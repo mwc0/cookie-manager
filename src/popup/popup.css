@@ -218,7 +218,12 @@ button.danger:hover:not(:disabled) {
 #table-wrap {
   border: 1px solid var(--line);
   border-radius: 6px;
-  overflow: hidden;
+  /* Scrolls rather than clips. `overflow: hidden` here was actively harmful:
+     it hid the row buttons when the table outgrew the popup, AND still let
+     focus scroll the table sideways, so clicking a half-hidden button pushed
+     the Name column off the left with no scrollbar to bring it back. */
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 table {
@@ -251,12 +256,18 @@ tr:last-child td {
 }
 
 td.name {
+  /* The name is how you identify a row, so it gets enough width not to break
+     mid-word ("auth_toke / n"). break-all stays as a fallback for the
+     pathologically long names some sites use. */
+  min-width: 112px;
   font-weight: 600;
   word-break: break-all;
 }
 
 td.value {
-  max-width: 260px;
+  /* Narrower than the name column deliberately: a truncated value is one
+     click from being shown in full, a broken-up name is just hard to read. */
+  max-width: 158px;
 }
 
 td.session {
@@ -287,7 +298,12 @@ td.value.expanded .value-toggle {
 }
 
 .flags {
-  white-space: nowrap;
+  /* Capped and allowed to wrap. A row can carry five badges, which made this
+     the widest column in the table -- wider than the buttons -- and pushed
+     the whole thing past the popup's width. Two short lines of badges cost
+     less than a table that doesn't fit. */
+  max-width: 150px;
+  white-space: normal;
 }
 
 .badge {
@@ -319,8 +335,8 @@ td.row-actions {
 }
 
 .row-button {
-  padding: 2px 8px;
-  margin-left: 4px;
+  padding: 2px 6px;
+  margin-left: 3px;
   font-size: 12px;
 }
 
@@ -445,4 +461,54 @@ button.row-button.danger.armed:hover:not(:disabled) {
 
 .errors li {
   margin: 2px 0;
+}
+
+/* --- search ------------------------------------------------------------ */
+
+.search {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.search input[type="search"] {
+  flex: 1;
+  padding: 5px 8px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font: inherit;
+}
+
+.search input[type="search"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* --- kept cookies ------------------------------------------------------ */
+
+/* A kept cookie is excluded from every delete this extension makes, so the
+   row needs to read differently at a glance -- someone scanning the table
+   before pressing Delete should be able to see what won't go. */
+tr.kept-row td {
+  background: var(--panel);
+}
+
+tr.kept-row td.name {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.row-button.keep.kept {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Same specificity trap as the armed delete button: a plain-element hover
+   rule outranks a multi-class one, so the hover case is spelled out rather
+   than left to lose. */
+button.row-button.keep.kept:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
 }

@@ -89,6 +89,44 @@ def main():
         r.check("no console errors across any of these states", not errors, str(errors[:3]))
         empty.close()
 
+        # --- the table has to FIT ---
+        # Not a nicety. When the table outgrew the popup, the row buttons were
+        # clipped out of reach, and focusing a clipped one scrolled the table
+        # sideways with no scrollbar to undo it. Playwright scrolls elements
+        # into view before clicking, so every click assertion still passed --
+        # only a screenshot showed it. Hence a geometry check.
+        wide, _ = open_popup(context, ext_id, "https://wide.test/")
+        wide.evaluate("""async () => {
+            await chrome.cookies.set({url:'https://wide.test/', name:'a_realistically_long_name',
+                value:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.a-long-token-value',
+                secure:true, httpOnly:true, sameSite:'no_restriction'});
+        }""")
+        wide.reload()
+        wide.wait_for_timeout(1200)
+
+        layout = wide.evaluate("""() => {
+            const wrap = document.getElementById('table-wrap');
+            const table = document.getElementById('cookie-table');
+            const buttons = Array.from(document.querySelectorAll('#cookie-rows button.row-button'));
+            const wrapBox = wrap.getBoundingClientRect();
+            return {
+                overflow: Math.round(table.getBoundingClientRect().width - wrap.clientWidth),
+                canScroll: getComputedStyle(wrap).overflowX === 'auto',
+                buttons: buttons.length,
+                buttonsInside: buttons.filter(b => {
+                    const box = b.getBoundingClientRect();
+                    return box.left >= wrapBox.left - 1 && box.right <= wrapBox.right + 1;
+                }).length,
+            };
+        }""")
+        r.check("the table fits the popup width",
+                layout["overflow"] <= 1, f"overflows by {layout['overflow']}px")
+        r.check("every row button is reachable without scrolling",
+                layout["buttons"] > 0 and layout["buttonsInside"] == layout["buttons"],
+                f"{layout['buttonsInside']}/{layout['buttons']} inside the visible area")
+        r.check("and the table can scroll if it ever does overflow", layout["canScroll"])
+        wide.close()
+
         context.close()
 
     return r.summarise()

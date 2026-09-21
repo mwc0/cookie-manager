@@ -12,12 +12,17 @@ import {
   truncate,
 } from "../lib/format.js";
 
-const VALUE_PREVIEW_LENGTH = 48;
+// Sized so a typical row fits the popup without the table overflowing --
+// the row now carries three buttons, and a table wider than the popup gets
+// scrolled rather than seen. Long values are still readable: click one to
+// expand it in place.
+const VALUE_PREVIEW_LENGTH = 28;
 
-// `handlers` is { onEdit(cookie), onDelete(cookie) }. onDelete is only called
-// once the user has confirmed, which this file handles: a single delete gets
-// a two-click arm rather than a dialog, so nothing goes without a deliberate
-// second click but there's no modal to dismiss either.
+// `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
+// isProtected(cookie) }. onDelete is only called once the user has confirmed,
+// which this file handles: a single delete gets a two-click arm rather than a
+// dialog, so nothing goes without a deliberate second click but there's no
+// modal to dismiss either.
 export function renderCookieTable(tbody, cookies, handlers = {}) {
   tbody.textContent = "";
 
@@ -42,6 +47,9 @@ export function renderCookieTable(tbody, cookies, handlers = {}) {
 
 function buildRow(cookie, handlers, disarmers, disarmAll) {
   const row = document.createElement("tr");
+  if (handlers.isProtected && handlers.isProtected(cookie)) {
+    row.classList.add("kept-row");
+  }
 
   row.appendChild(textCell(cookie.name, "mono name"));
   row.appendChild(valueCell(cookie.value));
@@ -64,9 +72,29 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
   const cell = document.createElement("td");
   cell.className = "row-actions";
 
+  const protectedNow = handlers.isProtected ? handlers.isProtected(cookie) : false;
+
+  // "Keep" rather than "Protect": this only stops THIS extension deleting the
+  // cookie. Nothing stops the website changing it. Calling that "protected"
+  // would promise more than it does -- see src/lib/protect.js.
+  const keep = document.createElement("button");
+  keep.type = "button";
+  keep.className = "row-button keep" + (protectedNow ? " kept" : "");
+  keep.textContent = protectedNow ? "Kept" : "Keep";
+  keep.setAttribute("aria-pressed", protectedNow ? "true" : "false");
+  keep.title = protectedNow
+    ? "This cookie is excluded from deletes. Click to stop keeping it."
+    : "Exclude this cookie from deletes made here";
+  keep.addEventListener("click", () => {
+    disarmAll();
+    if (handlers.onProtect) {
+      handlers.onProtect(cookie, !protectedNow);
+    }
+  });
+
   const edit = document.createElement("button");
   edit.type = "button";
-  edit.className = "row-button";
+  edit.className = "row-button edit";
   edit.textContent = "Edit";
   edit.title = "Edit this cookie";
   edit.addEventListener("click", () => {
@@ -80,7 +108,15 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
   remove.type = "button";
   remove.className = "row-button danger";
   remove.textContent = "Delete";
-  remove.title = "Delete this cookie";
+
+  // A kept cookie can't be deleted from here. Disabled rather than hidden, so
+  // the reason is visible instead of the button just not being where it was.
+  if (protectedNow) {
+    remove.disabled = true;
+    remove.title = "Kept cookies aren't deleted. Click Kept to allow it.";
+  } else {
+    remove.title = "Delete this cookie";
+  }
 
   let armed = false;
   const disarm = () => {
@@ -104,6 +140,7 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     }
   });
 
+  cell.appendChild(keep);
   cell.appendChild(edit);
   cell.appendChild(remove);
   return cell;

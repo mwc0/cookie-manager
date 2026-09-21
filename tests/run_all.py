@@ -18,6 +18,8 @@ FILES = [
     "test_scopes.py",
     "test_partitioned.py",
     "test_editor.py",
+    "test_search.py",
+    "test_protect.py",
     "test_no_network.py",
 ]
 

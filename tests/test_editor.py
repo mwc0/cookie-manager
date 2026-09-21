@@ -83,11 +83,19 @@ def main():
         # --- editing a value only ---
         edit_button(row_for(page, "hostonly_c")).click()
         page.wait_for_timeout(400)
+
+        # Check the editor is actually SHOWING, not just that the fields hold
+        # the right values. They survive from the previous save, so a prefill
+        # assertion on its own passes even when the click did nothing at all --
+        # which is exactly how a broken Edit button once went unnoticed.
         prefilled = page.evaluate("""() => ({
             name: document.getElementById('field-name').value,
             hostOnly: document.getElementById('field-hostonly').checked,
             session: document.getElementById('field-session').checked,
         })""")
+        r.check("clicking Edit actually opens the editor",
+                visible_state(page) == "state-edit" and page.locator("#field-value").is_visible(),
+                f"state={visible_state(page)}")
         r.check("the form is prefilled from the cookie",
                 prefilled["name"] == "hostonly_c" and prefilled["hostOnly"] and prefilled["session"],
                 json.dumps(prefilled))

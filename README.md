@@ -2,9 +2,9 @@
 
 A Chrome cookie manager (Manifest V3), built to replace EditThisCookie.
 
-**Status: early. Not ready for use as your only cookie tool.** The current build
-lists, creates, edits and deletes cookies. Search and the protect flag are not
-implemented yet.
+**Status: the planned v1 feature set is complete, but it has not been through
+a real browser under real use yet.** Incognito behaviour in particular is
+untested. Don't make it your only cookie tool just yet.
 
 ## Install for testing
 
@@ -33,6 +33,15 @@ After editing any file, press the reload icon on the extension's card.
 - Tells you when Chrome silently changes what you asked for — it caps cookie
   expiry at about 400 days, so asking for a date beyond that says so instead
   of showing you a date that isn't what was stored.
+- Searches the current tab's cookies by name, value, domain or path. While a
+  search is active you also get a "just the cookies shown" delete scope, so
+  filtering and then deleting removes what you can see rather than silently
+  reaching past it.
+- Lets you mark a cookie as **kept**, which excludes it from every delete this
+  extension makes — including "All sites" — and says so in the count before
+  you delete. It's a guard on this extension's own delete button, not
+  protection from the website: nothing here stops a site changing its own
+  cookies.
 
 ## Permissions
 

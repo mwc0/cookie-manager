@@ -10,8 +10,16 @@ import {
   removeCookies,
   writeCookie,
   validateCookieValues,
+  filterCookies,
   baseHostOf,
 } from "../lib/cookies.js";
+import {
+  loadProtected,
+  setProtected,
+  isProtected,
+  partitionByProtection,
+  pruneProtected,
+} from "../lib/protect.js";
 import {
   pluralise,
   formatCount,
@@ -33,6 +41,15 @@ let scopeCookies = [];
 // Held because saving needs the ORIGINAL identity to remove, not the edited
 // one — see writeCookie().
 let editing = null;
+
+// Every cookie for this page, and the subset the search box is showing.
+// `shownCookies` is what the "just the cookies shown" scope deletes, so it has
+// to be the same array the table was built from.
+let pageCookies = [];
+let shownCookies = [];
+
+// Keys of the cookies the user has asked us to keep. See src/lib/protect.js.
+let protectedKeys = new Set();
 
 const el = (id) => document.getElementById(id);
 
@@ -112,26 +129,83 @@ async function loadCurrentPage() {
 
 // Re-read everything: the table for this site, and the count for the
 // currently selected delete scope.
+//
+// Deliberately sequential. These used to run together, which was faster and
+// wrong: refreshScope() reads the kept-cookie list and the filtered array
+// that refreshTable() produces, so in parallel it could count a scope using
+// an empty kept list -- and then delete a cookie the table was, at that same
+// moment, drawing as kept.
 async function refresh() {
-  await Promise.all([refreshTable(), refreshScope()]);
+  await refreshTable();
+  await refreshScope();
 }
 
 async function refreshTable() {
   try {
-    const cookies = await getCookiesForPage(page);
+    pageCookies = await getCookiesForPage(page);
 
-    renderCookieTable(el("cookie-rows"), cookies, {
-      onEdit: openEditor,
-      onDelete: deleteOne,
-    });
-    el("cookie-count").textContent = pluralise(cookies.length, "cookie", "cookies");
+    const { keys, error } = await loadProtected();
+    protectedKeys = keys;
+    if (error) {
+      // A cookie the user believes is kept would be deleted anyway, so this
+      // has to be visible rather than logged.
+      showMainMessage(error, true);
+    }
 
-    const empty = cookies.length === 0;
-    el("empty-message").hidden = !empty;
-    el("cookie-table").hidden = empty;
+    // Forget keep-flags for cookies that no longer exist on this page, so a
+    // site setting a new cookie with an old name doesn't inherit protection
+    // the user never gave it.
+    const domains = new Set(pageCookies.map((c) => String(c.domain || "").replace(/^\./, "")));
+    domains.add(page.hostname);
+    const pruned = await pruneProtected(protectedKeys, pageCookies, domains);
+    protectedKeys = pruned.keys;
+
+    drawTable();
   } catch (error) {
     showError(error);
   }
+}
+
+// Apply the search box to the loaded cookies and draw. Kept separate from
+// refreshTable so typing filters what's already loaded instead of re-querying
+// Chrome on every keystroke.
+function drawTable() {
+  const query = el("search-input").value;
+  shownCookies = filterCookies(pageCookies, query);
+
+  renderCookieTable(el("cookie-rows"), shownCookies, {
+    onEdit: openEditor,
+    onDelete: deleteOne,
+    onProtect: toggleProtected,
+    isProtected: (cookie) => isProtected(protectedKeys, cookie),
+  });
+
+  const filtering = query.trim() !== "";
+  el("search-clear").hidden = !filtering;
+
+  el("cookie-count").textContent = filtering
+    ? pluralise(shownCookies.length, "cookie", "cookies") +
+      " of " + pluralise(pageCookies.length, "cookie", "cookies")
+    : pluralise(pageCookies.length, "cookie", "cookies");
+
+  // The "just the cookies shown" scope only makes sense while filtering.
+  el("scope-matches-row").hidden = !filtering;
+  el("scope-target-matches").textContent = filtering
+    ? pluralise(shownCookies.length, "match", "matches")
+    : "";
+
+  if (!filtering && selectedScope() === "matches") {
+    document.querySelector('input[name="scope"][value="page"]').checked = true;
+  }
+
+  const nothingAtAll = pageCookies.length === 0;
+  const nothingMatched = !nothingAtAll && shownCookies.length === 0;
+
+  el("empty-message").textContent = nothingMatched
+    ? "No cookies here match “" + query.trim() + "”."
+    : "No cookies are set for this site.";
+  el("empty-message").hidden = !(nothingAtAll || nothingMatched);
+  el("cookie-table").hidden = nothingAtAll || nothingMatched;
 }
 
 // --- delete scope ----------------------------------------------------------
@@ -150,18 +224,37 @@ async function refreshScope() {
   el("delete-button").disabled = true;
   cancelConfirm();
 
+  let inScope;
   try {
-    scopeCookies = await getCookiesForScope(selectedScope(), page);
+    // "matches" is the search box's scope, and deletes exactly the rows on
+    // screen — the same array the table was drawn from, not a re-query that
+    // could disagree with it.
+    inScope =
+      selectedScope() === "matches"
+        ? shownCookies
+        : await getCookiesForScope(selectedScope(), page);
   } catch (error) {
     scopeCookies = [];
     summaryLine.textContent = "Couldn't count the cookies in this scope: " + error.message;
     return;
   }
 
+  // Kept cookies are removed from the scope BEFORE the count is taken, so the
+  // number on screen is still exactly the number that will be deleted.
+  const { deletable, kept } = partitionByProtection(protectedKeys, inScope);
+  scopeCookies = deletable;
+
   const { count, domains } = summarise(scopeCookies);
+  const keptNote =
+    kept.length > 0
+      ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
+      : "";
 
   if (count === 0) {
-    summaryLine.textContent = "Nothing to delete in this scope.";
+    summaryLine.textContent =
+      kept.length > 0
+        ? "Nothing to delete in this scope —" + keptNote
+        : "Nothing to delete in this scope.";
     el("delete-button").disabled = true;
     return;
   }
@@ -171,7 +264,9 @@ async function refreshScope() {
     pluralise(count, "cookie", "cookies") +
     (domains.length === 1
       ? " from " + domains[0]
-      : " across " + pluralise(domains.length, "domain", "domains"));
+      : " across " + pluralise(domains.length, "domain", "domains")) +
+    "." +
+    keptNote;
 
   // Listing the exact domains is the point of the scope indicator: the user
   // sees what is about to go before agreeing to it.
@@ -431,9 +526,42 @@ async function saveEditor() {
   }
 }
 
+// --- keeping cookies -------------------------------------------------------
+
+async function toggleProtected(cookie, shouldKeep) {
+  const { keys, error } = await setProtected(cookie, shouldKeep);
+  protectedKeys = keys;
+
+  if (error) {
+    showMainMessage(error, true);
+    return;
+  }
+
+  showMainMessage(
+    shouldKeep
+      ? "Keeping " + cookie.name + ". It won't be deleted from here until you say otherwise."
+      : "No longer keeping " + cookie.name + ".",
+    false
+  );
+
+  // The table shows the new state, and the scope count has to change with it.
+  drawTable();
+  await refreshScope();
+}
+
 // Delete a single cookie from its row. The row has already asked for a second
 // click, so this runs straight away.
 async function deleteOne(cookie) {
+  // The row's Delete button is disabled for a kept cookie, but check anyway:
+  // a stale row could outlive the state it was drawn from.
+  if (isProtected(protectedKeys, cookie)) {
+    showMainMessage(
+      cookie.name + " is being kept, so it wasn't deleted. Click Kept first if you want it gone.",
+      true
+    );
+    return;
+  }
+
   const ok = await removeCookie(cookie);
 
   showMainMessage(
@@ -479,6 +607,20 @@ el("grant-button").addEventListener("click", async () => {
 
 el("retry-button").addEventListener("click", init);
 el("refresh-button").addEventListener("click", refresh);
+
+// Typing filters what's already loaded, so this is only a redraw plus a
+// recount -- no cookie query per keystroke.
+el("search-input").addEventListener("input", () => {
+  drawTable();
+  refreshScope();
+});
+
+el("search-clear").addEventListener("click", () => {
+  el("search-input").value = "";
+  drawTable();
+  refreshScope();
+  el("search-input").focus();
+});
 
 el("add-button").addEventListener("click", () => openEditor(null));
 el("edit-cancel").addEventListener("click", closeEditor);

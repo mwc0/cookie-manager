@@ -127,6 +127,29 @@ export async function getCookiesForScope(scope, page) {
   return await getCookiesForPage(page);
 }
 
+// Narrow a list of cookies to those matching a search box.
+//
+// Searches name, value, domain and path together, case-insensitively, because
+// people look for cookies by whatever they happen to remember -- a name, a
+// fragment of a token, a subdomain. Splitting that into separate fields would
+// mean picking the right one before you can find anything.
+//
+// v1 searches the current tab's cookies only. Searching across every domain is
+// a paid-tier feature -- see docs/SPEC.md.
+export function filterCookies(cookies, query) {
+  const needle = String(query || "").trim().toLowerCase();
+  if (needle === "") {
+    return cookies;
+  }
+
+  return cookies.filter((cookie) => {
+    const haystack = [cookie.name, cookie.value, cookie.domain, cookie.path]
+      .map((part) => String(part == null ? "" : part).toLowerCase())
+      .join("\n");
+    return haystack.includes(needle);
+  });
+}
+
 // Count and list the domains a set of cookies touches, for the scope
 // indicator. The UI shows this before deleting so the user sees exactly what
 // is about to go.

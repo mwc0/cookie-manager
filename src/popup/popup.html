@@ -75,12 +75,37 @@
 
       <p id="main-message" class="result" role="status" hidden></p>
 
+      <!-- Search filters the table below. It also adds a delete scope, so
+           that filtering and then deleting removes what you can see rather
+           than silently reaching past it. -->
+      <div class="search">
+        <label for="search-input" class="visually-hidden">Search cookies</label>
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Search name, value, domain or path"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="search-clear" type="button" hidden title="Clear the search">
+          Clear
+        </button>
+      </div>
+
       <!-- The headline feature. The count shown here comes from the same
            query that does the deleting, never from a separate estimate. -->
       <section id="delete-panel">
         <h2>Delete cookies</h2>
 
         <div class="scopes" role="radiogroup" aria-label="What to delete">
+          <!-- Only offered while a search is active. Without it, filtering the
+               table to three rows and pressing Delete would remove everything
+               the scope covers, which is not what the screen appears to say. -->
+          <label class="scope" id="scope-matches-row" hidden>
+            <input type="radio" name="scope" value="matches" />
+            <span class="scope-label">Just the cookies shown</span>
+            <span class="scope-target" id="scope-target-matches"></span>
+          </label>
           <label class="scope">
             <input type="radio" name="scope" value="page" checked />
             <span class="scope-label">This page</span>

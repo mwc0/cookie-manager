@@ -157,18 +157,25 @@ def row_for(page, cookie_name):
     """
     The table row for a named cookie.
 
-    Buttons are found by class, never by text: cookie VALUES are shown in the
-    same row and a value like "v2-edited" matches a has_text="Edit" filter.
+    Buttons are found by their OWN class, never by text and never by a
+    :not() chain. Two reasons, both learned the hard way: cookie VALUES are
+    shown in the same row, so a value like "v2-edited" matches a
+    has_text="Edit" filter; and a :not(.danger) selector silently started
+    matching the Keep button the moment a third action was added to the row.
     """
     return page.locator("tr", has=page.locator("td.name", has_text=cookie_name))
 
 
 def edit_button(row):
-    return row.locator("button.row-button:not(.danger)").first
+    return row.locator("button.row-button.edit").first
 
 
 def delete_button(row):
     return row.locator("button.row-button.danger").first
+
+
+def keep_button(row):
+    return row.locator("button.row-button.keep").first
 
 
 class Results:
