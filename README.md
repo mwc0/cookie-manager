@@ -73,6 +73,11 @@ tests/          browser tests (not shipped -- see tests/README.md)
 store/          listing copy, screenshots, privacy policy
 ```
 
+## Licence
+
+MIT. See `LICENSE`. You can read it, fork it, and check that what's published
+is what's described, which is rather the point.
+
 `docs/NOTES.md` records the assumptions in the code that have not yet been
 verified against a real browser.
 

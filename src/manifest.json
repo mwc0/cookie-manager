@@ -2,16 +2,30 @@
   "manifest_version": 3,
   "name": "Cookie Manager",
   "version": "0.1.0",
-  "description": "View and delete cookies. No tracking, no ads, no network requests, ever.",
-
-  "permissions": ["cookies", "storage"],
-
-  "optional_host_permissions": ["*://*/*"],
-
+  "description": "View, create, edit and delete cookies. Deletes all of them, not just some. No ads, no tracking, no network requests.",
+  "homepage_url": "https://github.com/mwc0/cookie-manager",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "cookies",
+    "storage"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
+  ],
   "incognito": "split",
-
   "action": {
     "default_title": "Cookie Manager",
-    "default_popup": "popup/popup.html"
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
   }
 }
