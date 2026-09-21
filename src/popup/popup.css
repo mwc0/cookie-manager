@@ -40,7 +40,10 @@
 }
 
 body {
-  width: 760px;
+  /* Chrome caps a popup at 800px. The extra 20px over the old 760 buys the
+     flags column enough room to keep badges on one line without squeezing
+     the value preview to uselessness. */
+  width: 780px;
   max-height: 580px;
   margin: 0;
   padding: 0;
@@ -267,7 +270,7 @@ td.name {
 td.value {
   /* Narrower than the name column deliberately: a truncated value is one
      click from being shown in full, a broken-up name is just hard to read. */
-  max-width: 158px;
+  max-width: 134px;
 }
 
 td.session {
@@ -298,11 +301,16 @@ td.value.expanded .value-toggle {
 }
 
 .flags {
-  /* Capped and allowed to wrap. A row can carry five badges, which made this
-     the widest column in the table -- wider than the buttons -- and pushed
-     the whole thing past the popup's width. Two short lines of badges cost
-     less than a table that doesn't fit. */
-  max-width: 150px;
+  /* Fixed width, and allowed to wrap.
+     Capping it alone wasn't enough: left to the table's own layout this
+     column took 111px -- under the cap, but too narrow for three badges, so
+     they stacked and row heights swung between 34px and 93px. Rows of wildly
+     different heights are hard to scan, and the extra height pushed the
+     content past the popup's max height so the table looked cut off.
+     A fixed width keeps the common two- and three-badge rows on one line.
+     It still wraps for the rare row carrying all five. */
+  min-width: 154px;
+  max-width: 154px;
   white-space: normal;
 }
 
@@ -382,7 +390,11 @@ button.row-button.danger.armed:hover:not(:disabled) {
 }
 
 .field {
-  margin-bottom: 12px;
+  /* 10 rather than 12: across seven fields that's what keeps the whole form,
+     Save button included, inside the popup's max height instead of 8px over
+     it. A primary action that needs scrolling to reach is a bad primary
+     action. */
+  margin-bottom: 10px;
 }
 
 .field-row {
