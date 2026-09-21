@@ -56,3 +56,6 @@ store/          listing copy, screenshots, privacy policy
 
 `docs/NOTES.md` records the assumptions in the code that have not yet been
 verified against a real browser.
+
+`docs/HANDOFF.md` is the working state: what is built, what isn't, what to test
+next and in what order. Start there when picking the project up again.
