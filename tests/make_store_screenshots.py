@@ -53,7 +53,7 @@ COOKIES = [
 
 SHOTS = [
     ("01-overview", "See every cookie on the site you're on"),
-    ("02-delete-scope", "Delete all of them — and see exactly what that means first"),
+    ("02-delete-scope", "Delete all of them, and see exactly what that means first"),
     ("03-edit", "Create and edit any field of a cookie"),
     ("04-search", "Search, then delete only what you're looking at"),
     ("05-keep", "Keep the cookies you don't want to lose"),
