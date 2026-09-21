@@ -1,0 +1,307 @@
+/* System fonts only. Loading a web font would be a network request, which
+   this extension never makes. */
+
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #6b6b6b;
+  --line: #e0e0e0;
+  --panel: #f7f7f7;
+  --accent: #1a56b8;
+  --danger: #b3261e;
+  --danger-bg: #fdf0ef;
+  --badge: #ececec;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e1e;
+    --fg: #e8e8e8;
+    --muted: #9a9a9a;
+    --line: #3a3a3a;
+    --panel: #272727;
+    --accent: #7aa7ee;
+    --danger: #f2837c;
+    --danger-bg: #331f1e;
+    --badge: #3a3a3a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* The browser's own [hidden] rule is weaker than any author rule that sets
+   display, so `.confirm { display: flex }` would keep a hidden element on
+   screen. The popup toggles screens with the hidden attribute, so this has to
+   win outright. */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  width: 760px;
+  max-height: 580px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.state {
+  padding: 14px 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+p {
+  margin: 0 0 10px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.mono {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* --- buttons -------------------------------------------------------------- */
+
+button {
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+button.danger:hover:not(:disabled) {
+  background: var(--danger-bg);
+}
+
+/* --- header --------------------------------------------------------------- */
+
+.bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bar p {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+/* --- delete panel --------------------------------------------------------- */
+
+#delete-panel {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.scopes {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.scope {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.scope-target {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.scope-summary {
+  margin: 9px 0 0;
+  font-weight: 600;
+}
+
+#scope-domains {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+#scope-domains summary {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+#scope-domains ul {
+  max-height: 110px;
+  margin: 6px 0 0;
+  padding: 0 0 0 18px;
+  overflow-y: auto;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--muted);
+}
+
+.actions {
+  margin-top: 10px;
+}
+
+.confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirm span {
+  font-weight: 600;
+}
+
+.result {
+  margin: 9px 0 0;
+}
+
+/* --- cookie table --------------------------------------------------------- */
+
+#table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+td.name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+td.value {
+  max-width: 260px;
+}
+
+td.session {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.value-toggle {
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.value-toggle:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+td.value.expanded .value-toggle {
+  white-space: normal;
+  word-break: break-all;
+}
+
+.flags {
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 5px;
+  margin: 0 3px 2px 0;
+  border-radius: 3px;
+  background: var(--badge);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.empty {
+  padding: 18px;
+  margin: 0;
+  text-align: center;
+}

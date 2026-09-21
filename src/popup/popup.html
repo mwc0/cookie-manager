@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cookie Manager</title>
+    <!-- Local stylesheet only. No web fonts, no CDN: the extension makes no
+         network requests of any kind. -->
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <!-- Only one of these sections is visible at a time. popup.js decides
+         which, and every one of them says something readable -- there is no
+         state where the user is shown a blank panel. -->
+
+    <section id="state-loading" class="state">
+      <p class="muted">Reading cookies&hellip;</p>
+    </section>
+
+    <!-- Shown when host permission hasn't been granted yet. Without it,
+         chrome.cookies returns an empty list rather than an error, so this
+         screen is the only thing standing between the user and a cookie
+         manager that silently appears to work but shows nothing. -->
+    <section id="state-gate" class="state" hidden>
+      <h1>One-time permission needed</h1>
+      <p>
+        Chrome won't hand a cookie to an extension without permission for the
+        site it belongs to. To list and delete your cookies, this extension
+        needs access to websites you visit.
+      </p>
+      <p class="muted">
+        It is used only to read and delete cookies when you open this popup.
+        Nothing is sent anywhere &mdash; the extension makes no network
+        requests at all, and has no analytics.
+      </p>
+      <p>
+        <button id="grant-button" class="primary" type="button">
+          Grant access
+        </button>
+      </p>
+      <p id="gate-message" class="error" role="status" hidden></p>
+    </section>
+
+    <!-- chrome://, about:, the Web Store, and similar pages can't have
+         cookies read from them. Say so plainly instead of showing an empty
+         table that looks like a bug. -->
+    <section id="state-blocked" class="state" hidden>
+      <h1>No cookies on this page</h1>
+      <p id="blocked-message"></p>
+      <p class="muted">Open a normal website and click the icon again.</p>
+    </section>
+
+    <section id="state-error" class="state" hidden>
+      <h1>Something went wrong</h1>
+      <p id="error-message" class="error"></p>
+      <p>
+        <button id="retry-button" type="button">Try again</button>
+      </p>
+    </section>
+
+    <section id="state-main" class="state" hidden>
+      <header class="bar">
+        <div>
+          <h1 id="site-name"></h1>
+          <p id="cookie-count" class="muted"></p>
+        </div>
+        <button id="refresh-button" type="button" title="Re-read cookies">
+          Refresh
+        </button>
+      </header>
+
+      <!-- The headline feature. The count shown here comes from the same
+           query that does the deleting, never from a separate estimate. -->
+      <section id="delete-panel">
+        <h2>Delete cookies</h2>
+
+        <div class="scopes" role="radiogroup" aria-label="What to delete">
+          <label class="scope">
+            <input type="radio" name="scope" value="page" checked />
+            <span class="scope-label">This page</span>
+            <span class="scope-target" id="scope-target-page"></span>
+          </label>
+          <label class="scope">
+            <input type="radio" name="scope" value="domain" />
+            <span class="scope-label">This domain and its subdomains</span>
+            <span class="scope-target" id="scope-target-domain"></span>
+          </label>
+          <label class="scope">
+            <input type="radio" name="scope" value="all" />
+            <span class="scope-label">All sites</span>
+            <span class="scope-target">everything in this browser profile</span>
+          </label>
+        </div>
+
+        <p id="scope-summary" class="scope-summary" role="status">
+          Counting&hellip;
+        </p>
+
+        <details id="scope-domains" hidden>
+          <summary id="scope-domains-summary"></summary>
+          <ul id="scope-domains-list"></ul>
+        </details>
+
+        <div class="actions">
+          <button id="delete-button" class="danger" type="button" disabled>
+            Delete&hellip;
+          </button>
+
+          <div id="confirm-row" class="confirm" hidden>
+            <span id="confirm-text"></span>
+            <button id="confirm-yes" class="danger" type="button">
+              Yes, delete
+            </button>
+            <button id="confirm-no" type="button">Cancel</button>
+          </div>
+        </div>
+
+        <p id="delete-result" class="result" role="status" hidden></p>
+      </section>
+
+      <div id="table-wrap">
+        <table id="cookie-table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Value</th>
+              <th scope="col">Domain</th>
+              <th scope="col">Path</th>
+              <th scope="col">Expires</th>
+              <th scope="col">Flags</th>
+            </tr>
+          </thead>
+          <tbody id="cookie-rows"></tbody>
+        </table>
+        <p id="empty-message" class="muted empty" hidden>
+          No cookies are set for this site.
+        </p>
+      </div>
+    </section>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

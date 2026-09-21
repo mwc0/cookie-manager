@@ -1,0 +1,14 @@
+# OS clutter
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Packaged builds for the Web Store listing
+*.zip
+*.crx
+*.pem

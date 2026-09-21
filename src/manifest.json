@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Cookie Manager",
+  "version": "0.1.0",
+  "description": "View and delete cookies. No tracking, no ads, no network requests, ever.",
+
+  "permissions": ["cookies", "storage"],
+
+  "optional_host_permissions": ["*://*/*"],
+
+  "incognito": "split",
+
+  "action": {
+    "default_title": "Cookie Manager",
+    "default_popup": "popup/popup.html"
+  }
+}
