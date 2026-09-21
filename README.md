@@ -2,9 +2,10 @@
 
 A Chrome cookie manager (Manifest V3), built to replace EditThisCookie.
 
-**Status: the planned v1 feature set is complete, but it has not been through
-a real browser under real use yet.** Incognito behaviour in particular is
-untested. Don't make it your only cookie tool just yet.
+**Status: the planned v1 feature set is complete and its behaviour has been
+verified**, including incognito. What's left before a store release is the
+listing itself — copy, screenshots and a privacy policy — and some wider
+real-world use. Treat it as a late beta rather than finished.
 
 ## Install for testing
 
