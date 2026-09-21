@@ -12,3 +12,7 @@ desktop.ini
 *.zip
 *.crx
 *.pem
+
+# Throwaway Chrome profiles created by the browser tests
+tests/.profiles/
+__pycache__/

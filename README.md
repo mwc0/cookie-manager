@@ -59,6 +59,7 @@ src/            the extension (this is what you load)
   popup/        popup UI
   lib/          shared helpers
 docs/           spec and implementation notes
+tests/          browser tests (not shipped -- see tests/README.md)
 store/          listing copy, screenshots, privacy policy
 ```
 
