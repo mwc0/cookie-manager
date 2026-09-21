@@ -6,10 +6,19 @@ import {
   getCookiesForPage,
   getCookiesForScope,
   summarise,
+  removeCookie,
   removeCookies,
+  writeCookie,
+  validateCookieValues,
   baseHostOf,
 } from "../lib/cookies.js";
-import { pluralise, formatCount } from "../lib/format.js";
+import {
+  pluralise,
+  formatCount,
+  formatExpiryFull,
+  toLocalDateTimeValue,
+  fromLocalDateTimeValue,
+} from "../lib/format.js";
 import { renderCookieTable } from "./render.js";
 
 // The site in the current tab: { origin, hostname }.
@@ -19,6 +28,11 @@ let page = null;
 // this array, which is the same one the on-screen count was taken from, so
 // the number shown and the number removed can't disagree.
 let scopeCookies = [];
+
+// The cookie currently open in the editor, or null when creating a new one.
+// Held because saving needs the ORIGINAL identity to remove, not the edited
+// one — see writeCookie().
+let editing = null;
 
 const el = (id) => document.getElementById(id);
 
@@ -87,6 +101,7 @@ async function loadCurrentPage() {
 
   page = { origin: url.origin, hostname: url.hostname };
 
+  el("main-message").hidden = true;
   el("site-name").textContent = url.hostname;
   el("scope-target-page").textContent = url.hostname;
   el("scope-target-domain").textContent = baseHostOf(url.hostname);
@@ -105,7 +120,10 @@ async function refreshTable() {
   try {
     const cookies = await getCookiesForPage(page);
 
-    renderCookieTable(el("cookie-rows"), cookies);
+    renderCookieTable(el("cookie-rows"), cookies, {
+      onEdit: openEditor,
+      onDelete: deleteOne,
+    });
     el("cookie-count").textContent = pluralise(cookies.length, "cookie", "cookies");
 
     const empty = cookies.length === 0;
@@ -233,6 +251,201 @@ async function runDelete() {
   }
 }
 
+// --- create / edit ---------------------------------------------------------
+
+// A short message above the delete panel, for things that happened on the
+// main screen (a cookie saved, a single cookie deleted).
+function showMainMessage(text, isError) {
+  const message = el("main-message");
+  message.textContent = text;
+  message.className = isError ? "result error" : "result";
+  message.hidden = false;
+}
+
+// Open the form. `cookie` is the one being edited, or null to create.
+function openEditor(cookie) {
+  editing = cookie || null;
+
+  el("main-message").hidden = true;
+  el("edit-title").textContent = cookie ? "Edit cookie" : "New cookie";
+  el("edit-errors").hidden = true;
+  el("edit-errors").textContent = "";
+
+  const isNew = !cookie;
+  const secure = isNew ? page.origin.startsWith("https:") : Boolean(cookie.secure);
+
+  el("field-name").value = isNew ? "" : cookie.name;
+  el("field-value").value = isNew ? "" : cookie.value;
+
+  // The stored domain carries a leading dot when the cookie is domain-wide
+  // (".example.com"). Showing that next to a Host-only checkbox would say the
+  // same thing twice, in two notations, so the dot is stripped here and the
+  // checkbox carries the meaning. buildSetDetails() puts it back.
+  el("field-domain").value = isNew
+    ? page.hostname
+    : String(cookie.domain || "").replace(/^\./, "");
+  el("field-path").value = isNew ? "/" : cookie.path || "/";
+
+  el("field-samesite").value = isNew ? "unspecified" : cookie.sameSite || "unspecified";
+  el("field-secure").checked = secure;
+  el("field-httponly").checked = isNew ? false : Boolean(cookie.httpOnly);
+
+  // A new cookie defaults to host-only: the narrower of the two, and what a
+  // page gets when it sets a cookie without a Domain attribute.
+  el("field-hostonly").checked = isNew ? true : Boolean(cookie.hostOnly);
+
+  // A new cookie defaults to a session cookie, so adding one can't
+  // accidentally leave something permanent behind.
+  const isSession = isNew || typeof cookie.expirationDate !== "number";
+  el("field-session").checked = isSession;
+  el("field-expiry").value = isSession
+    ? ""
+    : toLocalDateTimeValue(cookie.expirationDate);
+  syncExpiryEnabled();
+
+  // Partitioned cookies are carried through a save untouched. The partition
+  // isn't editable here — there's no safe way to offer that without a much
+  // longer explanation than this popup has room for.
+  const partition = el("edit-partition");
+  if (cookie && cookie.partitionKey) {
+    partition.textContent =
+      "This is a partitioned (CHIPS) cookie. Its partition is kept as it is when you save.";
+    partition.hidden = false;
+  } else {
+    partition.hidden = true;
+  }
+
+  showState("edit");
+  el("field-name").focus();
+}
+
+function closeEditor() {
+  editing = null;
+  showState("main");
+}
+
+// The expiry field is meaningless while "session cookie" is ticked.
+function syncExpiryEnabled() {
+  el("field-expiry").disabled = el("field-session").checked;
+}
+
+function readForm() {
+  const session = el("field-session").checked;
+
+  return {
+    name: el("field-name").value.trim(),
+    value: el("field-value").value,
+    domain: el("field-domain").value.trim(),
+    path: el("field-path").value.trim() || "/",
+    sameSite: el("field-samesite").value,
+    secure: el("field-secure").checked,
+    httpOnly: el("field-httponly").checked,
+    hostOnly: el("field-hostonly").checked,
+    session,
+    expirationDate: session ? null : fromLocalDateTimeValue(el("field-expiry").value),
+    // Carried straight through from the cookie being edited.
+    storeId: editing ? editing.storeId : undefined,
+    partitionKey: editing ? editing.partitionKey : undefined,
+  };
+}
+
+function showFormErrors(errors) {
+  const list = el("edit-errors");
+  list.textContent = "";
+
+  for (const error of errors) {
+    const item = document.createElement("li");
+    item.textContent = error;
+    list.appendChild(item);
+  }
+
+  list.hidden = errors.length === 0;
+}
+
+// Chrome caps how far ahead a cookie may expire — 400 days at the time of
+// writing — and it applies the cap silently: ask for 2030 and it stores a
+// date about thirteen months out without a word. Saying "Saved" and leaving
+// it there would be claiming something that didn't happen, so compare what
+// Chrome actually stored against what was asked for and report the gap.
+//
+// Deliberately compares the two dates rather than hardcoding 400 days, so
+// this keeps telling the truth if Chrome changes the limit.
+function describeExpiryChange(values, saved) {
+  if (!saved || values.session || typeof values.expirationDate !== "number") {
+    return "";
+  }
+  if (typeof saved.expirationDate !== "number") {
+    return "";
+  }
+
+  // A minute of slack: Chrome stores fractional seconds, and an unclamped
+  // date comes back as the one that was asked for.
+  if (Math.abs(saved.expirationDate - values.expirationDate) < 60) {
+    return "";
+  }
+
+  return (
+    " Chrome shortened the expiry to " +
+    formatExpiryFull({ expirationDate: saved.expirationDate }).replace(/^Expires /, "") +
+    " — it limits how far ahead a cookie is allowed to expire."
+  );
+}
+
+async function saveEditor() {
+  const values = readForm();
+
+  // Checked here rather than letting Chrome refuse the write, because its own
+  // rejection message names the cookie but never the rule it broke.
+  const errors = validateCookieValues(values);
+  if (errors.length > 0) {
+    showFormErrors(errors);
+    return;
+  }
+  showFormErrors([]);
+
+  const save = el("edit-save");
+  save.disabled = true;
+
+  try {
+    const { ok, cookie, error } = await writeCookie(editing, values);
+
+    if (!ok) {
+      showFormErrors([error]);
+      return;
+    }
+
+    const wasEditing = Boolean(editing);
+    closeEditor();
+    showMainMessage(
+      (wasEditing ? "Saved changes to " + values.name + "." : "Created " + values.name + ".") +
+        describeExpiryChange(values, cookie),
+      false
+    );
+    await refresh();
+  } catch (error) {
+    // writeCookie handles its own failures, so reaching here means something
+    // unexpected. Say so rather than leaving the form looking stuck.
+    showFormErrors([error && error.message ? error.message : String(error)]);
+  } finally {
+    save.disabled = false;
+  }
+}
+
+// Delete a single cookie from its row. The row has already asked for a second
+// click, so this runs straight away.
+async function deleteOne(cookie) {
+  const ok = await removeCookie(cookie);
+
+  showMainMessage(
+    ok
+      ? "Deleted " + cookie.name + "."
+      : "Couldn't delete " + cookie.name + ". It may be protected by the browser.",
+    !ok
+  );
+
+  await refresh();
+}
+
 // --- events ----------------------------------------------------------------
 
 el("grant-button").addEventListener("click", async () => {
@@ -266,6 +479,17 @@ el("grant-button").addEventListener("click", async () => {
 
 el("retry-button").addEventListener("click", init);
 el("refresh-button").addEventListener("click", refresh);
+
+el("add-button").addEventListener("click", () => openEditor(null));
+el("edit-cancel").addEventListener("click", closeEditor);
+el("edit-cancel-2").addEventListener("click", closeEditor);
+el("field-session").addEventListener("change", syncExpiryEnabled);
+
+el("edit-form").addEventListener("submit", (event) => {
+  // The form never navigates; submitting is just the Enter key reaching Save.
+  event.preventDefault();
+  saveEditor();
+});
 
 for (const radio of document.querySelectorAll('input[name="scope"]')) {
   radio.addEventListener("change", () => {

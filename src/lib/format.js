@@ -52,6 +52,53 @@ export function formatSameSite(value) {
   }
 }
 
+// --- the expiry field --------------------------------------------------
+//
+// <input type="datetime-local"> speaks local wall-clock time in
+// "YYYY-MM-DDTHH:mm"; chrome.cookies speaks seconds since the epoch. These
+// two convert between them.
+//
+// The components are read and written one at a time rather than going via
+// toISOString(), because that converts to UTC and would shift the time the
+// user sees by their offset.
+export function toLocalDateTimeValue(expirationDate) {
+  if (typeof expirationDate !== "number") {
+    return "";
+  }
+
+  const date = new Date(expirationDate * 1000);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const pad = (number) => String(number).padStart(2, "0");
+  return (
+    date.getFullYear() +
+    "-" +
+    pad(date.getMonth() + 1) +
+    "-" +
+    pad(date.getDate()) +
+    "T" +
+    pad(date.getHours()) +
+    ":" +
+    pad(date.getMinutes())
+  );
+}
+
+// Returns seconds since the epoch, or null if the field is empty or unreadable.
+export function fromLocalDateTimeValue(text) {
+  if (!text) {
+    return null;
+  }
+
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return Math.floor(date.getTime() / 1000);
+}
+
 export function truncate(text, max) {
   const value = String(text == null ? "" : text);
   if (value.length <= max) {

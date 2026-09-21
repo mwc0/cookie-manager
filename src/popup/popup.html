@@ -63,10 +63,17 @@
           <h1 id="site-name"></h1>
           <p id="cookie-count" class="muted"></p>
         </div>
-        <button id="refresh-button" type="button" title="Re-read cookies">
-          Refresh
-        </button>
+        <div class="bar-actions">
+          <button id="add-button" type="button" title="Create a new cookie">
+            Add cookie
+          </button>
+          <button id="refresh-button" type="button" title="Re-read cookies">
+            Refresh
+          </button>
+        </div>
       </header>
+
+      <p id="main-message" class="result" role="status" hidden></p>
 
       <!-- The headline feature. The count shown here comes from the same
            query that does the deleting, never from a separate estimate. -->
@@ -127,6 +134,7 @@
               <th scope="col">Path</th>
               <th scope="col">Expires</th>
               <th scope="col">Flags</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
           </thead>
           <tbody id="cookie-rows"></tbody>
@@ -135,6 +143,82 @@
           No cookies are set for this site.
         </p>
       </div>
+    </section>
+
+    <!-- Create and edit. One form does both: creating starts it empty,
+         editing fills it from the cookie and remembers the original so the
+         save can remove-then-set if the name, domain or path changed. -->
+    <section id="state-edit" class="state" hidden>
+      <header class="bar">
+        <h1 id="edit-title"></h1>
+        <button id="edit-cancel" type="button">Cancel</button>
+      </header>
+
+      <form id="edit-form" autocomplete="off">
+        <div class="field">
+          <label for="field-name">Name</label>
+          <input id="field-name" name="name" type="text" class="mono" spellcheck="false" />
+        </div>
+
+        <div class="field">
+          <label for="field-value">Value</label>
+          <textarea id="field-value" name="value" class="mono" rows="3" spellcheck="false"></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="field-domain">Domain</label>
+            <input id="field-domain" name="domain" type="text" class="mono" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="field-path">Path</label>
+            <input id="field-path" name="path" type="text" class="mono" spellcheck="false" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="field-samesite">SameSite</label>
+          <select id="field-samesite" name="sameSite">
+            <option value="unspecified">Unset (Chrome decides)</option>
+            <option value="lax">Lax</option>
+            <option value="strict">Strict</option>
+            <option value="no_restriction">None (needs Secure)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <span class="label">Expires</span>
+          <label class="check">
+            <input id="field-session" name="session" type="checkbox" />
+            <span>Session cookie &mdash; deleted when the browser closes</span>
+          </label>
+          <input id="field-expiry" name="expirationDate" type="datetime-local" />
+        </div>
+
+        <div class="field">
+          <span class="label">Flags</span>
+          <label class="check">
+            <input id="field-secure" name="secure" type="checkbox" />
+            <span>Secure &mdash; only sent over HTTPS</span>
+          </label>
+          <label class="check">
+            <input id="field-httponly" name="httpOnly" type="checkbox" />
+            <span>HttpOnly &mdash; hidden from page JavaScript</span>
+          </label>
+          <label class="check">
+            <input id="field-hostonly" name="hostOnly" type="checkbox" />
+            <span>Host-only &mdash; this exact host, not its subdomains</span>
+          </label>
+        </div>
+
+        <p id="edit-partition" class="muted" hidden></p>
+        <ul id="edit-errors" class="errors" hidden></ul>
+
+        <div class="actions">
+          <button id="edit-save" class="primary" type="submit">Save</button>
+          <button id="edit-cancel-2" type="button">Cancel</button>
+        </div>
+      </form>
     </section>
 
     <script type="module" src="popup.js"></script>

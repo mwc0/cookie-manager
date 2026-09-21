@@ -141,6 +141,197 @@ export function summarise(cookies) {
   };
 }
 
+// --- writing -----------------------------------------------------------
+//
+// The awkward parts of chrome.cookies.set, all verified against Chrome rather
+// than assumed. See docs/NOTES.md.
+
+// What makes two cookies the same cookie as far as Chrome is concerned.
+//
+// Deliberately not cookieKey() above: that one dedupes query results and
+// compares the stored domain string as-is. Here we need the *effective*
+// identity, because a host-only cookie is stored as "example.com" and a
+// domain-wide one as ".example.com" — same host, different cookie.
+function identityOf(parts) {
+  return [
+    parts.name,
+    String(parts.domain || "").replace(/^\./, ""),
+    Boolean(parts.hostOnly),
+    parts.path || "/",
+    parts.storeId || "",
+    parts.partitionKey ? JSON.stringify(parts.partitionKey) : "",
+  ].join("\n");
+}
+
+// Turn the form's values into the object chrome.cookies.set wants.
+//
+// `values` is { name, value, domain, path, secure, httpOnly, hostOnly,
+// session, expirationDate, sameSite, storeId, partitionKey }.
+export function buildSetDetails(values) {
+  const host = String(values.domain || "").replace(/^\./, "");
+  const path = values.path || "/";
+  const scheme = values.secure ? "https://" : "http://";
+
+  const details = {
+    // TRAP: set() reads the cookie back using this URL, and a cookie scoped to
+    // /admin is not returned for a URL at /. Ask for the root and set() hands
+    // back null even though the write SUCCEEDED, with runtime.lastError unset,
+    // so there is no way to tell that apart from a genuine failure. Including
+    // the cookie's own path here keeps the read-back honest.
+    url: scheme + host + path,
+    name: values.name,
+    value: values.value,
+    path,
+    secure: Boolean(values.secure),
+    httpOnly: Boolean(values.httpOnly),
+    sameSite: values.sameSite || "unspecified",
+  };
+
+  // TRAP: supplying `domain` at all makes the cookie domain-wide. Chrome
+  // stores it as ".host" with hostOnly false even when the dot is left off,
+  // so a host-only cookie has to omit the field entirely rather than pass
+  // the bare host.
+  if (!values.hostOnly) {
+    details.domain = host;
+  }
+
+  // TRAP: a session cookie has no expirationDate. Writing one back with a date
+  // silently converts it into a permanent cookie.
+  if (!values.session && typeof values.expirationDate === "number") {
+    details.expirationDate = values.expirationDate;
+  }
+
+  if (values.storeId) {
+    details.storeId = values.storeId;
+  }
+  if (values.partitionKey) {
+    details.partitionKey = values.partitionKey;
+  }
+
+  return details;
+}
+
+// Reasons Chrome would reject the write, checked before we attempt it.
+//
+// Worth doing up front: when Chrome refuses a cookie it throws
+// "Failed to parse or set cookie named X" and never says which rule was
+// broken, so anything we don't catch here reaches the user as a dead end.
+export function validateCookieValues(values) {
+  const errors = [];
+  const name = String(values.name || "");
+  const value = String(values.value || "");
+
+  if (name.trim() === "") {
+    errors.push("A cookie needs a name.");
+  } else if (/[\s;=,]/.test(name)) {
+    errors.push("A cookie name can't contain spaces, semicolons, commas or equals signs.");
+  }
+
+  if (/[;,]/.test(value)) {
+    errors.push("A cookie value can't contain semicolons or commas.");
+  }
+
+  if (String(values.domain || "").trim() === "") {
+    errors.push("A cookie needs a domain.");
+  }
+
+  if (!String(values.path || "").startsWith("/")) {
+    errors.push("The path has to start with a slash.");
+  }
+
+  // TRAP: Chrome rejects SameSite=None unless the cookie is also Secure.
+  if (values.sameSite === "no_restriction" && !values.secure) {
+    errors.push("SameSite “None” only works on a Secure cookie. Tick Secure, or choose a different SameSite.");
+  }
+
+  if (!values.session && typeof values.expirationDate !== "number") {
+    errors.push("Set an expiry date, or tick “Session cookie”.");
+  }
+
+  return errors;
+}
+
+// Create or update a cookie.
+//
+// `original` is the cookie being edited, or null when creating a new one.
+// Returns { ok, cookie, error } — never throws at the caller.
+export async function writeCookie(original, values) {
+  const details = buildSetDetails(values);
+
+  // TRAP: editing is remove-then-set. Chrome keys a cookie on
+  // name + domain + path (+ store + partition), so saving with any of those
+  // changed writes a SECOND cookie and leaves the original in place. Setting
+  // with an unchanged identity overwrites cleanly (verified), so a plain
+  // value edit doesn't need the remove.
+  if (original) {
+    const before = identityOf(original);
+    const after = identityOf({
+      name: details.name,
+      domain: details.domain || details.url.replace(/^https?:\/\//, "").split("/")[0],
+      hostOnly: !details.domain,
+      path: details.path,
+      storeId: details.storeId,
+      partitionKey: details.partitionKey,
+    });
+
+    if (before !== after) {
+      const removed = await removeCookie(original);
+      if (!removed) {
+        return {
+          ok: false,
+          error:
+            "The original cookie couldn't be removed, so the change was stopped " +
+            "rather than risk leaving two copies of it behind.",
+        };
+      }
+    }
+  }
+
+  let result;
+  try {
+    result = await chrome.cookies.set(details);
+  } catch (error) {
+    return { ok: false, error: describeWriteFailure(error) };
+  }
+
+  if (result) {
+    return { ok: true, cookie: result, error: null };
+  }
+
+  // A null result should be a real failure now that the URL covers the path,
+  // but that assumption has bitten once already — so check rather than trust
+  // it, and only report a failure if the cookie genuinely isn't there.
+  const landed = await chrome.cookies.getAll({
+    url: details.url,
+    name: details.name,
+  });
+  if (landed.length > 0) {
+    return { ok: true, cookie: landed[0], error: null };
+  }
+
+  return {
+    ok: false,
+    error: "Chrome didn't accept the cookie, and didn't say why.",
+  };
+}
+
+function describeWriteFailure(error) {
+  const message = error && error.message ? error.message : String(error);
+
+  // Chrome's own message for a rejected cookie names the cookie but not the
+  // rule it broke, so add the possibilities the form can't rule out.
+  if (message.includes("Failed to parse or set cookie")) {
+    return (
+      message +
+      " This usually means the domain doesn't match the cookie, or the name " +
+      "or value contains a character cookies aren't allowed to carry."
+    );
+  }
+  return message;
+}
+
+// --- deleting ----------------------------------------------------------
+
 // Delete one cookie.
 //
 // chrome.cookies.remove resolves to null when it fails rather than throwing,

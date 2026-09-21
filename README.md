@@ -3,7 +3,8 @@
 A Chrome cookie manager (Manifest V3), built to replace EditThisCookie.
 
 **Status: early. Not ready for use as your only cookie tool.** The current build
-lists and deletes cookies. Creating and editing cookies is not implemented yet.
+lists, creates, edits and deletes cookies. Search and the protect flag are not
+implemented yet.
 
 ## Install for testing
 
@@ -25,6 +26,13 @@ After editing any file, press the reload icon on the extension's card.
 - Deletes cookies at three scopes — this page, this domain and its subdomains,
   or every site in the profile — always showing the exact count and the exact
   domains affected before anything is removed.
+- Creates and edits cookies, including the awkward parts other editors get
+  wrong: a host-only cookie stays host-only, a session cookie doesn't quietly
+  become permanent, and renaming one moves it instead of leaving two behind.
+- Deletes a single cookie from its row, on a second click rather than a dialog.
+- Tells you when Chrome silently changes what you asked for — it caps cookie
+  expiry at about 400 days, so asking for a date beyond that says so instead
+  of showing you a date that isn't what was stored.
 
 ## Permissions
 
