@@ -1,10 +1,10 @@
-# Privacy Policy: Cookie Manager
+# Privacy Policy: cookieZ
 
 **Last updated: 21 September 2026**
 
 ## The short version
 
-Cookie Manager collects nothing, sends nothing, and makes no network requests
+cookieZ collects nothing, sends nothing, and makes no network requests
 of any kind. There is no server to send anything to.
 
 ## What this extension collects
@@ -18,7 +18,7 @@ transmitted.
 
 ## What this extension sends
 
-Nothing. Cookie Manager makes no network requests at all.
+Nothing. cookieZ makes no network requests at all.
 
 That includes the things extensions commonly send without mentioning:
 
@@ -60,7 +60,7 @@ extension removes the list.
 
 ## Cookies the extension reads
 
-Cookie Manager reads your cookies in order to show them to you, which is what
+cookieZ reads your cookies in order to show them to you, which is what
 it is for. This happens only while the popup is open, only in response to you
 opening it, and the results only ever reach your own screen.
 

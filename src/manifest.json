@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Cookie Manager",
+  "name": "cookieZ - cookie editor",
   "version": "0.1.0",
   "description": "View, create, edit and delete cookies. Deletes all of them, not just some. No ads, no tracking, no network requests.",
   "homepage_url": "https://github.com/mwc0/cookie-manager",
@@ -19,7 +19,7 @@
   ],
   "incognito": "split",
   "action": {
-    "default_title": "Cookie Manager",
+    "default_title": "cookieZ",
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

@@ -14,7 +14,7 @@ and the one wording decision worth making deliberately before submitting.
 *Limit: 75 characters. Roughly the first 45 show in search results.*
 
 ```
-Cookie Manager: view, edit and delete cookies
+cookieZ - cookie editor
 ```
 
 ## Summary
@@ -134,7 +134,7 @@ above.
 *Required. The store asks you to state the extension's single purpose.*
 
 ```
-Cookie Manager lets the user view, create, edit and delete the cookies stored
+cookieZ lets the user view, create, edit and delete the cookies stored
 in their own browser. Every feature serves that one purpose: listing cookies
 for the current site, editing their fields, deleting them at a chosen scope,
 searching within them, and marking individual cookies to be excluded from

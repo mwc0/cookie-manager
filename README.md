@@ -1,4 +1,4 @@
-# Cookie Manager
+# cookieZ - cookie editor
 
 A Chrome cookie manager (Manifest V3), built to replace EditThisCookie.
 
