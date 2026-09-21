@@ -42,11 +42,44 @@ a real window.
 | `test_partitioned.py` | That `partitionKey: {}` really means "any partition", so delete-all doesn't leave CHIPS cookies behind. |
 | `test_editor.py` | Every write trap: host-only, session, SameSite=None, remove-then-set, and Chrome's silent 400-day expiry cap. |
 | `test_no_network.py` | That the extension makes no outbound requests, via both a static scan of `src/` and a live capture of a whole session. |
+| `test_devtools_crosscheck.py` | The same claims again, but checked against Chrome's DevTools Protocol rather than the extension API. See below. |
 
 `probe_chrome_api.py` is not a test. It asks Chrome how it actually behaves
 and prints the answers. Every workaround in `src/lib/cookies.js` exists
 because of one of them, so run it if a Chrome update makes something behave
 strangely. It's faster than re-deriving the reasons.
+
+## Why there is a separate DevTools cross-check
+
+Every other file here verifies the extension by asking `chrome.cookies` what
+happened. That is the same API the extension uses, so if Chrome's extension
+API ever disagreed with how the browser really stores things, those tests
+would agree with the bug and still report green.
+
+`test_devtools_crosscheck.py` asks a second, independent source: the Chrome
+DevTools Protocol. `Storage.getCookies` and `Network.requestWillBeSent` are
+the calls behind DevTools' own Application and Network panels, so it is in
+substance the same check as opening DevTools and reading the tables by hand.
+It compares what the popup *displays*, field by field, against what Chrome
+reports.
+
+It also covers the one case the other CHIPS test cannot. `test_partitioned.py`
+sets `partitionKey` directly through `chrome.cookies`, which only proves the
+extension can read back what it itself wrote. This one gets a real partitioned
+cookie the way the web makes them: a cross-site iframe over real TLS returning
+a real `Set-Cookie: ...; Partitioned` header.
+
+That needs a genuine HTTPS origin, so the file starts a local TLS server and
+maps two hostnames onto it. It is worth knowing why. The first attempt served
+those pages through Playwright's request interception, and Chrome stored the
+cookie but **ignored the Partitioned attribute entirely**, because route
+fulfilment does not go through the code path that applies partitioning. That
+looked exactly like a real finding about Chrome, and was not. Telling those
+two apart is the whole reason this file exists.
+
+The certificate is generated at runtime with `openssl`, into the gitignored
+profiles directory. If `openssl` is not on the machine, that one check reports
+SKIPPED rather than failing.
 
 ## What these tests CANNOT cover
 

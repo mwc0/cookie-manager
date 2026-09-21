@@ -21,6 +21,7 @@ FILES = [
     "test_search.py",
     "test_protect.py",
     "test_no_network.py",
+    "test_devtools_crosscheck.py",
 ]
 
 
@@ -41,6 +42,7 @@ def main():
     print(f"All {len(FILES)} test files passed.")
     print("\nReminder: the permission prompt and incognito behaviour are NOT")
     print("covered here and need checking by hand -- see README.md.")
+    print("Both were checked once; the results are in docs/NOTES.md.")
     return 0
 
 
