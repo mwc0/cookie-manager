@@ -14,7 +14,7 @@ and the one wording decision worth making deliberately before submitting.
 *Limit: 75 characters. Roughly the first 45 show in search results.*
 
 ```
-Cookie Manager — view, edit and delete cookies
+Cookie Manager: view, edit and delete cookies
 ```
 
 ## Summary
@@ -37,7 +37,7 @@ English (United Kingdom)
 
 ## Description
 
-*Limit: 16,000 characters. Plain text — the store strips most formatting, so
+*Limit: 16,000 characters. Plain text, since the store strips most formatting, so
 this is written to read well without it.*
 
 ```
@@ -47,13 +47,13 @@ who wants to see what sites are storing on their machine.
 WHAT IT DOES
 
 • Lists every cookie for the site you're on, with domain, path, expiry and
-  flags — Secure, HttpOnly, HostOnly, SameSite and partitioned (CHIPS).
+  flags: Secure, HttpOnly, HostOnly, SameSite and partitioned (CHIPS).
 
 • Deletes cookies at three scopes: this page, this domain and its subdomains,
   or every site in your browser profile. Before anything is removed you see
   the exact count and the exact list of domains affected.
 
-• Creates and edits cookies — name, value, domain, path, expiry, Secure,
+• Creates and edits cookies: name, value, domain, path, expiry, Secure,
   HttpOnly and SameSite.
 
 • Searches by name, value, domain or path. While a search is active you get a
@@ -75,7 +75,7 @@ partitioned cookies, and you only find out later when you're still logged in
 somewhere you meant to clear.
 
 This one shows you the number and the domains before it acts, and the number
-it shows is taken from the same query that does the deleting — so what it
+it shows is taken from the same query that does the deleting, so what it
 says and what it does cannot drift apart. Partitioned (CHIPS) cookies are
 included, which is the case most often missed.
 
@@ -93,7 +93,7 @@ That means:
 • Nothing sold, shared or transferred to anyone
 
 You don't have to take that on trust. Open DevTools, watch the Network tab,
-and use the extension — you'll see nothing leave. The source is plain
+and use the extension. You'll see nothing leave. The source is plain
 JavaScript, HTML and CSS with no build step, no bundler, no minification and
 no dependencies, so what's published is exactly what was written, and you can
 read all of it.
@@ -105,7 +105,7 @@ The install prompt asks for two things: access to cookies, and local storage
 to remember which cookies you've marked as Kept.
 
 Access to websites is requested separately, at runtime, the first time you
-open the popup — not at install. Chrome won't release a single cookie to an
+open the popup, not at install. Chrome won't release a single cookie to an
 extension without it, so a cookie manager genuinely needs it, but it's kept
 out of the install prompt so you can see exactly what you're agreeing to and
 when. You can decline it, and revoke it later.
@@ -118,9 +118,9 @@ OPEN SOURCE
 Full source, including the automated tests:
 https://github.com/mwc0/cookie-manager
 
-The tests cover the things that fail silently — a "delete all" that leaves
+The tests cover the things that fail silently: a "delete all" that leaves
 cookies behind, a host-only cookie that quietly becomes domain-wide, a
-session cookie that silently becomes permanent — plus a check that the
+session cookie that silently becomes permanent. They also check that the
 extension makes no outbound requests.
 
 This is free, with no ads and no paid upgrade required to use any of the
@@ -146,7 +146,7 @@ deletion.
 ## Permission justifications
 
 *Required. The store asks for a justification per permission, and these are
-read by a human reviewer. Keep them specific — vague justifications are a
+read by a human reviewer. Keep them specific, because vague justifications are a
 common cause of review delays.*
 
 ### `cookies`
@@ -199,7 +199,7 @@ The source is unminified and unbundled.
 | Personally identifiable information | No |
 | Health information | No |
 | Financial and payment information | No |
-| Authentication information | **No** — see the note below |
+| Authentication information | **No**, see the note below |
 | Personal communications | No |
 | Location | No |
 | Web history | No |
@@ -208,8 +208,8 @@ The source is unminified and unbundled.
 
 **The note on authentication information.** The extension displays session
 cookies, which are authentication-related, and a reviewer may reasonably
-query this. The disclosure question asks what you *collect* — meaning
-transmit off the user's device — and the answer is nothing. The cookies are
+query this. The disclosure question asks what you *collect*, meaning
+transmit off the user's device, and the answer is nothing. The cookies are
 read and shown on screen, never gathered, stored or sent. If the dashboard
 wording ever makes this ambiguous, say exactly that in the notes field rather
 than ticking a box that implies transmission.

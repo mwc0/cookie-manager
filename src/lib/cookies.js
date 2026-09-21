@@ -174,7 +174,7 @@ export function summarise(cookies) {
 // Deliberately not cookieKey() above: that one dedupes query results and
 // compares the stored domain string as-is. Here we need the *effective*
 // identity, because a host-only cookie is stored as "example.com" and a
-// domain-wide one as ".example.com" — same host, different cookie.
+// domain-wide one as ".example.com": same host, different cookie.
 function identityOf(parts) {
   return [
     parts.name,
@@ -277,7 +277,7 @@ export function validateCookieValues(values) {
 // Create or update a cookie.
 //
 // `original` is the cookie being edited, or null when creating a new one.
-// Returns { ok, cookie, error } — never throws at the caller.
+// Returns { ok, cookie, error }. Never throws at the caller.
 export async function writeCookie(original, values) {
   const details = buildSetDetails(values);
 
@@ -322,7 +322,7 @@ export async function writeCookie(original, values) {
   }
 
   // A null result should be a real failure now that the URL covers the path,
-  // but that assumption has bitten once already — so check rather than trust
+  // but that assumption has bitten once already, so check rather than trust
   // it, and only report a failure if the cookie genuinely isn't there.
   const landed = await chrome.cookies.getAll({
     url: details.url,

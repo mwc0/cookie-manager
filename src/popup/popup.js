@@ -39,7 +39,7 @@ let scopeCookies = [];
 
 // The cookie currently open in the editor, or null when creating a new one.
 // Held because saving needs the ORIGINAL identity to remove, not the edited
-// one — see writeCookie().
+// one. See writeCookie().
 let editing = null;
 
 // Every cookie for this page, and the subset the search box is showing.
@@ -227,7 +227,7 @@ async function refreshScope() {
   let inScope;
   try {
     // "matches" is the search box's scope, and deletes exactly the rows on
-    // screen — the same array the table was drawn from, not a re-query that
+    // screen: the same array the table was drawn from, not a re-query that
     // could disagree with it.
     inScope =
       selectedScope() === "matches"
@@ -253,7 +253,7 @@ async function refreshScope() {
   if (count === 0) {
     summaryLine.textContent =
       kept.length > 0
-        ? "Nothing to delete in this scope —" + keptNote
+        ? "Nothing to delete in this scope." + keptNote
         : "Nothing to delete in this scope.";
     el("delete-button").disabled = true;
     return;
@@ -333,7 +333,7 @@ async function runDelete() {
         pluralise(removed, "cookie", "cookies") +
         ". " +
         pluralise(failed.length, "cookie", "cookies") +
-        " could not be deleted — they may be protected by the browser.";
+        " could not be deleted, and may be protected by the browser.";
     }
   } catch (error) {
     result.className = "result error";
@@ -399,7 +399,7 @@ function openEditor(cookie) {
   syncExpiryEnabled();
 
   // Partitioned cookies are carried through a save untouched. The partition
-  // isn't editable here — there's no safe way to offer that without a much
+  // isn't editable here: there's no safe way to offer that without a much
   // longer explanation than this popup has room for.
   const partition = el("edit-partition");
   if (cookie && cookie.partitionKey) {
@@ -457,8 +457,8 @@ function showFormErrors(errors) {
   list.hidden = errors.length === 0;
 }
 
-// Chrome caps how far ahead a cookie may expire — 400 days at the time of
-// writing — and it applies the cap silently: ask for 2030 and it stores a
+// Chrome caps how far ahead a cookie may expire (400 days at the time of
+// writing) and it applies the cap silently: ask for 2030 and it stores a
 // date about thirteen months out without a word. Saying "Saved" and leaving
 // it there would be claiming something that didn't happen, so compare what
 // Chrome actually stored against what was asked for and report the gap.
@@ -482,7 +482,7 @@ function describeExpiryChange(values, saved) {
   return (
     " Chrome shortened the expiry to " +
     formatExpiryFull({ expirationDate: saved.expirationDate }).replace(/^Expires /, "") +
-    " — it limits how far ahead a cookie is allowed to expire."
+    " It limits how far ahead a cookie is allowed to expire."
   );
 }
 

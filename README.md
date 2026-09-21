@@ -4,7 +4,7 @@ A Chrome cookie manager (Manifest V3), built to replace EditThisCookie.
 
 **Status: the planned v1 feature set is complete and its behaviour has been
 verified**, including incognito. What's left before a store release is the
-listing itself — copy, screenshots and a privacy policy — and some wider
+listing itself: copy, screenshots and a privacy policy, plus some wider
 real-world use. Treat it as a late beta rather than finished.
 
 ## Install for testing
@@ -14,7 +14,7 @@ There is no build step. The extension loads directly as source.
 1. Clone or download this repo.
 2. Open `chrome://extensions`.
 3. Turn on **Developer mode** (top right).
-4. Click **Load unpacked** and select the **`src`** folder — not the repo root.
+4. Click **Load unpacked** and select the **`src`** folder, not the repo root.
 
 To test incognito behaviour, open the extension's **Details** page and turn on
 **Allow in incognito**, or the popup won't open in a private window.
@@ -24,14 +24,14 @@ After editing any file, press the reload icon on the extension's card.
 ## What it does so far
 
 - Lists the current site's cookies, with domain, path, expiry and flags.
-- Deletes cookies at three scopes — this page, this domain and its subdomains,
-  or every site in the profile — always showing the exact count and the exact
+- Deletes cookies at three scopes: this page, this domain and its subdomains,
+  or every site in the profile. It always shows the exact count and the exact
   domains affected before anything is removed.
 - Creates and edits cookies, including the awkward parts other editors get
   wrong: a host-only cookie stays host-only, a session cookie doesn't quietly
   become permanent, and renaming one moves it instead of leaving two behind.
 - Deletes a single cookie from its row, on a second click rather than a dialog.
-- Tells you when Chrome silently changes what you asked for — it caps cookie
+- Tells you when Chrome silently changes what you asked for. It caps cookie
   expiry at about 400 days, so asking for a date beyond that says so instead
   of showing you a date that isn't what was stored.
 - Searches the current tab's cookies by name, value, domain or path. While a
@@ -39,7 +39,7 @@ After editing any file, press the reload icon on the extension's card.
   filtering and then deleting removes what you can see rather than silently
   reaching past it.
 - Lets you mark a cookie as **kept**, which excludes it from every delete this
-  extension makes — including "All sites" — and says so in the count before
+  extension makes, including "All sites", and says so in the count before
   you delete. It's a guard on this extension's own delete button, not
   protection from the website: nothing here stops a site changing its own
   cookies.
@@ -55,7 +55,7 @@ it.
 
 No network requests. No telemetry or analytics. No ads, affiliate links or
 injected content. No remote code. These are the reason the project exists, not
-preferences — see `CLAUDE.md` for the full list and `docs/SPEC.md` for why.
+preferences. See `CLAUDE.md` for the full list and `docs/SPEC.md` for why.
 
 The source is deliberately plain JavaScript with no build step, no bundler and
 no dependencies, so you can read exactly what it does before trusting it with

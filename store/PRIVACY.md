@@ -1,4 +1,4 @@
-# Privacy Policy — Cookie Manager
+# Privacy Policy: Cookie Manager
 
 **Last updated: 21 September 2026**
 
@@ -43,7 +43,7 @@ own computer. It records only enough to recognise a cookie again:
 - the cookie's name
 - its domain
 - its path
-- for a partitioned (CHIPS) cookie only, its partition key — which includes
+- for a partitioned (CHIPS) cookie only, its partition key, which includes
   the top-level site the cookie is partitioned under
 
 It never includes cookie **values**.
@@ -52,7 +52,7 @@ That fourth item is worth stating plainly rather than glossing: for
 partitioned cookies you have chosen to keep, the stored list will contain the
 name of the site they are partitioned under. It is written to your own disk,
 it is not synced to any account, not backed up anywhere, not readable by any
-website, and never transmitted — but it is a site name, so you should know it
+website, and never transmitted. But it is a site name, so you should know it
 is there.
 
 Nothing is stored for cookies you have not marked as Kept. Uninstalling the
@@ -69,13 +69,13 @@ never written to any file, and never stored by the extension.
 
 ## Permissions, and why each one exists
 
-**`cookies`** — required to read, create, edit and delete cookies. Without it
+**`cookies`**: required to read, create, edit and delete cookies. Without it
 the extension cannot do anything at all.
 
-**`storage`** — required to remember which cookies you marked as Kept, so the
+**`storage`**: required to remember which cookies you marked as Kept, so the
 setting survives closing the popup.
 
-**Access to websites** (`*://*/*`) — Chrome will not release a single cookie
+**Access to websites** (`*://*/*`): Chrome will not release a single cookie
 to an extension without permission for the site that cookie belongs to. This
 permission is **optional**: it is deliberately kept out of the install prompt
 and requested at runtime, the first time you open the popup. You can decline
@@ -95,7 +95,7 @@ transferred or disclosed to anyone, because no data leaves your device.
 
 The extension runs no remote code. Everything it executes ships inside the
 extension package and can be read in full. This is required by Chrome's
-Manifest V3 and is also a deliberate design choice — see below.
+Manifest V3 and is also a deliberate design choice. See below.
 
 ## Verifying all of this yourself
 
