@@ -1,7 +1,20 @@
 /* System fonts only. Loading a web font would be a network request, which
    this extension never makes. */
 
+/* Theme.
+
+   popup/apply-theme.js sets data-theme on <html> to "light" or "dark" before
+   the first paint, and the Auto / Light / Dark control in the header changes
+   it. "Auto" is resolved in JS, not here, so the dark colours below exist in
+   exactly one place instead of being repeated inside a media query -- see
+   src/lib/theme.js for why.
+
+   Because of that, there is no prefers-color-scheme fallback: if
+   apply-theme.js stops running, the popup is light on a dark OS. */
+
 :root {
+  color-scheme: light;
+
   --bg: #ffffff;
   --fg: #1a1a1a;
   --muted: #6b6b6b;
@@ -13,18 +26,20 @@
   --badge: #ececec;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1e1e1e;
-    --fg: #e8e8e8;
-    --muted: #9a9a9a;
-    --line: #3a3a3a;
-    --panel: #272727;
-    --accent: #7aa7ee;
-    --danger: #f2837c;
-    --danger-bg: #331f1e;
-    --badge: #3a3a3a;
-  }
+:root[data-theme="dark"] {
+  /* color-scheme also darkens what the browser draws itself: scrollbars, the
+     search field's clear button, and the date picker in the editor. */
+  color-scheme: dark;
+
+  --bg: #1e1e1e;
+  --fg: #e8e8e8;
+  --muted: #9a9a9a;
+  --line: #3a3a3a;
+  --panel: #272727;
+  --accent: #7aa7ee;
+  --danger: #f2837c;
+  --danger-bg: #331f1e;
+  --badge: #3a3a3a;
 }
 
 * {
@@ -335,6 +350,73 @@ td.value.expanded .value-toggle {
 .bar-actions {
   display: flex;
   gap: 6px;
+}
+
+/* --- theme control ------------------------------------------------------
+
+   Radio inputs rather than buttons, so arrow keys move between the three
+   options the way a segmented control is expected to behave. The inputs
+   themselves are hidden and the labels are what you see and click. */
+
+.theme {
+  display: flex;
+  align-items: stretch;
+  /* Larger than the control can ever be, so the ends stay semicircular
+     whatever height the header settles at. */
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* No dividing lines between the segments: on a pill they fight the rounded
+   ends, and the filled segment already shows which one is active. */
+.theme label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Both icons are drawn with currentColor, so they pick up the label's colour
+   and invert against the filled segment without a second rule. */
+.theme svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+/* The "A" stands in for an icon, so it is sized to match the two that are. */
+.theme-glyph {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.theme label:hover {
+  background: var(--panel);
+  color: var(--fg);
+}
+
+/* Must come after the :hover rule. Both selectors have the same specificity,
+   so source order is the only thing making the selected segment stay
+   highlighted while the pointer is over it -- and it always is, because you
+   just clicked it. */
+.theme input:checked + label {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+/* The inputs are clipped out of sight, which takes their focus ring with
+   them, so the label has to show focus instead or the control is invisible
+   to keyboard users. */
+.theme input:focus-visible + label {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
 }
 
 td.row-actions {

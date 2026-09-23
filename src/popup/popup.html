@@ -6,6 +6,11 @@
     <!-- Local stylesheet only. No web fonts, no CDN: the extension makes no
          network requests of any kind. -->
     <link rel="stylesheet" href="popup.css" />
+
+    <!-- Deliberately NOT type="module" and NOT deferred: this has to run
+         before the first paint, or a dark-theme popup flashes white on every
+         open. It is the only script here that is not a module. -->
+    <script src="apply-theme.js"></script>
   </head>
   <body>
     <!-- Only one of these sections is visible at a time. popup.js decides
@@ -64,6 +69,66 @@
           <p id="cookie-count" class="muted"></p>
         </div>
         <div class="bar-actions">
+          <!-- Auto follows the operating system and is the default, so the
+               popup behaves as it always did until someone chooses otherwise. -->
+          <div class="theme" role="radiogroup" aria-label="Colour theme">
+            <input
+              type="radio"
+              name="theme"
+              id="theme-auto"
+              value="auto"
+              class="visually-hidden"
+            />
+            <label for="theme-auto" title="Follow the system theme">
+              <span class="theme-glyph" aria-hidden="true">A</span>
+              <span class="visually-hidden">Auto</span>
+            </label>
+
+            <input
+              type="radio"
+              name="theme"
+              id="theme-light"
+              value="light"
+              class="visually-hidden"
+            />
+            <label for="theme-light" title="Always use the light theme">
+              <!-- Inline SVG, because an icon font or a sprite sheet would be
+                   a network request. currentColor makes both icons follow the
+                   label's own colour, so they invert when selected. -->
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="4.2" fill="currentColor" />
+                <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <line x1="12" y1="1.5" x2="12" y2="3.6" />
+                  <line x1="12" y1="20.4" x2="12" y2="22.5" />
+                  <line x1="1.5" y1="12" x2="3.6" y2="12" />
+                  <line x1="20.4" y1="12" x2="22.5" y2="12" />
+                  <line x1="4.6" y1="4.6" x2="6.1" y2="6.1" />
+                  <line x1="17.9" y1="17.9" x2="19.4" y2="19.4" />
+                  <line x1="4.6" y1="19.4" x2="6.1" y2="17.9" />
+                  <line x1="17.9" y1="6.1" x2="19.4" y2="4.6" />
+                </g>
+              </svg>
+              <span class="visually-hidden">Light</span>
+            </label>
+
+            <input
+              type="radio"
+              name="theme"
+              id="theme-dark"
+              value="dark"
+              class="visually-hidden"
+            />
+            <label for="theme-dark" title="Always use the dark theme">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span class="visually-hidden">Dark</span>
+            </label>
+          </div>
+
           <button id="add-button" type="button" title="Create a new cookie">
             Add cookie
           </button>

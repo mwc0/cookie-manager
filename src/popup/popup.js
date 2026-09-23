@@ -27,6 +27,13 @@ import {
   toLocalDateTimeValue,
   fromLocalDateTimeValue,
 } from "../lib/format.js";
+import {
+  loadTheme,
+  saveTheme,
+  applyTheme,
+  mirror,
+  watchSystemTheme,
+} from "../lib/theme.js";
 import { renderCookieTable } from "./render.js";
 
 // The site in the current tab: { origin, hostname }.
@@ -574,6 +581,42 @@ async function deleteOne(cookie) {
   await refresh();
 }
 
+// --- theme -----------------------------------------------------------------
+
+// The saved choice: "auto", "light" or "dark". Held here because the OS
+// listener below needs to know whether the user has pinned a theme -- once
+// they have, the OS flipping at sunset must not override it.
+let themeChoice = "auto";
+
+async function initTheme() {
+  const { choice, error } = await loadTheme();
+  themeChoice = choice;
+
+  // apply-theme.js has already painted from the localStorage mirror. Doing it
+  // again from the real value corrects the rare case where the two disagree,
+  // such as the first open after the choice was made in another profile.
+  applyTheme(choice);
+  mirror(choice);
+
+  const radio = document.querySelector('input[name="theme"][value="' + choice + '"]');
+  if (radio) {
+    radio.checked = true;
+  }
+
+  if (error) {
+    showMainMessage(error, true);
+  }
+}
+
+async function chooseTheme(choice) {
+  themeChoice = choice;
+
+  const { error } = await saveTheme(choice);
+  if (error) {
+    showMainMessage(error, true);
+  }
+}
+
 // --- events ----------------------------------------------------------------
 
 el("grant-button").addEventListener("click", async () => {
@@ -643,5 +686,22 @@ for (const radio of document.querySelectorAll('input[name="scope"]')) {
 el("delete-button").addEventListener("click", startConfirm);
 el("confirm-no").addEventListener("click", cancelConfirm);
 el("confirm-yes").addEventListener("click", runDelete);
+
+for (const radio of document.querySelectorAll('input[name="theme"]')) {
+  radio.addEventListener("change", () => chooseTheme(radio.value));
+}
+
+// Keep "auto" honest while the popup is open. A pinned light or dark choice
+// ignores the OS, which is the whole point of pinning it.
+watchSystemTheme(() => {
+  if (themeChoice === "auto") {
+    applyTheme("auto");
+  }
+});
+
+// Started before init() and deliberately not awaited: the theme is already on
+// screen from apply-theme.js, so this only reconciles it with storage and has
+// no reason to hold up reading cookies.
+initTheme();
 
 init();
