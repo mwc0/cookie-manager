@@ -25,8 +25,9 @@ After editing any file, press the reload icon on the extension's card.
 
 - Lists the current site's cookies, with domain, path, expiry and flags.
 - Deletes cookies at three scopes: this page, this domain and its subdomains,
-  or every site in the profile. It always shows the exact count and the exact
-  domains affected before anything is removed.
+  or every site in the profile, plus a fourth while searching (below). It
+  always shows the exact count and the exact domains affected before anything
+  is removed.
 - Creates and edits cookies, including the awkward parts other editors get
   wrong: a host-only cookie stays host-only, a session cookie doesn't quietly
   become permanent, and renaming one moves it instead of leaving two behind.
@@ -43,6 +44,7 @@ After editing any file, press the reload icon on the extension's card.
   you delete. It's a guard on this extension's own delete button, not
   protection from the website: nothing here stops a site changing its own
   cookies.
+- Has a light, dark or automatic (follow the system) colour theme.
 
 ## Permissions
 

@@ -102,7 +102,8 @@ read all of it.
 MINIMAL PERMISSIONS
 
 The install prompt asks for two things: access to cookies, and local storage
-to remember which cookies you've marked as Kept.
+to remember which cookies you've marked as Kept and whether you chose a light
+or dark theme.
 
 Access to websites is requested separately, at runtime, the first time you
 open the popup, not at install. Chrome won't release a single cookie to an
@@ -161,10 +162,11 @@ explicit request. There is no feature that does not depend on it.
 ### `storage`
 
 ```
-Used to store one thing locally: the list of cookies the user has marked as
-"Kept", so the extension remembers to exclude them from deletion after the
-popup closes. Each entry holds a cookie's name, domain and path, plus its
-partition key for partitioned (CHIPS) cookies. It never holds cookie values.
+Used to store two things locally. First, the list of cookies the user has
+marked as "Kept", so the extension remembers to exclude them from deletion
+after the popup closes. Each entry holds a cookie's name, domain and path,
+plus its partition key for partitioned (CHIPS) cookies. It never holds cookie
+values. Second, the user's colour theme choice: "auto", "light" or "dark".
 Stored via chrome.storage.local; nothing is synced or transmitted.
 ```
 

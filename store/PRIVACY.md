@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 21 September 2026**
+**Last updated: 23 September 2026**
 
 ## The short version
 
@@ -34,8 +34,19 @@ component, so there is no place for your data to go even in principle.
 
 ## What this extension stores on your device
 
-One thing: the list of cookies you have marked as **Kept**, so that the
-extension remembers not to delete them.
+Two things, both kept on your own computer and never transmitted.
+
+### Your colour theme
+
+Whether you chose Auto, Light or Dark. That is the whole record: one of those
+three words. It is stored twice, in Chrome's `storage.local` and in the popup's
+own browser storage. The second copy exists only so the popup can draw in the
+right colours instantly instead of flashing white first.
+
+### Cookies you have marked as Kept
+
+The list of cookies you have marked as **Kept**, so that the extension
+remembers not to delete them.
 
 That list is stored using Chrome's `storage.local` API, which keeps it on your
 own computer. It records only enough to recognise a cookie again:
@@ -56,7 +67,7 @@ website, and never transmitted. But it is a site name, so you should know it
 is there.
 
 Nothing is stored for cookies you have not marked as Kept. Uninstalling the
-extension removes the list.
+extension removes the list, and the theme setting with it.
 
 ## Cookies the extension reads
 
@@ -72,8 +83,8 @@ never written to any file, and never stored by the extension.
 **`cookies`**: required to read, create, edit and delete cookies. Without it
 the extension cannot do anything at all.
 
-**`storage`**: required to remember which cookies you marked as Kept, so the
-setting survives closing the popup.
+**`storage`**: required to remember which cookies you marked as Kept, and
+your colour theme, so both survive closing the popup.
 
 **Access to websites** (`*://*/*`): Chrome will not release a single cookie
 to an extension without permission for the site that cookie belongs to. This
