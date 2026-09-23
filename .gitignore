@@ -16,3 +16,18 @@ desktop.ini
 # Throwaway Chrome profiles created by the browser tests
 tests/.profiles/
 __pycache__/
+
+# Personal Claude Code settings. Machine-specific, and not something to
+# impose on anyone who clones the repo.
+.claude/settings.local.json
+
+# Pre-granted copy of the extension, rebuilt by the browser tests
+tests/.pregranted-*/
+
+# Google's agent skills (chrome-extensions, modern-web-guidance). Third-party
+# reference files for the AI assistant, not part of the project. Reinstall
+# on a new machine with:
+#   npx modern-web-guidance@latest install --choose
+.agents/
+.claude/skills/
+skills-lock.json
