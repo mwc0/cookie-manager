@@ -9,15 +9,31 @@ actually loads end up in the store zip.
 
 Design notes, since the constraint is unusual:
 
-The icon has to survive being 16 pixels wide in a toolbar. That rules out
-thin strokes, gradients, fine detail and anything that depends on reading
-text. What is left is a silhouette and two or three colours, so this is a
-plain cookie disc with chunky chips -- the chips are deliberately oversized
-relative to a real cookie, because at 16px a proportionally-correct chip is
-one pixel and disappears.
+The mark is the keycap Z from the promo tile, not a cookie. A cookie is what
+every other extension in this category already draws; the keycap says
+developer tool without a word, and it stops "cookieZ" reading as a typo for
+"cookies".
 
-Warm brown rather than the UI's blue: developer-tool listings are a sea of
-blue icons, and a cookie is the one shape this product can own outright.
+The icon has to survive being 16 pixels wide in a toolbar. That rules out
+thin strokes, gradients, fine detail and real text. So this is built from
+flat shapes only, and the Z is drawn as three polygons rather than set in a
+font -- a font would also make the output depend on whatever is installed on
+the machine that runs this.
+
+The keycap is read from the silhouette: a dark rounded square with a lighter
+face inset into it, the inset deeper at the bottom than the top. That band of
+darker colour along the bottom is what makes it look like a raised key rather
+than a letter in a box, and it is the one cue that still survives at 16px.
+
+The greys are the promo tile's, so the two read as the same object: #1f2633
+for the legend and the #c2cad8 family for the key. The one departure is that
+the edge here is a step darker than the tile's border. The tile can lean on a
+2px border and a drop shadow to separate the key from its background; at 16px
+both of those turn to mush, so the edge has to carry that on its own.
+
+A light key does lose its outline against a light toolbar. That is survivable
+because the near-black Z is what identifies the icon, and it holds at every
+size on both toolbar themes -- the key reads as the thing the Z sits on.
 """
 
 import sys
@@ -31,17 +47,30 @@ SIZES = [16, 32, 48, 128]
 # 128x128 viewBox. Flat shapes only, no strokes, no gradients.
 SVG = """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <!-- Body. Slightly off-centre chips keep it from reading as a clock face. -->
-  <circle cx="64" cy="64" r="58" fill="#c8813a"/>
-  <circle cx="64" cy="64" r="58" fill="none"/>
-  <!-- A lighter inner disc gives the edge definition without a stroke,
-       which would thin out to nothing at 16px. -->
-  <circle cx="64" cy="64" r="50" fill="#e0a05a"/>
-  <!-- Chips: oversized on purpose so they still register at 16px. -->
-  <circle cx="45" cy="44" r="11" fill="#5b3418"/>
-  <circle cx="84" cy="52" r="9"  fill="#5b3418"/>
-  <circle cx="54" cy="80" r="10" fill="#5b3418"/>
-  <circle cx="86" cy="86" r="8"  fill="#5b3418"/>
+  <!-- The key itself. This is the whole silhouette; the face is cut out of
+       it below rather than drawn on top of a separate shape. -->
+  <rect x="8" y="8" width="112" height="112" rx="24" fill="#b3bccb"/>
+
+  <!-- The face, inset 10 at the sides and 6 at the top but 26 at the bottom.
+       That uneven bottom inset is the entire 3D effect: it leaves a band of
+       the darker colour showing, which reads as the front edge of a raised
+       key. Even at 16px it survives as one darker row of pixels. -->
+  <rect x="18" y="14" width="92" height="80" rx="16" fill="#f5f8fc"/>
+
+  <!-- Z, as three flat shapes: two bars and the parallelogram between them.
+       Sized to fill most of the face, because a proportionally-polite letter
+       is unreadable once the icon is 16 pixels wide.
+
+       The numbers interlock, so change them together: the bars are 14 deep,
+       the diagonal spans exactly the gap between them (y 42 to 66), and it
+       overlaps the right end of the top bar and the left end of the bottom
+       one so the three read as a single stroke. The block is centred on the
+       FACE (y 14 to 94), not on the icon, or it sits low on the key. -->
+  <g fill="#1f2633">
+    <rect x="38" y="28" width="52" height="14"/>
+    <polygon points="90,42 70,42 38,66 58,66"/>
+    <rect x="38" y="66" width="52" height="14"/>
+  </g>
 </svg>
 """
 

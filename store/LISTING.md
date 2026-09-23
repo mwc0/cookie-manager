@@ -14,7 +14,7 @@ and the one wording decision worth making deliberately before submitting.
 *Limit: 75 characters. Roughly the first 45 show in search results.*
 
 ```
-cookieZ - cookie editor
+cookieZ - Cookie Editor
 ```
 
 ## Summary
