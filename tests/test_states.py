@@ -13,9 +13,9 @@ import sys
 from playwright.sync_api import sync_playwright
 
 from helpers import (
+    EXTENSION,
     Results,
     extension_id,
-    grant_host_permission,
     launch,
     open_popup,
     popup_url,
@@ -30,7 +30,12 @@ def main():
     r = Results("Popup states")
 
     with sync_playwright() as p:
-        context = launch(p, "states")
+        # The REAL src/, not the pre-granted copy the other tests load: these
+        # first two checks are the only coverage the optional-permission
+        # wiring has, and they need a genuinely ungranted profile to mean
+        # anything. Nothing here calls chrome.permissions.request() for real,
+        # so no native prompt appears.
+        context = launch(p, "states", extension=EXTENSION)
         ext_id = extension_id(context)
 
         # --- before any permission has been granted ---
@@ -63,14 +68,18 @@ def main():
         r.check("a denial leaves a working retry", deny.locator("#grant-button").is_enabled())
         deny.close()
         gate.close()
+        context.close()
+
+        # --- everything past the gate ---
+        # A second browser, on the pre-granted copy, so the screens that need
+        # permission are reached without raising the native prompt.
+        context = launch(p, "states-granted")
+        ext_id = extension_id(context)
 
         # --- a restricted page ---
         blocked = context.new_page()
         stub_active_tab(blocked, "chrome://version/")
         blocked.goto(popup_url(ext_id))
-        blocked.wait_for_timeout(400)
-        grant_host_permission(blocked)
-        blocked.reload()
         blocked.wait_for_timeout(900)
         blocked_message = blocked.locator("#blocked-message").text_content()
         r.check("a chrome:// page shows the blocked screen, not an empty table",

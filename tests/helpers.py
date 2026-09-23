@@ -19,7 +19,9 @@ Two things are worth understanding before changing any of this:
    are checked by hand -- see README.md.
 """
 
+import atexit
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -30,9 +32,93 @@ EXTENSION = REPO / "src"
 # test starts from a clean cookie store and an ungranted permission state.
 PROFILES = REPO / "tests" / ".profiles"
 
+# Throwaway copy of the extension, built by pregranted_extension(). Gitignored.
+#
+# The PID matters. run_all.py runs each test file as its own process, and a
+# finished test's Chrome can still hold this directory open for a moment after
+# the process that started it has gone. With a single shared path, the next
+# test would delete a directory Chrome was still reading -- which on Windows
+# fails rather than being ignored. One directory per process cannot collide.
+#
+# This is precaution, not a fix for something observed. It has not been seen
+# to happen.
+PREGRANTED = REPO / "tests" / f".pregranted-{os.getpid()}"
 
-def launch(playwright, name, extra_args=()):
-    """Start Chromium with the extension loaded, on a fresh profile."""
+# Built once per process; the second and later calls reuse it. Rebuilding
+# under a browser that is already running would reintroduce the same problem.
+_pregranted_ready = False
+
+
+def pregranted_extension():
+    """
+    A copy of src/ whose manifest asks for host access UP FRONT.
+
+    Chrome's optional-permission prompt is native browser UI that Playwright
+    cannot click, so anything calling chrome.permissions.request() blocks until
+    a human clicks Allow -- dozens of times across a full run. A REQUIRED host
+    permission is granted when the extension loads, with no prompt at all, so
+    the tests start from an already-granted state and run unattended.
+
+    src/manifest.json is never touched: the shipped extension still asks at
+    runtime. The trade-off is that the optional-permission wiring is no longer
+    exercised by most tests. test_states.py deliberately loads the real src/
+    and is the one place the gate screen and the Deny branch are covered, so
+    that path still has a test behind it.
+    """
+    global _pregranted_ready
+    if _pregranted_ready:
+        return PREGRANTED
+
+    # Best-effort tidy of copies left behind by earlier runs whose browser was
+    # still holding files at exit. Failing here is not worth stopping for.
+    for stale in PREGRANTED.parent.glob(".pregranted-*"):
+        if stale != PREGRANTED:
+            shutil.rmtree(stale, ignore_errors=True)
+
+    shutil.rmtree(PREGRANTED, ignore_errors=True)
+    shutil.copytree(EXTENSION, PREGRANTED)
+
+    path = PREGRANTED / "manifest.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    # host_permissions, NOT permissions: Manifest V3 keeps host patterns in
+    # their own key, and Chrome silently ignores a host pattern listed under
+    # permissions. That failure mode looks exactly like the extension having
+    # no access at all.
+    optional = manifest.pop("optional_host_permissions", [])
+    manifest["host_permissions"] = list(optional)
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+    # The copy has to stay the extension under test. If anything other than
+    # where the host permission sits has changed, the tests are no longer
+    # testing what ships, so fail loudly rather than quietly drift.
+    original = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
+    differing = {
+        key
+        for key in set(original) | set(manifest)
+        if original.get(key) != manifest.get(key)
+    }
+    if differing != {"host_permissions", "optional_host_permissions"}:
+        raise AssertionError(
+            "the pre-granted copy differs from src/manifest.json in unexpected "
+            f"ways: {sorted(differing)}"
+        )
+
+    _pregranted_ready = True
+    atexit.register(shutil.rmtree, PREGRANTED, ignore_errors=True)
+    return PREGRANTED
+
+
+def launch(playwright, name, extra_args=(), extension=None):
+    """
+    Start Chromium with the extension loaded, on a fresh profile.
+
+    Loads the pre-granted copy by default, so no native permission prompt ever
+    appears and the suite runs without anyone clicking Allow. Pass
+    `extension=EXTENSION` to load the real src/ instead and start from a
+    genuinely ungranted state -- test_states.py is the one place that wants it.
+    """
+    source = Path(extension) if extension else pregranted_extension()
+
     profile = PROFILES / name
     shutil.rmtree(profile, ignore_errors=True)
     profile.mkdir(parents=True, exist_ok=True)
@@ -44,8 +130,8 @@ def launch(playwright, name, extra_args=()):
         # visibly.
         headless=False,
         args=[
-            f"--disable-extensions-except={EXTENSION}",
-            f"--load-extension={EXTENSION}",
+            f"--disable-extensions-except={source}",
+            f"--load-extension={source}",
             "--no-first-run",
             *extra_args,
         ],
@@ -95,11 +181,15 @@ def stub_active_tab(page, url):
 
 def grant_host_permission(page):
     """
-    Grant the optional host permission.
+    Make sure the host permission is granted.
 
-    Calls the API directly, because the real prompt is native browser UI that
-    Playwright cannot click. This means the tests cover everything that
-    happens AFTER a grant, and nothing about the prompt itself.
+    Under the default pre-granted extension this is a no-op: the permission is
+    already held, so Chrome resolves immediately without showing anything. It
+    still matters when the real src/ is loaded, where it WILL raise the native
+    prompt that Playwright cannot click -- so only call it then if a human is
+    sitting there to click Allow.
+
+    Either way, the tests cover what happens after a grant, never the prompt.
     """
     return page.evaluate(
         "() => new Promise(resolve => "
