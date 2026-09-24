@@ -284,8 +284,11 @@ td.name {
 
 td.value {
   /* Narrower than the name column deliberately: a truncated value is one
-     click from being shown in full, a broken-up name is just hard to read. */
-  max-width: 134px;
+     click from being shown in full, a broken-up name is just hard to read.
+     The columns' minimum widths have to add up to less than the 747px the
+     popup gives the table, or it grows a sideways scrollbar. At 134px here
+     they came to 750. */
+  max-width: 128px;
 }
 
 td.session {
