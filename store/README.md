@@ -67,15 +67,69 @@ Two notes on how they're made, in case you ever adjust them:
 
 ## Before you submit
 
-- [ ] Re-run `tests/make_store_screenshots.py` if the UI changed since the
+For 1.0.0, all of these were done on 2026-09-24.
+
+- [x] Re-run `tests/make_store_screenshots.py` if the UI changed since the
       screenshots were last generated, and look at all five
-- [ ] Look at `promo-tile-440x280.png` shrunk to about 180px wide, which is
+- [x] Look at `promo-tile-440x280.png` shrunk to about 180px wide, which is
       roughly the size it is judged at in a search result
-- [ ] Re-read `PRIVACY.md` and confirm every claim is still true of the code
+- [x] Re-read `PRIVACY.md` and confirm every claim is still true of the code
       you are shipping. It is written in absolutes, which is only an asset
       while it stays accurate
-- [ ] Check the version number in `src/manifest.json` (still `0.1.0`; the
-      feature set is the planned v1, so `1.0.0` is the natural release)
-- [ ] Add an entry to `CHANGELOG.md` for the version being submitted, moving
+- [x] Bump the version in `src/manifest.json` (now `1.0.0`)
+- [x] Add an entry to `CHANGELOG.md` for the version being submitted, moving
       it out of Unreleased
-- [ ] Run `python store/package.py`, which builds the zip and checks it
+- [x] Run `python store/package.py`, which builds the zip and checks it
+- [x] Tag the release and attach the zip to a GitHub release, so anyone can
+      compare the store package against the source
+
+**Upload the zip attached to the GitHub release**, not a freshly rebuilt one.
+The release notes publish its SHA-256, and a rebuild can differ (zip files
+record timestamps), which would make that promise false.
+
+## At the dashboard
+
+- **Developer account:** a one-time US$5 registration fee, and the Google
+  account needs 2-Step Verification.
+- **Contact email:** shown to users, and where Google sends policy and
+  takedown notices, so it has to be one you read. A dedicated address keeps
+  your personal one off the listing.
+- **Paste each field** from `LISTING.md` in order. Upload the screenshots in
+  01 to 05 order and the promo tile.
+- **Choose deferred publishing**, so an approval doesn't publish the listing
+  before you're ready.
+- **Expect a longer review than average.** Broad host access (`*://*/*`, even
+  optional) is what Google's in-depth review looks for. That's normal, not a
+  sign of a problem.
+
+### Trader or non-trader
+
+Every developer must declare one or the other. It comes from EU consumer law
+(the Digital Services Act, in force since February 2024). Researched from
+Google's own pages on 2026-09-24:
+
+- **Trader:** "acting for purposes relating to his trade, business, craft or
+  profession". Google verifies your details and shows them **publicly at the
+  bottom of the listing**: legal name, physical address, phone number and
+  contact email. The FAQ says to use "an address you are comfortable having
+  shared publicly".
+- **Non-trader:** acting outside your trade or business. Nothing extra is
+  shown, but the listing tells users that EU consumer-protection rights don't
+  apply to any contract between you and them. For a free extension with no
+  contract to speak of, that costs little.
+- **You can switch later.** The FAQ says you can move between the two at any
+  time.
+- **Google won't decide it for you.** Its FAQ says it "can't provide direct
+  answers for your specific case".
+
+What that means for this project: 1.0.0 is free, with no payments, no
+account and no paid tier, so **non-trader is the defensible choice for the
+launch.** Once the paid tier ships, selling licences is plainly trade, so
+switch to trader **before** the first sale, and have a publishable address
+ready by then. Google's pages don't say whether a PO box or virtual office
+address is accepted, so check before relying on one. This is a reading of
+the rules, not legal advice.
+
+Sources:
+[trader disclosure policy](https://developer.chrome.com/docs/webstore/program-policies/trader-disclosure),
+[trader FAQ](https://developer.chrome.com/docs/webstore/program-policies/trader-verification-faq).
