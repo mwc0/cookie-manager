@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>cookieZ - Cookie Editor for Chrome</title>
+  <meta name="description" content="A free cookie editor for Chrome. View, create, edit and delete cookies. Deletes all of them when you ask, not just some. No ads, no tracking, no network requests.">
+  <link rel="canonical" href="https://cookiez.uk/">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="apple-touch-icon" href="images/icon-128.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="cookieZ - Cookie Editor for Chrome">
+  <meta property="og:description" content="View, create, edit and delete cookies. No ads, no tracking, no network requests.">
+  <meta property="og:url" content="https://cookiez.uk/">
+  <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="wordmark" href="./" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="privacy/">Privacy</a></li>
+          <li><a href="support/">Support</a></li>
+          <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="wrap">
+        <h1>See, edit and delete the cookies on any site</h1>
+        <p class="lede">cookieZ is a free cookie editor for Chrome. When you ask it to delete everything, it deletes everything. No ads, no tracking, and it never connects to the internet.</p>
+        <div class="actions">
+          <!-- Swap this for the store link once the listing is live:
+               <a class="button" href="STORE_URL">Add to Chrome</a> -->
+          <span class="button pending">Coming soon to the Chrome Web Store</span>
+          <a class="button secondary" href="https://github.com/mwc0/cookie-manager">View the source</a>
+        </div>
+        <p class="note">Free. Works in Chrome and other Chromium browsers.</p>
+        <div class="hero-shot">
+          <img class="shot" src="images/popup-01-overview.png" width="780" height="558" fetchpriority="high"
+               alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt">
+      <div class="wrap">
+        <h2>Can't log in to a site?</h2>
+        <p>A lot of login problems go away once you clear that one site's cookies. Chrome hides this a few menus deep. With cookieZ it's two clicks, and you see exactly what's about to go before anything is deleted.</p>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="wrap">
+        <h2>What it does</h2>
+        <ul class="features">
+          <li><strong>Lists every cookie</strong>For the site you're on, with domain, path, expiry and flags. Partitioned cookies included.</li>
+          <li><strong>Deletes at the scope you pick</strong>This page, this domain and its subdomains, or every site. The count and the list of sites are shown first.</li>
+          <li><strong>Creates and edits cookies</strong>Name, value, domain, path, expiry, Secure, HttpOnly and SameSite can all be changed.</li>
+          <li><strong>Searches</strong>By name, value, domain or path. While searching, you can delete just the cookies you can see.</li>
+          <li><strong>Keeps the ones you need</strong>Mark a cookie as Kept and cookieZ won't delete it, even when you clear every site.</li>
+          <li><strong>Tells you when Chrome changes things</strong>Chrome caps cookie expiry at about 400 days. If you ask for longer, cookieZ says so.</li>
+          <li><strong>Works in incognito</strong>Incognito cookies stay separate from your normal ones.</li>
+          <li><strong>Light or dark</strong>Or it can follow your system setting.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section alt">
+      <div class="wrap split">
+        <div>
+          <h2>Delete all means all</h2>
+          <p>Some cookie extensions say they've cleared everything when they've only cleared the site you're on. cookieZ shows you how many cookies will go and which sites they belong to, before it does anything.</p>
+          <p>That number comes from the same lookup that does the deleting, so what it says and what it does can't drift apart. Partitioned cookies, which many tools miss, are included.</p>
+        </div>
+        <img class="shot" src="images/popup-02-delete-scope.png" width="780" height="580" loading="lazy"
+             alt="The delete panel with All sites selected: 7 cookies across 5 domains, with the five domains listed underneath.">
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2>Nothing leaves your computer</h2>
+        <p>An extension that can read your cookies can read your logins, so you should be able to check what it does with them. cookieZ makes no network requests at all. No analytics, no error reports, no update checks, no fonts or scripts from the web.</p>
+        <p>You don't have to take that on trust. Open Chrome's DevTools, watch the Network tab and use the extension: nothing goes out. Or read the code. It's plain JavaScript with no build step and no dependencies, and all of it is <a href="https://github.com/mwc0/cookie-manager">on GitHub</a>.</p>
+        <ul class="facts">
+          <li>At install, it only asks for access to cookies and storage.</li>
+          <li>Access to websites is asked for separately, the first time you open it. You can say no.</li>
+          <li>It saves two things on your computer: the cookies you've marked as Kept, and your theme. Never cookie values.</li>
+        </ul>
+        <p style="margin-top: 20px;"><a href="privacy/">Read the full privacy policy</a></p>
+      </div>
+    </section>
+
+    <section class="section alt">
+      <div class="wrap">
+        <h2>A closer look</h2>
+        <div class="split tour">
+          <div>
+            <h3>Edit any field</h3>
+            <p>Change a cookie's value, expiry, path or flags, or make a new one. A cookie that was only for one host stays that way, and a session cookie doesn't quietly become permanent.</p>
+          </div>
+          <img class="shot" src="images/popup-03-edit.png" width="780" height="574" loading="lazy"
+               alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
+        </div>
+        <div class="split flip tour">
+          <div>
+            <h3>Search, then delete what you see</h3>
+            <p>Filter by name, value, domain or path. An extra delete option appears that removes only the cookies left on screen.</p>
+          </div>
+          <img class="shot" src="images/popup-04-search.png" width="780" height="441" loading="lazy"
+               alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
+        </div>
+        <div class="split tour">
+          <div>
+            <h3>Keep the logins you need</h3>
+            <p>Mark a cookie as Kept and it's left alone by every delete, even "All sites". The summary tells you how many it's skipping.</p>
+          </div>
+          <img class="shot" src="images/popup-05-keep.png" width="780" height="576" loading="lazy"
+               alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2>Free, and open source</h2>
+        <p>cookieZ is free to use, with no ads. The code is published under the MIT licence, so you can read it, check that the version in the Chrome Web Store matches it, and build it yourself if you'd rather.</p>
+        <div class="actions" style="justify-content: flex-start;">
+          <span class="button pending">Coming soon to the Chrome Web Store</span>
+          <a class="button secondary" href="https://github.com/mwc0/cookie-manager/releases">Releases</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; 2026 cookieZ</span>
+      <ul>
+        <li><a href="privacy/">Extension privacy</a></li>
+        <li><a href="website-privacy/">Website privacy</a></li>
+        <li><a href="support/">Support</a></li>
+        <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

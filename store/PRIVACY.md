@@ -143,4 +143,5 @@ be stated plainly rather than buried here.
 ## Contact
 
 Questions, or something in this policy that does not match what you observe:
-open an issue at https://github.com/mwc0/cookie-manager/issues
+email support@cookiez.uk, or open an issue at
+https://github.com/mwc0/cookie-manager/issues

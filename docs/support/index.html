@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Support - cookieZ</title>
+  <meta name="description" content="Help with the cookieZ cookie editor: common questions, and how to report a problem.">
+  <link rel="canonical" href="https://cookiez.uk/support/">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../#features">Features</a></li>
+          <li><a href="../privacy/">Privacy</a></li>
+          <li><a href="./" aria-current="page">Support</a></li>
+          <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <div class="wrap prose">
+      <h1>Support</h1>
+      <p class="updated">Common questions, and how to report a problem.</p>
+
+      <h2>Common questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Why does it ask for access to all websites?</summary>
+          <p>Chrome won't show an extension a site's cookies unless the extension has permission for that site. A cookie editor that works on any site needs permission for every site. cookieZ asks for it the first time you open it, not at install, and you can say no. You can also take it back later from the extension's Details page in <code>chrome://extensions</code>.</p>
+        </details>
+        <details>
+          <summary>It says "No cookies on this page" on a page that has cookies</summary>
+          <p>Chrome doesn't let extensions read cookies on its own pages, such as <code>chrome://</code> pages and the Chrome Web Store. Switch to a normal website and open cookieZ again.</p>
+        </details>
+        <details>
+          <summary>It doesn't open in incognito</summary>
+          <p>Chrome turns extensions off in incognito unless you allow them. Go to <code>chrome://extensions</code>, open cookieZ's Details, and turn on "Allow in incognito". Incognito cookies are kept separate from your normal ones, and deleting in one never touches the other.</p>
+        </details>
+        <details>
+          <summary>What does Keep do?</summary>
+          <p>A cookie marked as Kept is left out of every delete cookieZ makes, including "All sites". It only affects cookieZ's own delete buttons. The website that set the cookie can still change or remove it.</p>
+        </details>
+        <details>
+          <summary>I set an expiry date and it changed</summary>
+          <p>Chrome won't keep a cookie for more than about 400 days, and quietly shortens anything longer. cookieZ tells you when this happens, so the date you see is the one Chrome actually stored.</p>
+        </details>
+        <details>
+          <summary>Does "All sites" really delete everything?</summary>
+          <p>Yes, apart from any cookies you've marked as Kept. It includes partitioned cookies, which many tools miss. Before deleting, cookieZ shows how many cookies will go and which sites they belong to. Cookies in incognito are separate and aren't touched from a normal window.</p>
+        </details>
+        <details>
+          <summary>How do I remove it?</summary>
+          <p>Right-click the cookieZ icon and choose "Remove from Chrome", or remove it from <code>chrome://extensions</code>. This also deletes the two things it saved: your Kept list and your theme choice. Your cookies stay as they are.</p>
+        </details>
+      </div>
+
+      <h2>Report a problem</h2>
+      <p>Please <a href="https://github.com/mwc0/cookie-manager/issues">open an issue on GitHub</a>, or if you'd rather not, email <a href="mailto:support@cookiez.uk">support@cookiez.uk</a>. It helps to include:</p>
+      <ul>
+        <li>your Chrome version (from <code>chrome://version</code>)</li>
+        <li>the version of cookieZ (shown in <code>chrome://extensions</code>)</li>
+        <li>what you did, what you expected, and what happened instead</li>
+      </ul>
+      <p class="aside"><strong>Don't paste cookie values into an issue.</strong> Issues are public, emails can be forwarded, and a session cookie can be used to log in as you. The cookie's name and the site are usually enough.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; 2026 cookieZ</span>
+      <ul>
+        <li><a href="../privacy/">Extension privacy</a></li>
+        <li><a href="../website-privacy/">Website privacy</a></li>
+        <li><a href="./" aria-current="page">Support</a></li>
+        <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

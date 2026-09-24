@@ -36,6 +36,10 @@ from helpers import (
 )
 
 OUT = Path(__file__).resolve().parent.parent / "store" / "screenshots"
+
+# The bare popup captures, without the caption and canvas, for the website.
+# On a web page the popup should fill the image, not sit in a grey box.
+SITE_OUT = Path(__file__).resolve().parent.parent / "docs" / "images"
 SITE = "https://example.com/"
 
 # Obviously fake values. Nothing here resembles a real token.
@@ -139,6 +143,7 @@ def main():
             )
             png = page.locator("body").screenshot()
             compose(context, png, caption, OUT / f"{name}.png", clipped)
+            (SITE_OUT / f"popup-{name}.png").write_bytes(png)
             print(f"  wrote {name}.png" + ("  (content scrolls; faded)" if clipped else ""))
 
         # 1. overview

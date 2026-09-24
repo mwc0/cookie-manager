@@ -71,6 +71,7 @@ src/            the extension (this is what you load)
   popup/        popup UI
   lib/          shared helpers
 tests/          browser tests (not shipped -- see tests/README.md)
+docs/           the website, cookiez.uk (served by GitHub Pages)
 store/          listing copy, screenshots, privacy policy
 ```
 
