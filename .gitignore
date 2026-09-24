@@ -31,3 +31,8 @@ tests/.pregranted-*/
 .agents/
 .claude/skills/
 skills-lock.json
+
+# Private working notes, kept in a separate repo and cloned here
+.private/
+/CLAUDE.md
+.mcp.json

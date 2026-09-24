@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 23 September 2026**
+**Last updated: 24 September 2026**
 
 ## The short version
 
@@ -135,7 +135,8 @@ information from anyone, of any age.
 
 If this policy ever changes, the updated version will be published at the
 repository link above with a new date at the top, and the change will be
-described in the extension's release notes. Any change that introduced data
+described in the extension's release notes at
+https://github.com/mwc0/cookie-manager/releases. Any change that introduced data
 collection would be a fundamental change to what this extension is, and would
 be stated plainly rather than buried here.
 

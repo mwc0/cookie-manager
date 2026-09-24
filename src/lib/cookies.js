@@ -40,10 +40,11 @@ function dedupe(cookies) {
 // leave partitioned cookies behind -- which is the exact complaint we exist to
 // fix. We therefore also attempt a partitioned query and merge the results.
 //
-// NOT YET VERIFIED against a real browser: whether `partitionKey: {}` means
-// "any partition" in the installed Chrome version. It is wrapped in try/catch
-// so that if the argument is rejected we simply fall back to the plain result
-// rather than breaking the query. See docs/NOTES.md.
+// Checked against real Chrome: `partitionKey: {}` means "any partition", and a
+// plain getAll() really does miss partitioned cookies. tests/test_partitioned.py
+// and tests/test_devtools_crosscheck.py both prove it. It's still wrapped in
+// try/catch, so if a future Chrome rejects the argument we fall back to the
+// plain result rather than breaking the query.
 async function queryCookies(query) {
   const results = await chrome.cookies.getAll(query);
 
@@ -135,7 +136,7 @@ export async function getCookiesForScope(scope, page) {
 // mean picking the right one before you can find anything.
 //
 // v1 searches the current tab's cookies only. Searching across every domain is
-// a paid-tier feature -- see docs/SPEC.md.
+// planned for a later paid tier.
 export function filterCookies(cookies, query) {
   const needle = String(query || "").trim().toLowerCase();
   if (needle === "") {
@@ -167,7 +168,7 @@ export function summarise(cookies) {
 // --- writing -----------------------------------------------------------
 //
 // The awkward parts of chrome.cookies.set, all verified against Chrome rather
-// than assumed. See docs/NOTES.md.
+// than assumed. The tests for them are in tests/test_editor.py.
 
 // What makes two cookies the same cookie as far as Chrome is concerned.
 //

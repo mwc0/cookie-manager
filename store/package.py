@@ -147,11 +147,11 @@ def main():
     print(f"  name:    {manifest['name']}")
     print(f"  version: {version}")
     print("\nVerified: manifest.json is at the archive root, every file matches")
-    print("src/ byte for byte, and nothing from tests/, docs/ or store/ is in it.")
+    print("src/ byte for byte, and nothing from tests/ or store/ is in it.")
 
     if version.startswith("0."):
         print(f"\nNote: this is version {version}. If this is the store release,")
-        print("bump it in src/manifest.json and add a CHANGELOG.md entry first.")
+        print("bump it in src/manifest.json first, and write the release notes.")
 
     return 0
 

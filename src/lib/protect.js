@@ -4,7 +4,7 @@
 // anything this extension deletes, and the popup says so. It does not stop a
 // website, or another extension, from changing or removing the cookie itself.
 // Doing that needs a service worker listening to cookies.onChanged and writing
-// the old value back, which is deliberately deferred -- see docs/SPEC.md.
+// the old value back, which is deliberately left out of v1.
 //
 // Calling it "protected" while only guarding our own delete button would be
 // overclaiming, so the UI says "kept" wherever it reports what a delete did.

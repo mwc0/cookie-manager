@@ -57,7 +57,7 @@ it.
 
 No network requests. No telemetry or analytics. No ads, affiliate links or
 injected content. No remote code. These are the reason the project exists, not
-preferences. See `CLAUDE.md` for the full list and `docs/SPEC.md` for why.
+preferences.
 
 The source is deliberately plain JavaScript with no build step, no bundler and
 no dependencies, so you can read exactly what it does before trusting it with
@@ -70,7 +70,6 @@ src/            the extension (this is what you load)
   manifest.json
   popup/        popup UI
   lib/          shared helpers
-docs/           spec and implementation notes
 tests/          browser tests (not shipped -- see tests/README.md)
 store/          listing copy, screenshots, privacy policy
 ```
@@ -80,8 +79,8 @@ store/          listing copy, screenshots, privacy policy
 MIT. See `LICENSE`. You can read it, fork it, and check that what's published
 is what's described, which is rather the point.
 
-`docs/NOTES.md` records the assumptions in the code that have not yet been
-verified against a real browser.
+## Releases
 
-`docs/HANDOFF.md` is the working state: what is built, what isn't, what to test
-next and in what order. Start there when picking the project up again.
+What changed in each version is on the
+[releases page](https://github.com/mwc0/cookie-manager/releases), along with
+the exact zip that was uploaded to the Chrome Web Store.

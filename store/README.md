@@ -77,8 +77,9 @@ For 1.0.0, all of these were done on 2026-09-24.
       you are shipping. It is written in absolutes, which is only an asset
       while it stays accurate
 - [x] Bump the version in `src/manifest.json` (now `1.0.0`)
-- [x] Add an entry to `CHANGELOG.md` for the version being submitted, moving
-      it out of Unreleased
+- [x] Write what changed in the GitHub release notes, in plain short English,
+      with one line on whether the privacy position changed. The privacy
+      policy promises this
 - [x] Run `python store/package.py`, which builds the zip and checks it
 - [x] Tag the release and attach the zip to a GitHub release, so anyone can
       compare the store package against the source

@@ -11,7 +11,7 @@ and Network.requestWillBeSent are the calls behind DevTools' own Application
 and Network panels, so what this file compares against is, in substance, what
 you would see by opening DevTools and reading the tables yourself.
 
-Three comparisons, matching the manual checklist in docs/HANDOFF.md:
+Three comparisons:
 
   1. Cookie fields the popup DISPLAYS vs what DevTools reports.
   2. A partitioned (CHIPS) cookie created by a real cross-site iframe with a

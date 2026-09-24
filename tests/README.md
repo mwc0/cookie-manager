@@ -10,7 +10,7 @@ deliberately.
 ## These do not ship
 
 Nothing here is part of the extension. Only `src/` is loaded and zipped, so
-the no-dependency rule in `CLAUDE.md` is about `src/`. This directory is
+the project's no-dependency rule is about `src/`. This directory is
 allowed a test dependency because it never reaches a user's browser.
 
 ## Running them
@@ -96,7 +96,8 @@ Two things need a human, and no amount of scripting gets around them:
    not work: the file is HMAC-protected and Chrome reverts it. Don't spend
    time on it again.
 
-Both are in the manual checklist in `docs/HANDOFF.md`.
+Both were checked by hand before 1.0.0, and both need checking by hand again
+before any release that touches them.
 
 ## Two things worth knowing before editing these
 

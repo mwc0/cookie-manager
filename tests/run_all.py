@@ -42,7 +42,7 @@ def main():
     print(f"All {len(FILES)} test files passed.")
     print("\nReminder: the permission prompt and incognito behaviour are NOT")
     print("covered here and need checking by hand -- see README.md.")
-    print("Both were checked once; the results are in docs/NOTES.md.")
+    print("Both were checked by hand before 1.0.0.")
     return 0
 
 

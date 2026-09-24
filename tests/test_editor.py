@@ -1,8 +1,8 @@
 """
 Creating, editing and deleting a single cookie.
 
-Each test here corresponds to a trap in the "Write traps" section of
-docs/NOTES.md. They are all failures that would be SILENT -- a cookie that
+Each TRAP check here is a way chrome.cookies.set goes wrong without saying
+so. They are all failures that would be SILENT -- a cookie that
 quietly becomes domain-wide, or permanent, or duplicated -- so the assertions
 read the real cookie store afterwards rather than trusting the UI's own
 report.
