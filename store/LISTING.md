@@ -50,8 +50,9 @@ WHAT IT DOES
   flags: Secure, HttpOnly, HostOnly, SameSite and partitioned (CHIPS).
 
 • Deletes cookies at three scopes: this page, this domain and its subdomains,
-  or every site in your browser profile. Before anything is removed you see
-  the exact count and the exact list of domains affected.
+  or every site in your browser profile, plus a fourth while searching (below).
+  Before anything is removed you see the exact count and the exact list of
+  domains affected.
 
 • Creates and edits cookies: name, value, domain, path, expiry, Secure,
   HttpOnly and SameSite.
@@ -65,6 +66,8 @@ WHAT IT DOES
 
 • Works in incognito, with incognito cookies kept properly separate from your
   normal browsing.
+
+• Light, dark, or follows your system setting.
 
 
 DELETE ALL ACTUALLY MEANS ALL
