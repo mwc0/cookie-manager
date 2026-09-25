@@ -53,8 +53,8 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
 
   row.appendChild(textCell(cookie.name, "mono name"));
   row.appendChild(valueCell(cookie.value));
-  row.appendChild(textCell(cookie.domain, "mono"));
-  row.appendChild(textCell(cookie.path, "mono"));
+  row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
+  row.appendChild(breakableCell(cookie.path, "/", "mono path"));
 
   const expires = textCell(formatExpiry(cookie), "nowrap");
   expires.title = formatExpiryFull(cookie);
@@ -152,6 +152,27 @@ function textCell(text, className) {
   if (className) {
     cell.className = className;
   }
+  return cell;
+}
+
+// A cell whose text may wrap after each `separator`, so a long domain breaks
+// as "accounts.example." / "co.uk" rather than at whatever letter reached the
+// edge. <wbr> marks where a line may break and is otherwise invisible; it adds
+// nothing to textContent. Each piece still goes in as a text node, never as
+// HTML, because this is website-controlled input.
+function breakableCell(text, separator, className) {
+  const cell = document.createElement("td");
+  cell.className = className;
+
+  const parts = (text == null ? "" : String(text)).split(separator);
+  parts.forEach((part, index) => {
+    if (index > 0) {
+      cell.appendChild(document.createTextNode(separator));
+      cell.appendChild(document.createElement("wbr"));
+    }
+    cell.appendChild(document.createTextNode(part));
+  });
+
   return cell;
 }
 

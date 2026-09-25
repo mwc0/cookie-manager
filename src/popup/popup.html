@@ -25,7 +25,7 @@
          chrome.cookies returns an empty list rather than an error, so this
          screen is the only thing standing between the user and a cookie
          manager that silently appears to work but shows nothing. -->
-    <section id="state-gate" class="state" hidden>
+    <section id="state-gate" class="state notice" hidden>
       <h1>One-time permission needed</h1>
       <p>
         Chrome won't hand a cookie to an extension without permission for the
@@ -48,13 +48,13 @@
     <!-- chrome://, about:, the Web Store, and similar pages can't have
          cookies read from them. Say so plainly instead of showing an empty
          table that looks like a bug. -->
-    <section id="state-blocked" class="state" hidden>
+    <section id="state-blocked" class="state notice" hidden>
       <h1>No cookies on this page</h1>
       <p id="blocked-message"></p>
       <p class="muted">Open a normal website and click the icon again.</p>
     </section>
 
-    <section id="state-error" class="state" hidden>
+    <section id="state-error" class="state notice" hidden>
       <h1>Something went wrong</h1>
       <p id="error-message" class="error"></p>
       <p>
@@ -80,7 +80,19 @@
               class="visually-hidden"
             />
             <label for="theme-auto" title="Follow the system theme">
-              <span class="theme-glyph" aria-hidden="true">A</span>
+              <!-- Half light, half dark: the usual sign for "follow the
+                   system". Drawn to the same weight as the two beside it. -->
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="8.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" />
+              </svg>
               <span class="visually-hidden">Auto</span>
             </label>
 
@@ -169,7 +181,7 @@
           <label class="scope" id="scope-matches-row" hidden>
             <input type="radio" name="scope" value="matches" />
             <span class="scope-label">Just the cookies shown</span>
-            <span class="scope-target" id="scope-target-matches"></span>
+            <span class="scope-target scope-note" id="scope-target-matches"></span>
           </label>
           <label class="scope">
             <input type="radio" name="scope" value="page" checked />
@@ -184,7 +196,7 @@
           <label class="scope">
             <input type="radio" name="scope" value="all" />
             <span class="scope-label">All sites</span>
-            <span class="scope-target">everything in this browser profile</span>
+            <span class="scope-target scope-note">everything in this browser profile</span>
           </label>
         </div>
 
@@ -204,7 +216,7 @@
 
           <div id="confirm-row" class="confirm" hidden>
             <span id="confirm-text"></span>
-            <button id="confirm-yes" class="danger" type="button">
+            <button id="confirm-yes" class="danger solid" type="button">
               Yes, delete
             </button>
             <button id="confirm-no" type="button">Cancel</button>
@@ -216,6 +228,18 @@
 
       <div id="table-wrap">
         <table id="cookie-table">
+          <!-- Column widths live here, not in the cells. With these set, the
+               table cannot come out wider than the popup whatever the cookies
+               contain. See "cookie table" in popup.css. -->
+          <colgroup>
+            <col class="col-name" />
+            <col class="col-value" />
+            <col class="col-domain" />
+            <col class="col-path" />
+            <col class="col-expires" />
+            <col class="col-flags" />
+            <col class="col-actions" />
+          </colgroup>
           <thead>
             <tr>
               <th scope="col">Name</th>

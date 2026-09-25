@@ -104,11 +104,16 @@ def main():
         # sideways with no scrollbar to undo it. Playwright scrolls elements
         # into view before clicking, so every click assertion still passed --
         # only a screenshot showed it. Hence a geometry check.
+        #
+        # The cookie carries an expiry date on purpose. This check once passed
+        # with a session cookie while any cookie with a date ("30 Oct 2027" is
+        # wider than "Session") pushed the table 44px past the popup.
         wide, _ = open_popup(context, ext_id, "https://wide.test/")
         wide.evaluate("""async () => {
             await chrome.cookies.set({url:'https://wide.test/', name:'a_realistically_long_name',
                 value:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.a-long-token-value',
-                secure:true, httpOnly:true, sameSite:'no_restriction'});
+                secure:true, httpOnly:true, sameSite:'no_restriction',
+                expirationDate: Math.floor(Date.now() / 1000) + 300 * 86400});
         }""")
         wide.reload()
         wide.wait_for_timeout(1200)

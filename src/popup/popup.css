@@ -24,6 +24,19 @@
   --danger: #b3261e;
   --danger-bg: #fdf0ef;
   --badge: #ececec;
+  --badge-fg: #5c5c5c;
+  --selection: #cddcf6;
+  --scrollbar: #c4c4c4;
+
+  /* Text drawn ON a filled accent or danger button. White works on the dark
+     light-theme fills; the dark theme's fills are pale, so its text is dark.
+     White on those measured 2.4:1, well under the 4.5:1 text needs. */
+  --on-accent: #ffffff;
+  --on-danger: #ffffff;
+
+  /* Radios and checkboxes take the accent instead of Chrome's own blue, and
+     follow it into the dark theme. */
+  accent-color: var(--accent);
 }
 
 :root[data-theme="dark"] {
@@ -40,6 +53,16 @@
   --danger: #f2837c;
   --danger-bg: #331f1e;
   --badge: #3a3a3a;
+  --badge-fg: #b0b0b0;
+  --selection: #2e4a78;
+  --scrollbar: #4a4a4a;
+
+  --on-accent: #0f1f3d;
+  --on-danger: #2b0d0b;
+}
+
+::selection {
+  background: var(--selection);
 }
 
 * {
@@ -68,8 +91,25 @@ body {
   font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Scrollbars in the palette's own greys rather than Chrome's defaults. */
+body,
+#table-wrap,
+#scope-domains ul {
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
 .state {
   padding: 14px 16px;
+}
+
+/* The one-message screens: permission, blocked page, error. */
+.notice h1 {
+  margin-bottom: 8px;
+}
+
+.notice p {
+  /* Full popup width runs to ~120 characters a line, which is hard to read. */
+  max-width: 64ch;
 }
 
 h1 {
@@ -129,10 +169,20 @@ button:disabled {
   cursor: default;
 }
 
+/* One focus ring for every control, in the accent colour, only when focus
+   came from the keyboard. Text fields keep their own inset ring below. */
+button:focus-visible,
+summary:focus-visible,
+input[type="radio"]:focus-visible,
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 button.primary {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 button.danger {
@@ -189,9 +239,17 @@ button.danger:hover:not(:disabled) {
   color: var(--muted);
 }
 
+/* "3 matches" and "everything in this browser profile" describe a scope
+   rather than naming a host, so they are set as ordinary text. Monospace
+   would suggest a literal value. */
+.scope-note {
+  font-family: inherit;
+}
+
 .scope-summary {
   margin: 9px 0 0;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 #scope-domains {
@@ -231,6 +289,12 @@ button.danger:hover:not(:disabled) {
   margin: 9px 0 0;
 }
 
+/* The message above the search box ("Saved changes to…") needs its space
+   below it, not above, or it sits flush against the search field. */
+#main-message {
+  margin: 0 0 10px;
+}
+
 /* --- cookie table --------------------------------------------------------- */
 
 #table-wrap {
@@ -244,15 +308,51 @@ button.danger:hover:not(:disabled) {
   overflow-y: hidden;
 }
 
+/* Fixed layout: the widths on the <col> elements below are what the columns
+   get, whatever the cookies contain. Before this, the browser sized columns
+   from their content, and the minimums added up to ~790px against the 747px
+   available -- one cookie with a date and a longish value put every row's
+   Delete button out of sight. Trimming a few pixels at a time only held
+   until the next longer value.
+
+   Every column is fixed except Value, which takes what is left: 107px, or
+   about 93px once the popup grows a scrollbar. Truncating a value costs
+   nothing -- it is one click from being shown in full. */
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+.col-name {
+  width: 116px;
+}
+
+.col-domain {
+  width: 120px;
+}
+
+.col-path {
+  width: 44px;
+}
+
+.col-expires {
+  width: 84px;
+}
+
+.col-flags {
+  /* Two badges to a line, which covers the common flag pairs. */
+  width: 130px;
+}
+
+.col-actions {
+  /* Keep + Edit + Delete, sized for the wider "Kept" and "Sure?" forms. */
+  width: 146px;
 }
 
 th {
-  position: sticky;
-  top: 0;
-  padding: 6px 8px;
+  padding: 6px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
   text-align: left;
@@ -264,8 +364,11 @@ th {
 }
 
 td {
-  padding: 5px 8px;
+  padding: 5px 6px;
   border-bottom: 1px solid var(--line);
+  /* Top, not baseline: an expanded value is a button, and a button's baseline
+     is its LAST line, so baseline alignment dropped the rest of the row to
+     the bottom of a 30-line value. */
   vertical-align: top;
 }
 
@@ -274,21 +377,18 @@ tr:last-child td {
 }
 
 td.name {
-  /* The name is how you identify a row, so it gets enough width not to break
-     mid-word ("auth_toke / n"). break-all stays as a fallback for the
-     pathologically long names some sites use. */
-  min-width: 112px;
+  /* The name is how you identify a row, so its column is the widest fixed
+     one. break-all is the fallback for the pathologically long names some
+     sites use. */
   font-weight: 600;
   word-break: break-all;
 }
 
-td.value {
-  /* Narrower than the name column deliberately: a truncated value is one
-     click from being shown in full, a broken-up name is just hard to read.
-     The columns' minimum widths have to add up to less than the 747px the
-     popup gives the table, or it grows a sideways scrollbar. At 134px here
-     they came to 750. */
-  max-width: 128px;
+/* Domains and paths break at their dots and slashes (render.js marks those
+   points); `anywhere` is the fallback for a single piece too long to fit. */
+td.domain,
+td.path {
+  overflow-wrap: anywhere;
 }
 
 td.session {
@@ -318,20 +418,6 @@ td.value.expanded .value-toggle {
   word-break: break-all;
 }
 
-.flags {
-  /* Fixed width, and allowed to wrap.
-     Capping it alone wasn't enough: left to the table's own layout this
-     column took 111px -- under the cap, but too narrow for three badges, so
-     they stacked and row heights swung between 34px and 93px. Rows of wildly
-     different heights are hard to scan, and the extra height pushed the
-     content past the popup's max height so the table looked cut off.
-     A fixed width keeps the common two- and three-badge rows on one line.
-     It still wraps for the rare row carrying all five. */
-  min-width: 154px;
-  max-width: 154px;
-  white-space: normal;
-}
-
 .badge {
   display: inline-block;
   padding: 1px 5px;
@@ -339,7 +425,7 @@ td.value.expanded .value-toggle {
   border-radius: 3px;
   background: var(--badge);
   font-size: 10px;
-  color: var(--muted);
+  color: var(--badge-fg);
 }
 
 .empty {
@@ -385,19 +471,12 @@ td.value.expanded .value-toggle {
   user-select: none;
 }
 
-/* Both icons are drawn with currentColor, so they pick up the label's colour
-   and invert against the filled segment without a second rule. */
+/* All three icons are drawn with currentColor, so they pick up the label's
+   colour and invert against the filled segment without a second rule. */
 .theme svg {
   display: block;
   width: 14px;
   height: 14px;
-}
-
-/* The "A" stands in for an icon, so it is sized to match the two that are. */
-.theme-glyph {
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .theme label:hover {
@@ -411,7 +490,7 @@ td.value.expanded .value-toggle {
    just clicked it. */
 .theme input:checked + label {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 /* The inputs are clipped out of sight, which takes their focus ring with
@@ -423,6 +502,11 @@ td.value.expanded .value-toggle {
 }
 
 td.row-actions {
+  /* Less top padding than the other cells, because the buttons carry their
+     own. This puts their labels on the same line as the row's text instead
+     of 3px below it. */
+  padding-top: 2px;
+  padding-bottom: 2px;
   white-space: nowrap;
   text-align: right;
 }
@@ -431,6 +515,11 @@ td.row-actions {
   padding: 2px 6px;
   margin-left: 3px;
   font-size: 12px;
+}
+
+/* The ring would otherwise overlap the neighbouring button. */
+.row-button:focus-visible {
+  outline-offset: 1px;
 }
 
 .row-button.danger {
@@ -446,12 +535,17 @@ td.row-actions {
    above is more specific than a three-class selector, so without it that rule
    keeps the pale hover background while the white text below still applies --
    white on pale pink, i.e. an armed button reading as blank. An armed button
-   is ALWAYS hovered, because you just clicked it. */
+   is ALWAYS hovered, because you just clicked it.
+
+   The delete panel's "Yes, delete" (.solid) is the same moment -- the click
+   that actually deletes -- so it gets the same filled look. */
 .row-button.danger.armed,
-button.row-button.danger.armed:hover:not(:disabled) {
+button.row-button.danger.armed:hover:not(:disabled),
+button.danger.solid,
+button.danger.solid:hover:not(:disabled) {
   background: var(--danger);
   border-color: var(--danger);
-  color: #ffffff;
+  color: var(--on-danger);
 }
 
 /* Screen readers need a name for the actions column; sighted users don't
@@ -511,6 +605,7 @@ button.row-button.danger.armed:hover:not(:disabled) {
   border: 1px solid var(--line);
   border-radius: 4px;
   font: inherit;
+  caret-color: var(--accent);
 }
 
 .field textarea {
@@ -576,6 +671,7 @@ button.row-button.danger.armed:hover:not(:disabled) {
   border: 1px solid var(--line);
   border-radius: 4px;
   font: inherit;
+  caret-color: var(--accent);
 }
 
 .search input[type="search"]:focus {
