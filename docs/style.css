@@ -4,7 +4,8 @@
    from another server: the site keeps the same promise the extension makes.
 
    Colours follow the promo tile and the icon: a near-black ink, cool greys,
-   and the keycap. Light and dark follow the visitor's system setting. */
+   and the keycap. Light and dark follow the visitor's system setting,
+   unless they pick one with the button in the header (theme.js). */
 
 :root {
   color-scheme: light dark;
@@ -24,8 +25,13 @@
   --shot-shadow: 0 1px 2px rgba(20, 30, 60, 0.06), 0 8px 24px rgba(20, 30, 60, 0.10);
 }
 
+/* Dark colours, twice. The first block follows the system setting and needs
+   no script, so the site is right even if JavaScript is off. The second is
+   for a visitor who pressed the light/dark button (theme.js puts .dark or
+   .light on <html>). The two lists must stay identical: the site tests
+   check this. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --ink: #e8ebf1;
     --ink-soft: #b7bfcc;
     --muted: #8d96a6;
@@ -40,6 +46,27 @@
     --button-fg: #15181e;
     --shot-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
   }
+}
+
+:root.dark {
+  color-scheme: dark;
+  --ink: #e8ebf1;
+  --ink-soft: #b7bfcc;
+  --muted: #8d96a6;
+  --bg: #15181e;
+  --bg-alt: #1c2029;
+  --line: #2e3440;
+  --key-top: #343b49;
+  --key-bottom: #2a303c;
+  --key-edge: #4a5366;
+  --link: #8fb0ff;
+  --button-bg: #e8ebf1;
+  --button-fg: #15181e;
+  --shot-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+:root.light {
+  color-scheme: light;
 }
 
 *,
@@ -172,6 +199,71 @@ code {
 .site-nav a[aria-current="page"] {
   color: var(--ink);
   text-decoration: underline;
+}
+
+/* The navigation and the light/dark button, kept together on the right. */
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Shows the theme you'd switch TO: a moon while the page is light, a sun
+   while it's dark. Hidden until theme.js has set it up. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.theme-toggle[hidden] {
+  display: none;
+}
+
+.theme-toggle:hover {
+  color: var(--ink);
+  border-color: var(--muted);
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-toggle .icon-sun,
+.theme-toggle[data-showing="dark"] .icon-moon {
+  display: none;
+}
+
+.theme-toggle[data-showing="dark"] .icon-sun {
+  display: block;
+}
+
+/* On a phone: logo and button on the first row, the links on a full-width
+   row underneath. display: contents lets the button and nav be arranged as
+   if the .header-end wrapper weren't there; it's a plain div, so nothing is
+   lost for screen readers. */
+@media (max-width: 600px) {
+  .header-end {
+    display: contents;
+  }
+
+  .theme-toggle {
+    margin-left: auto;
+  }
+
+  .site-nav {
+    order: 1;
+    flex-basis: 100%;
+  }
 }
 
 /* --- home: hero --------------------------------------------------------- */

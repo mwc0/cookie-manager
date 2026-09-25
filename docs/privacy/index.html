@@ -4,6 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <!-- Applies a theme the visitor picked with the header button before the
+       page draws, so it doesn't flash the other theme first. Inline and not
+       deferred on purpose. See theme.js. -->
+  <script>
+    try {
+      const saved = localStorage.getItem("color-scheme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.classList.add(saved);
+        document.querySelector('meta[name="color-scheme"]').content = saved;
+      }
+    } catch (e) {}
+  </script>
   <title>Extension privacy policy - cookieZ</title>
   <meta name="description" content="The cookieZ extension collects nothing, sends nothing and makes no network requests. What it stores on your computer, and why it needs each permission.">
   <link rel="canonical" href="https://cookiez.uk/privacy/">
@@ -18,6 +30,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <link rel="stylesheet" href="../style.css">
+  <script src="../theme.js" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
@@ -27,14 +40,34 @@
   <header class="site-header">
     <div class="wrap">
       <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
-      <nav class="site-nav" aria-label="Main">
-        <ul>
-          <li><a href="../#features">Features</a></li>
-          <li><a href="./" aria-current="page">Privacy</a></li>
-          <li><a href="../support/">Support</a></li>
-          <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
-        </ul>
-      </nav>
+      <div class="header-end">
+        <nav class="site-nav" aria-label="Main">
+          <ul>
+            <li><a href="../#features">Features</a></li>
+            <li><a href="./" aria-current="page">Privacy</a></li>
+            <li><a href="../support/">Support</a></li>
+            <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+          </ul>
+        </nav>
+        <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="1.5" x2="12" y2="3.6"/>
+              <line x1="12" y1="20.4" x2="12" y2="22.5"/>
+              <line x1="1.5" y1="12" x2="3.6" y2="12"/>
+              <line x1="20.4" y1="12" x2="22.5" y2="12"/>
+              <line x1="4.6" y1="4.6" x2="6.1" y2="6.1"/>
+              <line x1="17.9" y1="17.9" x2="19.4" y2="19.4"/>
+              <line x1="4.6" y1="19.4" x2="6.1" y2="17.9"/>
+              <line x1="17.9" y1="6.1" x2="19.4" y2="4.6"/>
+            </g>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 
