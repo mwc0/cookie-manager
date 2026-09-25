@@ -241,10 +241,134 @@ code {
   color: var(--muted);
 }
 
-/* 780px is the popup's real width, so the image is never scaled up. */
-.hero-shot {
-  margin: 48px auto 0;
-  max-width: 780px;
+/* --- home: screenshot carousel -------------------------------------------
+
+   A strip of five screenshots that scrolls sideways and snaps to one at a
+   time. That part is CSS only, so it works with scripts off. carousel.js adds
+   the arrows and dots and hides the scrollbar once they're there.
+
+   820px = the popup's real width (780px) plus room for the shadow, so the
+   screenshots are never scaled up. */
+
+.showcase {
+  margin: 40px auto 0;
+  max-width: 820px;
+}
+
+.slides {
+  /* offsetLeft of each slide is measured from here; carousel.js relies on it. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  border-radius: 12px;
+}
+
+.slides:focus-visible {
+  outline-offset: 4px;
+}
+
+.slide {
+  flex: 0 0 100%;
+  margin: 0;
+  /* Room for the screenshot's shadow, which the strip would otherwise clip. */
+  padding: 8px 20px 12px;
+  scroll-snap-align: center;
+}
+
+.slide figure {
+  margin: 0;
+}
+
+.slide .shot {
+  margin: 0 auto;
+}
+
+.slide figcaption {
+  margin-top: 14px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* With the arrows and dots in place, the scrollbar is just clutter. Without
+   them it's the only visible hint that the strip scrolls, so it stays. */
+.has-controls .slides {
+  scrollbar-width: none;
+}
+
+.has-controls .slides::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.carousel-controls[hidden] {
+  display: none;
+}
+
+.carousel-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.carousel-arrow:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+
+.carousel-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.carousel-dots {
+  display: flex;
+  gap: 4px;
+}
+
+/* 24px buttons so they're easy to hit, with a 10px dot drawn inside. */
+.carousel-dot {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.carousel-dot::before {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: auto;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+}
+
+.carousel-dot[aria-current="true"]::before {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .slides {
+    scroll-behavior: smooth;
+  }
 }
 
 .shot {

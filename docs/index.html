@@ -19,6 +19,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="apple-touch-icon" href="images/icon-128.png">
   <link rel="stylesheet" href="style.css">
+  <script src="carousel.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -49,10 +50,53 @@
           <a class="button secondary" href="https://github.com/mwc0/cookie-manager">View the source</a>
         </div>
         <p class="note">Free. Works in Chrome and other Chromium browsers.</p>
-        <div class="hero-shot">
-          <img class="shot" src="images/popup-01-overview.png" width="780" height="558" fetchpriority="high"
-               alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
-        </div>
+        <!-- Five screenshots in a strip that scrolls sideways and snaps to one
+             at a time. Works with CSS alone (swipe, trackpad, or arrow keys once
+             focused). carousel.js adds the buttons and dots. -->
+        <section class="showcase" aria-roledescription="carousel" aria-label="Screenshots of cookieZ">
+          <div class="slides" tabindex="0" role="group" aria-label="Screenshots. Scroll sideways or use the arrow keys.">
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="1 of 5">
+              <figure>
+                <img class="shot" src="images/popup-01-overview.png" width="780" height="558" fetchpriority="high"
+                     alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
+                <figcaption>Every cookie on the site you're on</figcaption>
+              </figure>
+            </div>
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="2 of 5">
+              <figure>
+                <img class="shot" src="images/popup-02-delete-scope.png" width="780" height="580" loading="lazy"
+                     alt="The delete panel with All sites selected: 7 cookies across 5 domains, with the five domains listed underneath.">
+                <figcaption>See exactly what will be deleted, before it happens</figcaption>
+              </figure>
+            </div>
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="3 of 5">
+              <figure>
+                <img class="shot" src="images/popup-03-edit.png" width="780" height="574" loading="lazy"
+                     alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
+                <figcaption>Create or edit any field</figcaption>
+              </figure>
+            </div>
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="4 of 5">
+              <figure>
+                <img class="shot" src="images/popup-04-search.png" width="780" height="441" loading="lazy"
+                     alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
+                <figcaption>Search, then delete only what's shown</figcaption>
+              </figure>
+            </div>
+            <div class="slide" role="group" aria-roledescription="slide" aria-label="5 of 5">
+              <figure>
+                <img class="shot" src="images/popup-05-keep.png" width="780" height="576" loading="lazy"
+                     alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
+                <figcaption>Keep the cookies you don't want to lose</figcaption>
+              </figure>
+            </div>
+          </div>
+          <div class="carousel-controls" hidden>
+            <button type="button" class="carousel-arrow" data-step="-1" aria-label="Previous screenshot">&#8592;</button>
+            <div class="carousel-dots"></div>
+            <button type="button" class="carousel-arrow" data-step="1" aria-label="Next screenshot">&#8594;</button>
+          </div>
+        </section>
       </div>
     </section>
 
