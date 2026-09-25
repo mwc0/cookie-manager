@@ -30,9 +30,9 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="apple-touch-icon" href="images/icon-128.png">
-  <link rel="stylesheet" href="style.css?v=2026-09-25b">
-  <script src="carousel.js?v=2026-09-25b" defer></script>
-  <script src="theme.js?v=2026-09-25b" defer></script>
+  <link rel="stylesheet" href="style.css?v=2026-09-25c">
+  <script src="carousel.js?v=2026-09-25c" defer></script>
+  <script src="theme.js?v=2026-09-25c" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -90,44 +90,52 @@
           <div class="slides" tabindex="0" role="group" aria-label="Screenshots. Scroll sideways or use the arrow keys.">
             <div class="slide" role="group" aria-roledescription="slide" aria-label="1 of 5">
               <figure>
-                <img class="shot" src="images/popup-01-overview.png?v=2026-09-25b" width="780" height="555" fetchpriority="high"
+                <img class="shot" src="images/popup-01-overview.png?v=2026-09-25c" srcset="images/popup-01-overview@2x.png?v=2026-09-25c 2x" width="780" height="555" fetchpriority="high"
                      alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
                 <figcaption>Every cookie on the site you're on</figcaption>
               </figure>
             </div>
             <div class="slide" role="group" aria-roledescription="slide" aria-label="2 of 5">
               <figure>
-                <img class="shot" src="images/popup-02-delete-scope.png?v=2026-09-25b" width="780" height="580" loading="lazy"
+                <img class="shot" src="images/popup-02-delete-scope.png?v=2026-09-25c" srcset="images/popup-02-delete-scope@2x.png?v=2026-09-25c 2x" width="780" height="580" loading="lazy"
                      alt="The delete panel with All sites selected: 7 cookies across 5 domains, with the five domains listed underneath.">
                 <figcaption>See exactly what will be deleted, before it happens</figcaption>
               </figure>
             </div>
             <div class="slide" role="group" aria-roledescription="slide" aria-label="3 of 5">
               <figure>
-                <img class="shot" src="images/popup-03-edit.png?v=2026-09-25b" width="780" height="574" loading="lazy"
+                <img class="shot" src="images/popup-03-edit.png?v=2026-09-25c" srcset="images/popup-03-edit@2x.png?v=2026-09-25c 2x" width="780" height="574" loading="lazy"
                      alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
                 <figcaption>Create or edit any field</figcaption>
               </figure>
             </div>
             <div class="slide" role="group" aria-roledescription="slide" aria-label="4 of 5">
               <figure>
-                <img class="shot" src="images/popup-04-search.png?v=2026-09-25b" width="780" height="440" loading="lazy"
+                <img class="shot" src="images/popup-04-search.png?v=2026-09-25c" srcset="images/popup-04-search@2x.png?v=2026-09-25c 2x" width="780" height="440" loading="lazy"
                      alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
                 <figcaption>Search, then delete only what's shown</figcaption>
               </figure>
             </div>
             <div class="slide" role="group" aria-roledescription="slide" aria-label="5 of 5">
               <figure>
-                <img class="shot" src="images/popup-05-keep.png?v=2026-09-25b" width="780" height="555" loading="lazy"
+                <img class="shot" src="images/popup-05-keep.png?v=2026-09-25c" srcset="images/popup-05-keep@2x.png?v=2026-09-25c 2x" width="780" height="555" loading="lazy"
                      alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
                 <figcaption>Keep the cookies you don't want to lose</figcaption>
               </figure>
             </div>
           </div>
           <div class="carousel-controls" hidden>
-            <button type="button" class="carousel-arrow" data-step="-1" aria-label="Previous screenshot">&#8592;</button>
+            <button type="button" class="carousel-arrow" data-step="-1" aria-label="Previous screenshot">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
             <div class="carousel-dots"></div>
-            <button type="button" class="carousel-arrow" data-step="1" aria-label="Next screenshot">&#8594;</button>
+            <button type="button" class="carousel-arrow" data-step="1" aria-label="Next screenshot">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
         </section>
       </div>
@@ -163,7 +171,7 @@
           <p>Some cookie extensions say they've cleared everything when they've only cleared the site you're on. cookieZ shows you how many cookies will go and which sites they belong to, before it does anything.</p>
           <p>That number comes from the same lookup that does the deleting, so what it says and what it does can't drift apart. Partitioned cookies, which many tools miss, are included.</p>
         </div>
-        <img class="shot" src="images/popup-02-delete-scope.png?v=2026-09-25b" width="780" height="580" loading="lazy"
+        <img class="shot" src="images/popup-02-delete-scope.png?v=2026-09-25c" srcset="images/popup-02-delete-scope@2x.png?v=2026-09-25c 2x" width="780" height="580" loading="lazy"
              alt="The delete panel with All sites selected: 7 cookies across 5 domains, with the five domains listed underneath.">
       </div>
     </section>
@@ -178,7 +186,7 @@
           <li>Access to websites is asked for separately, the first time you open it. You can say no.</li>
           <li>It saves two things on your computer: the cookies you've marked as Kept, and your theme. Never cookie values.</li>
         </ul>
-        <p style="margin-top: 20px;"><a href="privacy/">Read the full privacy policy</a></p>
+        <p class="after-list"><a href="privacy/">Read the full privacy policy</a></p>
       </div>
     </section>
 
@@ -190,7 +198,7 @@
             <h3>Edit any field</h3>
             <p>Change a cookie's value, expiry, path or flags, or make a new one. A cookie that was only for one host stays that way, and a session cookie doesn't quietly become permanent.</p>
           </div>
-          <img class="shot" src="images/popup-03-edit.png?v=2026-09-25b" width="780" height="574" loading="lazy"
+          <img class="shot" src="images/popup-03-edit.png?v=2026-09-25c" srcset="images/popup-03-edit@2x.png?v=2026-09-25c 2x" width="780" height="574" loading="lazy"
                alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
         </div>
         <div class="split flip tour">
@@ -198,7 +206,7 @@
             <h3>Search, then delete what you see</h3>
             <p>Filter by name, value, domain or path. An extra delete option appears that removes only the cookies left on screen.</p>
           </div>
-          <img class="shot" src="images/popup-04-search.png?v=2026-09-25b" width="780" height="440" loading="lazy"
+          <img class="shot" src="images/popup-04-search.png?v=2026-09-25c" srcset="images/popup-04-search@2x.png?v=2026-09-25c 2x" width="780" height="440" loading="lazy"
                alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
         </div>
         <div class="split tour">
@@ -206,7 +214,7 @@
             <h3>Keep the logins you need</h3>
             <p>Mark a cookie as Kept and it's left alone by every delete, even "All sites". The summary tells you how many it's skipping.</p>
           </div>
-          <img class="shot" src="images/popup-05-keep.png?v=2026-09-25b" width="780" height="555" loading="lazy"
+          <img class="shot" src="images/popup-05-keep.png?v=2026-09-25c" srcset="images/popup-05-keep@2x.png?v=2026-09-25c 2x" width="780" height="555" loading="lazy"
                alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
         </div>
       </div>
@@ -216,7 +224,7 @@
       <div class="wrap">
         <h2>Free, and open source</h2>
         <p>cookieZ is free to use, with no ads. The code is published under the MIT licence, so you can read it, check that the version in the Chrome Web Store matches it, and build it yourself if you'd rather.</p>
-        <div class="actions" style="justify-content: flex-start;">
+        <div class="actions start">
           <span class="button pending">Coming soon to the Chrome Web Store</span>
           <a class="button secondary" href="https://github.com/mwc0/cookie-manager/releases">Releases</a>
         </div>

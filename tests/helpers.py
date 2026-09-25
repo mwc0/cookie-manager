@@ -108,7 +108,7 @@ def pregranted_extension():
     return PREGRANTED
 
 
-def launch(playwright, name, extra_args=(), extension=None):
+def launch(playwright, name, extra_args=(), extension=None, **context_options):
     """
     Start Chromium with the extension loaded, on a fresh profile.
 
@@ -116,6 +116,9 @@ def launch(playwright, name, extra_args=(), extension=None):
     appears and the suite runs without anyone clicking Allow. Pass
     `extension=EXTENSION` to load the real src/ instead and start from a
     genuinely ungranted state -- test_states.py is the one place that wants it.
+
+    Any other keyword (device_scale_factor=2, say) goes straight to
+    Playwright's launch_persistent_context.
     """
     source = Path(extension) if extension else pregranted_extension()
 
@@ -135,6 +138,7 @@ def launch(playwright, name, extra_args=(), extension=None):
             "--no-first-run",
             *extra_args,
         ],
+        **context_options,
     )
 
 

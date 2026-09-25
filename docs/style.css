@@ -296,6 +296,11 @@ code {
   margin-top: 32px;
 }
 
+/* Buttons lined up under left-aligned text rather than centred. */
+.actions.start {
+  justify-content: flex-start;
+}
+
 .button {
   display: inline-block;
   padding: 11px 20px;
@@ -407,15 +412,24 @@ code {
 }
 
 .carousel-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
+  padding: 0;
   border-radius: 50%;
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--ink);
-  font-size: 16px;
-  line-height: 1;
   cursor: pointer;
+}
+
+/* Drawn to the same weight as the sun and moon in the header, rather than
+   the arrow characters, which change with whatever font the device has. */
+.carousel-arrow svg {
+  width: 16px;
+  height: 16px;
 }
 
 .carousel-arrow:hover:not(:disabled) {
@@ -467,6 +481,19 @@ code {
   border-radius: 12px;
   border: 1px solid var(--line);
   box-shadow: var(--shot-shadow);
+}
+
+/* On a phone the whole 780px popup shrinks to about 320px, and its text to
+   about 4px: a grey blur. Instead, show a portrait crop of its left side
+   (site name, delete options, cookie names), at a size where the text can
+   actually be read. The crop is of the real screenshot; nothing is redrawn. */
+@media (max-width: 600px) {
+  .shot {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    object-position: left center;
+  }
 }
 
 /* --- home: sections ------------------------------------------------------ */
@@ -572,6 +599,12 @@ code {
   position: relative;
   padding: 6px 0 6px 26px;
   color: var(--ink-soft);
+}
+
+/* A paragraph straight after a list of facts, which has no bottom margin
+   of its own. */
+.section p.after-list {
+  margin-top: 20px;
 }
 
 .facts li::before {
@@ -687,4 +720,45 @@ code {
 
 .site-footer a:hover {
   color: var(--ink);
+}
+
+/* --- touch screens ------------------------------------------------------- */
+
+/* Fingers need about 44px to hit something reliably. The header and footer
+   links are ~20px tall, so on touch screens they get padding above and
+   below. The negative margins on the lists take that back out of the layout,
+   so the page looks the same and only the tappable area grows. */
+@media (pointer: coarse) {
+  .site-nav a,
+  .site-footer a {
+    display: inline-block;
+    padding-block: 12px;
+  }
+
+  .site-nav ul,
+  .site-footer ul {
+    row-gap: 0;
+    margin-block: -12px;
+  }
+
+  /* The round buttons keep their size and gain an invisible margin of tap
+     area. The dots sit 4px apart, so theirs only grows up and down. */
+  .theme-toggle,
+  .carousel-arrow,
+  .carousel-dot {
+    position: relative;
+  }
+
+  .theme-toggle::after,
+  .carousel-arrow::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+  }
+
+  .carousel-dot::after {
+    content: "";
+    position: absolute;
+    inset: -10px 0;
+  }
 }

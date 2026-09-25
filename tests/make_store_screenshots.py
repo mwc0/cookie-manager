@@ -14,10 +14,14 @@ Two deliberate choices, both explained in store/README.md:
   - Every cookie value is obviously fake. Anything legible in a store
     screenshot is public forever.
 
-The popup renders at 780px wide, so it is captured at 2x and placed at its
-natural size on the 1280x800 canvas. Upscaling a 760px capture to fill the
-frame would look blurry, which is the opposite of the impression this listing
-needs to make.
+The whole browser runs at 2x. The website gets each popup capture twice,
+popup-NAME.png at 780px and popup-NAME@2x.png at 1560px, so high-resolution
+screens get sharp text without ordinary screens downloading three times the
+data. The store images are taken with scale="css", which gives exactly
+1280x800 however dense the browser is, with the popup at its natural 780px.
+
+The first store image also goes to docs/images/01-overview.png, which is the
+picture every page of the website shows when a link to it is shared.
 """
 
 import base64
@@ -104,7 +108,9 @@ def compose(context, png_bytes, caption, out_path, clipped=False):
         .replace("__CLIPPED__", "clipped" if clipped else "")
     )
     frame.wait_for_timeout(300)
-    frame.screenshot(path=str(out_path))
+    # scale="css": one image pixel per CSS pixel, so the store gets the exact
+    # 1280x800 it requires even though the browser is running at 2x.
+    frame.screenshot(path=str(out_path), scale="css")
     frame.close()
 
 
@@ -112,10 +118,13 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as p:
-        context = launch(p, "screenshots")
+        # 2x for the whole browser. This has to be set here: the profile is a
+        # persistent context, which has no separate browser to open a 2x
+        # context from. (An earlier version tried that, got None, and quietly
+        # captured everything at 1x.)
+        context = launch(p, "screenshots", device_scale_factor=2)
         ext_id = extension_id(context)
 
-        # Capture the popup at 2x so the text stays crisp at native size.
         shot_page = context.new_page()
         shot_page.set_viewport_size({"width": 800, "height": 700})
         stub_active_tab(shot_page, SITE)
@@ -128,8 +137,6 @@ def main():
         )
         shot_page.close()
 
-        hi_dpi = context.browser.new_context(device_scale_factor=2) if context.browser else None
-
         page = context.new_page()
         stub_active_tab(page, SITE)
         page.goto(popup_url(ext_id))
@@ -141,9 +148,19 @@ def main():
             clipped = page.evaluate(
                 "() => document.body.scrollHeight > document.body.clientHeight + 2"
             )
-            png = page.locator("body").screenshot()
+            body = page.locator("body")
+            png = body.screenshot()  # 2x, 1560px wide
             compose(context, png, caption, OUT / f"{name}.png", clipped)
-            (SITE_OUT / f"popup-{name}.png").write_bytes(png)
+
+            # The website gets both sizes and each browser downloads only the
+            # one it needs (srcset in docs/index.html): 1x for ordinary
+            # screens, 2x for high-resolution screens and phones.
+            (SITE_OUT / f"popup-{name}.png").write_bytes(body.screenshot(scale="css"))
+            (SITE_OUT / f"popup-{name}@2x.png").write_bytes(png)
+            if name == SHOTS[0][0]:
+                # The website's link-preview image. Written here so it can't
+                # fall behind the store copy again.
+                (SITE_OUT / "01-overview.png").write_bytes((OUT / f"{name}.png").read_bytes())
             print(f"  wrote {name}.png" + ("  (content scrolls; faded)" if clipped else ""))
 
         # 1. overview
@@ -200,8 +217,6 @@ def main():
         capture(*SHOTS[4])
 
         page.close()
-        if hi_dpi:
-            hi_dpi.close()
         context.close()
 
     print(f"\n{len(SHOTS)} screenshots in {OUT}")

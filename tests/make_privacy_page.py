@@ -60,8 +60,8 @@ TEMPLATE = """<!DOCTYPE html>
   <meta property="og:image:height" content="800">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
-  <link rel="stylesheet" href="../style.css?v=2026-09-25b">
-  <script src="../theme.js?v=2026-09-25b" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2026-09-25c">
+  <script src="../theme.js?v=2026-09-25c" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
