@@ -188,6 +188,13 @@ def main():
         row = page.locator("tr", has=page.locator("td.name", has_text="session_id"))
         row.locator("button.row-button.keep").first.click()
         page.wait_for_timeout(900)
+        # Reopen the popup before capturing. The "Keeping session_id" message
+        # stays until then, and its extra line pushed the kept row into the
+        # faded bottom edge, so the screenshot's subject was the hardest thing
+        # to see. Reopening is a real state too: it shows the cookie is still
+        # kept after the popup was closed.
+        page.reload()
+        page.wait_for_timeout(1400)
         page.locator('input[name="scope"][value="page"]').check()
         page.wait_for_timeout(800)
         capture(*SHOTS[4])
