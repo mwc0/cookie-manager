@@ -37,98 +37,41 @@ English (United Kingdom)
 
 ## Description
 
-*Limit: 16,000 characters. Plain text, since the store strips most formatting, so
-this is written to read well without it.*
+*Limit: 16,000 characters. Plain text, since the store strips most formatting.
+Written in the same plain style as the better-rated listings in this category
+(Cookie-Editor, Dark Reader, uBlock Origin Lite): a one-line summary, a short
+intro, a plain feature list, a warning, and where to get help.*
 
 ```
-A cookie manager that does what it says, for developers, testers and anyone
-who wants to see what sites are storing on their machine.
+View, edit and delete the cookies on any website. When you delete everything, it actually deletes everything.
 
-WHAT IT DOES
+cookieZ is a cookie editor for Chrome. It's useful if you build or test websites, or if a site won't let you log in and you've been told to clear its cookies.
 
-• Lists every cookie for the site you're on, with domain, path, expiry and
-  flags: Secure, HttpOnly, HostOnly, SameSite and partitioned (CHIPS).
+Before you delete anything, cookieZ shows you how many cookies will go and which sites they come from. Some cookie editors say they've cleared everything but only clear the site you're on. This one deletes what it says it will, including partitioned cookies, which are often missed.
 
-• Deletes cookies at three scopes: this page, this domain and its subdomains,
-  or every site in your browser profile, plus a fourth while searching (below).
-  Before anything is removed you see the exact count and the exact list of
-  domains affected.
+Features:
+- See every cookie for the current site: name, value, domain, path, expiry and flags
+- Delete cookies for this page, this site and its subdomains, or every site
+- Create new cookies and edit any field
+- Delete a single cookie
+- Search by name, value, domain or path, then delete only the results
+- Mark cookies as "Kept" so cookieZ never deletes them
+- Works in incognito, kept separate from your normal cookies
+- Tells you when Chrome changes what you set (for example, Chrome caps expiry at about 400 days)
+- Light and dark mode
 
-• Creates and edits cookies: name, value, domain, path, expiry, Secure,
-  HttpOnly and SameSite.
+Privacy:
+cookieZ makes no network requests. No ads, no analytics, no tracking, and nothing you do leaves your computer. You can check this yourself in the Network tab of Chrome's DevTools.
 
-• Searches by name, value, domain or path. While a search is active you get a
-  "just the cookies shown" delete scope, so filtering and then deleting
-  removes what's actually on screen.
+When you install it, it asks for two permissions: cookies, and storage to remember your settings. It asks for access to websites the first time you open it, and you can say no.
 
-• Lets you mark cookies as Kept, so they're excluded from deletes. Useful for
-  the login you don't want to lose while clearing everything else.
-
-• Works in incognito, with incognito cookies kept properly separate from your
-  normal browsing.
-
-• Light, dark, or follows your system setting.
-
-
-DELETE ALL ACTUALLY MEANS ALL
-
-The common complaint about cookie managers is that "delete all" quietly
-doesn't. It clears the current domain and leaves the rest, or it misses
-partitioned cookies, and you only find out later when you're still logged in
-somewhere you meant to clear.
-
-This one shows you the number and the domains before it acts, and the number
-it shows is taken from the same query that does the deleting, so what it
-says and what it does cannot drift apart. Partitioned (CHIPS) cookies are
-included, which is the case most often missed.
-
-
-NO NETWORK REQUESTS. NONE.
-
-This extension makes no network requests of any kind. Not analytics, not
-error reporting, not update checks, not web fonts or CDN loads. It has no
-server component. Nothing you do in it leaves your computer.
-
-That means:
-• No tracking or telemetry of any kind
-• No ads, no affiliate links, no injected content
-• No remote code
-• Nothing sold, shared or transferred to anyone
-
-You don't have to take that on trust. Open DevTools, watch the Network tab,
-and use the extension. You'll see nothing leave. The source is plain
-JavaScript, HTML and CSS with no build step, no bundler, no minification and
-no dependencies, so what's published is exactly what was written, and you can
-read all of it.
-
-
-MINIMAL PERMISSIONS
-
-The install prompt asks for two things: access to cookies, and local storage
-to remember which cookies you've marked as Kept and whether you chose a light
-or dark theme.
-
-Access to websites is requested separately, at runtime, the first time you
-open the popup, not at install. Chrome won't release a single cookie to an
-extension without it, so a cookie manager genuinely needs it, but it's kept
-out of the install prompt so you can see exactly what you're agreeing to and
-when. You can decline it, and revoke it later.
-
-Nothing else is requested.
-
-
-OPEN SOURCE
-
-Full source, including the automated tests:
+The code is open source, so you can read all of it:
 https://github.com/mwc0/cookie-manager
 
-The tests cover the things that fail silently: a "delete all" that leaves
-cookies behind, a host-only cookie that quietly becomes domain-wide, a
-session cookie that silently becomes permanent. They also check that the
-extension makes no outbound requests.
+Be careful: cookies can hold your logins. Don't paste a cookie's value anywhere you don't trust, or someone could sign in as you.
 
-This is free, with no ads and no paid upgrade required to use any of the
-above.
+Help and bug reports: https://cookiez.uk/support/ or support@cookiez.uk
+Privacy policy: https://cookiez.uk/privacy/
 ```
 
 ---
