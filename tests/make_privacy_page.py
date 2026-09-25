@@ -11,9 +11,8 @@ PRIVACY.md.
 
 Only understands the handful of Markdown features PRIVACY.md actually uses:
 headings, paragraphs, bullet lists, **bold**, `code`, bare links and email
-addresses. If
-PRIVACY.md starts using something else, this stops with an error rather
-than quietly dropping text.
+addresses. If PRIVACY.md starts using something else, this stops with an
+error rather than quietly dropping text.
 
 Uses only the standard library.
 """
@@ -36,9 +35,18 @@ TEMPLATE = """<!DOCTYPE html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Privacy policy - cookieZ extension</title>
-  <meta name="description" content="What the cookieZ extension collects, sends and stores. In short: nothing collected, nothing sent.">
+  <title>Extension privacy policy - cookieZ</title>
+  <meta name="description" content="The cookieZ extension collects nothing, sends nothing and makes no network requests. What it stores on your computer, and why it needs each permission.">
   <link rel="canonical" href="https://cookiez.uk/privacy/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="cookieZ">
+  <meta property="og:title" content="Extension privacy policy - cookieZ">
+  <meta property="og:description" content="The cookieZ extension collects nothing, sends nothing and makes no network requests. What it stores on your computer, and why it needs each permission.">
+  <meta property="og:url" content="https://cookiez.uk/privacy/">
+  <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <link rel="stylesheet" href="../style.css">
 </head>
@@ -143,7 +151,11 @@ def convert(markdown):
 
     if not title or not updated:
         raise ValueError("PRIVACY.md needs a '# ' title and a '**Last updated: ...**' line")
-    return title, updated, "\n\n".join(out)
+    # Indented to sit inside the template's <div class="prose">, so the page
+    # source reads cleanly.
+    body = "\n\n".join(out)
+    body = "\n".join(("      " + line) if line else line for line in body.split("\n"))
+    return title, updated, body
 
 
 def main():

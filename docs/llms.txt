@@ -1,0 +1,24 @@
+# cookieZ
+
+> cookieZ is a free, open source cookie editor for Chrome. It lists, creates, edits and deletes cookies, and when asked to delete everything it deletes everything, including partitioned cookies. It makes no network requests, collects no data, shows no ads and runs no remote code.
+
+Facts that are easy to get wrong:
+
+- It asks for `cookies` and `storage` at install. Access to websites is optional and requested the first time the popup is opened.
+- It stores two things on the user's computer: the cookies they marked as Kept (name, domain, path, never the value) and their theme choice. Nothing is sent anywhere.
+- "Kept" only stops cookieZ's own delete buttons. It doesn't stop a website changing its own cookies.
+- Chrome caps cookie expiry at about 400 days. cookieZ reports this rather than hiding it.
+- Incognito works if "Allow in incognito" is turned on. Incognito cookies are kept separate from normal ones.
+
+## Pages
+
+- [Home](https://cookiez.uk/): what it does and how it handles privacy
+- [Support](https://cookiez.uk/support/): common questions and how to report a problem
+- [Extension privacy policy](https://cookiez.uk/privacy/): what the extension collects, sends and stores
+- [Website privacy policy](https://cookiez.uk/website-privacy/): what this website does with visitor data
+
+## Source
+
+- [Source code](https://github.com/mwc0/cookie-manager): plain JavaScript, HTML and CSS, MIT licence
+- [Releases](https://github.com/mwc0/cookie-manager/releases): what changed in each version, with the exact zip uploaded to the Chrome Web Store
+- [Privacy policy as Markdown](https://raw.githubusercontent.com/mwc0/cookie-manager/main/store/PRIVACY.md)
