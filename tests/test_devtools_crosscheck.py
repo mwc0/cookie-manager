@@ -1,24 +1,21 @@
 """
-Cross-check the extension against Chrome itself.
+Checks the extension against Chrome's DevTools.
 
-Every other test in this directory verifies the extension by asking
-`chrome.cookies` what happened. That is the same API the extension uses, so
-if Chrome's extension API ever disagreed with how the browser actually stores
-things, those tests would agree with the bug and still report green.
+The other tests check the extension's work using chrome.cookies, the same
+API the extension uses. If that API ever disagreed with what Chrome really
+stores, they would agree with the bug and still pass.
 
-This file asks a different source: the Chrome DevTools Protocol. Storage.getCookies
-and Network.requestWillBeSent are the calls behind DevTools' own Application
-and Network panels, so what this file compares against is, in substance, what
-you would see by opening DevTools and reading the tables yourself.
+This file uses the Chrome DevTools Protocol instead. It's what the
+Application and Network panels in DevTools use, so it's the same as opening
+DevTools and checking by eye.
 
-Three comparisons:
+It checks three things:
 
-  1. Cookie fields the popup DISPLAYS vs what DevTools reports.
-  2. A partitioned (CHIPS) cookie created by a real cross-site iframe with a
-     real Set-Cookie header, rather than one set directly through the
-     extension API.
-  3. Outbound requests, observed through the Network domain rather than
-     Playwright's own request log.
+  1. The cookie details shown in the popup match what DevTools shows.
+  2. A partitioned (CHIPS) cookie set by a real cross-site iframe, with a
+     real Set-Cookie header, is listed and deleted.
+  3. The popup makes no outgoing requests, seen through DevTools' network
+     events instead of Playwright's.
 """
 
 import json
@@ -50,7 +47,7 @@ def devtools_cookies(cdp):
 
 
 def displayed_rows(page):
-    """What the popup's table actually shows, read out of the DOM."""
+    """What the popup's table shows, read from the page."""
     return page.evaluate("""() => Array.from(document.querySelectorAll('#cookie-rows tr')).map(tr => {
         const cells = tr.querySelectorAll('td');
         return {
@@ -71,8 +68,8 @@ def check_fields(r, context, ext_id):
     page.wait_for_timeout(400)
     grant_host_permission(page)
 
-    # A spread of shapes: secure, httpOnly, an explicit SameSite, a dated
-    # cookie, a domain-wide one, and a value long enough to be truncated.
+    # A mix of cookies: Secure, HttpOnly, a SameSite value, an expiry date, a
+    # domain-wide one, and one with its own path.
     page.evaluate("""async () => {
         const year = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 200;
         await chrome.cookies.set({url:'https://crosscheck.test/', name:'plain', value:'simple'});
@@ -115,13 +112,13 @@ def check_fields(r, context, ext_id):
             mismatches.append(f"{name}: HttpOnly badge {('HttpOnly' in row['flags'])} vs {c['httpOnly']}")
     r.check("every displayed field matches DevTools", not mismatches, str(mismatches))
 
-    # SameSite, which the popup abbreviates, so check the mapping explicitly.
+    # The popup shortens SameSite, so check it separately.
     locked = truth.get("locked", {})
     r.check("the SameSite badge matches DevTools' value",
             "SS:Strict" in shown.get("locked", {}).get("flags", []) and locked.get("sameSite") == "Strict",
             f"badge={shown.get('locked', {}).get('flags')}, DevTools sameSite={locked.get('sameSite')!r}")
 
-    # host-only vs domain-wide, the distinction the write path turns on.
+    # Host-only vs domain-wide. Saving a cookie depends on getting this right.
     r.check("the HostOnly badge matches DevTools' leading-dot convention",
             "HostOnly" in shown.get("plain", {}).get("flags", [])
             and "HostOnly" not in shown.get("wide", {}).get("flags", [])
@@ -133,12 +130,12 @@ def check_fields(r, context, ext_id):
 
 class LocalTLS:
     """
-    A real HTTPS origin, served locally.
+    A real HTTPS server, running locally.
 
-    Needed because Chrome only applies the Partitioned attribute over a
-    genuine secure connection through the network stack. Two hostnames are
-    mapped to this one server with --host-resolver-rules, which is what makes
-    the iframe cross-site and therefore what makes the cookie partitioned.
+    Chrome only makes a cookie partitioned over a real secure connection.
+    --host-resolver-rules points two hostnames at this one server, which
+    makes the iframe cross-site, and that's what makes the cookie
+    partitioned.
     """
 
     PORT = 8443
@@ -151,7 +148,7 @@ class LocalTLS:
         self.server = None
 
     def certificate_available(self):
-        """Make a throwaway self-signed cert. False if openssl isn't here."""
+        """Makes a throwaway certificate. False if openssl isn't installed."""
         self.cert.parent.mkdir(parents=True, exist_ok=True)
         if self.cert.exists() and self.key.exists():
             return True
@@ -186,8 +183,8 @@ class LocalTLS:
             def do_GET(self):
                 host = self.headers.get("Host", "").split(":")[0]
                 if host == outer.EMBED_HOST:
-                    # The cookie under test, plus an unpartitioned third-party
-                    # cookie beside it so the two can be told apart.
+                    # The partitioned cookie being tested, and a normal
+                    # third-party one next to it to compare against.
                     self.send_response(200)
                     self.send_header("Content-Type", "text/html")
                     self.send_header(
@@ -228,15 +225,13 @@ class LocalTLS:
 
 def check_real_chips(r, playwright):
     """
-    A partitioned cookie made the way the web makes them: a cross-site iframe
-    over real TLS, returning a real Set-Cookie header with Partitioned.
+    A partitioned cookie made the way websites make them: a cross-site iframe
+    over real HTTPS, sending a Set-Cookie header with Partitioned.
 
-    The first version of this served the pages through Playwright's request
-    interception. Chrome stored the cookie but ignored the Partitioned
-    attribute completely, because route fulfilment doesn't go through the
-    path that applies partitioning. That was a harness artefact rather than a
-    finding about Chrome, and telling those two apart is the whole point of
-    this file, so it is worth a local server to get right.
+    The first version used Playwright's request interception instead. Chrome
+    stored the cookie but ignored Partitioned, because intercepted responses
+    skip that part of Chrome. That was a problem with the test, not with
+    Chrome, which is why this uses a real local server.
     """
     server = LocalTLS(PROFILES / "certs")
     if not server.certificate_available():
@@ -270,8 +265,8 @@ def check_real_chips(r, playwright):
                 not (plain or {}).get("partitionKey"),
                 json.dumps((plain or {}).get("partitionKey")))
 
-        # The assumption src/lib/cookies.js is built on, now against a cookie
-        # the browser partitioned itself rather than one we declared.
+        # The same thing cookies.js relies on, this time with a cookie Chrome
+        # partitioned itself.
         popup = context.new_page()
         stub_active_tab(popup, "https://" + server.EMBED_HOST + "/")
         popup.goto(popup_url(ext_id))
@@ -314,12 +309,10 @@ def check_real_chips(r, playwright):
 
 def check_network(r, context, ext_id):
     """
-    Outbound requests as the Network panel would see them.
+    Outgoing requests, as DevTools' Network panel would see them.
 
-    Network.requestWillBeSent is what DevTools' Network tab listens to, so
-    this is the same observation as leaving that tab open for a session --
-    rather than trusting Playwright's higher-level request event, which is
-    what the existing no-network test uses.
+    Uses the same events as the Network panel, not Playwright's request
+    event, which test_no_network.py already uses.
     """
     page = context.new_page()
     stub_active_tab(page, SITE)
@@ -338,7 +331,7 @@ def check_network(r, context, ext_id):
     page.reload()
     page.wait_for_timeout(1200)
 
-    # Exercise the paths most likely to reach out, if anything ever did.
+    # Use the parts most likely to make a request, if anything did.
     page.locator("#add-button").click()
     page.wait_for_timeout(300)
     page.fill("#field-name", "made_here")
@@ -369,8 +362,8 @@ def main():
         check_network(r, context, ext_id)
         context.close()
 
-        # Its own browser: it needs the hostname-mapping and certificate
-        # flags, which the other checks must not have.
+        # Runs in its own browser, because it needs the hostname and
+        # certificate flags and the other checks mustn't have them.
         check_real_chips(r, p)
 
     return r.summarise()

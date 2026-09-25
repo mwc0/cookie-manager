@@ -1,20 +1,18 @@
 """
-Build docs/privacy/index.html (the website's copy) from store/PRIVACY.md.
+Builds the website's copy of the privacy policy (docs/privacy/index.html)
+from store/PRIVACY.md.
 
     python tests/make_privacy_page.py
 
-The extension's privacy policy lives in one place, store/PRIVACY.md. The
-website shows the same text, and a privacy policy that says one thing on
-GitHub and another on the website is worse than having none. So the web page
-is generated, never edited by hand. Run this after every change to
-PRIVACY.md.
+The policy is written once, in store/PRIVACY.md, and the web page is made
+from it, so the two can never say different things. Don't edit the web page
+by hand. Run this after every change to PRIVACY.md.
 
-Only understands the handful of Markdown features PRIVACY.md actually uses:
-headings, paragraphs, bullet lists, **bold**, `code`, bare links and email
-addresses. If PRIVACY.md starts using something else, this stops with an
-error rather than quietly dropping text.
+It only understands the Markdown that PRIVACY.md uses: headings, paragraphs,
+bullet lists, **bold**, `code`, plain links and email addresses. If it finds
+anything else, it stops with an error instead of dropping the text.
 
-Uses only the standard library.
+Standard library only.
 """
 
 import html
@@ -27,17 +25,16 @@ SOURCE = ROOT / "store" / "PRIVACY.md"
 OUT = ROOT / "docs" / "privacy" / "index.html"
 
 
-# The page around the policy text. Same header and footer as the rest of
-# the site; keep them in step with docs/index.html.
+# The page around the policy. The header and footer are copies of the ones
+# in docs/index.html, so keep them the same.
 TEMPLATE = """<!DOCTYPE html>
 <html lang="en-GB">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <!-- Applies a theme the visitor picked with the header button before the
-       page draws, so it doesn't flash the other theme first. Inline and not
-       deferred on purpose. See theme.js. -->
+  <!-- Applies the theme the visitor picked, before the page is drawn, so it
+       doesn't flash. It's inline and not deferred for that reason. See theme.js. -->
   <script>
     try {
       const saved = localStorage.getItem("color-scheme");
@@ -129,13 +126,13 @@ TEMPLATE = """<!DOCTYPE html>
 
 
 def inline(text):
-    """Escape, then apply **bold**, `code` and bare https links."""
+    """Escapes the text, then handles **bold**, `code`, links and emails."""
     text = html.escape(text, quote=False)
     text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
     text = re.sub(r"(?<![\"'>])(https://[^\s<]+[^\s<.,;:)])", r'<a href="\1">\1</a>', text)
     text = re.sub(r"\b([\w.+-]+@[\w-]+\.[\w.-]*\w)\b", r'<a href="mailto:\1">\1</a>', text)
-    # Anything still looking like Markdown outside a code span was missed.
+    # Any Markdown left outside code wasn't handled.
     outside_code = re.sub(r"<code>.*?</code>", "", text)
     if "*" in outside_code or "[" in outside_code:
         raise ValueError(f"Markdown this script doesn't handle: {text!r}")
@@ -143,7 +140,7 @@ def inline(text):
 
 
 def convert(markdown):
-    """Returns (title, updated line, body HTML)."""
+    """Returns the title, the "Last updated" line and the body HTML."""
     lines = markdown.splitlines()
     title = updated = None
     out = []
@@ -184,8 +181,7 @@ def convert(markdown):
 
     if not title or not updated:
         raise ValueError("PRIVACY.md needs a '# ' title and a '**Last updated: ...**' line")
-    # Indented to sit inside the template's <div class="prose">, so the page
-    # source reads cleanly.
+    # Indented to line up inside the template, so the page source is tidy.
     body = "\n\n".join(out)
     body = "\n".join(("      " + line) if line else line for line in body.split("\n"))
     return title, updated, body

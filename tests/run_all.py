@@ -1,10 +1,10 @@
 """
-Run every test file and report a total.
+Runs every test file and reports a total.
 
     python run_all.py
 
-Exits non-zero if anything failed, so it can be wired into something later if
-that's ever wanted. Each file can also be run on its own.
+Exits with an error code if anything failed. Each file can also be run on
+its own.
 """
 
 import subprocess

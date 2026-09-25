@@ -1,22 +1,18 @@
 """
-Shared setup for the browser tests.
+Shared setup for the browser tests, so the test files stay short.
 
-Everything awkward about driving an extension from Playwright lives here, so
-the test files themselves stay readable.
+Two things to know before changing anything here:
 
-Two things are worth understanding before changing any of this:
+1. Playwright can't click the extension's toolbar icon, so it can't open the
+   real popup. The tests open popup/popup.html in a normal tab instead. But
+   then the active tab is the popup itself, and the extension would show its
+   blocked-page screen. stub_active_tab() fixes that by faking
+   chrome.tabs.query. Nothing else is faked: cookies are read from and
+   written to Chrome's real cookie store.
 
-1. Playwright cannot click the extension's toolbar icon, so it cannot open a
-   real browser-action popup. The tests open `popup/popup.html` as an ordinary
-   tab instead. That has a side effect: the popup page then IS the active tab,
-   so the extension would see a chrome-extension:// URL and correctly show its
-   blocked screen. `stub_active_tab()` works around it by faking
-   chrome.tabs.query, which is the only thing being faked -- all cookie
-   reads and writes go to the real Chrome cookie store.
-
-2. Chrome's own UI (the permission prompt, the "Allow in incognito" toggle) is
-   browser chrome, not page content, and cannot be driven at all. Those parts
-   are checked by hand -- see README.md.
+2. Playwright can't click Chrome's own UI at all, like the permission prompt
+   or the "Allow in Incognito" switch. Those are checked by hand. See
+   README.md.
 """
 
 import atexit
@@ -28,49 +24,43 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 EXTENSION = REPO / "src"
 
-# Throwaway browser profiles. Gitignored; removed before each run so every
-# test starts from a clean cookie store and an ungranted permission state.
+# Throwaway browser profiles (gitignored). Deleted before each run, so every
+# test starts with no cookies and no permission granted.
 PROFILES = REPO / "tests" / ".profiles"
 
-# Throwaway copy of the extension, built by pregranted_extension(). Gitignored.
+# Throwaway copy of the extension, made by pregranted_extension() (gitignored).
 #
-# The PID matters. run_all.py runs each test file as its own process, and a
-# finished test's Chrome can still hold this directory open for a moment after
-# the process that started it has gone. With a single shared path, the next
-# test would delete a directory Chrome was still reading -- which on Windows
-# fails rather than being ignored. One directory per process cannot collide.
-#
-# This is precaution, not a fix for something observed. It has not been seen
-# to happen.
+# Each process gets its own folder, named after its process ID. run_all.py
+# runs each test file as a separate process, and the last test's Chrome can
+# keep the folder open for a moment after it finishes. On Windows, deleting a
+# folder that's in use fails. This hasn't actually happened. It's a
+# precaution.
 PREGRANTED = REPO / "tests" / f".pregranted-{os.getpid()}"
 
-# Built once per process; the second and later calls reuse it. Rebuilding
-# under a browser that is already running would reintroduce the same problem.
+# Only built once per process. Rebuilding it while Chrome is running would
+# cause the same problem.
 _pregranted_ready = False
 
 
 def pregranted_extension():
     """
-    A copy of src/ whose manifest asks for host access UP FRONT.
+    A copy of src/ with host access in the manifest from the start.
 
-    Chrome's optional-permission prompt is native browser UI that Playwright
-    cannot click, so anything calling chrome.permissions.request() blocks until
-    a human clicks Allow -- dozens of times across a full run. A REQUIRED host
-    permission is granted when the extension loads, with no prompt at all, so
-    the tests start from an already-granted state and run unattended.
+    Playwright can't click Chrome's permission prompt, so every call to
+    chrome.permissions.request() would wait for someone to click Allow. A
+    required host permission is granted when the extension loads, with no
+    prompt, so the tests can run on their own.
 
-    src/manifest.json is never touched: the shipped extension still asks at
-    runtime. The trade-off is that the optional-permission wiring is no longer
-    exercised by most tests. test_states.py deliberately loads the real src/
-    and is the one place the gate screen and the Deny branch are covered, so
-    that path still has a test behind it.
+    src/manifest.json isn't changed, so the real extension still asks when
+    it's first used. Because of this, most tests skip the permission code.
+    test_states.py loads the real src/ to test that part.
     """
     global _pregranted_ready
     if _pregranted_ready:
         return PREGRANTED
 
-    # Best-effort tidy of copies left behind by earlier runs whose browser was
-    # still holding files at exit. Failing here is not worth stopping for.
+    # Clear out copies left by earlier runs. If Chrome still has one open,
+    # it's skipped.
     for stale in PREGRANTED.parent.glob(".pregranted-*"):
         if stale != PREGRANTED:
             shutil.rmtree(stale, ignore_errors=True)
@@ -80,17 +70,15 @@ def pregranted_extension():
 
     path = PREGRANTED / "manifest.json"
     manifest = json.loads(path.read_text(encoding="utf-8"))
-    # host_permissions, NOT permissions: Manifest V3 keeps host patterns in
-    # their own key, and Chrome silently ignores a host pattern listed under
-    # permissions. That failure mode looks exactly like the extension having
-    # no access at all.
+    # It has to be host_permissions, not permissions. Chrome ignores a host
+    # pattern under permissions without any error, which looks exactly like
+    # the extension having no access.
     optional = manifest.pop("optional_host_permissions", [])
     manifest["host_permissions"] = list(optional)
     path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
-    # The copy has to stay the extension under test. If anything other than
-    # where the host permission sits has changed, the tests are no longer
-    # testing what ships, so fail loudly rather than quietly drift.
+    # The copy must match the real manifest apart from the host permission.
+    # If anything else differs, the tests aren't testing what ships, so stop.
     original = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
     differing = {
         key
@@ -110,15 +98,14 @@ def pregranted_extension():
 
 def launch(playwright, name, extra_args=(), extension=None, **context_options):
     """
-    Start Chromium with the extension loaded, on a fresh profile.
+    Starts Chromium on a fresh profile, with the extension loaded.
 
-    Loads the pre-granted copy by default, so no native permission prompt ever
-    appears and the suite runs without anyone clicking Allow. Pass
-    `extension=EXTENSION` to load the real src/ instead and start from a
-    genuinely ungranted state -- test_states.py is the one place that wants it.
+    Loads the pre-granted copy unless told otherwise, so no permission prompt
+    appears. Pass extension=EXTENSION to load the real src/ with no
+    permission granted. Only test_states.py does this.
 
-    Any other keyword (device_scale_factor=2, say) goes straight to
-    Playwright's launch_persistent_context.
+    Any other keyword arguments, like device_scale_factor=2, are passed
+    straight to Playwright's launch_persistent_context.
     """
     source = Path(extension) if extension else pregranted_extension()
 
@@ -128,9 +115,8 @@ def launch(playwright, name, extra_args=(), extension=None, **context_options):
 
     return playwright.chromium.launch_persistent_context(
         str(profile),
-        # Not headless: extensions and their pages are more reliably available
-        # in a real browser window, and these tests are cheap enough to run
-        # visibly.
+        # Not headless. Extensions work more reliably in a real window, and
+        # the tests are quick anyway.
         headless=False,
         args=[
             f"--disable-extensions-except={source}",
@@ -143,7 +129,7 @@ def launch(playwright, name, extra_args=(), extension=None, **context_options):
 
 
 def extension_id(context):
-    """Read the unpacked extension's generated ID off chrome://extensions."""
+    """Reads the extension's ID from chrome://extensions."""
     page = context.new_page()
     page.goto("chrome://extensions")
     page.wait_for_timeout(800)
@@ -161,10 +147,10 @@ def popup_url(ext_id):
 
 def stub_active_tab(page, url):
     """
-    Make the popup believe `url` is the active tab.
+    Makes the popup think `url` is the active tab.
 
-    Must be called before the page is navigated. See the note at the top of
-    this file for why this is necessary.
+    Call it before the page is loaded. The note at the top of this file
+    explains why it's needed.
     """
     page.add_init_script(
         """
@@ -185,15 +171,12 @@ def stub_active_tab(page, url):
 
 def grant_host_permission(page):
     """
-    Make sure the host permission is granted.
+    Asks for host access.
 
-    Under the default pre-granted extension this is a no-op: the permission is
-    already held, so Chrome resolves immediately without showing anything. It
-    still matters when the real src/ is loaded, where it WILL raise the native
-    prompt that Playwright cannot click -- so only call it then if a human is
-    sitting there to click Allow.
-
-    Either way, the tests cover what happens after a grant, never the prompt.
+    With the pre-granted copy (the default) access is already there, so this
+    returns straight away. With the real src/ it opens Chrome's permission
+    prompt, which Playwright can't click, so only use it then if someone is
+    there to click Allow.
     """
     return page.evaluate(
         "() => new Promise(resolve => "
@@ -203,8 +186,8 @@ def grant_host_permission(page):
 
 def open_popup(context, ext_id, site_url, grant=True):
     """
-    The usual starting point: a popup showing `site_url`, permission granted.
-    Returns (page, console_errors) -- the list fills as errors are logged.
+    Opens the popup for `site_url`, with access granted.
+    Returns (page, console_errors). The list fills up as errors are logged.
     """
     page = context.new_page()
     console_errors = []
@@ -228,7 +211,7 @@ def open_popup(context, ext_id, site_url, grant=True):
 
 
 def visible_state(page):
-    """Which of the popup's screens is currently showing."""
+    """Which of the popup's screens is showing."""
     return page.evaluate(
         "() => { for (const el of document.querySelectorAll('.state')) "
         "if (!el.hidden) return el.id; return null; }"
@@ -236,7 +219,7 @@ def visible_state(page):
 
 
 def cookies_for(page, host):
-    """Read the real cookie store directly, to check what the UI actually did."""
+    """Reads Chrome's cookie store directly, to check what the popup really did."""
     return page.evaluate(
         """async (host) => (await chrome.cookies.getAll({domain: host})).map(c => ({
             name: c.name, value: c.value, domain: c.domain, path: c.path,
@@ -249,13 +232,12 @@ def cookies_for(page, host):
 
 def row_for(page, cookie_name):
     """
-    The table row for a named cookie.
+    The table row for the named cookie.
 
-    Buttons are found by their OWN class, never by text and never by a
-    :not() chain. Two reasons, both learned the hard way: cookie VALUES are
-    shown in the same row, so a value like "v2-edited" matches a
-    has_text="Edit" filter; and a :not(.danger) selector silently started
-    matching the Keep button the moment a third action was added to the row.
+    Buttons are found by their own class, not by their text or a :not()
+    selector. Cookie values are in the same row, so a value like "v2-edited"
+    would match a search for "Edit". And a :not(.danger) selector started
+    matching the Keep button as soon as it was added to the row.
     """
     return page.locator("tr", has=page.locator("td.name", has_text=cookie_name))
 
@@ -286,7 +268,7 @@ class Results:
         return ok
 
     def note(self, name, detail):
-        """Record something observed, with no pass/fail judgement."""
+        """Logs something without passing or failing it."""
         self.entries.append((name, True, detail))
         print(f"[note] {name}: {detail}")
 

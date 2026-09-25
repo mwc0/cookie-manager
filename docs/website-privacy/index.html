@@ -4,9 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <!-- Applies a theme the visitor picked with the header button before the
-       page draws, so it doesn't flash the other theme first. Inline and not
-       deferred on purpose. See theme.js. -->
+  <!-- Applies the theme the visitor picked, before the page is drawn, so it
+       doesn't flash. It's inline and not deferred for that reason. See theme.js. -->
   <script>
     try {
       const saved = localStorage.getItem("color-scheme");

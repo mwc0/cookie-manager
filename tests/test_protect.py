@@ -1,13 +1,12 @@
 """
-The keep ("protect") flag.
+The Keep button.
 
-v1 is a UI guard: a kept cookie is excluded from anything this extension
-deletes. It does NOT stop a website changing the cookie -- that needs a
-service worker and is deferred.
+A kept cookie is skipped by everything this extension deletes. It doesn't
+stop a website changing the cookie. That would need a service worker, and
+it's left for later.
 
-The test that matters most is the last one: a kept cookie must survive
-"All sites", the widest delete there is. If it doesn't, the flag is
-decoration.
+The most important check is that a kept cookie survives "All sites", the
+biggest delete there is. If it doesn't, the button is useless.
 """
 
 import sys
@@ -66,14 +65,14 @@ def main():
                 row.get_attribute("class"))
         r.check("a kept cookie's Delete button is disabled", delete_button(row).is_disabled())
 
-        # --- it survives a reopen, i.e. it really was stored ---
+        # --- still kept after reopening, so it really was saved ---
         page.reload()
         page.wait_for_timeout(1200)
         row = row_for(page, "important")
         r.check("the kept flag survives closing and reopening the popup",
                 keep_button(row).text_content().strip() == "Kept")
 
-        # --- the scope count accounts for it ---
+        # --- the delete summary mentions it ---
         summary = page.locator("#scope-summary").text_content().strip()
         r.check("the scope says what it will leave alone",
                 "2 cookies" in summary and "kept" in summary.lower(), summary)
@@ -86,7 +85,7 @@ def main():
         r.check("a page-scope delete spares the kept cookie",
                 names_left(page) == ["important"], str(names_left(page)))
 
-        # --- THE ONE THAT MATTERS: it survives "All sites" ---
+        # --- the important one: it survives "All sites" ---
         page.evaluate(
             """async () => {
                 await chrome.cookies.set({url:'https://keep.test/', name:'fresh', value:'1'});

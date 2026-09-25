@@ -1,11 +1,10 @@
 """
 Creating, editing and deleting a single cookie.
 
-Each TRAP check here is a way chrome.cookies.set goes wrong without saying
-so. They are all failures that would be SILENT -- a cookie that
-quietly becomes domain-wide, or permanent, or duplicated -- so the assertions
-read the real cookie store afterwards rather than trusting the UI's own
-report.
+Each TRAP check is a way chrome.cookies.set can go wrong without an error: a
+cookie that becomes domain-wide, permanent, or duplicated. So these checks
+read Chrome's cookie store afterwards instead of trusting what the popup
+says.
 """
 
 import json
@@ -58,9 +57,9 @@ def main():
             session: document.getElementById('field-session').checked,
             expiryDisabled: document.getElementById('field-expiry').disabled,
         })""")
-        # Host-only and session are the NARROW options. A new cookie defaults to
-        # both, so adding one can't accidentally leave something domain-wide or
-        # permanent behind.
+        # A new cookie is host-only and a session cookie by default, the
+        # narrowest options, so adding one can't leave something domain-wide
+        # or permanent behind by accident.
         r.check("a new cookie defaults to host-only and session",
                 defaults["domain"] == HOST and defaults["hostOnly"] and defaults["session"]
                 and defaults["expiryDisabled"],
@@ -84,10 +83,10 @@ def main():
         edit_button(row_for(page, "hostonly_c")).click()
         page.wait_for_timeout(400)
 
-        # Check the editor is actually SHOWING, not just that the fields hold
-        # the right values. They survive from the previous save, so a prefill
-        # assertion on its own passes even when the click did nothing at all --
-        # which is exactly how a broken Edit button once went unnoticed.
+        # Check the editor is actually open, not just that the fields hold the
+        # right values. The values are still there from the last save, so that
+        # check alone passes even if the click did nothing. That's how a
+        # broken Edit button was once missed.
         prefilled = page.evaluate("""() => ({
             name: document.getElementById('field-name').value,
             hostOnly: document.getElementById('field-hostonly').checked,
@@ -110,8 +109,8 @@ def main():
                 len(edited) == 1, f"{len(edited)} copies")
 
         # --- SameSite=None without Secure ---
-        # Chrome throws a message naming the cookie but never the rule, so this
-        # has to be caught before the write or it's a dead end for the user.
+        # Chrome's error names the cookie but not the rule it broke, so the
+        # popup has to catch this before saving, or the user is stuck.
         page.locator("#add-button").click()
         page.wait_for_timeout(300)
         page.fill("#field-name", "ss_none")
@@ -170,7 +169,7 @@ def main():
                 len(moved) == 1 and moved[0]["path"] == "/admin", json.dumps(moved))
 
         # --- host-only -> domain-wide on purpose ---
-        # Also an identity change: Chrome stores these as two different cookies.
+        # Chrome also treats these as two different cookies.
         edit_button(row_for(page, "hostonly_c")).click()
         page.wait_for_timeout(400)
         page.uncheck("#field-hostonly")
@@ -213,9 +212,8 @@ def main():
                 armed_text == "Sure?" and len(named(cookies_for(page, HOST), "hostonly_c")) == 1,
                 f"button reads {armed_text!r}, cookie still present")
 
-        # The armed button must be READABLE, not just correct. A more specific
-        # hover rule once left white text on a pale background here, which every
-        # textContent assertion happily passed.
+        # The armed button must be readable too. A hover rule once made it
+        # white text on a pale background, and every text check still passed.
         contrast = delete_button(row).evaluate(
             "b => { const c = getComputedStyle(b); return {color: c.color, background: c.backgroundColor}; }"
         )

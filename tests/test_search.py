@@ -1,12 +1,11 @@
 """
-Search / filter, and its interaction with the delete scopes.
+Search, and how it works with the delete options.
 
-The interaction is the dangerous part. Filtering the table to three rows and
-then pressing Delete must not quietly remove the forty cookies the scope
-covers -- the screen would be saying one thing and doing another, which is the
-failure this whole extension exists to avoid. So search adds a "just the
-cookies shown" scope, and these tests pin down that it deletes exactly what is
-on screen and nothing else.
+That second part is the risky one. If you search down to three cookies and
+press Delete, it mustn't also delete the forty others in the scope. The
+screen would say one thing and do another, which is what this extension
+exists to avoid. So while searching there's an extra option to delete only
+the cookies shown, and these tests check it deletes exactly those.
 """
 
 import json
@@ -68,8 +67,8 @@ def main():
                 "3 cookies of 5 cookies" in page.locator("#cookie-count").text_content(),
                 repr(page.locator("#cookie-count").text_content().strip()))
 
-        # sub_cookie matches on its VALUE ("SESSION-in-value"), which also
-        # proves the search is case-insensitive.
+        # sub_cookie only matches on its value ("SESSION-in-value"), in
+        # capitals, so this also shows the search ignores case.
         r.check("search covers values too, case-insensitively", "sub_cookie" in names)
 
         # --- matching by domain ---
@@ -91,14 +90,14 @@ def main():
         r.check("the clear button hides when there's nothing to clear",
                 page.evaluate("() => document.getElementById('search-clear').hidden"))
 
-        # --- the scope only appears while filtering ---
+        # --- the "cookies shown" option only appears while searching ---
         r.check("no 'cookies shown' scope when not filtering",
                 page.evaluate("() => document.getElementById('scope-matches-row').hidden"))
         search(page, "session")
         r.check("'cookies shown' scope appears while filtering",
                 not page.evaluate("() => document.getElementById('scope-matches-row').hidden"))
 
-        # --- THE IMPORTANT ONE: filtered delete removes only what's shown ---
+        # --- the important one: deleting while searching removes only what's shown ---
         page.locator('input[name="scope"][value="matches"]').check()
         page.wait_for_timeout(700)
         summary = page.locator("#scope-summary").text_content().strip()
@@ -118,7 +117,7 @@ def main():
         r.check("ONLY the matching cookies were deleted",
                 left == ["theme", "tracking_id"], str(left))
 
-        # --- falling back when the filter is cleared ---
+        # --- clearing the search switches away from that option ---
         page.fill("#search-input", "")
         page.wait_for_timeout(700)
         r.check("clearing the filter drops the now-meaningless scope",

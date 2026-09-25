@@ -4,9 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <!-- Applies a theme the visitor picked with the header button before the
-       page draws, so it doesn't flash the other theme first. Inline and not
-       deferred on purpose. See theme.js. -->
+  <!-- Applies the theme the visitor picked, before the page is drawn, so it
+       doesn't flash. It's inline and not deferred for that reason. See theme.js. -->
   <script>
     try {
       const saved = localStorage.getItem("color-scheme");
@@ -83,9 +82,8 @@
           <a class="button secondary" href="https://github.com/mwc0/cookie-manager">View the source</a>
         </div>
         <p class="note">Free. Works in Chrome and other Chromium browsers.</p>
-        <!-- Five screenshots in a strip that scrolls sideways and snaps to one
-             at a time. Works with CSS alone (swipe, trackpad, or arrow keys once
-             focused). carousel.js adds the buttons and dots. -->
+        <!-- Five screenshots in a strip that scrolls sideways. It works without
+             JavaScript. carousel.js adds the arrows and dots. -->
         <section class="showcase" aria-roledescription="carousel" aria-label="Screenshots of cookieZ">
           <div class="slides" tabindex="0" role="group" aria-label="Screenshots. Scroll sideways or use the arrow keys.">
             <div class="slide" role="group" aria-roledescription="slide" aria-label="1 of 5">

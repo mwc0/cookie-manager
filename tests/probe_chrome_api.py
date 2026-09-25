@@ -1,14 +1,14 @@
 """
-Not a test -- a probe. Run it to ask Chrome how it actually behaves.
-
-Every awkward workaround in src/lib/cookies.js exists because of one of the
-answers below. If a Chrome update ever changes one, the code built on it goes
-subtly wrong in a way no amount of reading the source would reveal, so this
-prints the current answers rather than asserting the old ones.
+Not a test. It asks Chrome how its cookie API behaves and prints the answers.
 
     python probe_chrome_api.py
 
-Expected answers as of 2026-09-21, Chromium 153:
+Most of the workarounds in src/lib/cookies.js are there because of one of
+these answers. If a Chrome update changes one, the code could quietly break
+in a way you can't see by reading it. So this prints what Chrome does now,
+instead of checking against the old answers.
+
+Answers as of 2026-09-21, Chromium 153:
   set() with a non-covering url ......... returns None, but WRITES the cookie
   set() with a covering url ............. returns the cookie
   SameSite=None without Secure .......... throws, without naming the rule
@@ -91,7 +91,7 @@ def main():
             print(f"\n{question}:")
             print("  " + json.dumps(answer))
 
-        # The expiry answer is only meaningful as a duration.
+        # Easier to read as a number of days.
         expiry = answers.get("expiry requested far in the future", {})
         if expiry.get("stored"):
             stored = datetime.fromtimestamp(expiry["stored"], timezone.utc)

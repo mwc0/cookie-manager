@@ -1,27 +1,25 @@
 """
-Generate the Chrome Web Store screenshots.
+Makes the Chrome Web Store screenshots.
 
     python make_store_screenshots.py
 
-Writes 1280x800 PNGs into store/screenshots/. Re-run it whenever the UI
-changes -- that's the point of it being a script rather than a folder of
-hand-taken captures that quietly go stale.
+Writes 1280x800 PNGs to store/screenshots/. Run it again whenever the popup
+changes, so the screenshots never go out of date.
 
-Two deliberate choices, both explained in store/README.md:
+Two rules, explained in store/README.md:
 
-  - Everything is shown on example.com and friends. example.com is reserved
-    for documentation, so no real service's branding ends up in the listing.
-  - Every cookie value is obviously fake. Anything legible in a store
-    screenshot is public forever.
+  - Every site shown is example.com or similar. Those domains are reserved
+    for examples, so no real company's name ends up in the listing.
+  - Every cookie value is clearly fake. Anything in a store screenshot is
+    public forever.
 
-The whole browser runs at 2x. The website gets each popup capture twice,
-popup-NAME.png at 780px and popup-NAME@2x.png at 1560px, so high-resolution
-screens get sharp text without ordinary screens downloading three times the
-data. The store images are taken with scale="css", which gives exactly
-1280x800 however dense the browser is, with the popup at its natural 780px.
+The browser runs at 2x. The website gets two copies of each popup capture,
+popup-NAME.png at 780px wide and popup-NAME@2x.png at 1560px, so sharp
+screens get sharp text and other screens don't download the bigger file.
+The store images are always exactly 1280x800.
 
-The first store image also goes to docs/images/01-overview.png, which is the
-picture every page of the website shows when a link to it is shared.
+The first store image is also copied to docs/images/01-overview.png, the
+preview image shown when someone shares a link to the website.
 """
 
 import base64
@@ -41,12 +39,12 @@ from helpers import (
 
 OUT = Path(__file__).resolve().parent.parent / "store" / "screenshots"
 
-# The bare popup captures, without the caption and canvas, for the website.
-# On a web page the popup should fill the image, not sit in a grey box.
+# Popup captures for the website, without the caption and grey background,
+# so the popup fills the image.
 SITE_OUT = Path(__file__).resolve().parent.parent / "docs" / "images"
 SITE = "https://example.com/"
 
-# Obviously fake values. Nothing here resembles a real token.
+# Clearly fake values. None of them look like a real token.
 COOKIES = [
     {"url": SITE, "name": "session_id",
      "value": "s%3AEXAMPLE-NOT-A-REAL-SESSION.0000", "secure": True, "httpOnly": True},
@@ -67,8 +65,7 @@ SHOTS = [
     ("05-keep", "Keep the cookies you don't want to lose"),
 ]
 
-# The frame the popup sits on. System fonts only, in keeping with the
-# extension itself making no network requests of any kind.
+# The background the popup sits on. System fonts only, like the extension.
 FRAME = """<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
   html, body { margin: 0; padding: 0; width: 1280px; height: 800px; }
@@ -85,9 +82,9 @@ FRAME = """<!DOCTYPE html>
           box-shadow: 0 16px 40px rgba(20, 30, 60, 0.18),
                       0 2px 6px rgba(20, 30, 60, 0.10); }
   img { width: 780px; display: block; border-radius: 10px; }
-  /* Only added when the popup's content genuinely scrolls. It says "there is
-     more below" instead of letting the frame end on a sliced-through row,
-     which reads as a broken screenshot rather than a scrollable list. */
+  /* Only added when the popup's content scrolls. The fade shows there's more
+     below, instead of the image ending halfway through a row, which looks
+     broken. */
   .shot.clipped::after {
     content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 72px;
     border-radius: 0 0 10px 10px;
@@ -108,8 +105,8 @@ def compose(context, png_bytes, caption, out_path, clipped=False):
         .replace("__CLIPPED__", "clipped" if clipped else "")
     )
     frame.wait_for_timeout(300)
-    # scale="css": one image pixel per CSS pixel, so the store gets the exact
-    # 1280x800 it requires even though the browser is running at 2x.
+    # scale="css" keeps the image at exactly 1280x800, which the store needs,
+    # even though the browser runs at 2x.
     frame.screenshot(path=str(out_path), scale="css")
     frame.close()
 
@@ -118,10 +115,9 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as p:
-        # 2x for the whole browser. This has to be set here: the profile is a
-        # persistent context, which has no separate browser to open a 2x
-        # context from. (An earlier version tried that, got None, and quietly
-        # captured everything at 1x.)
+        # The whole browser runs at 2x. It has to be set here, when the
+        # browser starts. An earlier version tried to open a separate 2x
+        # window later, which failed without an error and gave 1x images.
         context = launch(p, "screenshots", device_scale_factor=2)
         ext_id = extension_id(context)
 
@@ -152,14 +148,13 @@ def main():
             png = body.screenshot()  # 2x, 1560px wide
             compose(context, png, caption, OUT / f"{name}.png", clipped)
 
-            # The website gets both sizes and each browser downloads only the
-            # one it needs (srcset in docs/index.html): 1x for ordinary
-            # screens, 2x for high-resolution screens and phones.
+            # The website gets both sizes, and each browser only downloads the
+            # one it needs (see srcset in docs/index.html).
             (SITE_OUT / f"popup-{name}.png").write_bytes(body.screenshot(scale="css"))
             (SITE_OUT / f"popup-{name}@2x.png").write_bytes(png)
             if name == SHOTS[0][0]:
-                # The website's link-preview image. Written here so it can't
-                # fall behind the store copy again.
+                # The website's link preview image. Written here so it always
+                # matches the store copy.
                 (SITE_OUT / "01-overview.png").write_bytes((OUT / f"{name}.png").read_bytes())
             print(f"  wrote {name}.png" + ("  (content scrolls; faded)" if clipped else ""))
 
@@ -183,9 +178,8 @@ def main():
         page.fill("#field-value", "beta-enabled")
         page.uncheck("#field-session")
         page.fill("#field-expiry", "2027-06-30T12:00")
-        # Drop focus, or the capture shows a focus ring and the blue
-        # text-selection left behind by fill() -- artefacts of automation that
-        # would look like UI defects in the listing.
+        # Remove focus, or the screenshot shows a focus ring and selected
+        # text left behind by fill(), which would look like bugs.
         page.evaluate("() => document.activeElement && document.activeElement.blur()")
         page.wait_for_timeout(300)
         capture(*SHOTS[2])
@@ -205,11 +199,9 @@ def main():
         row = page.locator("tr", has=page.locator("td.name", has_text="session_id"))
         row.locator("button.row-button.keep").first.click()
         page.wait_for_timeout(900)
-        # Reopen the popup before capturing. The "Keeping session_id" message
-        # stays until then, and its extra line pushed the kept row into the
-        # faded bottom edge, so the screenshot's subject was the hardest thing
-        # to see. Reopening is a real state too: it shows the cookie is still
-        # kept after the popup was closed.
+        # Reopen the popup first. Otherwise the "Keeping session_id" message
+        # is still showing, and it pushes the kept row down into the faded
+        # bottom edge where it's hard to see.
         page.reload()
         page.wait_for_timeout(1400)
         page.locator('input[name="scope"][value="page"]').check()

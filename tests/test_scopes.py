@@ -1,14 +1,13 @@
 """
-The three delete scopes.
+The page, domain and all-sites delete options.
 
-This is the headline feature, so the thing being tested is not just "does it
-delete" but "does it delete exactly what it said it would" -- the count on
-screen, the confirm text, the reported result and the real cookie store all
-have to agree.
+This is the main feature, so it's not enough that it deletes. It has to
+delete exactly what it said it would: the count on screen, the confirm
+message, the result message and Chrome's cookie store must all agree.
 
-The seeded landscape includes `notexample.test` on purpose. A scope built on a
-suffix match rather than real domain matching would sweep it up along with
-`example.test`, which would be an over-delete of an unrelated site.
+notexample.test is there on purpose. A check that only looked at whether the
+domain ends in "example.test" would delete it too, and it's a different
+site.
 """
 
 import json
@@ -68,8 +67,8 @@ def main():
         r.check("main screen reached", visible_state(page) == "state-main")
 
         # --- this page ---
-        # Two cookies: the host-only one, plus the domain-wide .example.test
-        # cookie that this page genuinely receives.
+        # Two cookies: the host-only one, and the domain-wide .example.test
+        # one, which this page also gets.
         select_scope(page, "page")
         r.check("'this page' counts the cookies the page actually receives",
                 "2 cookies" in page.locator("#scope-summary").text_content(),
@@ -94,7 +93,7 @@ def main():
                 "notexample.test" in all_domains and "other.test" in all_domains,
                 str(all_domains))
 
-        # --- delete at domain scope, and check the claim against reality ---
+        # --- delete at domain scope, and check it did what it said ---
         select_scope(page, "domain")
         claimed = page.locator("#scope-summary").text_content().strip()
         page.locator("#delete-button").click()

@@ -1,14 +1,13 @@
 """
-The extension makes no network requests. Ever.
+The extension never makes a network request.
 
-This is the product's entire positioning rather than a nice-to-have, so it is
-worth a test that runs every time and not just an occasional look at the
-DevTools Network tab.
+This is the product's main promise, so it's tested on every run, not just
+checked in DevTools now and then.
 
-Two checks, because they fail differently:
-  - a static grep for the things that cause requests (fetch, CDN links, web
-    fonts), which catches them even on code paths a test never reaches
-  - a live capture of every request the browser makes while the popup is used
+Two checks, because they catch different things:
+  - a search of the source for things that make requests (fetch, CDN links,
+    web fonts), which also catches code that no test reaches
+  - a record of every request the browser makes while the popup is used
 """
 
 import re
@@ -21,7 +20,7 @@ from helpers import EXTENSION, Results, extension_id, launch, open_popup
 
 SITE = "https://network.test/"
 
-# Things that would mean a network request, or make one possible.
+# Anything that makes, or could make, a network request.
 FORBIDDEN = [
     (r"\bfetch\s*\(", "fetch() call"),
     (r"XMLHttpRequest", "XMLHttpRequest"),
@@ -67,7 +66,7 @@ def watch_requests(r):
         page.reload()
         page.wait_for_timeout(1000)
 
-        # Exercise the parts that could plausibly reach out.
+        # Use the parts that could possibly make a request.
         page.locator("#add-button").click()
         page.wait_for_timeout(300)
         page.fill("#field-name", "made_here")

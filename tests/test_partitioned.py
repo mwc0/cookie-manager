@@ -1,15 +1,15 @@
 """
 Partitioned (CHIPS) cookies.
 
-Why this one matters more than it looks: a plain getAll() does not return
-partitioned cookies, so a "delete everything" built on it alone leaves some
-behind -- which is the exact complaint this extension exists to fix. The code
-queries a second time with `partitionKey: {}` and merges. These tests pin down
-that `{}` really does mean "any partition", because if that assumption ever
-stops holding, the failure is silent.
+A plain getAll() doesn't return partitioned cookies, so a "delete
+everything" built on it alone would leave some behind, which is exactly the
+complaint this extension fixes. The code asks a second time with
+`partitionKey: {}` and merges the results. These tests check that `{}`
+really means "any partition", because if that ever changes, nothing will
+show an error.
 
-Caveat worth keeping in mind: the partition key here is set directly via
-chrome.cookies.set, not by a real cross-site embed. See README.md.
+The cookie here is made directly with chrome.cookies.set. One made by a real
+cross-site iframe is tested in test_devtools_crosscheck.py.
 """
 
 import json
@@ -59,7 +59,7 @@ def main():
         )
         r.check("an exact partitionKey query also finds it (sanity check)", len(exact) == 1)
 
-        # --- and now the thing that actually matters: the popup's own path ---
+        # --- now the part that matters: the popup itself ---
         page.reload()
         page.wait_for_timeout(1200)
         rows = page.evaluate("() => document.getElementById('cookie-rows').children.length")

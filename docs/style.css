@@ -1,11 +1,8 @@
-/* cookieZ website.
+/* cookieZ website. One stylesheet for every page, with nothing loaded from
+   another server.
 
-   One stylesheet for every page. No web fonts, no framework, nothing loaded
-   from another server: the site keeps the same promise the extension makes.
-
-   Colours follow the promo tile and the icon: a near-black ink, cool greys,
-   and the keycap. Light and dark follow the visitor's system setting,
-   unless they pick one with the button in the header (theme.js). */
+   Colours match the icon and promo tile. Light or dark follows the system,
+   unless the visitor uses the button in the header (theme.js). */
 
 :root {
   color-scheme: light dark;
@@ -25,11 +22,9 @@
   --shot-shadow: 0 1px 2px rgba(20, 30, 60, 0.06), 0 8px 24px rgba(20, 30, 60, 0.10);
 }
 
-/* Dark colours, twice. The first block follows the system setting and needs
-   no script, so the site is right even if JavaScript is off. The second is
-   for a visitor who pressed the light/dark button (theme.js puts .dark or
-   .light on <html>). The two lists must stay identical: the site tests
-   check this. */
+/* The dark colours are here twice. The first block follows the system and
+   works without JavaScript. The second is for visitors who pressed the
+   light/dark button. Keep the two lists the same. */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     --ink: #e8ebf1;
@@ -119,7 +114,7 @@ code {
   padding: 0 24px;
 }
 
-/* Keyboard users land here first and can jump past the header. */
+/* Lets keyboard users skip past the header. */
 .skip {
   position: absolute;
   left: 16px;
@@ -151,7 +146,7 @@ code {
   padding-bottom: 14px;
 }
 
-/* The wordmark from the promo tile, scaled down: "cookie" and a keycap Z. */
+/* "cookie" plus a keycap Z, as on the promo tile. */
 .wordmark {
   display: inline-flex;
   align-items: center;
@@ -201,15 +196,14 @@ code {
   text-decoration: underline;
 }
 
-/* The navigation and the light/dark button, kept together on the right. */
 .header-end {
   display: flex;
   align-items: center;
   gap: 18px;
 }
 
-/* Shows the theme you'd switch TO: a moon while the page is light, a sun
-   while it's dark. Hidden until theme.js has set it up. */
+/* Shows the theme you'd switch to: a moon on the light page, a sun on the
+   dark one. Hidden until theme.js sets it up. */
 .theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -247,10 +241,9 @@ code {
   display: block;
 }
 
-/* On a phone: logo and button on the first row, the links on a full-width
-   row underneath. display: contents lets the button and nav be arranged as
-   if the .header-end wrapper weren't there; it's a plain div, so nothing is
-   lost for screen readers. */
+/* On phones, the logo and button share the top row and the links go on the
+   row below. display: contents lets the button and nav be placed as if the
+   wrapper div wasn't there. */
 @media (max-width: 600px) {
   .header-end {
     display: contents;
@@ -296,7 +289,6 @@ code {
   margin-top: 32px;
 }
 
-/* Buttons lined up under left-aligned text rather than centred. */
 .actions.start {
   justify-content: flex-start;
 }
@@ -323,7 +315,7 @@ code {
   border-color: var(--muted);
 }
 
-/* Shown until the store listing is live. Not a link, so it can't lead
+/* Used until the store listing is live. It isn't a link, so it can't lead
    anywhere broken. */
 .button.pending {
   background: transparent;
@@ -340,12 +332,11 @@ code {
 
 /* --- home: screenshot carousel -------------------------------------------
 
-   A strip of five screenshots that scrolls sideways and snaps to one at a
-   time. That part is CSS only, so it works with scripts off. carousel.js adds
-   the arrows and dots and hides the scrollbar once they're there.
+   A strip of screenshots that scrolls sideways and stops on one at a time.
+   That works with CSS alone. carousel.js adds the arrows and dots.
 
-   820px = the popup's real width (780px) plus room for the shadow, so the
-   screenshots are never scaled up. */
+   820px is the popup's width (780px) plus room for the shadow, so the
+   screenshots are never stretched. */
 
 .showcase {
   margin: 40px auto 0;
@@ -353,7 +344,7 @@ code {
 }
 
 .slides {
-  /* offsetLeft of each slide is measured from here; carousel.js relies on it. */
+  /* carousel.js measures slide positions from here. */
   position: relative;
   display: flex;
   align-items: center;
@@ -370,7 +361,7 @@ code {
 .slide {
   flex: 0 0 100%;
   margin: 0;
-  /* Room for the screenshot's shadow, which the strip would otherwise clip. */
+  /* Room for the screenshot's shadow. */
   padding: 8px 20px 12px;
   scroll-snap-align: center;
 }
@@ -389,8 +380,8 @@ code {
   color: var(--muted);
 }
 
-/* With the arrows and dots in place, the scrollbar is just clutter. Without
-   them it's the only visible hint that the strip scrolls, so it stays. */
+/* Hide the scrollbar once the arrows and dots are there. Without them, the
+   scrollbar is the only sign that the strip scrolls. */
 .has-controls .slides {
   scrollbar-width: none;
 }
@@ -425,8 +416,7 @@ code {
   cursor: pointer;
 }
 
-/* Drawn to the same weight as the sun and moon in the header, rather than
-   the arrow characters, which change with whatever font the device has. */
+/* SVG arrows, because arrow characters look different in every font. */
 .carousel-arrow svg {
   width: 16px;
   height: 16px;
@@ -446,7 +436,7 @@ code {
   gap: 4px;
 }
 
-/* 24px buttons so they're easy to hit, with a 10px dot drawn inside. */
+/* 24px buttons, easy to hit, with a 10px dot inside. */
 .carousel-dot {
   width: 24px;
   height: 24px;
@@ -483,10 +473,8 @@ code {
   box-shadow: var(--shot-shadow);
 }
 
-/* On a phone the whole 780px popup shrinks to about 320px, and its text to
-   about 4px: a grey blur. Instead, show a portrait crop of its left side
-   (site name, delete options, cookie names), at a size where the text can
-   actually be read. The crop is of the real screenshot; nothing is redrawn. */
+/* On phones the whole popup would shrink until its text is about 4px, so
+   show a crop of its left side instead, big enough to read. */
 @media (max-width: 600px) {
   .shot {
     width: 100%;
@@ -524,7 +512,7 @@ code {
   margin-bottom: 0;
 }
 
-/* Text on one side, screenshot on the other. Stacks on narrow screens. */
+/* Text beside a screenshot. They stack on narrow screens. */
 .split {
   display: grid;
   grid-template-columns: 1fr 1.25fr;
@@ -553,7 +541,7 @@ code {
   line-height: 1.3;
 }
 
-/* The "closer look" rows: one feature and its screenshot per row. */
+/* The "A closer look" rows. */
 .tour {
   margin-top: 36px;
 }
@@ -601,8 +589,7 @@ code {
   color: var(--ink-soft);
 }
 
-/* A paragraph straight after a list of facts, which has no bottom margin
-   of its own. */
+/* The list above has no bottom margin, so the paragraph adds the space. */
 .section p.after-list {
   margin-top: 20px;
 }
@@ -673,7 +660,7 @@ code {
   background: var(--bg-alt);
 }
 
-/* Frequently asked questions: native <details>, so no script is needed. */
+/* Questions and answers use <details>, so no script is needed. */
 .faq details {
   border-bottom: 1px solid var(--line);
   padding: 14px 0;
@@ -724,10 +711,9 @@ code {
 
 /* --- touch screens ------------------------------------------------------- */
 
-/* Fingers need about 44px to hit something reliably. The header and footer
-   links are ~20px tall, so on touch screens they get padding above and
-   below. The negative margins on the lists take that back out of the layout,
-   so the page looks the same and only the tappable area grows. */
+/* Fingers need about 44px to hit something. On touch screens the header
+   and footer links get extra padding, and the lists' negative margins
+   cancel it out, so the page looks the same but is easier to tap. */
 @media (pointer: coarse) {
   .site-nav a,
   .site-footer a {
@@ -741,8 +727,8 @@ code {
     margin-block: -12px;
   }
 
-  /* The round buttons keep their size and gain an invisible margin of tap
-     area. The dots sit 4px apart, so theirs only grows up and down. */
+  /* The round buttons stay the same size but get a bigger tap area. The dots
+     are only 4px apart, so theirs only grows up and down. */
   .theme-toggle,
   .carousel-arrow,
   .carousel-dot {
