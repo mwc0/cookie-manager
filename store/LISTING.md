@@ -234,12 +234,16 @@ All three are true.
 
 ## Privacy policy URL
 
-The store requires a URL, not a file. The policy is in `store/PRIVACY.md`, and
-the simplest honest option is to point at it on GitHub:
-
 ```
-https://github.com/mwc0/cookie-manager/blob/main/store/PRIVACY.md
+https://cookiez.uk/privacy/
 ```
 
-That needs no hosting and updates when the repo does. If you'd rather have a
-plain page, GitHub Pages on this repo would also work.
+That page is generated from `store/PRIVACY.md` by `tests/make_privacy_page.py`,
+so it always says the same as the file here. After changing PRIVACY.md, re-run
+the script and push, or the website falls behind.
+
+## Contact email
+
+```
+support@cookiez.uk
+```
