@@ -1,23 +1,16 @@
 """
-Build the Chrome Web Store zip.
+Builds the Chrome Web Store zip, then checks it.
 
     python store/package.py
 
-Writes cookie-manager-<version>.zip in the repo root, then checks it.
+Writes cookie-manager-<version>.zip in the repo root. Nothing is changed on
+the way in: every file goes into the zip exactly as it is in src/. The
+listing promises that what's published is what's in the source, so keep it
+that way.
 
-This is not a build step. Nothing is compiled, bundled, minified or
-rewritten: the files go into the zip byte for byte as they are in src/. That
-matters beyond tidiness, because the listing and the privacy policy both tell
-people that what is published is what was written, and they can only keep
-saying so while this script stays a zip and a set of assertions.
-
-What it is actually for is the one mistake that is easy to make by hand and
-gets submissions rejected: zipping the src folder instead of its contents.
-Chrome needs manifest.json at the root of the archive. Zipping src/ puts it
-at src/manifest.json and the upload fails with a message that does not make
-the cause obvious.
-
-Uses only the standard library.
+The main thing it prevents is zipping the src folder itself instead of its
+contents. Chrome needs manifest.json at the top of the zip, and the upload
+error doesn't make that obvious.
 """
 
 import json
@@ -28,13 +21,13 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 SRC = REPO / "src"
 
-# Anything matching these never belongs in a published extension.
+# Never shipped in the extension.
 NEVER_SHIP = {".map", ".log", ".zip", ".crx", ".pem", ".py", ".md"}
 NEVER_SHIP_NAMES = {".DS_Store", "Thumbs.db", "desktop.ini", ".gitignore"}
 
 
 def collect():
-    """Every file under src/, as (absolute path, path inside the zip)."""
+    """Every file in src/, as (path on disk, path inside the zip)."""
     files = []
     for path in sorted(SRC.rglob("*")):
         if not path.is_file():
@@ -47,7 +40,7 @@ def collect():
 
 
 def check_before(files):
-    """Fail loudly rather than produce a zip the store will reject."""
+    """Problems that would get the zip rejected by the store."""
     problems = []
 
     names = {arc for _, arc in files}

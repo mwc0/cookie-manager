@@ -1,16 +1,12 @@
 // The light/dark button in the header.
 //
-// The site follows the visitor's system setting by default, entirely in CSS.
-// This button offers the opposite of whatever is showing. Picking it pins
-// that exact theme (it stays dark even if the system later turns dark too);
-// picking the system's own theme again goes back to following the system.
+// By default the site follows the system theme, using CSS alone. The button
+// switches to the other theme and keeps it, even if the system changes
+// later. Switching back to the system's theme goes back to following it.
 //
-// The choice is kept in localStorage under "color-scheme", on the visitor's
-// own device, and only once they click. The website privacy policy says so.
-//
-// The saved choice is applied before the page draws by a short inline script
-// in each page's <head>, so there's no flash of the wrong theme. This file
-// only runs the button.
+// The choice is saved in localStorage as "color-scheme", only after a click.
+// The website privacy policy mentions this. A short script in each page's
+// <head> applies it before the page is drawn. This file only runs the button.
 
 (function () {
   const KEY = "color-scheme";
@@ -29,8 +25,8 @@
     }
   }
 
-  // null means "follow the system". Kept here rather than re-read from
-  // storage, so the button still works where storage is blocked.
+  // null means "follow the system". Kept in a variable so the button still
+  // works if storage is blocked.
   let choice = saved();
 
   function system() {
@@ -53,19 +49,18 @@
 
   button.addEventListener("click", function () {
     const target = showing() === "dark" ? "light" : "dark";
-    // Choosing what the system already shows means "follow the system".
+    // Picking the system's own theme means "follow the system".
     choice = target === system() ? null : target;
     try {
       if (choice) localStorage.setItem(KEY, choice);
       else localStorage.removeItem(KEY);
     } catch (e) {
-      // Storage blocked: the switch still works, it just isn't remembered.
+      // Storage blocked. The switch still works, it just isn't remembered.
     }
     apply();
   });
 
-  // The system setting can change while the page is open. The CSS follows it
-  // by itself; this keeps the button's icon and label right.
+  // The CSS follows system changes by itself. This keeps the icon right.
   systemDark.addEventListener("change", apply);
 
   apply();
