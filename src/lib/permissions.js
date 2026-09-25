@@ -1,35 +1,26 @@
-// Host permission handling.
+// Access to websites. The "cookies" permission alone can't read any cookies:
+// Chrome also needs permission for each cookie's site. We ask for all sites
+// when the popup is first opened, rather than at install.
 //
-// The "cookies" permission on its own is not enough to read a single cookie.
-// Chrome also requires host permission for the site a cookie belongs to.
-// We keep "*://*/*" out of the manifest and in optional_host_permissions so
-// the install screen stays clean, then ask for it at runtime.
-//
-// The important trap: without host permission, chrome.cookies.getAll() does
-// NOT throw. It quietly returns an empty array, which looks exactly like
-// "this site has no cookies". Everything that reads cookies must therefore
-// check hasHostAccess() first, so we can tell the user which situation
-// they're actually in.
+// Watch out: without that permission, chrome.cookies.getAll() doesn't fail.
+// It returns an empty list, which looks the same as "this site has no
+// cookies". So always check hasHostAccess() before reading cookies.
 
 export const ALL_SITES = "*://*/*";
 
-// Does the user already have us covered for all sites?
 export async function hasHostAccess() {
   try {
     return await chrome.permissions.contains({ origins: [ALL_SITES] });
   } catch (error) {
-    // If even the check fails, treat it as "no access" and let the UI show
-    // the grant screen rather than an empty cookie list.
+    // Treat a failed check as "no access", so the user sees the grant screen
+    // and not an empty list.
     console.warn("Permission check failed:", error);
     return false;
   }
 }
 
-// Ask for access. This MUST be called directly from a click handler --
-// Chrome rejects permission requests that aren't tied to a user gesture.
-//
-// Returns { granted, error }. A denial is not an error; it's a normal answer
-// that the UI needs to handle readably.
+// Must be called straight from a click, or Chrome refuses to show the
+// prompt. Returns { granted, error }. The user saying no isn't an error.
 export async function requestHostAccess() {
   try {
     const granted = await chrome.permissions.request({ origins: [ALL_SITES] });

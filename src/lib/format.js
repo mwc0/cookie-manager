@@ -1,9 +1,7 @@
-// Display helpers. Pure functions -- no chrome API calls, no side effects,
-// so these are the easy ones to reason about and change.
+// Formatting for display. Nothing in here calls Chrome or changes anything.
 
-// Cookies without an expirationDate are session cookies: they die when the
-// browser closes. Keeping that distinction visible matters, because writing an
-// expiry onto a session cookie silently makes it permanent.
+// A cookie with no expiry date is a session cookie, deleted when the browser
+// closes.
 export function formatExpiry(cookie) {
   if (typeof cookie.expirationDate !== "number") {
     return "Session";
@@ -21,7 +19,7 @@ export function formatExpiry(cookie) {
   });
 }
 
-// The full timestamp, for the row's tooltip.
+// The full date and time, for the tooltip.
 export function formatExpiryFull(cookie) {
   if (typeof cookie.expirationDate !== "number") {
     return "Session cookie - removed when the browser closes";
@@ -35,8 +33,8 @@ export function formatExpiryFull(cookie) {
   return "Expires " + date.toLocaleString();
 }
 
-// Chrome's internal SameSite names aren't the ones developers know from the
-// Set-Cookie header, so translate them back.
+// Chrome's SameSite names differ from the ones in a Set-Cookie header, so
+// show the familiar ones.
 export function formatSameSite(value) {
   switch (value) {
     case "no_restriction":
@@ -54,13 +52,9 @@ export function formatSameSite(value) {
 
 // --- the expiry field --------------------------------------------------
 //
-// <input type="datetime-local"> speaks local wall-clock time in
-// "YYYY-MM-DDTHH:mm"; chrome.cookies speaks seconds since the epoch. These
-// two convert between them.
-//
-// The components are read and written one at a time rather than going via
-// toISOString(), because that converts to UTC and would shift the time the
-// user sees by their offset.
+// The date input uses local time as "YYYY-MM-DDTHH:mm". Chrome uses seconds
+// since 1970. These two convert between them. toISOString() isn't used
+// because it converts to UTC, which would shift the time the user sees.
 export function toLocalDateTimeValue(expirationDate) {
   if (typeof expirationDate !== "number") {
     return "";
@@ -85,7 +79,7 @@ export function toLocalDateTimeValue(expirationDate) {
   );
 }
 
-// Returns seconds since the epoch, or null if the field is empty or unreadable.
+// Returns null if the field is empty or can't be read.
 export function fromLocalDateTimeValue(text) {
   if (!text) {
     return null;
@@ -111,7 +105,7 @@ export function formatCount(number) {
   return number.toLocaleString();
 }
 
-// "1 cookie" / "14 cookies"
+// "1 cookie", "14 cookies"
 export function pluralise(count, singular, plural) {
   return formatCount(count) + " " + (count === 1 ? singular : plural);
 }

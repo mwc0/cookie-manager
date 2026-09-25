@@ -1,16 +1,12 @@
-/* System fonts only. Loading a web font would be a network request, which
-   this extension never makes. */
+/* System fonts only. A web font would be a network request. */
 
 /* Theme.
 
-   popup/apply-theme.js sets data-theme on <html> to "light" or "dark" before
-   the first paint, and the Auto / Light / Dark control in the header changes
-   it. "Auto" is resolved in JS, not here, so the dark colours below exist in
-   exactly one place instead of being repeated inside a media query -- see
-   src/lib/theme.js for why.
-
-   Because of that, there is no prefers-color-scheme fallback: if
-   apply-theme.js stops running, the popup is light on a dark OS. */
+   apply-theme.js sets data-theme on <html> to "light" or "dark" before the
+   popup is drawn. "Auto" is worked out in JavaScript (see src/lib/theme.js),
+   so the dark colours only need to be written once, below. There's no
+   prefers-color-scheme fallback, so if apply-theme.js stops working, the
+   popup is always light. */
 
 :root {
   color-scheme: light;
@@ -28,20 +24,18 @@
   --selection: #cddcf6;
   --scrollbar: #c4c4c4;
 
-  /* Text drawn ON a filled accent or danger button. White works on the dark
-     light-theme fills; the dark theme's fills are pale, so its text is dark.
-     White on those measured 2.4:1, well under the 4.5:1 text needs. */
+  /* Text colour on filled accent and danger buttons. White text on the dark
+     theme's pale buttons was too hard to read, so dark text is used there. */
   --on-accent: #ffffff;
   --on-danger: #ffffff;
 
-  /* Radios and checkboxes take the accent instead of Chrome's own blue, and
-     follow it into the dark theme. */
+  /* Radios and checkboxes use the accent colour in both themes. */
   accent-color: var(--accent);
 }
 
 :root[data-theme="dark"] {
-  /* color-scheme also darkens what the browser draws itself: scrollbars, the
-     search field's clear button, and the date picker in the editor. */
+  /* Also darkens the parts Chrome draws itself, like scrollbars and the date
+     picker. */
   color-scheme: dark;
 
   --bg: #1e1e1e;
@@ -69,18 +63,15 @@
   box-sizing: border-box;
 }
 
-/* The browser's own [hidden] rule is weaker than any author rule that sets
-   display, so `.confirm { display: flex }` would keep a hidden element on
-   screen. The popup toggles screens with the hidden attribute, so this has to
-   win outright. */
+/* Makes the hidden attribute always win. Without this, a rule like
+   .confirm { display: flex } would keep a hidden element on screen, and the
+   popup switches screens using hidden. */
 [hidden] {
   display: none !important;
 }
 
 body {
-  /* Chrome caps a popup at 800px. The extra 20px over the old 760 buys the
-     flags column enough room to keep badges on one line without squeezing
-     the value preview to uselessness. */
+  /* Chrome won't make a popup wider than 800px. */
   width: 780px;
   max-height: 580px;
   margin: 0;
@@ -91,7 +82,6 @@ body {
   font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Scrollbars in the palette's own greys rather than Chrome's defaults. */
 body,
 #table-wrap,
 #scope-domains ul {
@@ -102,13 +92,13 @@ body,
   padding: 14px 16px;
 }
 
-/* The one-message screens: permission, blocked page, error. */
+/* Screens with a single message: permission, blocked page, error. */
 .notice h1 {
   margin-bottom: 8px;
 }
 
 .notice p {
-  /* Full popup width runs to ~120 characters a line, which is hard to read. */
+  /* Keeps lines to a readable length. */
   max-width: 64ch;
 }
 
@@ -169,8 +159,8 @@ button:disabled {
   cursor: default;
 }
 
-/* One focus ring for every control, in the accent colour, only when focus
-   came from the keyboard. Text fields keep their own inset ring below. */
+/* One focus ring for every control, shown only for keyboard use. Text
+   fields have their own ring further down. */
 button:focus-visible,
 summary:focus-visible,
 input[type="radio"]:focus-visible,
@@ -240,8 +230,7 @@ button.danger:hover:not(:disabled) {
 }
 
 /* "3 matches" and "everything in this browser profile" describe a scope
-   rather than naming a host, so they are set as ordinary text. Monospace
-   would suggest a literal value. */
+   rather than name a site, so they use normal text, not monospace. */
 .scope-note {
   font-family: inherit;
 }
@@ -289,8 +278,8 @@ button.danger:hover:not(:disabled) {
   margin: 9px 0 0;
 }
 
-/* The message above the search box ("Saved changes to…") needs its space
-   below it, not above, or it sits flush against the search field. */
+/* The message above the search box ("Saved changes to…") needs space
+   under it, or it touches the search field. */
 #main-message {
   margin: 0 0 10px;
 }
@@ -300,24 +289,16 @@ button.danger:hover:not(:disabled) {
 #table-wrap {
   border: 1px solid var(--line);
   border-radius: 6px;
-  /* Scrolls rather than clips. `overflow: hidden` here was actively harmful:
-     it hid the row buttons when the table outgrew the popup, AND still let
-     focus scroll the table sideways, so clicking a half-hidden button pushed
-     the Name column off the left with no scrollbar to bring it back. */
+  /* Scrolls sideways if it has to. Don't change this to overflow: hidden:
+     that hid the row buttons when the table was too wide. */
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-/* Fixed layout: the widths on the <col> elements below are what the columns
-   get, whatever the cookies contain. Before this, the browser sized columns
-   from their content, and the minimums added up to ~790px against the 747px
-   available -- one cookie with a date and a longish value put every row's
-   Delete button out of sight. Trimming a few pixels at a time only held
-   until the next longer value.
-
-   Every column is fixed except Value, which takes what is left: 107px, or
-   about 93px once the popup grows a scrollbar. Truncating a value costs
-   nothing -- it is one click from being shown in full. */
+/* Fixed column widths, set on the <col> elements in popup.html, so the
+   table can never be wider than the popup, whatever the cookies contain.
+   Every column has a fixed width except Value, which gets what's left.
+   Long values are cut short, and can be clicked to show in full. */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -342,12 +323,12 @@ table {
 }
 
 .col-flags {
-  /* Two badges to a line, which covers the common flag pairs. */
+  /* Two badges fit on a line. */
   width: 130px;
 }
 
 .col-actions {
-  /* Keep + Edit + Delete, sized for the wider "Kept" and "Sure?" forms. */
+  /* Wide enough for Keep, Edit and Delete, including "Kept" and "Sure?". */
   width: 146px;
 }
 
@@ -366,9 +347,8 @@ th {
 td {
   padding: 5px 6px;
   border-bottom: 1px solid var(--line);
-  /* Top, not baseline: an expanded value is a button, and a button's baseline
-     is its LAST line, so baseline alignment dropped the rest of the row to
-     the bottom of a 30-line value. */
+  /* Line up with the top of the cell. With baseline alignment, an expanded
+     value pushed the rest of the row down to its last line. */
   vertical-align: top;
 }
 
@@ -377,15 +357,14 @@ tr:last-child td {
 }
 
 td.name {
-  /* The name is how you identify a row, so its column is the widest fixed
-     one. break-all is the fallback for the pathologically long names some
-     sites use. */
+  /* The widest fixed column, since the name is how people find a cookie.
+     break-all handles the rare very long name. */
   font-weight: 600;
   word-break: break-all;
 }
 
-/* Domains and paths break at their dots and slashes (render.js marks those
-   points); `anywhere` is the fallback for a single piece too long to fit. */
+/* Domains and paths wrap at their dots and slashes (see render.js). anywhere
+   is the fallback for a single piece that's too long. */
 td.domain,
 td.path {
   overflow-wrap: anywhere;
@@ -443,23 +422,21 @@ td.value.expanded .value-toggle {
 
 /* --- theme control ------------------------------------------------------
 
-   Radio inputs rather than buttons, so arrow keys move between the three
-   options the way a segmented control is expected to behave. The inputs
-   themselves are hidden and the labels are what you see and click. */
+   Built from radio buttons so the arrow keys move between the three
+   options. The radios are hidden, and the labels are what you see and click. */
 
 .theme {
   display: flex;
   align-items: stretch;
-  /* Larger than the control can ever be, so the ends stay semicircular
-     whatever height the header settles at. */
+  /* Keeps the ends round whatever the height. */
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--bg);
   overflow: hidden;
 }
 
-/* No dividing lines between the segments: on a pill they fight the rounded
-   ends, and the filled segment already shows which one is active. */
+/* No lines between the segments. The filled one already shows which is
+   chosen. */
 .theme label {
   display: flex;
   align-items: center;
@@ -471,8 +448,7 @@ td.value.expanded .value-toggle {
   user-select: none;
 }
 
-/* All three icons are drawn with currentColor, so they pick up the label's
-   colour and invert against the filled segment without a second rule. */
+/* The icons use currentColor, so they change colour with the label. */
 .theme svg {
   display: block;
   width: 14px;
@@ -484,27 +460,24 @@ td.value.expanded .value-toggle {
   color: var(--fg);
 }
 
-/* Must come after the :hover rule. Both selectors have the same specificity,
-   so source order is the only thing making the selected segment stay
-   highlighted while the pointer is over it -- and it always is, because you
-   just clicked it. */
+/* Must stay after the :hover rule, or the chosen segment loses its
+   highlight while the mouse is over it (which it always is, right after a
+   click). */
 .theme input:checked + label {
   background: var(--accent);
   color: var(--on-accent);
 }
 
-/* The inputs are clipped out of sight, which takes their focus ring with
-   them, so the label has to show focus instead or the control is invisible
-   to keyboard users. */
+/* The radios are hidden, so the label shows the keyboard focus ring
+   instead. */
 .theme input:focus-visible + label {
   outline: 2px solid var(--accent);
   outline-offset: -3px;
 }
 
 td.row-actions {
-  /* Less top padding than the other cells, because the buttons carry their
-     own. This puts their labels on the same line as the row's text instead
-     of 3px below it. */
+  /* Less top padding than other cells, because the buttons have their own.
+     This lines their text up with the rest of the row. */
   padding-top: 2px;
   padding-bottom: 2px;
   white-space: nowrap;
@@ -517,7 +490,7 @@ td.row-actions {
   font-size: 12px;
 }
 
-/* The ring would otherwise overlap the neighbouring button. */
+/* Stops the focus ring overlapping the next button. */
 .row-button:focus-visible {
   outline-offset: 1px;
 }
@@ -527,18 +500,16 @@ td.row-actions {
   border-color: var(--line);
 }
 
-/* The armed state of a single-cookie delete: the button asks for a second
-   click rather than opening a dialog, so it has to look clearly different
-   from the one that only asks.
+/* A Delete button waiting for its second click ("Sure?"). It's filled in
+   so it clearly looks different.
 
-   The :hover selector is not optional. `button.danger:hover:not(:disabled)`
-   above is more specific than a three-class selector, so without it that rule
-   keeps the pale hover background while the white text below still applies --
-   white on pale pink, i.e. an armed button reading as blank. An armed button
-   is ALWAYS hovered, because you just clicked it.
+   The :hover selector is needed. Without it, the danger:hover rule above
+   wins, and the button shows white text on a pale background, which looks
+   blank. The button is always hovered at this point, since it was just
+   clicked.
 
-   The delete panel's "Yes, delete" (.solid) is the same moment -- the click
-   that actually deletes -- so it gets the same filled look. */
+   "Yes, delete" (.solid) in the delete panel is the same moment, so it
+   looks the same. */
 .row-button.danger.armed,
 button.row-button.danger.armed:hover:not(:disabled),
 button.danger.solid,
@@ -548,8 +519,8 @@ button.danger.solid:hover:not(:disabled) {
   color: var(--on-danger);
 }
 
-/* Screen readers need a name for the actions column; sighted users don't
-   need a header over two buttons. */
+/* Screen readers need a name for the actions column. Sighted users don't
+   need a heading over the buttons. */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -569,10 +540,8 @@ button.danger.solid:hover:not(:disabled) {
 }
 
 .field {
-  /* 10 rather than 12: across seven fields that's what keeps the whole form,
-     Save button included, inside the popup's max height instead of 8px over
-     it. A primary action that needs scrolling to reach is a bad primary
-     action. */
+  /* 10px, not 12px, so the whole form, Save button included, fits in the
+     popup without scrolling. */
   margin-bottom: 10px;
 }
 
@@ -624,8 +593,7 @@ button.danger.solid:hover:not(:disabled) {
   color: var(--muted);
 }
 
-/* Checkboxes sit inline with their explanation, so the label reads as one
-   sentence rather than a word floating above a box. */
+/* Checkboxes sit on the same line as their label. */
 .field label.check {
   display: flex;
   align-items: center;
@@ -681,9 +649,8 @@ button.danger.solid:hover:not(:disabled) {
 
 /* --- kept cookies ------------------------------------------------------ */
 
-/* A kept cookie is excluded from every delete this extension makes, so the
-   row needs to read differently at a glance -- someone scanning the table
-   before pressing Delete should be able to see what won't go. */
+/* A kept cookie won't be deleted, so its row looks different. Anyone
+   checking the table before pressing Delete can see what will stay. */
 tr.kept-row td {
   background: var(--panel);
 }
@@ -698,9 +665,8 @@ tr.kept-row td.name {
   font-weight: 600;
 }
 
-/* Same specificity trap as the armed delete button: a plain-element hover
-   rule outranks a multi-class one, so the hover case is spelled out rather
-   than left to lose. */
+/* The hover case is written out for the same reason as the "Sure?" button
+   above, or a plainer hover rule would win. */
 button.row-button.keep.kept:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);

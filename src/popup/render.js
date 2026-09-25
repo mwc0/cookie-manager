@@ -1,9 +1,8 @@
-// Builds the cookie table rows.
+// Builds the cookie table.
 //
-// Everything here uses textContent, never innerHTML. Cookie names and values
-// come from websites, so they are untrusted input. Dropping them into
-// innerHTML inside an extension page would be a genuine security hole, not a
-// style preference.
+// Always use textContent here, never innerHTML. Cookie names and values come
+// from websites, so they can't be trusted. Putting them in innerHTML would be
+// a security hole.
 
 import {
   formatExpiry,
@@ -12,17 +11,13 @@ import {
   truncate,
 } from "../lib/format.js";
 
-// Sized so a typical row fits the popup without the table overflowing --
-// the row now carries three buttons, and a table wider than the popup gets
-// scrolled rather than seen. Long values are still readable: click one to
-// expand it in place.
+// Short enough that a row fits the popup's width. Long values can be clicked
+// to show in full.
 const VALUE_PREVIEW_LENGTH = 28;
 
 // `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
-// isProtected(cookie) }. onDelete is only called once the user has confirmed,
-// which this file handles: a single delete gets a two-click arm rather than a
-// dialog, so nothing goes without a deliberate second click but there's no
-// modal to dismiss either.
+// isProtected(cookie) }. Deleting one cookie takes two clicks (Delete, then
+// "Sure?"), and onDelete is only called after the second.
 export function renderCookieTable(tbody, cookies, handlers = {}) {
   tbody.textContent = "";
 
@@ -30,9 +25,8 @@ export function renderCookieTable(tbody, cookies, handlers = {}) {
     (a, b) => a.domain.localeCompare(b.domain) || a.name.localeCompare(b.name)
   );
 
-  // Only one row may be armed at a time, so arming a second one disarms the
-  // first. Kept per render pass rather than in a module variable, so a
-  // re-render can't leave a stale button behind.
+  // Only one row can show "Sure?" at a time. Clicking another row's button
+  // resets the rest.
   const disarmers = [];
   const disarmAll = () => {
     for (const disarm of disarmers) {
@@ -74,9 +68,8 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
 
   const protectedNow = handlers.isProtected ? handlers.isProtected(cookie) : false;
 
-  // "Keep" rather than "Protect": this only stops THIS extension deleting the
-  // cookie. Nothing stops the website changing it. Calling that "protected"
-  // would promise more than it does -- see src/lib/protect.js.
+  // Called "Keep", not "Protect", because it only stops this extension
+  // deleting the cookie. See src/lib/protect.js.
   const keep = document.createElement("button");
   keep.type = "button";
   keep.className = "row-button keep" + (protectedNow ? " kept" : "");
@@ -109,8 +102,8 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
   remove.className = "row-button danger";
   remove.textContent = "Delete";
 
-  // A kept cookie can't be deleted from here. Disabled rather than hidden, so
-  // the reason is visible instead of the button just not being where it was.
+  // A kept cookie can't be deleted. The button is disabled, not hidden, so
+  // its tooltip can say why.
   if (protectedNow) {
     remove.disabled = true;
     remove.title = "Kept cookies aren't deleted. Click Kept to allow it.";
@@ -155,11 +148,9 @@ function textCell(text, className) {
   return cell;
 }
 
-// A cell whose text may wrap after each `separator`, so a long domain breaks
-// as "accounts.example." / "co.uk" rather than at whatever letter reached the
-// edge. <wbr> marks where a line may break and is otherwise invisible; it adds
-// nothing to textContent. Each piece still goes in as a text node, never as
-// HTML, because this is website-controlled input.
+// A cell that only wraps at a separator, so a long domain breaks after a dot
+// and not in the middle of a word. <wbr> marks where a line may break and is
+// otherwise invisible. Each piece is still added as text, never as HTML.
 function breakableCell(text, separator, className) {
   const cell = document.createElement("td");
   cell.className = className;
@@ -176,8 +167,7 @@ function breakableCell(text, separator, className) {
   return cell;
 }
 
-// Values are often long tokens. Show a preview, and let the user click to
-// expand the full value in place.
+// Long values show a preview. Click to see the whole value.
 function valueCell(value) {
   const cell = document.createElement("td");
   cell.className = "mono value";

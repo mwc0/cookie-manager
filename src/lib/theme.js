@@ -1,17 +1,10 @@
-// Light / dark theme.
+// Light and dark theme. "auto" follows the system; "light" and "dark" stay
+// fixed. The theme actually shown ("light" or "dark") goes on <html> as
+// data-theme, and that's all the CSS looks at.
 //
-// Three choices: "auto" (the default) follows the operating system, while
-// "light" and "dark" pin it regardless of what the OS is doing.
-//
-// The RESOLVED theme -- only ever "light" or "dark" -- is written to
-// data-theme on <html>, and that attribute is the only thing the CSS looks at.
-//
-// Resolving "auto" here in JS rather than with a CSS media query is
-// deliberate. The alternative needs the dark colours written twice: once
-// inside @media (prefers-color-scheme: dark) for auto, and again under
-// :root[data-theme="dark"] for the explicit choice. Two copies of the same
-// colour list drift apart the first time one of them is edited. This way
-// there is exactly one dark block in popup.css.
+// "auto" is worked out here rather than in CSS so popup.css only needs the
+// dark colours once. Doing it in CSS would mean two copies of the dark
+// colours, and two copies drift apart.
 
 export const THEME_KEY = "theme";
 export const THEMES = ["auto", "light", "dark"];
@@ -19,22 +12,18 @@ const DEFAULT_THEME = "auto";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
-// chrome.storage.local is the source of truth, matching the rest of the
-// extension's settings. The choice is ALSO mirrored into localStorage, purely
-// because popup/apply-theme.js has to read it synchronously before the first
-// paint -- chrome.storage.local is async, so on its own it guarantees a white
-// flash every time a dark-mode user opens the popup.
-//
-// localStorage is only ever a cache. It is per-profile, so it does not cross
-// the split-incognito boundary; chrome.storage.local does, which is why the
-// real value lives there.
+// The choice is saved in chrome.storage.local. A copy also goes in
+// localStorage, because popup/apply-theme.js has to read it instantly, before
+// the popup is drawn. chrome.storage.local is too slow for that and would
+// cause a white flash. The copy is only a cache: incognito has its own
+// localStorage, but shares chrome.storage.local.
 const MIRROR_KEY = "theme";
 
 function isValidTheme(value) {
   return THEMES.includes(value);
 }
 
-// Turn a choice into the theme actually being shown.
+// Turns "auto" into "light" or "dark".
 export function resolveTheme(choice) {
   if (choice === "light" || choice === "dark") {
     return choice;
@@ -43,18 +32,15 @@ export function resolveTheme(choice) {
   try {
     return window.matchMedia(DARK_QUERY).matches ? "dark" : "light";
   } catch (error) {
-    // matchMedia is not something to fail the popup over.
     return "light";
   }
 }
 
-// Paint it. Safe to call as often as you like.
 export function applyTheme(choice) {
   document.documentElement.dataset.theme = resolveTheme(choice);
 }
 
-// Read the stored choice. Never throws: a storage failure just means the
-// default, which is the same thing the user saw before they ever touched it.
+// Never throws. If storage fails, the default ("auto") is used.
 export async function loadTheme() {
   try {
     const stored = await chrome.storage.local.get(THEME_KEY);
@@ -73,11 +59,8 @@ export async function loadTheme() {
   }
 }
 
-// Save a choice and apply it. Returns { error }.
-//
-// The theme is applied and mirrored BEFORE the await, so the switch responds
-// instantly and still looks right even if the write then fails. A theme that
-// only changes once storage has confirmed it feels broken on a slow disk.
+// Saves and applies a choice. Returns { error }. The theme changes before
+// the save finishes, so the switch feels instant even if saving is slow.
 export async function saveTheme(choice) {
   const value = isValidTheme(choice) ? choice : DEFAULT_THEME;
 
@@ -96,18 +79,17 @@ export async function saveTheme(choice) {
   }
 }
 
-// Keep the synchronous mirror in step. Failing here costs a flash on the next
-// open, nothing more, so it stays quiet.
+// Updates the localStorage copy. If that fails, the worst case is one white
+// flash next time, so errors are ignored.
 export function mirror(choice) {
   try {
     window.localStorage.setItem(MIRROR_KEY, choice);
   } catch (error) {
-    // Private mode, blocked site data, or a full quota. Not worth reporting.
   }
 }
 
-// Call onChange whenever the OS theme flips, so "auto" keeps up while the
-// popup is open. Returns a function that stops listening.
+// Calls onChange when the system theme changes while the popup is open.
+// Returns a function that stops listening.
 export function watchSystemTheme(onChange) {
   try {
     const query = window.matchMedia(DARK_QUERY);

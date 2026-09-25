@@ -1,24 +1,15 @@
-// The protect flag.
-//
-// v1 is a UI GUARD, not active protection: a protected cookie is excluded from
-// anything this extension deletes, and the popup says so. It does not stop a
-// website, or another extension, from changing or removing the cookie itself.
-// Doing that needs a service worker listening to cookies.onChanged and writing
-// the old value back, which is deliberately left out of v1.
-//
-// Calling it "protected" while only guarding our own delete button would be
-// overclaiming, so the UI says "kept" wherever it reports what a delete did.
+// The "Keep" flag (called "protected" in the code). A kept cookie is skipped
+// by every delete in this extension. It doesn't stop the website, or another
+// extension, from changing or deleting it. That would need a background
+// script, which v1 doesn't have. It's why the popup says "kept" and never
+// "protected": it would be promising more than it does.
 
 const STORAGE_KEY = "protectedCookies";
 
-// Identity of a cookie for protection purposes.
-//
-// Deliberately WITHOUT storeId, unlike cookieKey() in cookies.js. A storeId
-// distinguishes the normal cookie store from the incognito one, so including
-// it would mean a cookie protected in a normal window is unprotected in an
-// incognito one -- which is the opposite of what someone ticking "protect"
-// expects. The trade-off is that protecting a cookie protects its incognito
-// namesake too, which is the safer direction to be wrong in.
+// How a kept cookie is remembered. Unlike cookieKey() in cookies.js, this
+// leaves out storeId, so keeping a cookie in a normal window also keeps the
+// matching cookie in incognito. That's what people expect, and if it's ever
+// wrong, it errs towards not deleting.
 export function protectionKeyOf(cookie) {
   return [
     String(cookie.domain || "").replace(/^\./, ""),
@@ -28,12 +19,9 @@ export function protectionKeyOf(cookie) {
   ].join("\n");
 }
 
-// Every protected cookie, as a Set of keys.
-//
-// A storage failure returns an empty set rather than throwing: the cost is
-// that a protected cookie is briefly treated as unprotected, so the caller is
-// told about the failure and the UI has to surface it. Silently swallowing it
-// would let a delete remove something the user believed was safe.
+// Every kept cookie, as a Set of keys. If storage can't be read, this returns
+// an empty set plus an error. The popup must show that error, otherwise a
+// delete could remove a cookie the user thinks is kept.
 export async function loadProtected() {
   try {
     const stored = await chrome.storage.local.get(STORAGE_KEY);
@@ -49,7 +37,7 @@ export async function loadProtected() {
   }
 }
 
-// Turn protection on or off for one cookie. Returns { keys, error }.
+// Keep or un-keep one cookie. Returns { keys, error }.
 export async function setProtected(cookie, shouldProtect) {
   const { keys, error } = await loadProtected();
   if (error) {
@@ -80,7 +68,7 @@ export function isProtected(protectedKeys, cookie) {
   return protectedKeys.has(protectionKeyOf(cookie));
 }
 
-// Split a list into what a delete may touch and what it must leave alone.
+// Splits a list into cookies a delete may remove and ones it must leave.
 export function partitionByProtection(protectedKeys, cookies) {
   const deletable = [];
   const kept = [];
@@ -96,13 +84,10 @@ export function partitionByProtection(protectedKeys, cookies) {
   return { deletable, kept };
 }
 
-// Forget protection for cookies that no longer exist.
-//
-// Without this the stored list grows forever, and worse: a key can be
-// reused. Delete a cookie, and a site later sets one with the same name on
-// the same domain and path -- a stale entry would silently protect the new
-// one. Called with every cookie currently on the page, so only keys for THIS
-// page's domains are considered; keys for other sites are left alone.
+// Forgets kept cookies that no longer exist. Otherwise the list grows
+// forever, and if a site later sets a new cookie with the same name, the old
+// entry would keep it without the user asking. Only this page's domains are
+// checked. Entries for other sites are left alone.
 export async function pruneProtected(protectedKeys, cookiesOnPage, pageDomains) {
   const live = new Set(cookiesOnPage.map(protectionKeyOf));
   const stale = [];
@@ -127,8 +112,7 @@ export async function pruneProtected(protectedKeys, cookiesOnPage, pageDomains) 
     await chrome.storage.local.set({ [STORAGE_KEY]: Array.from(remaining) });
     return { keys: remaining, error: null };
   } catch (error) {
-    // Not worth bothering the user about: the list is merely untidy, and
-    // nothing is protected that shouldn't be.
+    // Not worth telling the user. The list is just untidy.
     console.warn("Couldn't prune the protected list:", error);
     return { keys: protectedKeys, error: null };
   }

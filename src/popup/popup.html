@@ -3,28 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <title>cookieZ</title>
-    <!-- Local stylesheet only. No web fonts, no CDN: the extension makes no
-         network requests of any kind. -->
+    <!-- Local stylesheet only. No web fonts and nothing from a CDN. -->
     <link rel="stylesheet" href="popup.css" />
 
-    <!-- Deliberately NOT type="module" and NOT deferred: this has to run
-         before the first paint, or a dark-theme popup flashes white on every
-         open. It is the only script here that is not a module. -->
+    <!-- Not a module and not deferred, so it runs before the popup is drawn.
+         Otherwise dark mode flashes white on every open. -->
     <script src="apply-theme.js"></script>
   </head>
   <body>
-    <!-- Only one of these sections is visible at a time. popup.js decides
-         which, and every one of them says something readable -- there is no
-         state where the user is shown a blank panel. -->
+    <!-- Only one of these screens shows at a time. popup.js picks which. Each one
+         has a message, so the popup is never blank. -->
 
     <section id="state-loading" class="state">
       <p class="muted">Reading cookies&hellip;</p>
     </section>
 
-    <!-- Shown when host permission hasn't been granted yet. Without it,
-         chrome.cookies returns an empty list rather than an error, so this
-         screen is the only thing standing between the user and a cookie
-         manager that silently appears to work but shows nothing. -->
+    <!-- Shown until access to websites is granted. Without that access, Chrome
+         returns an empty list instead of an error, so without this screen the
+         popup would just look empty. -->
     <section id="state-gate" class="state notice" hidden>
       <h1>One-time permission needed</h1>
       <p>
@@ -45,9 +41,7 @@
       <p id="gate-message" class="error" role="status" hidden></p>
     </section>
 
-    <!-- chrome://, about:, the Web Store, and similar pages can't have
-         cookies read from them. Say so plainly instead of showing an empty
-         table that looks like a bug. -->
+    <!-- Pages like chrome:// and the Web Store can't have their cookies read. -->
     <section id="state-blocked" class="state notice" hidden>
       <h1>No cookies on this page</h1>
       <p id="blocked-message"></p>
@@ -69,8 +63,7 @@
           <p id="cookie-count" class="muted"></p>
         </div>
         <div class="bar-actions">
-          <!-- Auto follows the operating system and is the default, so the
-               popup behaves as it always did until someone chooses otherwise. -->
+          <!-- Auto follows the system theme. It's the default. -->
           <div class="theme" role="radiogroup" aria-label="Colour theme">
             <input
               type="radio"
@@ -80,8 +73,7 @@
               class="visually-hidden"
             />
             <label for="theme-auto" title="Follow the system theme">
-              <!-- Half light, half dark: the usual sign for "follow the
-                   system". Drawn to the same weight as the two beside it. -->
+              <!-- Half light, half dark: the usual icon for "follow the system". -->
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle
                   cx="12"
@@ -104,9 +96,8 @@
               class="visually-hidden"
             />
             <label for="theme-light" title="Always use the light theme">
-              <!-- Inline SVG, because an icon font or a sprite sheet would be
-                   a network request. currentColor makes both icons follow the
-                   label's own colour, so they invert when selected. -->
+              <!-- Icons are inline SVG, since an icon font would be a network request.
+                   currentColor makes them match the label's colour. -->
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="4.2" fill="currentColor" />
                 <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -152,9 +143,8 @@
 
       <p id="main-message" class="result" role="status" hidden></p>
 
-      <!-- Search filters the table below. It also adds a delete scope, so
-           that filtering and then deleting removes what you can see rather
-           than silently reaching past it. -->
+      <!-- Filters the table. While searching, an extra delete option removes only
+           the cookies shown. -->
       <div class="search">
         <label for="search-input" class="visually-hidden">Search cookies</label>
         <input
@@ -169,15 +159,13 @@
         </button>
       </div>
 
-      <!-- The headline feature. The count shown here comes from the same
-           query that does the deleting, never from a separate estimate. -->
+      <!-- The count shown here comes from the same list that gets deleted. -->
       <section id="delete-panel">
         <h2>Delete cookies</h2>
 
         <div class="scopes" role="radiogroup" aria-label="What to delete">
-          <!-- Only offered while a search is active. Without it, filtering the
-               table to three rows and pressing Delete would remove everything
-               the scope covers, which is not what the screen appears to say. -->
+          <!-- Only shown while searching. Without it, pressing Delete after a search
+               would remove every cookie in the scope, not just the ones on screen. -->
           <label class="scope" id="scope-matches-row" hidden>
             <input type="radio" name="scope" value="matches" />
             <span class="scope-label">Just the cookies shown</span>
@@ -228,9 +216,8 @@
 
       <div id="table-wrap">
         <table id="cookie-table">
-          <!-- Column widths live here, not in the cells. With these set, the
-               table cannot come out wider than the popup whatever the cookies
-               contain. See "cookie table" in popup.css. -->
+          <!-- Column widths are set here, so the table can't be wider than the popup.
+               See "cookie table" in popup.css. -->
           <colgroup>
             <col class="col-name" />
             <col class="col-value" />
@@ -259,9 +246,9 @@
       </div>
     </section>
 
-    <!-- Create and edit. One form does both: creating starts it empty,
-         editing fills it from the cookie and remembers the original so the
-         save can remove-then-set if the name, domain or path changed. -->
+    <!-- One form for creating and editing. When editing, it remembers the
+         original cookie, so a changed name or path replaces it instead of adding
+         a second cookie. -->
     <section id="state-edit" class="state" hidden>
       <header class="bar">
         <h1 id="edit-title"></h1>

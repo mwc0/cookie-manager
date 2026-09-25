@@ -1,21 +1,15 @@
-// Sets the theme before anything is painted.
+// Sets the theme before the popup is drawn, so dark mode doesn't flash white.
 //
-// This is a plain script, not a module, and it is loaded from <head> WITHOUT
-// defer on purpose: that combination is the only one the browser runs
-// synchronously, before the body renders. A module would be deferred until
-// after the first paint, which is exactly the flash this exists to prevent.
+// It's a plain script loaded in <head> without "defer", because that's the
+// only way it runs before the page appears. It reads the localStorage copy of
+// the setting, since chrome.storage.local is too slow here. src/lib/theme.js
+// keeps that copy up to date.
 //
-// It reads localStorage rather than chrome.storage.local because
-// chrome.storage.local is async and therefore always too late. src/lib/theme.js
-// owns the real value and keeps this mirror in step.
+// Don't delete this file: the popup would flash white every time it opens.
 //
-// If you delete this file, dark mode still works but the popup flashes white
-// on every open. popup.css has one dark block, keyed off the data-theme
-// attribute that this sets -- there is no media-query fallback to catch it.
-//
-// The resolve logic below is a deliberate three-line copy of resolveTheme() in
-// src/lib/theme.js. A classic script cannot import from a module, so the
-// choice is duplicating this much or accepting the flash. Change both together.
+// The few lines that pick light or dark copy resolveTheme() in
+// src/lib/theme.js, because a plain script can't import from a module. If you
+// change one, change the other.
 (function () {
   "use strict";
 
@@ -29,8 +23,7 @@
       theme = "dark";
     }
   } catch (error) {
-    // Blocked site data or no matchMedia. Light is the safe default; the
-    // module-side code corrects it a moment later once storage is readable.
+    // Fall back to light. popup.js corrects it a moment later.
   }
 
   document.documentElement.dataset.theme = theme;

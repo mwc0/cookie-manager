@@ -1,5 +1,5 @@
-// Popup wiring: decides which screen to show, loads cookies, and runs the
-// delete-with-scope flow.
+// Runs the popup: picks which screen to show, loads the cookies, and handles
+// deleting, editing and keeping.
 
 import { hasHostAccess, requestHostAccess } from "../lib/permissions.js";
 import {
@@ -36,26 +36,23 @@ import {
 } from "../lib/theme.js";
 import { renderCookieTable } from "./render.js";
 
-// The site in the current tab: { origin, hostname }.
+// The site in the current tab, as { origin, hostname }.
 let page = null;
 
-// The exact cookies the selected scope would delete. The delete runs against
-// this array, which is the same one the on-screen count was taken from, so
-// the number shown and the number removed can't disagree.
+// The cookies the chosen scope will delete. The count on screen comes from
+// this same list, so the number shown always matches what gets deleted.
 let scopeCookies = [];
 
-// The cookie currently open in the editor, or null when creating a new one.
-// Held because saving needs the ORIGINAL identity to remove, not the edited
-// one. See writeCookie().
+// The cookie open in the editor, or null for a new one. Saving needs the
+// original cookie, in case the name or path changed. See writeCookie().
 let editing = null;
 
-// Every cookie for this page, and the subset the search box is showing.
-// `shownCookies` is what the "just the cookies shown" scope deletes, so it has
-// to be the same array the table was built from.
+// All of this page's cookies, and the ones the search is showing.
+// "Just the cookies shown" deletes shownCookies, the same list as the table.
 let pageCookies = [];
 let shownCookies = [];
 
-// Keys of the cookies the user has asked us to keep. See src/lib/protect.js.
+// The cookies the user has marked as Kept. See src/lib/protect.js.
 let protectedKeys = new Set();
 
 const el = (id) => document.getElementById(id);
@@ -113,9 +110,8 @@ async function loadCurrentPage() {
     return;
   }
 
-  // chrome://, about:, file:, extension pages and the Web Store either have no
-  // cookies or are off-limits to extensions. Say which, rather than showing an
-  // empty table that looks like a failure.
+  // Pages like chrome:// and the Web Store can't have their cookies read.
+  // Say so, instead of showing an empty table that looks broken.
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     showBlocked(
       "Pages served over " + url.protocol + " don't have cookies an extension can read."
@@ -134,14 +130,9 @@ async function loadCurrentPage() {
   await refresh();
 }
 
-// Re-read everything: the table for this site, and the count for the
-// currently selected delete scope.
-//
-// Deliberately sequential. These used to run together, which was faster and
-// wrong: refreshScope() reads the kept-cookie list and the filtered array
-// that refreshTable() produces, so in parallel it could count a scope using
-// an empty kept list -- and then delete a cookie the table was, at that same
-// moment, drawing as kept.
+// Reloads the table, then the delete count. These must run one after the
+// other. refreshScope() uses the Kept list that refreshTable() loads, and
+// running them together once let a delete remove a cookie shown as kept.
 async function refresh() {
   await refreshTable();
   await refreshScope();
@@ -154,14 +145,11 @@ async function refreshTable() {
     const { keys, error } = await loadProtected();
     protectedKeys = keys;
     if (error) {
-      // A cookie the user believes is kept would be deleted anyway, so this
-      // has to be visible rather than logged.
+      // Must be shown: a cookie the user thinks is kept could get deleted.
       showMainMessage(error, true);
     }
 
-    // Forget keep-flags for cookies that no longer exist on this page, so a
-    // site setting a new cookie with an old name doesn't inherit protection
-    // the user never gave it.
+    // Forget Kept entries for cookies that are gone. See pruneProtected().
     const domains = new Set(pageCookies.map((c) => String(c.domain || "").replace(/^\./, "")));
     domains.add(page.hostname);
     const pruned = await pruneProtected(protectedKeys, pageCookies, domains);
@@ -173,9 +161,8 @@ async function refreshTable() {
   }
 }
 
-// Apply the search box to the loaded cookies and draw. Kept separate from
-// refreshTable so typing filters what's already loaded instead of re-querying
-// Chrome on every keystroke.
+// Applies the search and draws the table. It filters the cookies already
+// loaded, so typing doesn't ask Chrome again on every key press.
 function drawTable() {
   const query = el("search-input").value;
   shownCookies = filterCookies(pageCookies, query);
@@ -195,7 +182,7 @@ function drawTable() {
       " of " + pluralise(pageCookies.length, "cookie", "cookies")
     : pluralise(pageCookies.length, "cookie", "cookies");
 
-  // The "just the cookies shown" scope only makes sense while filtering.
+  // "Just the cookies shown" only appears while searching.
   el("scope-matches-row").hidden = !filtering;
   el("scope-target-matches").textContent = filtering
     ? pluralise(shownCookies.length, "match", "matches")
@@ -233,9 +220,8 @@ async function refreshScope() {
 
   let inScope;
   try {
-    // "matches" is the search box's scope, and deletes exactly the rows on
-    // screen: the same array the table was drawn from, not a re-query that
-    // could disagree with it.
+    // "matches" deletes exactly the rows on screen, so it uses the table's
+    // own list rather than asking Chrome again.
     inScope =
       selectedScope() === "matches"
         ? shownCookies
@@ -246,8 +232,8 @@ async function refreshScope() {
     return;
   }
 
-  // Kept cookies are removed from the scope BEFORE the count is taken, so the
-  // number on screen is still exactly the number that will be deleted.
+  // Kept cookies are taken out before counting, so the number shown is still
+  // exactly what will be deleted.
   const { deletable, kept } = partitionByProtection(protectedKeys, inScope);
   scopeCookies = deletable;
 
@@ -275,14 +261,13 @@ async function refreshScope() {
     "." +
     keptNote;
 
-  // Listing the exact domains is the point of the scope indicator: the user
-  // sees what is about to go before agreeing to it.
+  // List every domain, so the user sees exactly what will go first.
   if (domains.length > 1) {
     const list = el("scope-domains-list");
     list.textContent = "";
     for (const domain of domains) {
       const item = document.createElement("li");
-      item.textContent = domain; // untrusted input -- never innerHTML
+      item.textContent = domain; // comes from websites, so never innerHTML
       list.appendChild(item);
     }
     el("scope-domains-summary").textContent =
@@ -333,7 +318,6 @@ async function runDelete() {
     if (failed.length === 0) {
       result.textContent = "Deleted " + pluralise(removed, "cookie", "cookies") + ".";
     } else {
-      // Report honestly rather than claiming a clean sweep.
       result.className = "result error";
       result.textContent =
         "Deleted " +
@@ -355,8 +339,7 @@ async function runDelete() {
 
 // --- create / edit ---------------------------------------------------------
 
-// A short message above the delete panel, for things that happened on the
-// main screen (a cookie saved, a single cookie deleted).
+// A short message above the delete panel, such as "Deleted session_id."
 function showMainMessage(text, isError) {
   const message = el("main-message");
   message.textContent = text;
@@ -364,7 +347,7 @@ function showMainMessage(text, isError) {
   message.hidden = false;
 }
 
-// Open the form. `cookie` is the one being edited, or null to create.
+// Opens the editor. `cookie` is the one to edit, or null for a new one.
 function openEditor(cookie) {
   editing = cookie || null;
 
@@ -379,10 +362,9 @@ function openEditor(cookie) {
   el("field-name").value = isNew ? "" : cookie.name;
   el("field-value").value = isNew ? "" : cookie.value;
 
-  // The stored domain carries a leading dot when the cookie is domain-wide
-  // (".example.com"). Showing that next to a Host-only checkbox would say the
-  // same thing twice, in two notations, so the dot is stripped here and the
-  // checkbox carries the meaning. buildSetDetails() puts it back.
+  // A domain-wide cookie is stored with a leading dot (".example.com"). The
+  // dot is hidden here because the Host-only checkbox already shows that.
+  // buildSetDetails() puts it back when saving.
   el("field-domain").value = isNew
     ? page.hostname
     : String(cookie.domain || "").replace(/^\./, "");
@@ -392,12 +374,11 @@ function openEditor(cookie) {
   el("field-secure").checked = secure;
   el("field-httponly").checked = isNew ? false : Boolean(cookie.httpOnly);
 
-  // A new cookie defaults to host-only: the narrower of the two, and what a
-  // page gets when it sets a cookie without a Domain attribute.
+  // New cookies start as host-only, the same as a website's default.
   el("field-hostonly").checked = isNew ? true : Boolean(cookie.hostOnly);
 
-  // A new cookie defaults to a session cookie, so adding one can't
-  // accidentally leave something permanent behind.
+  // New cookies start as session cookies, so nothing permanent is left behind
+  // by accident.
   const isSession = isNew || typeof cookie.expirationDate !== "number";
   el("field-session").checked = isSession;
   el("field-expiry").value = isSession
@@ -405,9 +386,8 @@ function openEditor(cookie) {
     : toLocalDateTimeValue(cookie.expirationDate);
   syncExpiryEnabled();
 
-  // Partitioned cookies are carried through a save untouched. The partition
-  // isn't editable here: there's no safe way to offer that without a much
-  // longer explanation than this popup has room for.
+  // A partitioned cookie keeps its partition when saved. The partition can't
+  // be edited here.
   const partition = el("edit-partition");
   if (cookie && cookie.partitionKey) {
     partition.textContent =
@@ -426,7 +406,7 @@ function closeEditor() {
   showState("main");
 }
 
-// The expiry field is meaningless while "session cookie" is ticked.
+// No expiry date while "Session cookie" is ticked.
 function syncExpiryEnabled() {
   el("field-expiry").disabled = el("field-session").checked;
 }
@@ -445,7 +425,6 @@ function readForm() {
     hostOnly: el("field-hostonly").checked,
     session,
     expirationDate: session ? null : fromLocalDateTimeValue(el("field-expiry").value),
-    // Carried straight through from the cookie being edited.
     storeId: editing ? editing.storeId : undefined,
     partitionKey: editing ? editing.partitionKey : undefined,
   };
@@ -464,14 +443,10 @@ function showFormErrors(errors) {
   list.hidden = errors.length === 0;
 }
 
-// Chrome caps how far ahead a cookie may expire (400 days at the time of
-// writing) and it applies the cap silently: ask for 2030 and it stores a
-// date about thirteen months out without a word. Saying "Saved" and leaving
-// it there would be claiming something that didn't happen, so compare what
-// Chrome actually stored against what was asked for and report the gap.
-//
-// Deliberately compares the two dates rather than hardcoding 400 days, so
-// this keeps telling the truth if Chrome changes the limit.
+// Chrome won't let a cookie expire more than about 400 days ahead. If you ask
+// for longer, it quietly shortens it. This compares what was saved with what
+// was asked for, and returns a note if Chrome changed it. It doesn't assume
+// 400 days, so it still works if Chrome changes the limit.
 function describeExpiryChange(values, saved) {
   if (!saved || values.session || typeof values.expirationDate !== "number") {
     return "";
@@ -480,8 +455,7 @@ function describeExpiryChange(values, saved) {
     return "";
   }
 
-  // A minute of slack: Chrome stores fractional seconds, and an unclamped
-  // date comes back as the one that was asked for.
+  // Allow a minute's difference, because Chrome stores fractions of a second.
   if (Math.abs(saved.expirationDate - values.expirationDate) < 60) {
     return "";
   }
@@ -496,8 +470,7 @@ function describeExpiryChange(values, saved) {
 async function saveEditor() {
   const values = readForm();
 
-  // Checked here rather than letting Chrome refuse the write, because its own
-  // rejection message names the cookie but never the rule it broke.
+  // Check first, because Chrome's own error doesn't say what's wrong.
   const errors = validateCookieValues(values);
   if (errors.length > 0) {
     showFormErrors(errors);
@@ -525,8 +498,8 @@ async function saveEditor() {
     );
     await refresh();
   } catch (error) {
-    // writeCookie handles its own failures, so reaching here means something
-    // unexpected. Say so rather than leaving the form looking stuck.
+    // Shouldn't happen, since writeCookie() catches its own errors. Show it
+    // anyway so the form doesn't look stuck.
     showFormErrors([error && error.message ? error.message : String(error)]);
   } finally {
     save.disabled = false;
@@ -551,16 +524,15 @@ async function toggleProtected(cookie, shouldKeep) {
     false
   );
 
-  // The table shows the new state, and the scope count has to change with it.
+  // Redraw, and recount, since kept cookies aren't deleted.
   drawTable();
   await refreshScope();
 }
 
-// Delete a single cookie from its row. The row has already asked for a second
-// click, so this runs straight away.
+// Deletes one cookie from its row. The row already asked "Sure?".
 async function deleteOne(cookie) {
-  // The row's Delete button is disabled for a kept cookie, but check anyway:
-  // a stale row could outlive the state it was drawn from.
+  // The button is disabled for kept cookies, but check again in case the
+  // table is out of date.
   if (isProtected(protectedKeys, cookie)) {
     showMainMessage(
       cookie.name + " is being kept, so it wasn't deleted. Click Kept first if you want it gone.",
@@ -583,18 +555,16 @@ async function deleteOne(cookie) {
 
 // --- theme -----------------------------------------------------------------
 
-// The saved choice: "auto", "light" or "dark". Held here because the OS
-// listener below needs to know whether the user has pinned a theme -- once
-// they have, the OS flipping at sunset must not override it.
+// "auto", "light" or "dark". The system-theme listener below needs to know,
+// so it only changes the theme when this is "auto".
 let themeChoice = "auto";
 
 async function initTheme() {
   const { choice, error } = await loadTheme();
   themeChoice = choice;
 
-  // apply-theme.js has already painted from the localStorage mirror. Doing it
-  // again from the real value corrects the rare case where the two disagree,
-  // such as the first open after the choice was made in another profile.
+  // apply-theme.js already set the theme from the localStorage copy. Apply it
+  // again from the saved value in case the two differ.
   applyTheme(choice);
   mirror(choice);
 
@@ -623,8 +593,7 @@ el("grant-button").addEventListener("click", async () => {
   const message = el("gate-message");
   message.hidden = true;
 
-  // Must be called straight from the click: Chrome rejects permission
-  // requests that aren't tied to a user gesture.
+  // Has to run straight from the click, or Chrome won't show the prompt.
   const { granted, error } = await requestHostAccess();
 
   if (error) {
@@ -651,8 +620,6 @@ el("grant-button").addEventListener("click", async () => {
 el("retry-button").addEventListener("click", init);
 el("refresh-button").addEventListener("click", refresh);
 
-// Typing filters what's already loaded, so this is only a redraw plus a
-// recount -- no cookie query per keystroke.
 el("search-input").addEventListener("input", () => {
   drawTable();
   refreshScope();
@@ -671,7 +638,7 @@ el("edit-cancel-2").addEventListener("click", closeEditor);
 el("field-session").addEventListener("change", syncExpiryEnabled);
 
 el("edit-form").addEventListener("submit", (event) => {
-  // The form never navigates; submitting is just the Enter key reaching Save.
+  // Pressing Enter in the form saves, without reloading the page.
   event.preventDefault();
   saveEditor();
 });
@@ -691,17 +658,15 @@ for (const radio of document.querySelectorAll('input[name="theme"]')) {
   radio.addEventListener("change", () => chooseTheme(radio.value));
 }
 
-// Keep "auto" honest while the popup is open. A pinned light or dark choice
-// ignores the OS, which is the whole point of pinning it.
+// Follow the system theme while the popup is open, but only on "auto".
 watchSystemTheme(() => {
   if (themeChoice === "auto") {
     applyTheme("auto");
   }
 });
 
-// Started before init() and deliberately not awaited: the theme is already on
-// screen from apply-theme.js, so this only reconciles it with storage and has
-// no reason to hold up reading cookies.
+// Not awaited, so loading cookies doesn't wait for it. The theme is already
+// showing thanks to apply-theme.js.
 initTheme();
 
 init();

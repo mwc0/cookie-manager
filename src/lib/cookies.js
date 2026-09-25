@@ -1,13 +1,8 @@
-// Thin wrappers over chrome.cookies.
-//
-// Everything that touches the cookie API goes through here, so the awkward
-// parts of that API are handled in one place instead of being rediscovered
-// in the UI code.
+// Everything that talks to chrome.cookies goes through this file, so the
+// awkward parts of that API are handled in one place.
 
-// chrome.cookies.set/remove want a URL, not a cookie object. The cookie's
-// own fields tell us what that URL has to look like:
-//   - the scheme comes from the `secure` flag
-//   - a leading dot on the domain ( ".example.com" ) is not part of the host
+// chrome.cookies.set and remove need a URL, not a cookie. The scheme comes
+// from the Secure flag, and a leading dot on the domain has to be removed.
 export function buildCookieUrl(cookie) {
   const scheme = cookie.secure ? "https://" : "http://";
   const host = String(cookie.domain || "").replace(/^\./, "");
@@ -15,9 +10,8 @@ export function buildCookieUrl(cookie) {
   return scheme + host + path;
 }
 
-// Identity of a cookie, for de-duplicating results that came from more than
-// one query. Chrome considers these four fields (plus the partition) to be
-// what makes a cookie unique.
+// A key that identifies one cookie, used to remove duplicates when the same
+// cookie comes back from more than one query.
 export function cookieKey(cookie) {
   const partition = cookie.partitionKey
     ? JSON.stringify(cookie.partitionKey)
@@ -33,18 +27,11 @@ function dedupe(cookies) {
   return Array.from(seen.values());
 }
 
-// Run one cookie query.
-//
-// Partitioned cookies (CHIPS) are the wrinkle here. A plain getAll() returns
-// unpartitioned cookies only, so a "delete everything" built on it alone can
-// leave partitioned cookies behind -- which is the exact complaint we exist to
-// fix. We therefore also attempt a partitioned query and merge the results.
-//
-// Checked against real Chrome: `partitionKey: {}` means "any partition", and a
-// plain getAll() really does miss partitioned cookies. tests/test_partitioned.py
-// and tests/test_devtools_crosscheck.py both prove it. It's still wrapped in
-// try/catch, so if a future Chrome rejects the argument we fall back to the
-// plain result rather than breaking the query.
+// A plain getAll() skips partitioned (CHIPS) cookies, so "delete everything"
+// would leave them behind. We run a second query with partitionKey: {}, which
+// means "any partition", and merge the two. The tests confirm both behaviours
+// in real Chrome. The try/catch is there in case a future Chrome rejects the
+// argument: we'd still return the plain results.
 async function queryCookies(query) {
   const results = await chrome.cookies.getAll(query);
 
@@ -52,27 +39,22 @@ async function queryCookies(query) {
   try {
     partitioned = await chrome.cookies.getAll({ ...query, partitionKey: {} });
   } catch (error) {
-    // Older Chrome, or an argument it doesn't accept. Not fatal.
     partitioned = [];
   }
 
   return dedupe([...results, ...partitioned]);
 }
 
-// Cookies belonging to the site in the current tab.
+// The cookies for the site in the current tab. This needs two queries,
+// because each one misses something on its own:
 //
-// This needs two queries unioned together, because each one alone has a hole:
+//   - A URL query only returns cookies whose path matches, so a cookie for
+//     /admin wouldn't show up on /home.
+//   - A domain query returns every path and subdomain, but not parent
+//     domains, so ".example.com" is missing on "www.example.com".
 //
-//   - Querying by URL applies cookie PATH matching. On /home, a cookie scoped
-//     to /admin would be invisible. We pass the origin so at least the root
-//     path matches, and let the domain query cover the rest.
-//   - Querying by domain covers every path, and subdomains, but excludes
-//     PARENT domains -- a ".example.com" cookie is not returned for
-//     "www.example.com", even though the page receives it.
-//
-// Together they cover both. The one case still missed is a parent-domain
-// cookie on a non-root path; that is rare, it errs towards showing too little
-// rather than deleting too much, and the "All sites" scope still catches it.
+// Together they cover both. The one gap left is a parent-domain cookie on a
+// path other than "/". That's rare, and "All sites" still catches it.
 export async function getCookiesForPage(page) {
   const [byUrl, byDomain] = await Promise.all([
     queryCookies({ url: page.origin + "/" }),
@@ -81,37 +63,26 @@ export async function getCookiesForPage(page) {
   return dedupe([...byUrl, ...byDomain]);
 }
 
-// Cookies for a domain and everything below it.
-//
-// Note this does NOT include parent domains: querying "www.example.com"
-// excludes a ".example.com" cookie, even though the page receives it. That's
-// why the domain scope unions this with the page's own cookies below.
+// Cookies for a domain and its subdomains. Parent domains aren't included,
+// which is why the "domain" scope below adds the page's own cookies too.
 export async function getCookiesForDomain(domain) {
   return await queryCookies({ domain });
 }
 
-// Every cookie in this browser profile.
 export async function getAllCookies() {
   return await queryCookies({});
 }
 
-// Strip a leading "www." so that "this domain and its subdomains" on
-// www.example.com also covers blog.example.com.
-//
-// Deliberately a simple string rule and not a real public-suffix lookup:
-// doing that properly needs the Public Suffix List, which is a dependency and
-// a data file we don't want. The cost of the simple rule is that the scope can
-// occasionally reach less far than the user expects -- which is why the UI
-// always lists the exact domains being affected before deleting anything.
+// Removes a leading "www." so that on www.example.com, "this domain and its
+// subdomains" also covers blog.example.com. A proper version would need the
+// Public Suffix List, which is a dependency we don't want. The popup always
+// lists the exact domains before deleting, so nobody has to trust this rule.
 export function baseHostOf(hostname) {
   return hostname.replace(/^www\./, "");
 }
 
-// Collect the cookies a delete scope would remove.
-// `page` is { origin, hostname }.
-//
-// The UI deletes exactly the array this returns, so the number it shows and
-// the number it deletes cannot drift apart.
+// The cookies a delete scope would remove. The popup deletes exactly this
+// list, so the number it shows and the number it deletes are always the same.
 export async function getCookiesForScope(scope, page) {
   if (scope === "all") {
     return await getAllCookies();
@@ -128,15 +99,8 @@ export async function getCookiesForScope(scope, page) {
   return await getCookiesForPage(page);
 }
 
-// Narrow a list of cookies to those matching a search box.
-//
-// Searches name, value, domain and path together, case-insensitively, because
-// people look for cookies by whatever they happen to remember -- a name, a
-// fragment of a token, a subdomain. Splitting that into separate fields would
-// mean picking the right one before you can find anything.
-//
-// v1 searches the current tab's cookies only. Searching across every domain is
-// planned for a later paid tier.
+// Search box filter. Looks at name, value, domain and path all at once, and
+// ignores case, so people can find a cookie by whatever part they remember.
 export function filterCookies(cookies, query) {
   const needle = String(query || "").trim().toLowerCase();
   if (needle === "") {
@@ -151,9 +115,7 @@ export function filterCookies(cookies, query) {
   });
 }
 
-// Count and list the domains a set of cookies touches, for the scope
-// indicator. The UI shows this before deleting so the user sees exactly what
-// is about to go.
+// The count and the list of domains, shown before anything is deleted.
 export function summarise(cookies) {
   const domains = new Set();
   for (const cookie of cookies) {
@@ -167,15 +129,13 @@ export function summarise(cookies) {
 
 // --- writing -----------------------------------------------------------
 //
-// The awkward parts of chrome.cookies.set, all verified against Chrome rather
-// than assumed. The tests for them are in tests/test_editor.py.
+// chrome.cookies.set has several traps, marked TRAP below. Each one was
+// checked in real Chrome, and tests/test_editor.py covers them.
 
-// What makes two cookies the same cookie as far as Chrome is concerned.
-//
-// Deliberately not cookieKey() above: that one dedupes query results and
-// compares the stored domain string as-is. Here we need the *effective*
-// identity, because a host-only cookie is stored as "example.com" and a
-// domain-wide one as ".example.com": same host, different cookie.
+// Whether two cookies are the same cookie as far as Chrome is concerned.
+// This isn't cookieKey() above: a host-only cookie is stored as "example.com"
+// and a domain-wide one as ".example.com", and those are different cookies
+// even though the host is the same.
 function identityOf(parts) {
   return [
     parts.name,
@@ -187,21 +147,17 @@ function identityOf(parts) {
   ].join("\n");
 }
 
-// Turn the form's values into the object chrome.cookies.set wants.
-//
-// `values` is { name, value, domain, path, secure, httpOnly, hostOnly,
-// session, expirationDate, sameSite, storeId, partitionKey }.
+// Turns the editor form's values into what chrome.cookies.set expects.
 export function buildSetDetails(values) {
   const host = String(values.domain || "").replace(/^\./, "");
   const path = values.path || "/";
   const scheme = values.secure ? "https://" : "http://";
 
   const details = {
-    // TRAP: set() reads the cookie back using this URL, and a cookie scoped to
-    // /admin is not returned for a URL at /. Ask for the root and set() hands
-    // back null even though the write SUCCEEDED, with runtime.lastError unset,
-    // so there is no way to tell that apart from a genuine failure. Including
-    // the cookie's own path here keeps the read-back honest.
+    // TRAP: set() reads the cookie back from this URL. If the URL is "/" but
+    // the cookie's path is "/admin", set() returns null even though it worked,
+    // and there's no error to tell the difference. Using the cookie's own
+    // path avoids that.
     url: scheme + host + path,
     name: values.name,
     value: values.value,
@@ -211,16 +167,14 @@ export function buildSetDetails(values) {
     sameSite: values.sameSite || "unspecified",
   };
 
-  // TRAP: supplying `domain` at all makes the cookie domain-wide. Chrome
-  // stores it as ".host" with hostOnly false even when the dot is left off,
-  // so a host-only cookie has to omit the field entirely rather than pass
-  // the bare host.
+  // TRAP: passing any domain at all makes the cookie domain-wide. For a
+  // host-only cookie the domain has to be left out completely.
   if (!values.hostOnly) {
     details.domain = host;
   }
 
-  // TRAP: a session cookie has no expirationDate. Writing one back with a date
-  // silently converts it into a permanent cookie.
+  // TRAP: a session cookie has no expiry date. Giving it one turns it into a
+  // permanent cookie.
   if (!values.session && typeof values.expirationDate === "number") {
     details.expirationDate = values.expirationDate;
   }
@@ -235,11 +189,9 @@ export function buildSetDetails(values) {
   return details;
 }
 
-// Reasons Chrome would reject the write, checked before we attempt it.
-//
-// Worth doing up front: when Chrome refuses a cookie it throws
-// "Failed to parse or set cookie named X" and never says which rule was
-// broken, so anything we don't catch here reaches the user as a dead end.
+// Checks the form before saving. When Chrome rejects a cookie, its error
+// doesn't say which rule was broken, so anything we can catch here gets a
+// clearer message.
 export function validateCookieValues(values) {
   const errors = [];
   const name = String(values.name || "");
@@ -275,18 +227,14 @@ export function validateCookieValues(values) {
   return errors;
 }
 
-// Create or update a cookie.
-//
-// `original` is the cookie being edited, or null when creating a new one.
-// Returns { ok, cookie, error }. Never throws at the caller.
+// Creates a cookie, or updates one when `original` is the cookie being
+// edited. Returns { ok, cookie, error } and never throws.
 export async function writeCookie(original, values) {
   const details = buildSetDetails(values);
 
-  // TRAP: editing is remove-then-set. Chrome keys a cookie on
-  // name + domain + path (+ store + partition), so saving with any of those
-  // changed writes a SECOND cookie and leaves the original in place. Setting
-  // with an unchanged identity overwrites cleanly (verified), so a plain
-  // value edit doesn't need the remove.
+  // TRAP: if the name, domain or path changed, saving creates a second cookie
+  // and leaves the old one. So in that case we delete the old one first. If
+  // only the value changed, set() overwrites it and no delete is needed.
   if (original) {
     const before = identityOf(original);
     const after = identityOf({
@@ -322,9 +270,8 @@ export async function writeCookie(original, values) {
     return { ok: true, cookie: result, error: null };
   }
 
-  // A null result should be a real failure now that the URL covers the path,
-  // but that assumption has bitten once already, so check rather than trust
-  // it, and only report a failure if the cookie genuinely isn't there.
+  // A null result should mean it failed, but set() has returned null on
+  // success before (see the TRAP above), so check whether the cookie is there.
   const landed = await chrome.cookies.getAll({
     url: details.url,
     name: details.name,
@@ -339,11 +286,11 @@ export async function writeCookie(original, values) {
   };
 }
 
+// Chrome's error names the cookie but not what was wrong with it, so we add
+// the likely reasons.
 function describeWriteFailure(error) {
   const message = error && error.message ? error.message : String(error);
 
-  // Chrome's own message for a rejected cookie names the cookie but not the
-  // rule it broke, so add the possibilities the form can't rule out.
   if (message.includes("Failed to parse or set cookie")) {
     return (
       message +
@@ -356,10 +303,8 @@ function describeWriteFailure(error) {
 
 // --- deleting ----------------------------------------------------------
 
-// Delete one cookie.
-//
-// chrome.cookies.remove resolves to null when it fails rather than throwing,
-// so the result has to be checked or failures pass silently.
+// Deletes one cookie. chrome.cookies.remove returns null when it fails
+// instead of throwing, so the result has to be checked.
 export async function removeCookie(cookie) {
   const details = {
     url: buildCookieUrl(cookie),
@@ -379,8 +324,8 @@ export async function removeCookie(cookie) {
   }
 }
 
-// Delete many. Returns what actually happened, so the UI can report honestly
-// instead of claiming success.
+// Deletes many cookies and reports which ones failed, so the popup can tell
+// the user instead of claiming everything worked.
 export async function removeCookies(cookies) {
   const outcomes = await Promise.all(
     cookies.map(async (cookie) => ({ cookie, ok: await removeCookie(cookie) }))
