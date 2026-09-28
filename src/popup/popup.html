@@ -63,31 +63,9 @@
           <p id="cookie-count" class="muted"></p>
         </div>
         <div class="bar-actions">
-          <!-- Auto follows the system theme. It's the default. -->
+          <!-- Follows the system theme until someone picks the other one.
+               popup.js selects the button for the theme showing. -->
           <div class="theme" role="radiogroup" aria-label="Colour theme">
-            <input
-              type="radio"
-              name="theme"
-              id="theme-auto"
-              value="auto"
-              class="visually-hidden"
-            />
-            <label for="theme-auto" title="Follow the system theme">
-              <!-- Half light, half dark: the usual icon for "follow the system". -->
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="8.5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                />
-                <path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" />
-              </svg>
-              <span class="visually-hidden">Auto</span>
-            </label>
-
             <input
               type="radio"
               name="theme"
@@ -95,7 +73,7 @@
               value="light"
               class="visually-hidden"
             />
-            <label for="theme-light" title="Always use the light theme">
+            <label for="theme-light" title="Light theme">
               <!-- Icons are inline SVG, since an icon font would be a network request.
                    currentColor makes them match the label's colour. -->
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -121,7 +99,7 @@
               value="dark"
               class="visually-hidden"
             />
-            <label for="theme-dark" title="Always use the dark theme">
+            <label for="theme-dark" title="Dark theme">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path
                   d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"

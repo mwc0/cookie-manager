@@ -31,6 +31,7 @@ import {
   loadTheme,
   saveTheme,
   applyTheme,
+  choiceFor,
   mirror,
   watchSystemTheme,
 } from "../lib/theme.js";
@@ -555,9 +556,20 @@ async function deleteOne(cookie) {
 
 // --- theme -----------------------------------------------------------------
 
-// "auto", "light" or "dark". The system-theme listener below needs to know,
-// so it only changes the theme when this is "auto".
-let themeChoice = "auto";
+// "light" or "dark" if someone picked one, or null to follow the system. The
+// system-theme listener below only changes the theme when this is null.
+let themeChoice = null;
+
+// Selects the Light or Dark button for the theme showing. apply-theme.js has
+// set data-theme before this first runs, so a button is selected from the
+// start.
+function showThemeButton() {
+  const showing = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  const radio = document.querySelector('input[name="theme"][value="' + showing + '"]');
+  if (radio) {
+    radio.checked = true;
+  }
+}
 
 async function initTheme() {
   const { choice, error } = await loadTheme();
@@ -567,21 +579,17 @@ async function initTheme() {
   // again from the saved value in case the two differ.
   applyTheme(choice);
   mirror(choice);
-
-  const radio = document.querySelector('input[name="theme"][value="' + choice + '"]');
-  if (radio) {
-    radio.checked = true;
-  }
+  showThemeButton();
 
   if (error) {
     showMainMessage(error, true);
   }
 }
 
-async function chooseTheme(choice) {
-  themeChoice = choice;
+async function chooseTheme(theme) {
+  themeChoice = choiceFor(theme);
 
-  const { error } = await saveTheme(choice);
+  const { error } = await saveTheme(theme);
   if (error) {
     showMainMessage(error, true);
   }
@@ -658,15 +666,17 @@ for (const radio of document.querySelectorAll('input[name="theme"]')) {
   radio.addEventListener("change", () => chooseTheme(radio.value));
 }
 
-// Follow the system theme while the popup is open, but only on "auto".
+// Follow the system theme while the popup is open, unless someone picked one.
 watchSystemTheme(() => {
-  if (themeChoice === "auto") {
-    applyTheme("auto");
+  if (!themeChoice) {
+    applyTheme(null);
+    showThemeButton();
   }
 });
 
 // Not awaited, so loading cookies doesn't wait for it. The theme is already
 // showing thanks to apply-theme.js.
+showThemeButton();
 initTheme();
 
 init();

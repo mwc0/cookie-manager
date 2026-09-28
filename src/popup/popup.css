@@ -3,8 +3,9 @@
 /* Theme.
 
    apply-theme.js sets data-theme on <html> to "light" or "dark" before the
-   popup is drawn. "Auto" is worked out in JavaScript (see src/lib/theme.js),
-   so the dark colours only need to be written once, below. There's no
+   popup is drawn. Following the system is worked out in JavaScript (see
+   src/lib/theme.js), so the dark colours only need to be written once,
+   below. There's no
    prefers-color-scheme fallback, so if apply-theme.js stops working, the
    popup is always light. */
 
@@ -422,8 +423,8 @@ td.value.expanded .value-toggle {
 
 /* --- theme control ------------------------------------------------------
 
-   Built from radio buttons so the arrow keys move between the three
-   options. The radios are hidden, and the labels are what you see and click. */
+   Built from radio buttons so the arrow keys move between Light and
+   Dark. The radios are hidden, and the labels are what you see and click. */
 
 .theme {
   display: flex;

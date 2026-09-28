@@ -16,10 +16,12 @@
   var theme = "light";
 
   try {
-    var choice = window.localStorage.getItem("theme") || "auto";
+    // "light" or "dark" if someone picked one. Anything else means follow
+    // the system.
+    var choice = window.localStorage.getItem("theme");
     var systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-    if (choice === "dark" || (choice === "auto" && systemIsDark)) {
+    if (choice === "dark" || (choice !== "light" && systemIsDark)) {
       theme = "dark";
     }
   } catch (error) {

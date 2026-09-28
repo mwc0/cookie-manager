@@ -1,14 +1,13 @@
-// Light and dark theme. "auto" follows the system; "light" and "dark" stay
-// fixed. The theme actually shown ("light" or "dark") goes on <html> as
-// data-theme, and that's all the CSS looks at.
+// Light and dark theme. By default the popup follows the system theme. If
+// someone picks the other one, that choice is saved and kept, even if the
+// system changes later. Picking the system's own theme again removes the
+// saved choice, so it goes back to following the system.
 //
-// "auto" is worked out here rather than in CSS so popup.css only needs the
-// dark colours once. Doing it in CSS would mean two copies of the dark
-// colours, and two copies drift apart.
+// The theme actually shown ("light" or "dark") goes on <html> as data-theme,
+// and that's all the CSS looks at. Following the system is worked out here
+// rather than in CSS, so popup.css only needs the dark colours once.
 
 export const THEME_KEY = "theme";
-export const THEMES = ["auto", "light", "dark"];
-const DEFAULT_THEME = "auto";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
@@ -19,16 +18,13 @@ const DARK_QUERY = "(prefers-color-scheme: dark)";
 // localStorage, but shares chrome.storage.local.
 const MIRROR_KEY = "theme";
 
-function isValidTheme(value) {
-  return THEMES.includes(value);
+// "light" or "dark", or null for "follow the system". Anything else,
+// including "auto" saved by version 1.0.0, means follow the system.
+function asChoice(value) {
+  return value === "light" || value === "dark" ? value : null;
 }
 
-// Turns "auto" into "light" or "dark".
-export function resolveTheme(choice) {
-  if (choice === "light" || choice === "dark") {
-    return choice;
-  }
-
+export function systemTheme() {
   try {
     return window.matchMedia(DARK_QUERY).matches ? "dark" : "light";
   } catch (error) {
@@ -36,22 +32,41 @@ export function resolveTheme(choice) {
   }
 }
 
+// The theme to show for a saved choice.
+export function resolveTheme(choice) {
+  return asChoice(choice) || systemTheme();
+}
+
+// What to save when someone picks `theme`: nothing if it's the system's own
+// theme, so the popup keeps following the system.
+export function choiceFor(theme) {
+  return theme === systemTheme() ? null : asChoice(theme);
+}
+
 export function applyTheme(choice) {
   document.documentElement.dataset.theme = resolveTheme(choice);
 }
 
-// Never throws. If storage fails, the default ("auto") is used.
+// Never throws. If storage fails, the popup follows the system.
 export async function loadTheme() {
   try {
     const stored = await chrome.storage.local.get(THEME_KEY);
-    const value = stored ? stored[THEME_KEY] : null;
-    return {
-      choice: isValidTheme(value) ? value : DEFAULT_THEME,
-      error: null,
-    };
+    const value = stored ? stored[THEME_KEY] : undefined;
+    const choice = asChoice(value);
+
+    // Removes anything else, like the "auto" 1.0.0 saved, so only "light" or
+    // "dark" is ever kept, as the privacy policy says.
+    // If that fails it's tried again next time, so the error is ignored.
+    if (value !== undefined && !choice) {
+      try {
+        await chrome.storage.local.remove(THEME_KEY);
+      } catch (error) {
+      }
+    }
+    return { choice, error: null };
   } catch (error) {
     return {
-      choice: DEFAULT_THEME,
+      choice: null,
       error:
         "Couldn't read your saved theme, so the system theme is being used: " +
         (error && error.message ? error.message : String(error)),
@@ -59,16 +74,21 @@ export async function loadTheme() {
   }
 }
 
-// Saves and applies a choice. Returns { error }. The theme changes before
-// the save finishes, so the switch feels instant even if saving is slow.
-export async function saveTheme(choice) {
-  const value = isValidTheme(choice) ? choice : DEFAULT_THEME;
+// Saves and applies the theme someone picked. Returns { error }. The theme
+// changes before the save finishes, so the switch feels instant even if
+// saving is slow.
+export async function saveTheme(theme) {
+  const choice = choiceFor(theme);
 
-  applyTheme(value);
-  mirror(value);
+  applyTheme(choice);
+  mirror(choice);
 
   try {
-    await chrome.storage.local.set({ [THEME_KEY]: value });
+    if (choice) {
+      await chrome.storage.local.set({ [THEME_KEY]: choice });
+    } else {
+      await chrome.storage.local.remove(THEME_KEY);
+    }
     return { error: null };
   } catch (error) {
     return {
@@ -83,7 +103,11 @@ export async function saveTheme(choice) {
 // flash next time, so errors are ignored.
 export function mirror(choice) {
   try {
-    window.localStorage.setItem(MIRROR_KEY, choice);
+    if (asChoice(choice)) {
+      window.localStorage.setItem(MIRROR_KEY, choice);
+    } else {
+      window.localStorage.removeItem(MIRROR_KEY);
+    }
   } catch (error) {
   }
 }

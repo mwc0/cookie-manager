@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 24 September 2026**
+**Last updated: 28 September 2026**
 
 ## The short version
 
@@ -38,10 +38,12 @@ Two things, both kept on your own computer and never transmitted.
 
 ### Your colour theme
 
-Whether you chose Auto, Light or Dark. That is the whole record: one of those
-three words. It is stored twice, in Chrome's `storage.local` and in the popup's
-own browser storage. The second copy exists only so the popup can draw in the
-right colours instantly instead of flashing white first.
+Whether you picked Light or Dark. That is the whole record: one of those two
+words. It is only saved if you pick the opposite of your system's theme, and
+it is removed if you switch back. It is stored twice, in Chrome's
+`storage.local` and in the popup's own browser storage. The second copy exists
+only so the popup can draw in the right colours instantly instead of flashing
+white first.
 
 ### Cookies you have marked as Kept
 

@@ -112,7 +112,8 @@ Used to store two things locally. First, the list of cookies the user has
 marked as "Kept", so the extension remembers to exclude them from deletion
 after the popup closes. Each entry holds a cookie's name, domain and path,
 plus its partition key for partitioned (CHIPS) cookies. It never holds cookie
-values. Second, the user's colour theme choice: "auto", "light" or "dark".
+values. Second, the user's colour theme choice, "light" or "dark", saved only
+if they pick the opposite of their system theme.
 Stored via chrome.storage.local; nothing is synced or transmitted.
 ```
 

@@ -20,6 +20,7 @@ FILES = [
     "test_editor.py",
     "test_search.py",
     "test_protect.py",
+    "test_theme.py",
     "test_no_network.py",
     "test_devtools_crosscheck.py",
 ]
