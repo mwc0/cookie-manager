@@ -1,25 +1,7 @@
 # cookieZ - Cookie Editor
 
-A Chrome cookie manager (Manifest V3), built to replace EditThisCookie.
+A Chrome cookie manager (Manifest V3)
 
-**Status: the planned v1 feature set is complete and its behaviour has been
-verified**, including incognito. What's left before a store release is the
-listing itself: copy, screenshots and a privacy policy, plus some wider
-real-world use. Treat it as a late beta rather than finished.
-
-## Install for testing
-
-There is no build step. The extension loads directly as source.
-
-1. Clone or download this repo.
-2. Open `chrome://extensions`.
-3. Turn on **Developer mode** (top right).
-4. Click **Load unpacked** and select the **`src`** folder, not the repo root.
-
-To test incognito behaviour, open the extension's **Details** page and turn on
-**Allow in incognito**, or the popup won't open in a private window.
-
-After editing any file, press the reload icon on the extension's card.
 
 ## What it does so far
 
@@ -44,7 +26,6 @@ After editing any file, press the reload icon on the extension's card.
   you delete. It's a guard on this extension's own delete button, not
   protection from the website: nothing here stops a site changing its own
   cookies.
-- Has a light, dark or automatic (follow the system) colour theme.
 
 ## Permissions
 
@@ -56,23 +37,13 @@ it.
 ## What it will never do
 
 No network requests. No telemetry or analytics. No ads, affiliate links or
-injected content. No remote code. These are the reason the project exists, not
-preferences.
+injected content. No remote code.
 
 The source is deliberately plain JavaScript with no build step, no bundler and
 no dependencies, so you can read exactly what it does before trusting it with
 your session cookies.
 
-## Repo layout
 
-```
-src/            the extension (this is what you load)
-  manifest.json
-  popup/        popup UI
-  lib/          shared helpers
-tests/          browser tests (not shipped -- see tests/README.md)
-docs/           the website, cookiez.uk (served by GitHub Pages)
-store/          listing copy, screenshots, privacy policy
 ```
 
 ## Licence
