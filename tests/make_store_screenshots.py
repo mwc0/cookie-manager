@@ -14,16 +14,15 @@ Two rules, explained in store/README.md:
     public forever.
 
 The browser runs at 2x. The website gets two copies of each popup capture,
-popup-NAME.png at 780px wide and popup-NAME@2x.png at 1560px, so sharp
+popup-NAME.webp at 780px wide and popup-NAME@2x.webp at 1560px, so sharp
 screens get sharp text and other screens don't download the bigger file.
-The store images are always exactly 1280x800.
+The store images are always exactly 1280x800 PNGs.
 
 The first store image is also copied to docs/images/01-overview.png, the
 preview image shown when someone shares a link to the website.
 """
 
 import base64
-import json
 import sys
 from pathlib import Path
 
@@ -94,6 +93,31 @@ FRAME = """<!DOCTYPE html>
 <body><h1>__CAPTION__</h1><div class="shot __CLIPPED__"><img src="__IMAGE__"></div></body></html>"""
 
 
+def to_webp(context, png_bytes):
+    """
+    Converts a PNG to WebP, using Chrome so no image library is needed.
+
+    Quality 90 is about 40% smaller than the PNG and looks the same, text
+    included. Lossless WebP came out bigger than the PNG.
+    """
+    page = context.new_page()
+    webp = page.evaluate(
+        """async (png) => {
+            const img = new Image();
+            img.src = "data:image/png;base64," + png;
+            await img.decode();
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext("2d").drawImage(img, 0, 0);
+            return canvas.toDataURL("image/webp", 0.9).split(",")[1];
+        }""",
+        base64.b64encode(png_bytes).decode("ascii"),
+    )
+    page.close()
+    return base64.b64decode(webp)
+
+
 def compose(context, png_bytes, caption, out_path, clipped=False):
     """Put a popup capture on a 1280x800 canvas with a caption."""
     data_uri = "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
@@ -150,8 +174,8 @@ def main():
 
             # The website gets both sizes, and each browser only downloads the
             # one it needs (see srcset in docs/index.html).
-            (SITE_OUT / f"popup-{name}.png").write_bytes(body.screenshot(scale="css"))
-            (SITE_OUT / f"popup-{name}@2x.png").write_bytes(png)
+            (SITE_OUT / f"popup-{name}.webp").write_bytes(to_webp(context, body.screenshot(scale="css")))
+            (SITE_OUT / f"popup-{name}@2x.webp").write_bytes(to_webp(context, png))
             if name == SHOTS[0][0]:
                 # The website's link preview image. Written here so it always
                 # matches the store copy.
