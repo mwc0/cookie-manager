@@ -43,9 +43,6 @@ The source is deliberately plain JavaScript with no build step, no bundler and
 no dependencies, so you can read exactly what it does before trusting it with
 your session cookies.
 
-
-```
-
 ## Licence
 
 MIT. See `LICENSE`. You can read it, fork it, and check that what's published
