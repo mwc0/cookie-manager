@@ -1,5 +1,5 @@
 // Runs the popup: picks which screen to show, loads the cookies, and handles
-// deleting, editing and keeping.
+// deleting, editing, keeping, exporting and importing.
 
 import { hasHostAccess, requestHostAccess } from "../lib/permissions.js";
 import {
@@ -12,7 +12,10 @@ import {
   validateCookieValues,
   filterCookies,
   baseHostOf,
+  getAllCookies,
 } from "../lib/cookies.js";
+import { toJson, toNetscape, toHeader, parseImport, planImport } from "../lib/transfer.js";
+import { copyWithFeedback } from "./clipboard.js";
 import {
   loadProtected,
   setProtected,
@@ -44,6 +47,10 @@ let page = null;
 // this same list, so the number shown always matches what gets deleted.
 let scopeCookies = [];
 
+// Every cookie in the chosen scope, kept ones included. This is what Export
+// exports: keeping a cookie stops it being deleted, not copied.
+let scopeAll = [];
+
 // The cookie open in the editor, or null for a new one. Saving needs the
 // original cookie, in case the name or path changed. See writeCookie().
 let editing = null;
@@ -57,6 +64,14 @@ let shownCookies = [];
 let protectedKeys = new Set();
 
 const el = (id) => document.getElementById(id);
+
+// Opened with "Open in a tab", the page is popup.html?tab=<id>, where <id> is
+// the tab it was opened from. Otherwise it's the toolbar popup.
+const targetTabId = Number(new URLSearchParams(location.search).get("tab")) || null;
+const inTab = targetTabId !== null;
+if (inTab) {
+  document.body.classList.add("in-tab");
+}
 
 function showState(name) {
   for (const section of document.querySelectorAll(".state")) {
@@ -95,9 +110,26 @@ async function getActiveTab() {
   return tabs[0] || null;
 }
 
-async function loadCurrentPage() {
-  const tab = await getActiveTab();
+// The tab whose cookies are shown: the active tab in the popup, or the tab
+// it was opened from when it's open in a tab of its own.
+async function getTargetTab() {
+  if (!inTab) {
+    return await getActiveTab();
+  }
+  try {
+    return await chrome.tabs.get(targetTabId);
+  } catch (error) {
+    return null;
+  }
+}
 
+async function loadCurrentPage() {
+  const tab = await getTargetTab();
+
+  if (!tab && inTab) {
+    showBlocked("The tab this was opened from has been closed.");
+    return;
+  }
   if (!tab || !tab.url) {
     showBlocked("Chrome didn't report an address for this tab.");
     return;
@@ -124,6 +156,9 @@ async function loadCurrentPage() {
 
   el("main-message").hidden = true;
   el("site-name").textContent = url.hostname;
+  if (inTab) {
+    document.title = "cookieZ - " + url.hostname;
+  }
   el("scope-target-page").textContent = url.hostname;
   el("scope-target-domain").textContent = baseHostOf(url.hostname);
 
@@ -217,6 +252,7 @@ async function refreshScope() {
   summaryLine.textContent = "Counting…";
   details.hidden = true;
   el("delete-button").disabled = true;
+  el("export-button").disabled = true;
   cancelConfirm();
 
   let inScope;
@@ -229,9 +265,13 @@ async function refreshScope() {
         : await getCookiesForScope(selectedScope(), page);
   } catch (error) {
     scopeCookies = [];
+    scopeAll = [];
     summaryLine.textContent = "Couldn't count the cookies in this scope: " + error.message;
     return;
   }
+
+  scopeAll = inScope;
+  el("export-button").disabled = inScope.length === 0;
 
   // Kept cookies are taken out before counting, so the number shown is still
   // exactly what will be deleted.
@@ -285,6 +325,7 @@ async function refreshScope() {
 function cancelConfirm() {
   el("confirm-row").hidden = true;
   el("delete-button").hidden = false;
+  el("export-button").hidden = false;
 }
 
 function startConfirm() {
@@ -298,6 +339,7 @@ function startConfirm() {
 
   el("delete-result").hidden = true;
   el("delete-button").hidden = true;
+  el("export-button").hidden = true;
   el("confirm-row").hidden = false;
   el("confirm-yes").focus();
 }
@@ -554,6 +596,287 @@ async function deleteOne(cookie) {
   await refresh();
 }
 
+// --- export ----------------------------------------------------------------
+
+function selectedFormat() {
+  const checked = document.querySelector('input[name="format"]:checked');
+  return checked ? checked.value : "json";
+}
+
+// The export for the chosen format, and the file name to download it as.
+function buildExport() {
+  const format = selectedFormat();
+  const date = new Date().toISOString().slice(0, 10);
+  const scopeName = {
+    page: page.hostname,
+    domain: baseHostOf(page.hostname),
+    all: "all-sites",
+    matches: page.hostname + "-search",
+  }[selectedScope()];
+  const base = "cookies-" + scopeName + "-" + date;
+
+  if (format === "netscape") {
+    return { text: toNetscape(scopeAll), filename: base + ".txt", type: "text/plain" };
+  }
+  if (format === "header") {
+    return { text: toHeader(scopeAll), filename: base + "-header.txt", type: "text/plain" };
+  }
+  return { text: toJson(scopeAll), filename: base + ".json", type: "application/json" };
+}
+
+function openExport() {
+  const { count, domains } = summarise(scopeAll);
+  const kept = scopeAll.length - scopeCookies.length;
+
+  el("export-summary").textContent =
+    pluralise(count, "cookie", "cookies") +
+    (domains.length === 1 ? " from " + domains[0] : " from " + pluralise(domains.length, "domain", "domains")) +
+    (kept > 0 ? ", including " + pluralise(kept, "kept cookie", "kept cookies") : "") +
+    ".";
+
+  // A Cookie header is sent to one site, so it only makes sense for one.
+  const header = document.querySelector('input[name="format"][value="header"]');
+  const oneSite = new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1;
+  header.disabled = !oneSite;
+  el("header-note").textContent = oneSite
+    ? "Names and values only, for one site."
+    : "Only for cookies from one site. These are from several.";
+  if (!oneSite && header.checked) {
+    document.querySelector('input[name="format"][value="json"]').checked = true;
+  }
+
+  el("export-result").hidden = true;
+  el("main-message").hidden = true;
+  showExportText();
+  showState("export");
+  el("export-copy").focus();
+}
+
+function showExportText() {
+  el("export-output").value = buildExport().text;
+}
+
+function downloadExport() {
+  const { text, filename, type } = buildExport();
+
+  // A download made from the page itself. No downloads permission needed.
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+
+  const result = el("export-result");
+  result.className = "result";
+  result.textContent = "Saving as " + filename + ".";
+  result.hidden = false;
+}
+
+// --- import ----------------------------------------------------------------
+
+// What the preview said will be written. Import writes exactly this list.
+let importPlan = null;
+
+function openImport() {
+  el("main-message").hidden = true;
+  el("import-file-row").hidden = !inTab;
+  el("import-file-hint").hidden = inTab;
+  resetImportPreview();
+  el("import-result").hidden = true;
+  el("import-failures").hidden = true;
+  showState("import");
+  el("import-text").focus();
+}
+
+function resetImportPreview() {
+  importPlan = null;
+  el("import-preview").hidden = true;
+}
+
+function fillList(list, items) {
+  list.textContent = "";
+  for (const text of items) {
+    const item = document.createElement("li");
+    item.textContent = text; // comes from a file, so never innerHTML
+    list.appendChild(item);
+  }
+  list.hidden = items.length === 0;
+}
+
+async function checkImport() {
+  el("import-result").hidden = true;
+  el("import-failures").hidden = true;
+  resetImportPreview();
+
+  const { entries, problems } = parseImport(el("import-text").value);
+
+  let existing;
+  try {
+    existing = await getAllCookies();
+  } catch (error) {
+    showImportResult("Couldn't read your current cookies to compare: " + error.message, true);
+    return;
+  }
+
+  const plan = planImport(
+    entries,
+    existing,
+    (cookie) => isProtected(protectedKeys, cookie),
+    Date.now() / 1000
+  );
+
+  const count = plan.toWrite.length;
+  const replacing = plan.toWrite.filter((item) => item.replaces).length;
+  const kept = plan.toWrite.filter((item) => item.kept).length;
+
+  const parts = [];
+  if (count === 0) {
+    parts.push("Nothing can be imported.");
+  } else {
+    parts.push(
+      "Will add " +
+        pluralise(count, "cookie", "cookies") +
+        (plan.domains.length === 1
+          ? " for " + plan.domains[0]
+          : " across " + pluralise(plan.domains.length, "site", "sites")) +
+        "."
+    );
+    if (replacing > 0) {
+      parts.push(
+        formatCount(replacing) +
+          (replacing === 1 ? " of them replaces a cookie" : " of them replace cookies") +
+          " you already have."
+      );
+    }
+    if (kept > 0) {
+      parts.push(
+        formatCount(kept) + (kept === 1 ? " of those is a kept cookie." : " of those are kept cookies.")
+      );
+    }
+  }
+  if (plan.expired > 0) {
+    parts.push(
+      pluralise(plan.expired, "cookie has", "cookies have") + " already expired and will be skipped."
+    );
+  }
+  if (plan.duplicates > 0) {
+    parts.push(pluralise(plan.duplicates, "duplicate", "duplicates") + " in the file will be skipped.");
+  }
+  el("import-summary").textContent = parts.join(" ");
+
+  if (plan.domains.length > 1) {
+    fillList(el("import-domains-list"), plan.domains);
+    el("import-domains-summary").textContent = "Show the " + formatCount(plan.domains.length) + " sites";
+    el("import-domains").open = false;
+    el("import-domains").hidden = false;
+  } else {
+    el("import-domains").hidden = true;
+  }
+
+  const skipped = [...problems, ...plan.invalid.map((text) => "Will be skipped: " + text)];
+  fillList(el("import-problems"), skipped);
+
+  el("import-confirm").textContent = "Import " + pluralise(count, "cookie", "cookies");
+  el("import-confirm-row").hidden = count === 0;
+  el("import-preview").hidden = false;
+  importPlan = count > 0 ? plan : null;
+  if (importPlan) {
+    el("import-confirm").focus();
+  }
+}
+
+function showImportResult(text, isError) {
+  const result = el("import-result");
+  result.textContent = text;
+  result.className = isError ? "result error" : "result";
+  result.hidden = false;
+}
+
+async function runImport() {
+  if (!importPlan) {
+    return;
+  }
+  const plan = importPlan;
+  resetImportPreview();
+  showImportResult("Importing…", false);
+
+  let created = 0;
+  let replaced = 0;
+  let shortened = 0;
+  const failures = [];
+
+  // One at a time, so the result for each cookie is known.
+  for (const { entry, replaces } of plan.toWrite) {
+    const { ok, cookie, error } = await writeCookie(null, entry);
+    if (!ok) {
+      failures.push(entry.name + " (" + entry.domain + "): " + error);
+      continue;
+    }
+    if (replaces) {
+      replaced += 1;
+    } else {
+      created += 1;
+    }
+    if (describeExpiryChange(entry, cookie)) {
+      shortened += 1;
+    }
+  }
+
+  const parts = [
+    "Imported " +
+      pluralise(created + replaced, "cookie", "cookies") +
+      (replaced > 0 ? " (" + formatCount(replaced) + " replaced)" : "") +
+      ".",
+  ];
+  if (shortened > 0) {
+    parts.push(
+      "Chrome shortened the expiry of " +
+        pluralise(shortened, "cookie", "cookies") +
+        ", because it limits how far ahead a cookie can expire."
+    );
+  }
+  if (failures.length > 0) {
+    parts.push("Chrome refused " + pluralise(failures.length, "cookie", "cookies") + ":");
+  }
+  showImportResult(parts.join(" "), failures.length > 0);
+  fillList(el("import-failures"), failures);
+}
+
+async function readImportFile() {
+  const file = el("import-file").files[0];
+  if (!file) {
+    return;
+  }
+  try {
+    el("import-text").value = await file.text();
+    await checkImport();
+  } catch (error) {
+    showImportResult("Couldn't read " + file.name + ": " + error.message, true);
+  }
+}
+
+async function closeImport() {
+  showState("main");
+  await refresh();
+}
+
+// --- open in a tab ---------------------------------------------------------
+
+async function openInTab() {
+  const tab = await getActiveTab();
+  if (!tab) {
+    showMainMessage("Couldn't tell which tab this is for.", true);
+    return;
+  }
+  await chrome.tabs.create({
+    url: chrome.runtime.getURL("popup/popup.html") + "?tab=" + tab.id,
+  });
+  window.close();
+}
+
 // --- theme -----------------------------------------------------------------
 
 // "light" or "dark" if someone picked one, or null to follow the system. The
@@ -626,7 +949,12 @@ el("grant-button").addEventListener("click", async () => {
 });
 
 el("retry-button").addEventListener("click", init);
-el("refresh-button").addEventListener("click", refresh);
+// In a tab, the other tab may have moved to another site, so read its address
+// again too.
+el("refresh-button").addEventListener("click", () => (inTab ? loadCurrentPage() : refresh()));
+el("tab-button").hidden = inTab;
+el("tab-button").addEventListener("click", openInTab);
+el("import-tab").addEventListener("click", openInTab);
 
 el("search-input").addEventListener("input", () => {
   drawTable();
@@ -659,6 +987,28 @@ for (const radio of document.querySelectorAll('input[name="scope"]')) {
 }
 
 el("delete-button").addEventListener("click", startConfirm);
+el("export-button").addEventListener("click", openExport);
+el("export-back").addEventListener("click", () => showState("main"));
+el("export-copy").addEventListener("click", () =>
+  copyWithFeedback(el("export-copy"), el("export-output").value)
+);
+el("export-download").addEventListener("click", downloadExport);
+for (const radio of document.querySelectorAll('input[name="format"]')) {
+  radio.addEventListener("change", showExportText);
+}
+
+el("import-button").addEventListener("click", openImport);
+el("import-back").addEventListener("click", closeImport);
+el("import-check").addEventListener("click", checkImport);
+el("import-confirm").addEventListener("click", runImport);
+el("import-cancel").addEventListener("click", resetImportPreview);
+el("import-file").addEventListener("change", readImportFile);
+// A changed paste has to be checked again before it can be imported.
+el("import-text").addEventListener("input", resetImportPreview);
+
+el("value-copy").addEventListener("click", () =>
+  copyWithFeedback(el("value-copy"), el("field-value").value)
+);
 el("confirm-no").addEventListener("click", cancelConfirm);
 el("confirm-yes").addEventListener("click", runDelete);
 

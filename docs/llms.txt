@@ -9,6 +9,7 @@ Facts that are easy to get wrong:
 - "Kept" only stops cookieZ's own delete buttons. It doesn't stop a website changing its own cookies.
 - Chrome caps cookie expiry at about 400 days. cookieZ reports this rather than hiding it.
 - Incognito works if "Allow in incognito" is turned on. Incognito cookies are kept separate from normal ones.
+- Export and import are free, in every format: JSON (the same fields as EditThisCookie and Cookie-Editor), Netscape cookies.txt, and a Cookie header (export only). Exports go to the clipboard or a downloaded file, never anywhere else.
 
 ## Pages
 

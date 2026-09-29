@@ -672,3 +672,127 @@ button.row-button.keep.kept:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* --- copy, open in a tab ---------------------------------------------------- */
+
+/* The Copy button under an expanded value. */
+td.value .row-button.copy {
+  display: block;
+  margin: 4px 0 0;
+}
+
+/* The editor's Copy button sits on the same line as the Value label. */
+.field-label-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.field .field-label-row label {
+  margin-bottom: 0;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 7px;
+}
+
+.icon-button svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+/* A button that reads as a link inside a sentence. */
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Open in a tab, the page can be as wide as the window allows, up to a
+   comfortable reading width. Nothing else changes. */
+body.in-tab {
+  width: auto;
+  max-width: 1100px;
+  max-height: none;
+  margin: 0 auto;
+  overflow-y: visible;
+}
+
+/* --- export and import ------------------------------------------------------ */
+
+.formats {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 10px 0;
+}
+
+.formats .scope-label {
+  min-width: 94px;
+  font-weight: 600;
+}
+
+textarea.output {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  resize: vertical;
+  caret-color: var(--accent);
+}
+
+textarea.output:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.warning {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+#import-preview {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+#import-preview .scope-summary {
+  margin: 0;
+}
+
+#import-preview .errors,
+#import-failures {
+  margin: 10px 0 0;
+}
+
+#import-domains {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+#import-domains summary {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+#import-domains ul {
+  max-height: 110px;
+  margin: 6px 0 0;
+  padding: 0 0 0 18px;
+  overflow-y: auto;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--muted);
+}

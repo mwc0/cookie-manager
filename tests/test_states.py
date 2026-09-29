@@ -114,11 +114,16 @@ def main():
         }""")
         wide.reload()
         wide.wait_for_timeout(1200)
+        # Expand the long value too, so its Copy button is measured as well.
+        wide.locator("#cookie-rows .value-toggle").first.click()
+        wide.wait_for_timeout(200)
 
         layout = wide.evaluate("""() => {
             const wrap = document.getElementById('table-wrap');
             const table = document.getElementById('cookie-table');
-            const buttons = Array.from(document.querySelectorAll('#cookie-rows button.row-button'));
+            // Hidden buttons have no position on screen, so they're left out.
+            const buttons = Array.from(document.querySelectorAll('#cookie-rows button.row-button'))
+                .filter(b => b.getClientRects().length > 0);
             const wrapBox = wrap.getBoundingClientRect();
             return {
                 overflow: Math.round(table.getBoundingClientRect().width - wrap.clientWidth),
