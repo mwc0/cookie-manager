@@ -191,8 +191,9 @@ export function buildSetDetails(values) {
 
 // Checks the form before saving. When Chrome rejects a cookie, its error
 // doesn't say which rule was broken, so anything we can catch here gets a
-// clearer message.
-export function validateCookieValues(values) {
+// clearer message. An imported cookie has no form to tick, so `imported`
+// swaps the advice for a description of what's wrong with it.
+export function validateCookieValues(values, { imported = false } = {}) {
   const errors = [];
   const name = String(values.name || "");
   const value = String(values.value || "");
@@ -217,11 +218,19 @@ export function validateCookieValues(values) {
 
   // TRAP: Chrome rejects SameSite=None unless the cookie is also Secure.
   if (values.sameSite === "no_restriction" && !values.secure) {
-    errors.push("SameSite “None” only works on a Secure cookie. Tick Secure, or choose a different SameSite.");
+    errors.push(
+      imported
+        ? "It has SameSite “None” but isn't Secure, and Chrome won't accept that."
+        : "SameSite “None” only works on a Secure cookie. Tick Secure, or choose a different SameSite."
+    );
   }
 
   if (!values.session && typeof values.expirationDate !== "number") {
-    errors.push("Set an expiry date, or tick “Session cookie”.");
+    errors.push(
+      imported
+        ? "It has no expiry date and isn't marked as a session cookie."
+        : "Set an expiry date, or tick “Session cookie”."
+    );
   }
 
   return errors;

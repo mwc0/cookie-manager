@@ -291,7 +291,7 @@ export function planImport(entries, existing, isKept, now) {
       continue;
     }
 
-    const errors = validateCookieValues(entry);
+    const errors = validateCookieValues(entry, { imported: true });
     if (errors.length > 0) {
       invalid.push(entry.name + " (" + entry.domain + "): " + errors.join(" "));
       continue;

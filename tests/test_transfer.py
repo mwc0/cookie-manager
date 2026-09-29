@@ -261,6 +261,8 @@ def main():
         r.check("an import skips the cookies it can't write, and says why",
                 "Will add 1 cookie" in preview and "expired" in preview and "Secure" in problems,
                 f"{preview!r} / {problems.strip()!r}")
+        r.check("the reason describes the cookie instead of asking to tick a box",
+                "isn't Secure" in problems and "Tick" not in problems, problems.strip())
         r.check("only the valid cookie was written",
                 "good" in names and "no_secure" not in names and "old" not in names,
                 str(sorted(names - {c['name'] for c in before})))
