@@ -634,14 +634,20 @@ function openExport() {
     (kept > 0 ? ", including " + pluralise(kept, "kept cookie", "kept cookies") : "") +
     ".";
 
-  // A Cookie header is sent to one site, so it only makes sense for one.
+  // A Cookie header is what a browser sends to one page. "This page" (and a
+  // search within it) is exactly that set, even when it mixes example.com
+  // and www.example.com cookies. The wider scopes only qualify when every
+  // cookie has the same domain.
   const header = document.querySelector('input[name="format"][value="header"]');
-  const oneSite = new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1;
-  header.disabled = !oneSite;
-  el("header-note").textContent = oneSite
-    ? "Names and values only, for one site."
-    : "Only for cookies from one site. These are from several.";
-  if (!oneSite && header.checked) {
+  const onePage =
+    selectedScope() === "page" ||
+    selectedScope() === "matches" ||
+    new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1;
+  header.disabled = !onePage;
+  el("header-note").textContent = onePage
+    ? "Names and values only, as a browser sends them to this page."
+    : "Only for the cookies of one page. Choose “This page” to use it.";
+  if (!onePage && header.checked) {
     document.querySelector('input[name="format"][value="json"]').checked = true;
   }
 

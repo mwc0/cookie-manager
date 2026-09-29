@@ -286,6 +286,42 @@ def main():
                 page.evaluate("() => window.__copied")
                 == "a-long-value-that-is-cut-short-in-the-table-0123456789")
 
+        # --- a Cookie header for a www site ---
+        # A page on www.mixed.test gets cookies set for both www.mixed.test
+        # and mixed.test. That's still one page's cookies, so the header
+        # must be available for "This page".
+        mixed_page, mixed_errors = open_popup(context, ext_id, "https://www.mixed.test/")
+        mixed_page.evaluate("""async () => {
+            await chrome.cookies.set({url: 'https://www.mixed.test/', name: 'on_www', value: 'a'});
+            await chrome.cookies.set({url: 'https://www.mixed.test/', name: 'on_base', value: 'b',
+                                      domain: 'mixed.test'});
+        }""")
+        mixed_page.reload()
+        mixed_page.wait_for_timeout(1200)
+        header_radio = mixed_page.locator('input[name="format"][value="header"]')
+
+        mixed_page.locator('input[name="scope"][value="page"]').check()
+        mixed_page.wait_for_timeout(900)
+        mixed_page.locator("#export-button").click()
+        mixed_page.wait_for_timeout(300)
+        enabled = header_radio.is_enabled()
+        header_radio.check()
+        mixed_page.wait_for_timeout(200)
+        header = mixed_page.locator("#export-output").input_value()
+        r.check("the Cookie header works for This page on a www site",
+                enabled and "on_www=a" in header and "on_base=b" in header, header)
+        mixed_page.locator("#export-back").click()
+        mixed_page.wait_for_timeout(300)
+
+        mixed_page.locator('input[name="scope"][value="all"]').check()
+        mixed_page.wait_for_timeout(900)
+        mixed_page.locator("#export-button").click()
+        mixed_page.wait_for_timeout(300)
+        r.check("but not for All sites, which mixes several sites",
+                header_radio.is_disabled())
+        r.check("no console errors on the www site", not mixed_errors, str(mixed_errors))
+        mixed_page.close()
+
         # --- open in a tab ---
         with context.expect_page() as info:
             page.locator("#tab-button").click()
