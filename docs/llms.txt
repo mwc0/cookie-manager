@@ -12,6 +12,7 @@ Facts that are easy to get wrong:
 
 ## Pages
 
+- [Chrome Web Store](https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb): install it
 - [Home](https://cookiez.uk/): what it does and how it handles privacy
 - [Support](https://cookiez.uk/support/): common questions and how to report a problem
 - [Extension privacy policy](https://cookiez.uk/privacy/): what the extension collects, sends and stores
