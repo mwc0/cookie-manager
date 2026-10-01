@@ -13,6 +13,7 @@ import {
   filterCookies,
   baseHostOf,
   getAllCookies,
+  cookieKey,
 } from "../lib/cookies.js";
 import {
   toJson,
@@ -79,6 +80,10 @@ let shownCookies = [];
 
 // The cookies the user has marked as Kept. See src/lib/protect.js.
 let protectedKeys = new Set();
+
+// The cookies ticked in the table, as cookieKey()s. "Just the ticked
+// cookies" deletes and exports exactly these. Kept in memory only.
+let picked = new Set();
 
 const el = (id) => document.getElementById(id);
 
@@ -224,12 +229,19 @@ function drawTable() {
   const query = el("search-input").value;
   shownCookies = filterCookies(pageCookies, query);
 
+  // Forget ticks for cookies that have gone, after a delete for example.
+  const onPage = new Set(pageCookies.map(cookieKey));
+  picked = new Set([...picked].filter((key) => onPage.has(key)));
+
   renderCookieTable(el("cookie-rows"), shownCookies, {
     onEdit: openEditor,
     onDelete: deleteOne,
     onProtect: toggleProtected,
     isProtected: (cookie) => isProtected(protectedKeys, cookie),
+    onPick: pickCookie,
+    isPicked: (cookie) => picked.has(cookieKey(cookie)),
   });
+  showPicked();
 
   const filtering = query.trim() !== "";
   el("search-clear").hidden = !filtering;
@@ -275,6 +287,68 @@ function drawTable() {
   el("cookie-table").hidden = nothingAtAll || nothingMatched;
 }
 
+// --- ticking cookies -------------------------------------------------------
+
+// The cookies on this page that are ticked, hidden by a search or not.
+function pickedCookies() {
+  return pageCookies.filter((cookie) => picked.has(cookieKey(cookie)));
+}
+
+// Ticking doesn't redraw the table, so focus stays on the box just ticked.
+function pickCookie(cookie, ticked) {
+  const before = picked.size;
+  if (ticked) {
+    picked.add(cookieKey(cookie));
+  } else {
+    picked.delete(cookieKey(cookie));
+  }
+  scopeAfterPicking(before);
+}
+
+// The tick box in the header ticks or unticks every cookie shown.
+function pickAllShown(ticked) {
+  const before = picked.size;
+  for (const cookie of shownCookies) {
+    if (ticked) {
+      picked.add(cookieKey(cookie));
+    } else {
+      picked.delete(cookieKey(cookie));
+    }
+  }
+  for (const box of document.querySelectorAll("#cookie-rows td.pick input")) {
+    box.checked = ticked;
+  }
+  scopeAfterPicking(before);
+}
+
+// The first tick switches the delete panel to the ticked cookies, which is
+// always a smaller set than the scope it replaces. Unticking the last one
+// goes back to "This page".
+function scopeAfterPicking(before) {
+  showPicked();
+  if (before === 0 && picked.size > 0) {
+    document.querySelector('input[name="scope"][value="picked"]').checked = true;
+  }
+  el("delete-result").hidden = true;
+  refreshScope();
+}
+
+// The header tick box and the "Just the ticked cookies" option.
+function showPicked() {
+  const shownPicked = shownCookies.filter((cookie) => picked.has(cookieKey(cookie))).length;
+  const all = el("pick-all");
+  all.checked = shownCookies.length > 0 && shownPicked === shownCookies.length;
+  all.indeterminate = shownPicked > 0 && shownPicked < shownCookies.length;
+  all.disabled = shownCookies.length === 0;
+
+  const count = pickedCookies().length;
+  el("scope-picked-row").hidden = count === 0;
+  el("scope-target-picked").textContent = count > 0 ? pluralise(count, "cookie", "cookies") : "";
+  if (count === 0 && selectedScope() === "picked") {
+    document.querySelector('input[name="scope"][value="page"]').checked = true;
+  }
+}
+
 // --- delete scope ----------------------------------------------------------
 
 function selectedScope() {
@@ -294,12 +368,15 @@ async function refreshScope() {
 
   let inScope;
   try {
-    // "matches" deletes exactly the rows on screen, so it uses the table's
-    // own list rather than asking Chrome again.
-    inScope =
-      selectedScope() === "matches"
-        ? shownCookies
-        : await getCookiesForScope(selectedScope(), page);
+    // "matches" and "picked" delete exactly the rows chosen in the table, so
+    // they use the table's own list rather than asking Chrome again.
+    if (selectedScope() === "matches") {
+      inScope = shownCookies;
+    } else if (selectedScope() === "picked") {
+      inScope = pickedCookies();
+    } else {
+      inScope = await getCookiesForScope(selectedScope(), page);
+    }
   } catch (error) {
     scopeCookies = [];
     scopeAll = [];
@@ -739,6 +816,7 @@ function buildExport() {
     domain: baseHostOf(page.hostname),
     all: "all-sites",
     matches: page.hostname + "-search",
+    picked: page.hostname + "-ticked",
   }[selectedScope()];
   const base = "cookies-" + scopeName + "-" + date;
 
@@ -800,6 +878,7 @@ function exportIsOnePage(domains) {
   return (
     selectedScope() === "page" ||
     selectedScope() === "matches" ||
+    selectedScope() === "picked" ||
     new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1
   );
 }
@@ -1119,6 +1198,8 @@ el("search-clear").addEventListener("click", () => {
   refreshScope();
   el("search-input").focus();
 });
+
+el("pick-all").addEventListener("change", () => pickAllShown(el("pick-all").checked));
 
 el("add-button").addEventListener("click", () => openEditor(null));
 el("edit-cancel").addEventListener("click", closeEditor);

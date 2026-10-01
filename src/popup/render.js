@@ -23,8 +23,9 @@ const VALUE_PREVIEW_LENGTH = 28;
 const LARGE_COOKIE_BYTES = 3500;
 
 // `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
-// isProtected(cookie) }. Deleting one cookie takes two clicks (Delete, then
-// "Sure?"), and onDelete is only called after the second.
+// isProtected(cookie), onPick(cookie, ticked), isPicked(cookie) }. Deleting
+// one cookie takes two clicks (Delete, then "Sure?"), and onDelete is only
+// called after the second.
 export function renderCookieTable(tbody, cookies, handlers = {}) {
   tbody.textContent = "";
 
@@ -52,6 +53,8 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
     row.classList.add("kept-row");
   }
 
+  row.appendChild(pickCell(cookie, handlers));
+
   const name = textCell(cookie.name, "mono name");
   name.title = cookie.name + " (" + formatBytes(cookieBytes(cookie)) + ")";
   row.appendChild(name);
@@ -59,7 +62,7 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
   row.appendChild(breakableCell(cookie.path, "/", "mono path"));
 
-  const expires = textCell(formatExpiry(cookie), "nowrap");
+  const expires = textCell(formatExpiry(cookie), "nowrap expires");
   expires.title = formatExpiryFull(cookie);
   if (typeof cookie.expirationDate !== "number") {
     expires.classList.add("session");
@@ -69,6 +72,25 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   row.appendChild(flagsCell(cookie));
   row.appendChild(actionsCell(cookie, handlers, disarmers, disarmAll));
   return row;
+}
+
+// A tick box for choosing cookies by hand, for "Just the ticked cookies".
+function pickCell(cookie, handlers) {
+  const cell = document.createElement("td");
+  cell.className = "pick";
+
+  const box = document.createElement("input");
+  box.type = "checkbox";
+  box.checked = handlers.isPicked ? handlers.isPicked(cookie) : false;
+  box.setAttribute("aria-label", "Tick " + cookie.name);
+  box.addEventListener("change", () => {
+    if (handlers.onPick) {
+      handlers.onPick(cookie, box.checked);
+    }
+  });
+
+  cell.appendChild(box);
+  return cell;
 }
 
 function actionsCell(cookie, handlers, disarmers, disarmAll) {

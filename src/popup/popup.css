@@ -308,8 +308,12 @@ table {
   font-variant-numeric: tabular-nums;
 }
 
+.col-pick {
+  width: 28px;
+}
+
 .col-name {
-  width: 116px;
+  width: 104px;
 }
 
 .col-domain {
@@ -370,6 +374,17 @@ td.name {
 td.domain,
 td.path {
   overflow-wrap: anywhere;
+}
+
+/* The tick boxes. The padding is trimmed so the box sits in line with the
+   first line of the row. */
+th.pick,
+td.pick {
+  padding-right: 0;
+}
+
+.pick input {
+  margin: 1px 0 0;
 }
 
 td.session {

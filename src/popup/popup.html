@@ -155,6 +155,12 @@
         <h2>Delete or export cookies</h2>
 
         <div class="scopes" role="radiogroup" aria-label="What to delete">
+          <!-- Only shown while some cookies are ticked in the table. -->
+          <label class="scope" id="scope-picked-row" hidden>
+            <input type="radio" name="scope" value="picked" />
+            <span class="scope-label">Just the ticked cookies</span>
+            <span class="scope-target scope-note" id="scope-target-picked"></span>
+          </label>
           <!-- Only shown while searching. Without it, pressing Delete after a search
                would remove every cookie in the scope, not just the ones on screen. -->
           <label class="scope" id="scope-matches-row" hidden>
@@ -213,6 +219,7 @@
           <!-- Column widths are set here, so the table can't be wider than the popup.
                See "cookie table" in popup.css. -->
           <colgroup>
+            <col class="col-pick" />
             <col class="col-name" />
             <col class="col-value" />
             <col class="col-domain" />
@@ -223,6 +230,9 @@
           </colgroup>
           <thead>
             <tr>
+              <th scope="col" class="pick">
+                <input type="checkbox" id="pick-all" title="Tick every cookie shown" aria-label="Tick every cookie shown" />
+              </th>
               <th scope="col">Name</th>
               <th scope="col">Value</th>
               <th scope="col">Domain</th>
