@@ -279,9 +279,10 @@ button.danger:hover:not(:disabled) {
   margin: 9px 0 0;
 }
 
-/* The message above the search box ("Saved changes to…") needs space
-   under it, or it touches the search field. */
-#main-message {
+/* The messages above the search box ("Saved changes to…") need space
+   under them, or they touch the search field. */
+#main-message,
+#size-warning {
   margin: 0 0 10px;
 }
 
@@ -754,6 +755,11 @@ textarea.output {
 textarea.output:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
+}
+
+.badge.large {
+  color: var(--danger);
+  font-weight: 600;
 }
 
 .warning {

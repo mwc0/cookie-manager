@@ -9,12 +9,18 @@ import {
   formatExpiryFull,
   formatSameSite,
   truncate,
+  cookieBytes,
+  formatBytes,
 } from "../lib/format.js";
 import { copyWithFeedback } from "./clipboard.js";
 
 // Short enough that a row fits the popup's width. Long values can be clicked
 // to show in full.
 const VALUE_PREVIEW_LENGTH = 28;
+
+// Chrome refuses a cookie whose name and value add up to more than 4,096
+// bytes. A cookie this close to it gets a "Large" badge.
+const LARGE_COOKIE_BYTES = 3500;
 
 // `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
 // isProtected(cookie) }. Deleting one cookie takes two clicks (Delete, then
@@ -46,7 +52,9 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
     row.classList.add("kept-row");
   }
 
-  row.appendChild(textCell(cookie.name, "mono name"));
+  const name = textCell(cookie.name, "mono name");
+  name.title = cookie.name + " (" + formatBytes(cookieBytes(cookie)) + ")";
+  row.appendChild(name);
   row.appendChild(valueCell(cookie.value));
   row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
   row.appendChild(breakableCell(cookie.path, "/", "mono path"));
@@ -229,6 +237,16 @@ function flagsCell(cookie) {
   }
   if (cookie.partitionKey) {
     cell.appendChild(badge("Partitioned", "Partitioned (CHIPS) cookie"));
+  }
+
+  const bytes = cookieBytes(cookie);
+  if (bytes >= LARGE_COOKIE_BYTES) {
+    const large = badge(
+      "Large",
+      formatBytes(bytes) + ". Chrome won't keep a cookie over 4 KB (name and value together)."
+    );
+    large.classList.add("large");
+    cell.appendChild(large);
   }
 
   cell.appendChild(

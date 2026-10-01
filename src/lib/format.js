@@ -101,6 +101,39 @@ export function truncate(text, max) {
   return value.slice(0, max) + "…";
 }
 
+// --- sizes -------------------------------------------------------------
+//
+// Sizes are in bytes as sent over the network, so a character outside plain
+// ASCII counts as more than one.
+
+const encoder = new TextEncoder();
+
+function byteLength(text) {
+  return encoder.encode(String(text == null ? "" : text)).length;
+}
+
+// Chrome's limit applies to a cookie's name and value together.
+export function cookieBytes(cookie) {
+  return byteLength(cookie.name) + byteLength(cookie.value);
+}
+
+// The size of the Cookie header these cookies make: "a=1; b=2".
+export function headerBytes(cookies) {
+  if (cookies.length === 0) {
+    return 0;
+  }
+  const pairs = cookies.reduce((total, cookie) => total + cookieBytes(cookie) + 1, 0);
+  return pairs + 2 * (cookies.length - 1);
+}
+
+// "812 bytes", "3.1 KB"
+export function formatBytes(bytes) {
+  if (bytes < 1024) {
+    return formatCount(bytes) + (bytes === 1 ? " byte" : " bytes");
+  }
+  return (bytes / 1024).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " KB";
+}
+
 export function formatCount(number) {
   return number.toLocaleString();
 }

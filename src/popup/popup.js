@@ -34,6 +34,8 @@ import {
 import {
   pluralise,
   formatCount,
+  headerBytes,
+  formatBytes,
   formatExpiryFull,
   toLocalDateTimeValue,
   fromLocalDateTimeValue,
@@ -79,6 +81,9 @@ let shownCookies = [];
 let protectedKeys = new Set();
 
 const el = (id) => document.getElementById(id);
+
+// Above this, the popup warns that the site's cookies are getting too big.
+const SIZE_WARNING_BYTES = 6 * 1024;
 
 // Opened with "Open in a tab", the page is popup.html?tab=<id>, where <id> is
 // the tab it was opened from. Otherwise it's the toolbar popup.
@@ -229,10 +234,26 @@ function drawTable() {
   const filtering = query.trim() !== "";
   el("search-clear").hidden = !filtering;
 
-  el("cookie-count").textContent = filtering
-    ? pluralise(shownCookies.length, "cookie", "cookies") +
-      " of " + pluralise(pageCookies.length, "cookie", "cookies")
-    : pluralise(pageCookies.length, "cookie", "cookies");
+  // "about", because this page's list also has cookies for other paths,
+  // which a browser only sends on those paths.
+  const bytes = headerBytes(pageCookies);
+  el("cookie-count").textContent =
+    (filtering
+      ? pluralise(shownCookies.length, "cookie", "cookies") +
+        " of " + pluralise(pageCookies.length, "cookie", "cookies")
+      : pluralise(pageCookies.length, "cookie", "cookies")) +
+    (bytes > 0 ? " · about " + formatBytes(bytes) : "");
+
+  // Many servers refuse requests with more than 8 KB of headers, and a site
+  // that has piled up cookies is a common reason someone can't log in.
+  const warning = el("size-warning");
+  warning.hidden = bytes <= SIZE_WARNING_BYTES;
+  warning.textContent = warning.hidden
+    ? ""
+    : "This site's cookies add up to about " +
+      formatBytes(bytes) +
+      ". Many servers refuse more than 8 KB, which can stop you logging in. " +
+      "Deleting this site's cookies usually fixes it.";
 
   // "Just the cookies shown" only appears while searching.
   el("scope-matches-row").hidden = !filtering;
