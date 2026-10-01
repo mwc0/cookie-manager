@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "cookieZ - Cookie Editor",
   "version": "1.1.0",
-  "description": "View, create, edit and delete cookies. Deletes all of them, not just some. No ads, no tracking, no network requests.",
+  "description": "View, create, edit and delete cookies. No ads, no tracking, no network requests.",
   "homepage_url": "https://github.com/mwc0/cookie-manager",
   "icons": {
     "16": "icons/icon-16.png",

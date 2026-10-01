@@ -22,7 +22,7 @@ cookieZ - Cookie Editor
 *Limit: 132 characters. Shown under the name in search results.*
 
 ```
-View, create, edit and delete cookies. Deletes all of them, not just some. No ads, no tracking, no network requests.
+View, create, edit and delete cookies. No ads, no tracking, no network requests.
 ```
 
 ## Category
