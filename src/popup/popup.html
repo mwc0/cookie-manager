@@ -335,6 +335,11 @@
           <span class="scope-note muted">Compatible with other cookie editors. Keeps every detail.</span>
         </label>
         <label class="scope">
+          <input type="radio" name="format" value="playwright" />
+          <span class="scope-label">Playwright</span>
+          <span class="scope-note muted">A storageState file, for starting a test already logged in.</span>
+        </label>
+        <label class="scope">
           <input type="radio" name="format" value="netscape" />
           <span class="scope-label">cookies.txt</span>
           <span class="scope-note muted">For curl, wget, yt-dlp and other tools. Can't hold SameSite or partitions.</span>
@@ -343,6 +348,11 @@
           <input type="radio" name="format" value="header" />
           <span class="scope-label">Cookie header</span>
           <span class="scope-note muted" id="header-note">Names and values only, for one site.</span>
+        </label>
+        <label class="scope">
+          <input type="radio" name="format" value="curl" />
+          <span class="scope-label">curl command</span>
+          <span class="scope-note muted" id="curl-note">Sends these cookies to this page, for bash or zsh.</span>
         </label>
       </div>
 

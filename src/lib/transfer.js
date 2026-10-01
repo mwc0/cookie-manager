@@ -2,15 +2,18 @@
 // Chrome or the page, so every part can be tested on its own. popup.js does
 // the reading and writing.
 //
-// Three export formats:
+// Five export formats:
 //   - JSON, with the same field names EditThisCookie and Cookie-Editor use,
 //     so files move between the three.
 //   - Netscape cookies.txt, used by curl, wget, yt-dlp and many other tools.
 //     It has no room for SameSite or partitions, so those are lost.
+//   - Playwright's storageState file, which testers use to start a test
+//     already logged in.
 //   - A Cookie header ("name=value; name2=value2"), names and values only.
+//   - A curl command that sends that header.
 //
-// Import reads JSON and cookies.txt. A Cookie header can't be imported: it
-// doesn't say which site the cookies belong to.
+// Import reads JSON (Playwright's included) and cookies.txt. A Cookie header
+// can't be imported: it doesn't say which site the cookies belong to.
 
 import { validateCookieValues } from "./cookies.js";
 
@@ -68,6 +71,47 @@ export function toNetscape(cookies) {
 
 export function toHeader(cookies) {
   return cookies.map((cookie) => cookie.name + "=" + cookie.value).join("; ");
+}
+
+// Playwright's storageState: { cookies, origins }. Only cookies are filled
+// in, since an extension can't read a site's localStorage without running
+// code on the page. Playwright marks a domain-wide cookie with a leading dot,
+// uses -1 for a session cookie, and only knows Strict, Lax and None.
+export function toPlaywright(cookies) {
+  const list = cookies.map((cookie) => {
+    const host = String(cookie.domain || "").replace(/^\./, "");
+    const out = {
+      name: cookie.name,
+      value: cookie.value,
+      domain: cookie.hostOnly ? host : "." + host,
+      path: cookie.path || "/",
+      expires: typeof cookie.expirationDate === "number" ? cookie.expirationDate : -1,
+      httpOnly: Boolean(cookie.httpOnly),
+      secure: Boolean(cookie.secure),
+      sameSite: PLAYWRIGHT_SAME_SITE[cookie.sameSite] || "Lax",
+    };
+    // Playwright writes the partition as just the top-level site.
+    if (cookie.partitionKey && cookie.partitionKey.topLevelSite) {
+      out.partitionKey = cookie.partitionKey.topLevelSite;
+    }
+    return out;
+  });
+  return JSON.stringify({ cookies: list, origins: [] }, null, 2);
+}
+
+// Chrome treats an unset SameSite as Lax, so that's what Playwright gets.
+const PLAYWRIGHT_SAME_SITE = {
+  strict: "Strict",
+  lax: "Lax",
+  no_restriction: "None",
+};
+
+// A curl command that sends these cookies to `url`. Single quotes keep the
+// shell from reading anything in a value, and a quote inside a value is
+// written the way bash and zsh expect: '\''
+export function toCurl(cookies, url) {
+  const quote = (text) => "'" + String(text).replace(/'/g, "'\\''") + "'";
+  return "curl -b " + quote(toHeader(cookies)) + " " + quote(url);
 }
 
 // --- import: reading the text ------------------------------------------------
@@ -170,8 +214,11 @@ function fromJsonItem(item) {
     expirationDate: session ? null : expiry,
   };
 
+  // Chrome's own shape is { topLevelSite }. Playwright writes the site alone.
   if (item.partitionKey && typeof item.partitionKey.topLevelSite === "string") {
     entry.partitionKey = { topLevelSite: item.partitionKey.topLevelSite };
+  } else if (typeof item.partitionKey === "string" && item.partitionKey !== "") {
+    entry.partitionKey = { topLevelSite: item.partitionKey };
   }
   return entry;
 }

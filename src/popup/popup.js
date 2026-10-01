@@ -14,7 +14,15 @@ import {
   baseHostOf,
   getAllCookies,
 } from "../lib/cookies.js";
-import { toJson, toNetscape, toHeader, parseImport, planImport } from "../lib/transfer.js";
+import {
+  toJson,
+  toNetscape,
+  toHeader,
+  toPlaywright,
+  toCurl,
+  parseImport,
+  planImport,
+} from "../lib/transfer.js";
 import { copyWithFeedback } from "./clipboard.js";
 import {
   loadProtected,
@@ -621,6 +629,12 @@ function buildExport() {
   if (format === "header") {
     return { text: toHeader(scopeAll), filename: base + "-header.txt", type: "text/plain" };
   }
+  if (format === "curl") {
+    return { text: toCurl(scopeAll, page.origin + "/"), filename: base + "-curl.sh", type: "text/plain" };
+  }
+  if (format === "playwright") {
+    return { text: toPlaywright(scopeAll), filename: base + "-playwright.json", type: "application/json" };
+  }
   return { text: toJson(scopeAll), filename: base + ".json", type: "application/json" };
 }
 
@@ -634,21 +648,22 @@ function openExport() {
     (kept > 0 ? ", including " + pluralise(kept, "kept cookie", "kept cookies") : "") +
     ".";
 
-  // A Cookie header is what a browser sends to one page. "This page" (and a
-  // search within it) is exactly that set, even when it mixes example.com
-  // and www.example.com cookies. The wider scopes only qualify when every
-  // cookie has the same domain.
-  const header = document.querySelector('input[name="format"][value="header"]');
-  const onePage =
-    selectedScope() === "page" ||
-    selectedScope() === "matches" ||
-    new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1;
-  header.disabled = !onePage;
-  el("header-note").textContent = onePage
-    ? "Names and values only, as a browser sends them to this page."
-    : "Only for the cookies of one page. Choose “This page” to use it.";
-  if (!onePage && header.checked) {
-    document.querySelector('input[name="format"][value="json"]').checked = true;
+  // The Cookie header and curl both send cookies to one page, so they're
+  // only offered when the cookies are one page's.
+  const onePage = exportIsOnePage(domains);
+  const onePageFormats = [
+    ["header", "Names and values only, as a browser sends them to this page."],
+    ["curl", "Sends these cookies to this page, for bash or zsh."],
+  ];
+  for (const [format, note] of onePageFormats) {
+    const radio = document.querySelector('input[name="format"][value="' + format + '"]');
+    radio.disabled = !onePage;
+    el(format + "-note").textContent = onePage
+      ? note
+      : "Only for the cookies of one page. Choose “This page” to use it.";
+    if (!onePage && radio.checked) {
+      document.querySelector('input[name="format"][value="json"]').checked = true;
+    }
   }
 
   el("export-result").hidden = true;
@@ -656,6 +671,18 @@ function openExport() {
   showExportText();
   showState("export");
   el("export-copy").focus();
+}
+
+// Whether the cookies being exported are what a browser sends to one page.
+// "This page" (and a search within it) is exactly that set, even when it
+// mixes example.com and www.example.com cookies. The wider scopes only
+// qualify when every cookie has the same domain.
+function exportIsOnePage(domains) {
+  return (
+    selectedScope() === "page" ||
+    selectedScope() === "matches" ||
+    new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1
+  );
 }
 
 function showExportText() {

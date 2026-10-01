@@ -147,6 +147,10 @@ def main():
                 all(f"{c['name']}={c['value']}" in header for c in original) and header.count("; ") == 5,
                 header)
 
+        curl, _ = export_text(page, "curl")
+        r.check("the curl command sends that header to the page",
+                curl == f"curl -b '{header}' '{SITE}'", curl)
+
         # --- copy and download ---
         page.locator("#export-button").click()
         page.wait_for_timeout(300)
@@ -208,6 +212,34 @@ def main():
         r.check("cookies.txt round trip: everything it can hold comes back",
                 core(after) == core(original) and result.startswith("Imported 6 cookies"),
                 json.dumps([a for a in core(after) if a not in core(original)]))
+        back_to_main(page)
+
+        # --- Playwright round trip ---
+        # cookies.txt dropped SameSite and the partition, so start again from
+        # the full JSON export.
+        page.evaluate(CLEAR)
+        do_import(page, json_text)
+        back_to_main(page)
+        r.check("the original cookies are back before the Playwright test", snapshot(page) == original)
+        playwright_text, _ = export_text(page, "playwright")
+        state = json.loads(playwright_text)
+        r.check("the Playwright export is a storageState file",
+                set(state) == {"cookies", "origins"} and len(state["cookies"]) == 6
+                and all(c["sameSite"] in ("Strict", "Lax", "None") for c in state["cookies"]),
+                playwright_text[:200])
+        page.evaluate(CLEAR)
+        preview, result = do_import(page, playwright_text)
+        after = snapshot(page)
+
+        def as_playwright_keeps(cookies):
+            # Playwright has no "unset" SameSite. Chrome treats unset as Lax,
+            # so that's what comes back.
+            return [{**c, "sameSite": "lax" if c["sameSite"] == "unspecified" else c["sameSite"]}
+                    for c in cookies]
+
+        r.check("Playwright round trip: every cookie comes back, partition included",
+                after == as_playwright_keeps(original) and result.startswith("Imported 6 cookies"),
+                json.dumps([a for a in after if a not in as_playwright_keeps(original)]))
         back_to_main(page)
 
         # --- other tools' exports ---
@@ -319,6 +351,8 @@ def main():
         mixed_page.wait_for_timeout(300)
         r.check("but not for All sites, which mixes several sites",
                 header_radio.is_disabled())
+        r.check("and neither is the curl command",
+                mixed_page.locator('input[name="format"][value="curl"]').is_disabled())
         r.check("no console errors on the www site", not mixed_errors, str(mixed_errors))
         mixed_page.close()
 
