@@ -18,6 +18,13 @@
     "*://*/*"
   ],
   "incognito": "split",
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+K"
+      }
+    }
+  },
   "action": {
     "default_title": "cookieZ",
     "default_popup": "popup/popup.html",
