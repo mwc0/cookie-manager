@@ -77,7 +77,12 @@ def reopen(context, ext_id, page):
     """Closes the popup and opens it again, as the toolbar button would."""
     page.close()
     page, errors = open_popup(context, ext_id, SITE)
-    page.wait_for_timeout(600)
+    # Wait until the popup has finished loading. Clicking while it's still
+    # redrawing the table can land on the wrong row.
+    page.wait_for_function(
+        "() => !document.getElementById('scope-summary').textContent.includes('Counting')"
+    )
+    page.wait_for_timeout(300)
     return page, errors
 
 
