@@ -113,8 +113,19 @@
           <button id="add-button" type="button" title="Create a new cookie">
             Add cookie
           </button>
+          <button id="import-button" type="button" title="Add cookies from a JSON or cookies.txt export">
+            Import
+          </button>
           <button id="refresh-button" type="button" title="Re-read cookies">
             Refresh
+          </button>
+          <!-- Hidden when already in a tab. -->
+          <button id="tab-button" class="icon-button" type="button" title="Open in a tab">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="visually-hidden">Open in a tab</span>
           </button>
         </div>
       </header>
@@ -137,9 +148,10 @@
         </button>
       </div>
 
-      <!-- The count shown here comes from the same list that gets deleted. -->
+      <!-- The count shown here comes from the same list that gets deleted.
+           Export uses the same choice of cookies. -->
       <section id="delete-panel">
-        <h2>Delete cookies</h2>
+        <h2>Delete or export cookies</h2>
 
         <div class="scopes" role="radiogroup" aria-label="What to delete">
           <!-- Only shown while searching. Without it, pressing Delete after a search
@@ -178,6 +190,9 @@
         <div class="actions">
           <button id="delete-button" class="danger" type="button" disabled>
             Delete&hellip;
+          </button>
+          <button id="export-button" type="button" disabled>
+            Export&hellip;
           </button>
 
           <div id="confirm-row" class="confirm" hidden>
@@ -240,7 +255,10 @@
         </div>
 
         <div class="field">
-          <label for="field-value">Value</label>
+          <div class="field-label-row">
+            <label for="field-value">Value</label>
+            <button id="value-copy" class="row-button" type="button" title="Copy the value">Copy</button>
+          </div>
           <textarea id="field-value" name="value" class="mono" rows="3" spellcheck="false"></textarea>
         </div>
 
@@ -298,6 +316,95 @@
           <button id="edit-cancel-2" type="button">Cancel</button>
         </div>
       </form>
+    </section>
+
+    <!-- Export uses the cookies chosen in the delete panel, kept ones
+         included. -->
+    <section id="state-export" class="state" hidden>
+      <header class="bar">
+        <h1>Export cookies</h1>
+        <button id="export-back" type="button">Back</button>
+      </header>
+
+      <p id="export-summary" class="scope-summary"></p>
+
+      <div class="formats" role="radiogroup" aria-label="Format">
+        <label class="scope">
+          <input type="radio" name="format" value="json" checked />
+          <span class="scope-label">JSON</span>
+          <span class="scope-note muted">Compatible with other cookie editors. Keeps every detail.</span>
+        </label>
+        <label class="scope">
+          <input type="radio" name="format" value="netscape" />
+          <span class="scope-label">cookies.txt</span>
+          <span class="scope-note muted">For curl, wget, yt-dlp and other tools. Can't hold SameSite or partitions.</span>
+        </label>
+        <label class="scope">
+          <input type="radio" name="format" value="header" />
+          <span class="scope-label">Cookie header</span>
+          <span class="scope-note muted" id="header-note">Names and values only, for one site.</span>
+        </label>
+      </div>
+
+      <label for="export-output" class="visually-hidden">Exported cookies</label>
+      <textarea id="export-output" class="mono output" rows="9" readonly spellcheck="false"></textarea>
+
+      <p class="warning">
+        This includes login cookies. Anyone who has it can sign in as you on
+        these sites, so keep it private.
+      </p>
+
+      <div class="actions">
+        <button id="export-copy" class="primary" type="button">Copy</button>
+        <button id="export-download" type="button">Download</button>
+      </div>
+      <p id="export-result" class="result" role="status" hidden></p>
+    </section>
+
+    <!-- Nothing is written until the preview has been shown and confirmed. -->
+    <section id="state-import" class="state" hidden>
+      <header class="bar">
+        <h1>Import cookies</h1>
+        <button id="import-back" type="button">Back</button>
+      </header>
+
+      <p>
+        Paste cookies exported as JSON (from cookieZ or another cookie
+        editor), or the contents of a cookies.txt file.
+      </p>
+
+      <!-- Choosing a file can close the popup in Chrome, so it's only offered
+           in a tab. -->
+      <p id="import-file-row" hidden>
+        <label for="import-file">Or choose a file:</label>
+        <input id="import-file" type="file" accept=".json,.txt,application/json,text/plain" />
+      </p>
+      <p id="import-file-hint" class="muted">
+        To choose a file instead, <button id="import-tab" class="link-button" type="button">open cookieZ in a tab</button>.
+      </p>
+
+      <label for="import-text" class="visually-hidden">Cookies to import</label>
+      <textarea id="import-text" class="mono output" rows="9" spellcheck="false" autocomplete="off"></textarea>
+
+      <div class="actions">
+        <button id="import-check" class="primary" type="button">Check</button>
+      </div>
+
+      <section id="import-preview" hidden>
+        <p id="import-summary" class="scope-summary" role="status"></p>
+        <details id="import-domains" hidden>
+          <summary id="import-domains-summary"></summary>
+          <ul id="import-domains-list"></ul>
+        </details>
+        <ul id="import-problems" class="errors" hidden></ul>
+        <div id="import-confirm-row" class="actions">
+          <button id="import-confirm" class="primary" type="button"></button>
+          <button id="import-cancel" type="button">Cancel</button>
+        </div>
+      </section>
+
+      <p id="import-result" class="result" role="status" hidden></p>
+      <ul id="import-failures" class="errors" hidden></ul>
     </section>
 
     <script type="module" src="popup.js"></script>

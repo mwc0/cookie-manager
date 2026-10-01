@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 28 September 2026**
+**Last updated: 29 September 2026**
 
 ## The short version
 
@@ -77,8 +77,14 @@ cookieZ reads your cookies in order to show them to you, which is what
 it is for. This happens only while the popup is open, only in response to you
 opening it, and the results only ever reach your own screen.
 
-Cookie values are shown in the popup's table. They are never transmitted,
-never written to any file, and never stored by the extension.
+Cookie values are shown in the popup's table. They are never transmitted and
+never stored by the extension. They only leave the popup if you choose: when
+you copy a value or an export, it goes to your clipboard, and when you
+download an export, it is saved as a file on your computer, where you choose.
+cookieZ keeps no copy of either.
+
+Importing works the same way in reverse. The cookies you paste or choose are
+written to Chrome's cookie store and nowhere else.
 
 ## Permissions, and why each one exists
 

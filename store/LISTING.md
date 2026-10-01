@@ -55,6 +55,10 @@ Features:
 - Create new cookies and edit any field
 - Delete a single cookie
 - Search by name, value, domain or path, then delete only the results
+- Export cookies as JSON, cookies.txt (Netscape) or a Cookie header, then copy or download
+- Import JSON (from cookieZ or another cookie editor) or cookies.txt, with a preview before anything is added
+- Copy a cookie's value in one click
+- Open cookieZ in a full tab for long lists and long values
 - Mark cookies as "Kept" so cookieZ never deletes them
 - Works in incognito, kept separate from your normal cookies
 - Tells you when Chrome changes what you set (for example, Chrome caps expiry at about 400 days)
@@ -68,7 +72,7 @@ When you install it, it asks for two permissions: cookies, and storage to rememb
 The code is open source, so you can read all of it:
 https://github.com/mwc0/cookie-manager
 
-Be careful: cookies can hold your logins. Don't paste a cookie's value anywhere you don't trust, or someone could sign in as you.
+Be careful: cookies can hold your logins. Don't paste a cookie's value or an export anywhere you don't trust, or someone could sign in as you.
 
 Help and bug reports: https://cookiez.uk/support/ or support@cookiez.uk
 Privacy policy: https://cookiez.uk/privacy/

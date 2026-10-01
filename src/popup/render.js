@@ -10,6 +10,7 @@ import {
   formatSameSite,
   truncate,
 } from "../lib/format.js";
+import { copyWithFeedback } from "./clipboard.js";
 
 // Short enough that a row fits the popup's width. Long values can be clicked
 // to show in full.
@@ -167,7 +168,8 @@ function breakableCell(text, separator, className) {
   return cell;
 }
 
-// Long values show a preview. Click to see the whole value.
+// Long values show a preview. Click to see the whole value, with a Copy
+// button under it.
 function valueCell(value) {
   const cell = document.createElement("td");
   cell.className = "mono value";
@@ -185,12 +187,25 @@ function valueCell(value) {
     button.classList.add("muted");
     button.disabled = true;
   } else if (needsToggle) {
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "row-button copy";
+    copy.textContent = "Copy";
+    copy.title = "Copy the whole value";
+    copy.hidden = true;
+    copy.addEventListener("click", () => copyWithFeedback(copy, full));
+
     button.title = "Click to show the full value";
     button.addEventListener("click", () => {
       const expanded = cell.classList.toggle("expanded");
       button.textContent = expanded ? full : truncate(full, VALUE_PREVIEW_LENGTH);
       button.title = expanded ? "Click to collapse" : "Click to show the full value";
+      copy.hidden = !expanded;
     });
+
+    cell.appendChild(button);
+    cell.appendChild(copy);
+    return cell;
   } else {
     button.disabled = true;
   }
