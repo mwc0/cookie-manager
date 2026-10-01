@@ -56,7 +56,7 @@ Features:
 - Delete a single cookie
 - Search by name, value, domain or path, then delete only the results
 - Export cookies as JSON, cookies.txt (Netscape) or a Cookie header, then copy or download
-- Import JSON (from cookieZ, EditThisCookie or Cookie-Editor) or cookies.txt, with a preview before anything is added
+- Import JSON (from cookieZ or another cookie editor) or cookies.txt, with a preview before anything is added
 - Copy a cookie's value in one click
 - Open cookieZ in a full tab for long lists and long values
 - Mark cookies as "Kept" so cookieZ never deletes them
