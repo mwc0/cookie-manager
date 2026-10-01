@@ -73,7 +73,7 @@
   <main id="main" class="page">
     <div class="wrap prose">
       <h1>Privacy policy</h1>
-      <p class="updated">For the cookieZ browser extension. Last updated: 29 September 2026.</p>
+      <p class="updated">For the cookieZ browser extension. Last updated: 1 October 2026.</p>
       <p class="aside">This covers the extension. For this website, see the <a href="../website-privacy/">website privacy policy</a>.</p>
 
       <h2>The short version</h2>
@@ -105,7 +105,7 @@
 
       <h2>What this extension stores on your device</h2>
 
-      <p>Two things, both kept on your own computer and never transmitted.</p>
+      <p>Two things are saved on your own computer, and a third is held briefly in memory so a delete can be undone. None of them is ever transmitted.</p>
 
       <h3>Your colour theme</h3>
 
@@ -130,11 +130,26 @@
 
       <p>Nothing is stored for cookies you have not marked as Kept. Uninstalling the extension removes the list, and the theme setting with it.</p>
 
+      <h3>Your last delete, for Undo</h3>
+
+      <p>When you delete cookies, cookieZ holds on to the cookies it just deleted so it can put them back if you click <strong>Undo</strong>. To put a cookie back it needs the whole cookie, so this one does include cookie <strong>values</strong>, which are often what keeps you logged in to a site.</p>
+
+      <p>It is kept as briefly and as narrowly as possible:</p>
+
+      <ul>
+        <li>Only the most recent delete is held. A new delete replaces it.</li>
+        <li>It is dropped after 10 minutes, and as soon as you use Undo.</li>
+        <li>It is held in Chrome's <code>storage.session</code>, which lives in memory only. It is never written to your disk, and Chrome empties it when you close the browser.</li>
+        <li>Deletes made in an incognito window are held separately, and are only offered for Undo in incognito.</li>
+      </ul>
+
+      <p>Like everything else here, it is never transmitted.</p>
+
       <h2>Cookies the extension reads</h2>
 
       <p>cookieZ reads your cookies in order to show them to you, which is what it is for. This happens only while the popup is open, only in response to you opening it, and the results only ever reach your own screen.</p>
 
-      <p>Cookie values are shown in the popup's table. They are never transmitted and never stored by the extension. They only leave the popup if you choose: when you copy a value or an export, it goes to your clipboard, and when you download an export, it is saved as a file on your computer, where you choose. cookieZ keeps no copy of either.</p>
+      <p>Cookie values are shown in the popup's table. They are never transmitted, and never stored by the extension, except for the short-lived Undo copy described above. They only leave the popup if you choose: when you copy a value or an export, it goes to your clipboard, and when you download an export, it is saved as a file on your computer, where you choose. cookieZ keeps no copy of either.</p>
 
       <p>Importing works the same way in reverse. The cookies you paste or choose are written to Chrome's cookie store and nowhere else.</p>
 
@@ -142,7 +157,7 @@
 
       <p><strong><code>cookies</code></strong>: required to read, create, edit and delete cookies. Without it the extension cannot do anything at all.</p>
 
-      <p><strong><code>storage</code></strong>: required to remember which cookies you marked as Kept, and your colour theme, so both survive closing the popup.</p>
+      <p><strong><code>storage</code></strong>: required to remember which cookies you marked as Kept, and your colour theme, so both survive closing the popup, and to hold your last delete in memory for Undo.</p>
 
       <p><strong>Access to websites</strong> (<code>*://*/*</code>): Chrome will not release a single cookie to an extension without permission for the site that cookie belongs to. This permission is <strong>optional</strong>: it is deliberately kept out of the install prompt and requested at runtime, the first time you open the popup. You can decline it, and you can revoke it later from the extension's Details page in <code>chrome://extensions</code>. It is used only to read and change cookies when you ask.</p>
 

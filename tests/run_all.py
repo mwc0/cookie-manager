@@ -22,6 +22,7 @@ FILES = [
     "test_protect.py",
     "test_theme.py",
     "test_transfer.py",
+    "test_undo.py",
     "test_no_network.py",
     "test_devtools_crosscheck.py",
 ]

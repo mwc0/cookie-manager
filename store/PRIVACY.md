@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 29 September 2026**
+**Last updated: 1 October 2026**
 
 ## The short version
 
@@ -34,7 +34,8 @@ component, so there is no place for your data to go even in principle.
 
 ## What this extension stores on your device
 
-Two things, both kept on your own computer and never transmitted.
+Two things are saved on your own computer, and a third is held briefly in
+memory so a delete can be undone. None of them is ever transmitted.
 
 ### Your colour theme
 
@@ -71,14 +72,34 @@ is there.
 Nothing is stored for cookies you have not marked as Kept. Uninstalling the
 extension removes the list, and the theme setting with it.
 
+### Your last delete, for Undo
+
+When you delete cookies, cookieZ holds on to the cookies it just deleted so
+it can put them back if you click **Undo**. To put a cookie back it needs the
+whole cookie, so this one does include cookie **values**, which are often
+what keeps you logged in to a site.
+
+It is kept as briefly and as narrowly as possible:
+
+- Only the most recent delete is held. A new delete replaces it.
+- It is dropped after 10 minutes, and as soon as you use Undo.
+- It is held in Chrome's `storage.session`, which lives in memory only. It is
+  never written to your disk, and Chrome empties it when you close the
+  browser.
+- Deletes made in an incognito window are held separately, and are only
+  offered for Undo in incognito.
+
+Like everything else here, it is never transmitted.
+
 ## Cookies the extension reads
 
 cookieZ reads your cookies in order to show them to you, which is what
 it is for. This happens only while the popup is open, only in response to you
 opening it, and the results only ever reach your own screen.
 
-Cookie values are shown in the popup's table. They are never transmitted and
-never stored by the extension. They only leave the popup if you choose: when
+Cookie values are shown in the popup's table. They are never transmitted, and
+never stored by the extension, except for the short-lived Undo copy described
+above. They only leave the popup if you choose: when
 you copy a value or an export, it goes to your clipboard, and when you
 download an export, it is saved as a file on your computer, where you choose.
 cookieZ keeps no copy of either.
@@ -92,7 +113,8 @@ written to Chrome's cookie store and nowhere else.
 the extension cannot do anything at all.
 
 **`storage`**: required to remember which cookies you marked as Kept, and
-your colour theme, so both survive closing the popup.
+your colour theme, so both survive closing the popup, and to hold your last
+delete in memory for Undo.
 
 **Access to websites** (`*://*/*`): Chrome will not release a single cookie
 to an extension without permission for the site that cookie belongs to. This

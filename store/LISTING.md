@@ -117,8 +117,12 @@ marked as "Kept", so the extension remembers to exclude them from deletion
 after the popup closes. Each entry holds a cookie's name, domain and path,
 plus its partition key for partitioned (CHIPS) cookies. It never holds cookie
 values. Second, the user's colour theme choice, "light" or "dark", saved only
-if they pick the opposite of their system theme.
-Stored via chrome.storage.local; nothing is synced or transmitted.
+if they pick the opposite of their system theme. Both are stored via
+chrome.storage.local.
+Also, for the Undo button, the cookies removed by the most recent delete are
+held in chrome.storage.session (memory only, never written to disk, cleared
+by the browser on exit). Only the last delete is held, and it is dropped
+after 10 minutes or once used. Nothing is synced or transmitted.
 ```
 
 ### Host permission (`*://*/*`, optional)

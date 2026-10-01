@@ -47,6 +47,13 @@ import {
   watchSystemTheme,
 } from "../lib/theme.js";
 import { renderCookieTable } from "./render.js";
+import {
+  saveLastDelete,
+  loadLastDelete,
+  clearLastDelete,
+  restoreCookies,
+  describeAge,
+} from "../lib/undo.js";
 
 // The site in the current tab, as { origin, hostname }.
 let page = null;
@@ -172,6 +179,7 @@ async function loadCurrentPage() {
 
   showState("main");
   await refresh();
+  await offerStoredUndo();
 }
 
 // Reloads the table, then the delete count. These must run one after the
@@ -364,7 +372,7 @@ async function runDelete() {
   result.textContent = "Deleting…";
 
   try {
-    const { removed, failed } = await removeCookies(scopeCookies);
+    const { removed, removedCookies, failed } = await removeCookies(scopeCookies);
 
     if (failed.length === 0) {
       result.textContent = "Deleted " + pluralise(removed, "cookie", "cookies") + ".";
@@ -377,6 +385,7 @@ async function runDelete() {
         pluralise(failed.length, "cookie", "cookies") +
         " could not be deleted, and may be protected by the browser.";
     }
+    await offerUndo(result, removedCookies);
   } catch (error) {
     result.className = "result error";
     result.textContent = "The delete failed: " + error.message;
@@ -600,6 +609,95 @@ async function deleteOne(cookie) {
       : "Couldn't delete " + cookie.name + ". It may be protected by the browser.",
     !ok
   );
+  if (ok) {
+    await offerUndo(el("main-message"), [cookie]);
+  }
+
+  await refresh();
+}
+
+// --- undo ------------------------------------------------------------------
+
+// Remembers what a delete removed and adds an Undo button to its message.
+// Setting the message's text later removes the button. That's fine: the
+// delete can still be undone from the next open, for up to 10 minutes.
+async function offerUndo(message, removedCookies) {
+  if (removedCookies.length === 0) {
+    return;
+  }
+  const { error } = await saveLastDelete(removedCookies);
+  if (error) {
+    message.append(" " + error);
+    return;
+  }
+  appendUndoButton(message);
+}
+
+function appendUndoButton(message) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "row-button undo-button";
+  button.textContent = "Undo";
+  button.addEventListener("click", () => runUndo(message, button));
+  message.append(" ", button);
+}
+
+// On opening, offer to undo a delete made in the last 10 minutes, unless
+// something more important is already showing.
+async function offerStoredUndo() {
+  const last = await loadLastDelete();
+  if (!last || !el("main-message").hidden) {
+    return;
+  }
+
+  // "example.com" and ".example.com" are the same site to a reader.
+  const count = last.cookies.length;
+  const sites = Array.from(
+    new Set(last.cookies.map((cookie) => String(cookie.domain || "").replace(/^\./, "")))
+  );
+  const what = count === 1 ? last.cookies[0].name : pluralise(count, "cookie", "cookies");
+  const where =
+    sites.length === 1 ? " from " + sites[0] : " across " + pluralise(sites.length, "site", "sites");
+
+  showMainMessage(
+    "Deleted " + what + where + " " + describeAge(Date.now() / 1000 - last.at) + ".",
+    false
+  );
+  appendUndoButton(el("main-message"));
+}
+
+async function runUndo(message, button) {
+  button.disabled = true;
+
+  const last = await loadLastDelete();
+  if (!last) {
+    message.className = "result error";
+    message.textContent = "There's nothing to undo. Undo only lasts 10 minutes after a delete.";
+    return;
+  }
+
+  message.className = "result";
+  message.textContent = "Restoring…";
+
+  const { restored, expired, failures } = await restoreCookies(last.cookies);
+  await clearLastDelete();
+
+  const parts = ["Restored " + pluralise(restored, "cookie", "cookies") + "."];
+  if (expired > 0) {
+    parts.push(
+      pluralise(expired, "cookie has", "cookies have") +
+        " expired since, so " +
+        (expired === 1 ? "it wasn't" : "they weren't") +
+        " put back."
+    );
+  }
+  if (failures.length > 0) {
+    parts.push(
+      "Chrome refused " + pluralise(failures.length, "cookie", "cookies") + ": " + failures.join(" ")
+    );
+  }
+  message.className = failures.length > 0 ? "result error" : "result";
+  message.textContent = parts.join(" ");
 
   await refresh();
 }
