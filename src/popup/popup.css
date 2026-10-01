@@ -701,7 +701,8 @@ tr.kept-row td {
   background: var(--panel);
 }
 
-tr.kept-row td.name {
+/* A line down the left edge of a kept row. The tick box is the first cell. */
+tr.kept-row td.pick {
   box-shadow: inset 2px 0 0 var(--accent);
 }
 

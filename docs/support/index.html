@@ -28,8 +28,8 @@
   <meta property="og:image:height" content="800">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
-  <link rel="stylesheet" href="../style.css?v=2026-09-29">
-  <script src="../theme.js?v=2026-09-29" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2026-10-01">
+  <script src="../theme.js?v=2026-10-01" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -109,7 +109,11 @@
         </details>
         <details>
           <summary>How do I move cookies to another browser or tool?</summary>
-          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. You'll see how many cookies will be added, and for which sites, before anything changes. An export includes login cookies, so treat it like a password.</p>
+          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. The Playwright option makes a storageState file for starting automated tests already logged in. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. You'll see how many cookies will be added, and for which sites, before anything changes. An export includes login cookies, so treat it like a password.</p>
+        </details>
+        <details>
+          <summary>What does the size next to the cookie count mean?</summary>
+          <p>It's roughly how much the site's cookies add to every request your browser sends it. Many servers refuse requests with more than about 8 KB of them, and the usual symptom is a site that won't let you log in, so cookieZ warns you above 6 KB. Deleting that site's cookies usually fixes it. A cookie marked Large is close to Chrome's 4 KB limit for a single cookie.</p>
         </details>
         <details>
           <summary>How do I remove it?</summary>
