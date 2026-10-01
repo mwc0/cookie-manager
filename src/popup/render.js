@@ -7,6 +7,7 @@
 import {
   formatExpiry,
   formatExpiryFull,
+  expiresSoon,
   formatSameSite,
   truncate,
   cookieBytes,
@@ -26,12 +27,13 @@ const LARGE_COOKIE_BYTES = 3500;
 // isProtected(cookie), onPick(cookie, ticked), isPicked(cookie) }. Deleting
 // one cookie takes two clicks (Delete, then "Sure?"), and onDelete is only
 // called after the second.
-export function renderCookieTable(tbody, cookies, handlers = {}) {
+//
+// `sort` is { key: "name" | "domain" | "expires", dir: "ascending" |
+// "descending" }.
+export function renderCookieTable(tbody, cookies, handlers = {}, sort = DEFAULT_SORT) {
   tbody.textContent = "";
 
-  const sorted = [...cookies].sort(
-    (a, b) => a.domain.localeCompare(b.domain) || a.name.localeCompare(b.name)
-  );
+  const sorted = sortCookies(cookies, sort);
 
   // Only one row can show "Sure?" at a time. Clicking another row's button
   // resets the rest.
@@ -45,6 +47,36 @@ export function renderCookieTable(tbody, cookies, handlers = {}) {
   for (const cookie of sorted) {
     tbody.appendChild(buildRow(cookie, handlers, disarmers, disarmAll));
   }
+}
+
+export const DEFAULT_SORT = { key: "domain", dir: "ascending" };
+
+// Ties are broken by domain and then name, so the order never jumps about.
+// "example.com" and ".example.com" sort together.
+export function sortCookies(cookies, sort = DEFAULT_SORT) {
+  const host = (cookie) => String(cookie.domain || "").replace(/^\./, "");
+  const byDomainThenName = (a, b) =>
+    host(a).localeCompare(host(b)) || a.name.localeCompare(b.name);
+  const flip = sort.dir === "descending" ? -1 : 1;
+
+  return [...cookies].sort((a, b) => {
+    if (sort.key === "name") {
+      return flip * (a.name.localeCompare(b.name) || byDomainThenName(a, b));
+    }
+    if (sort.key === "expires") {
+      // Session cookies have no date, so they go last whichever way round.
+      const aSession = typeof a.expirationDate !== "number";
+      const bSession = typeof b.expirationDate !== "number";
+      if (aSession !== bSession) {
+        return aSession ? 1 : -1;
+      }
+      if (aSession) {
+        return byDomainThenName(a, b);
+      }
+      return flip * (a.expirationDate - b.expirationDate) || byDomainThenName(a, b);
+    }
+    return flip * byDomainThenName(a, b);
+  });
 }
 
 function buildRow(cookie, handlers, disarmers, disarmAll) {
@@ -66,6 +98,9 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   expires.title = formatExpiryFull(cookie);
   if (typeof cookie.expirationDate !== "number") {
     expires.classList.add("session");
+  }
+  if (expiresSoon(cookie)) {
+    expires.classList.add("expires-soon");
   }
   row.appendChild(expires);
 

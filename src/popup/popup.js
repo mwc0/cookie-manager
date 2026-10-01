@@ -49,7 +49,7 @@ import {
   mirror,
   watchSystemTheme,
 } from "../lib/theme.js";
-import { renderCookieTable } from "./render.js";
+import { renderCookieTable, DEFAULT_SORT } from "./render.js";
 import {
   saveLastDelete,
   loadLastDelete,
@@ -80,6 +80,10 @@ let shownCookies = [];
 
 // The cookies the user has marked as Kept. See src/lib/protect.js.
 let protectedKeys = new Set();
+
+// How the table is sorted. Kept in memory only, so every open starts with
+// the default.
+let sort = DEFAULT_SORT;
 
 // The cookies ticked in the table, as cookieKey()s. "Just the ticked
 // cookies" deletes and exports exactly these. Kept in memory only.
@@ -240,7 +244,7 @@ function drawTable() {
     isProtected: (cookie) => isProtected(protectedKeys, cookie),
     onPick: pickCookie,
     isPicked: (cookie) => picked.has(cookieKey(cookie)),
-  });
+  }, sort);
   showPicked();
 
   const filtering = query.trim() !== "";
@@ -285,6 +289,24 @@ function drawTable() {
     : "No cookies are set for this site.";
   el("empty-message").hidden = !(nothingAtAll || nothingMatched);
   el("cookie-table").hidden = nothingAtAll || nothingMatched;
+}
+
+// Clicking a heading sorts by it. Clicking it again reverses the order.
+function sortBy(key) {
+  sort =
+    sort.key === key
+      ? { key, dir: sort.dir === "ascending" ? "descending" : "ascending" }
+      : { key, dir: "ascending" };
+
+  for (const button of document.querySelectorAll("th button.sort")) {
+    const heading = button.parentElement;
+    if (button.dataset.sort === sort.key) {
+      heading.setAttribute("aria-sort", sort.dir);
+    } else {
+      heading.removeAttribute("aria-sort");
+    }
+  }
+  drawTable();
 }
 
 // --- ticking cookies -------------------------------------------------------
@@ -1200,6 +1222,9 @@ el("search-clear").addEventListener("click", () => {
 });
 
 el("pick-all").addEventListener("change", () => pickAllShown(el("pick-all").checked));
+for (const button of document.querySelectorAll("th button.sort")) {
+  button.addEventListener("click", () => sortBy(button.dataset.sort));
+}
 
 el("add-button").addEventListener("click", () => openEditor(null));
 el("edit-cancel").addEventListener("click", closeEditor);

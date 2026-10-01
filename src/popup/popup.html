@@ -233,11 +233,13 @@
               <th scope="col" class="pick">
                 <input type="checkbox" id="pick-all" title="Tick every cookie shown" aria-label="Tick every cookie shown" />
               </th>
-              <th scope="col">Name</th>
+              <!-- Name, Domain and Expires sort the table. popup.js sets aria-sort
+                   on the one in use. -->
+              <th scope="col"><button type="button" class="sort" data-sort="name">Name</button></th>
               <th scope="col">Value</th>
-              <th scope="col">Domain</th>
+              <th scope="col" aria-sort="ascending"><button type="button" class="sort" data-sort="domain">Domain</button></th>
               <th scope="col">Path</th>
-              <th scope="col">Expires</th>
+              <th scope="col"><button type="button" class="sort" data-sort="expires">Expires</button></th>
               <th scope="col">Flags</th>
               <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
