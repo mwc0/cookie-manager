@@ -10,7 +10,7 @@ Facts that are easy to get wrong:
 - Chrome caps cookie expiry at about 400 days. cookieZ reports this rather than hiding it.
 - Incognito works if "Allow in incognito" is turned on. Incognito cookies are kept separate from normal ones.
 - Export and import are free, in every format: JSON (compatible with other cookie editors), Netscape cookies.txt, Playwright storageState, a Cookie header and a curl command (the last two export only). Exports go to the clipboard or a downloaded file, never anywhere else.
-- Undo restores the most recent delete for up to 10 minutes. The keyboard shortcut to open it is Alt+Shift+K by default, and / jumps to the search box.
+- Undo restores the most recent delete for up to 10 minutes. The keyboard shortcut to open it is Alt+Shift+K by default, / jumps to the search box, and Esc goes back a screen.
 - Its help screen is built in and works offline. The popup contains no links to the web.
 
 ## Pages

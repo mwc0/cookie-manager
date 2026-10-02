@@ -61,7 +61,7 @@ Features:
 - Copy a cookie's value in one click
 - Sort by name, domain or expiry, and see at a glance which cookies expire soon
 - See how big each site's cookies are, with a warning when they get big enough to stop logins
-- Open it with Alt+Shift+K, and press / to search
+- Open it with Alt+Shift+K, press / to search and Esc to go back
 - Built-in help that works offline
 - Open cookieZ in a full tab for long lists and long values
 - Mark cookies as "Kept" so cookieZ never deletes them
