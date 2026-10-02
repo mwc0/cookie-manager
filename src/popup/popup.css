@@ -279,9 +279,10 @@ button.danger:hover:not(:disabled) {
   margin: 9px 0 0;
 }
 
-/* The message above the search box ("Saved changes to…") needs space
-   under it, or it touches the search field. */
-#main-message {
+/* The messages above the search box ("Saved changes to…") need space
+   under them, or they touch the search field. */
+#main-message,
+#size-warning {
   margin: 0 0 10px;
 }
 
@@ -307,8 +308,12 @@ table {
   font-variant-numeric: tabular-nums;
 }
 
+.col-pick {
+  width: 28px;
+}
+
 .col-name {
-  width: 116px;
+  width: 104px;
 }
 
 .col-domain {
@@ -345,6 +350,30 @@ th {
   color: var(--muted);
 }
 
+/* The sortable headings look like the others, with an arrow on the one in
+   use. */
+th button.sort {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+th button.sort:hover {
+  color: var(--fg);
+}
+
+th[aria-sort="ascending"] button.sort::after {
+  content: " \2191";
+}
+
+th[aria-sort="descending"] button.sort::after {
+  content: " \2193";
+}
+
 td {
   padding: 5px 6px;
   border-bottom: 1px solid var(--line);
@@ -369,6 +398,22 @@ td.name {
 td.domain,
 td.path {
   overflow-wrap: anywhere;
+}
+
+/* The tick boxes. The padding is trimmed so the box sits in line with the
+   first line of the row. */
+th.pick,
+td.pick {
+  padding-right: 0;
+}
+
+.pick input {
+  margin: 1px 0 0;
+}
+
+/* Expires within a day. */
+td.expires-soon {
+  color: var(--danger);
 }
 
 td.session {
@@ -656,7 +701,8 @@ tr.kept-row td {
   background: var(--panel);
 }
 
-tr.kept-row td.name {
+/* A line down the left edge of a kept row. The tick box is the first cell. */
+tr.kept-row td.pick {
   box-shadow: inset 2px 0 0 var(--accent);
 }
 
@@ -754,6 +800,11 @@ textarea.output {
 textarea.output:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
+}
+
+.badge.large {
+  color: var(--danger);
+  font-weight: 600;
 }
 
 .warning {

@@ -28,8 +28,8 @@
   <meta property="og:image:height" content="800">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
-  <link rel="stylesheet" href="../style.css?v=2026-09-29">
-  <script src="../theme.js?v=2026-09-29" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2026-10-01">
+  <script src="../theme.js?v=2026-10-01" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -88,8 +88,16 @@
           <p>Chrome turns extensions off in incognito unless you allow them. Go to <code>chrome://extensions</code>, open cookieZ's Details, and turn on "Allow in incognito". Incognito cookies are kept separate from your normal ones, and deleting in one never touches the other.</p>
         </details>
         <details>
+          <summary>Is there a keyboard shortcut?</summary>
+          <p>Yes. Press Alt+Shift+K to open cookieZ. To change it, go to <code>chrome://extensions/shortcuts</code>. If another extension already uses Alt+Shift+K, Chrome leaves cookieZ without one, and you can pick your own there.</p>
+        </details>
+        <details>
           <summary>What does Keep do?</summary>
           <p>A cookie marked as Kept is left out of every delete cookieZ makes, including "All sites". It only affects cookieZ's own delete buttons. The website that set the cookie can still change or remove it.</p>
+        </details>
+        <details>
+          <summary>I deleted the wrong cookies. Can I get them back?</summary>
+          <p>Yes, for 10 minutes. Click Undo next to the "Deleted" message, or open cookieZ again and click Undo at the top. Only the most recent delete can be undone. To make this possible, cookieZ holds the deleted cookies in memory for those 10 minutes. They're never written to disk, and closing the browser clears them.</p>
         </details>
         <details>
           <summary>I set an expiry date and it changed</summary>
@@ -101,7 +109,11 @@
         </details>
         <details>
           <summary>How do I move cookies to another browser or tool?</summary>
-          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. You'll see how many cookies will be added, and for which sites, before anything changes. An export includes login cookies, so treat it like a password.</p>
+          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. The Playwright option makes a storageState file for starting automated tests already logged in. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. You'll see how many cookies will be added, and for which sites, before anything changes. An export includes login cookies, so treat it like a password.</p>
+        </details>
+        <details>
+          <summary>What does the size next to the cookie count mean?</summary>
+          <p>It's roughly how much the site's cookies add to every request your browser sends it. Many servers refuse requests with more than about 8 KB of them, and the usual symptom is a site that won't let you log in, so cookieZ warns you above 6 KB. Deleting that site's cookies usually fixes it. A cookie marked Large is close to Chrome's 4 KB limit for a single cookie.</p>
         </details>
         <details>
           <summary>How do I remove it?</summary>

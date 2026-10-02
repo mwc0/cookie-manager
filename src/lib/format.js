@@ -1,8 +1,14 @@
 // Formatting for display. Nothing in here calls Chrome or changes anything.
 
+const HOUR = 60 * 60;
+const DAY = 24 * HOUR;
+
+// Within this, the expiry is shown as "in 3 days" rather than a date.
+const RELATIVE_WITHIN = 30 * DAY;
+
 // A cookie with no expiry date is a session cookie, deleted when the browser
-// closes.
-export function formatExpiry(cookie) {
+// closes. One that expires within 30 days says how soon: "in 3 days".
+export function formatExpiry(cookie, now = Date.now() / 1000) {
   if (typeof cookie.expirationDate !== "number") {
     return "Session";
   }
@@ -12,6 +18,11 @@ export function formatExpiry(cookie) {
     return "Unknown";
   }
 
+  const relative = formatRelative(cookie.expirationDate - now);
+  if (relative) {
+    return relative;
+  }
+
   return date.toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
@@ -19,8 +30,8 @@ export function formatExpiry(cookie) {
   });
 }
 
-// The full date and time, for the tooltip.
-export function formatExpiryFull(cookie) {
+// The full date and time, for the tooltip, with "in 3 days" when it's soon.
+export function formatExpiryFull(cookie, now = Date.now() / 1000) {
   if (typeof cookie.expirationDate !== "number") {
     return "Session cookie - removed when the browser closes";
   }
@@ -30,7 +41,33 @@ export function formatExpiryFull(cookie) {
     return "Expiry date could not be read";
   }
 
-  return "Expires " + date.toLocaleString();
+  const relative = formatRelative(cookie.expirationDate - now);
+  return "Expires " + date.toLocaleString() + (relative ? " (" + relative + ")" : "");
+}
+
+// Whether a cookie expires within the next day.
+export function expiresSoon(cookie, now = Date.now() / 1000) {
+  if (typeof cookie.expirationDate !== "number") {
+    return false;
+  }
+  const left = cookie.expirationDate - now;
+  return left > 0 && left < DAY;
+}
+
+// "in 5 minutes", "in 5 hours", "in 3 days", or "" when it's not within 30
+// days. Uses the browser's own wording for the user's language.
+function formatRelative(secondsLeft) {
+  if (!(secondsLeft > 0) || secondsLeft >= RELATIVE_WITHIN) {
+    return "";
+  }
+  const words = new Intl.RelativeTimeFormat(undefined, { numeric: "always" });
+  if (secondsLeft < HOUR) {
+    return words.format(Math.max(1, Math.round(secondsLeft / 60)), "minute");
+  }
+  if (secondsLeft < DAY) {
+    return words.format(Math.round(secondsLeft / HOUR), "hour");
+  }
+  return words.format(Math.round(secondsLeft / DAY), "day");
 }
 
 // Chrome's SameSite names differ from the ones in a Set-Cookie header, so
@@ -99,6 +136,39 @@ export function truncate(text, max) {
     return value;
   }
   return value.slice(0, max) + "…";
+}
+
+// --- sizes -------------------------------------------------------------
+//
+// Sizes are in bytes as sent over the network, so a character outside plain
+// ASCII counts as more than one.
+
+const encoder = new TextEncoder();
+
+function byteLength(text) {
+  return encoder.encode(String(text == null ? "" : text)).length;
+}
+
+// Chrome's limit applies to a cookie's name and value together.
+export function cookieBytes(cookie) {
+  return byteLength(cookie.name) + byteLength(cookie.value);
+}
+
+// The size of the Cookie header these cookies make: "a=1; b=2".
+export function headerBytes(cookies) {
+  if (cookies.length === 0) {
+    return 0;
+  }
+  const pairs = cookies.reduce((total, cookie) => total + cookieBytes(cookie) + 1, 0);
+  return pairs + 2 * (cookies.length - 1);
+}
+
+// "812 bytes", "3.1 KB"
+export function formatBytes(bytes) {
+  if (bytes < 1024) {
+    return formatCount(bytes) + (bytes === 1 ? " byte" : " bytes");
+  }
+  return (bytes / 1024).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " KB";
 }
 
 export function formatCount(number) {

@@ -334,15 +334,18 @@ export async function removeCookie(cookie) {
 }
 
 // Deletes many cookies and reports which ones failed, so the popup can tell
-// the user instead of claiming everything worked.
+// the user instead of claiming everything worked. `removedCookies` is the
+// ones that really went, which is what Undo puts back.
 export async function removeCookies(cookies) {
   const outcomes = await Promise.all(
     cookies.map(async (cookie) => ({ cookie, ok: await removeCookie(cookie) }))
   );
 
   const failed = outcomes.filter((outcome) => !outcome.ok).map((outcome) => outcome.cookie);
+  const removedCookies = outcomes.filter((outcome) => outcome.ok).map((outcome) => outcome.cookie);
   return {
-    removed: outcomes.length - failed.length,
+    removed: removedCookies.length,
+    removedCookies,
     failed,
   };
 }

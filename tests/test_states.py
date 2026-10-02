@@ -93,6 +93,16 @@ def main():
                 visible_state(empty) == "state-main" and empty_visible and rows == 0,
                 f"state={visible_state(empty)}, empty message shown={empty_visible}, rows={rows}")
         r.check("no console errors across any of these states", not errors, str(errors[:3]))
+
+        # --- the keyboard shortcut ---
+        # Pressing it is browser UI that Playwright can't reach, so this asks
+        # Chrome which shortcut it actually registered.
+        shortcut = empty.evaluate("""async () => {
+            const commands = await chrome.commands.getAll();
+            const open = commands.find((c) => c.name === "_execute_action");
+            return open ? open.shortcut : null;
+        }""")
+        r.check("Alt+Shift+K is registered to open the popup", shortcut == "Alt+Shift+K", repr(shortcut))
         empty.close()
 
         # --- the table has to fit ---

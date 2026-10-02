@@ -7,8 +7,11 @@
 import {
   formatExpiry,
   formatExpiryFull,
+  expiresSoon,
   formatSameSite,
   truncate,
+  cookieBytes,
+  formatBytes,
 } from "../lib/format.js";
 import { copyWithFeedback } from "./clipboard.js";
 
@@ -16,15 +19,21 @@ import { copyWithFeedback } from "./clipboard.js";
 // to show in full.
 const VALUE_PREVIEW_LENGTH = 28;
 
+// Chrome refuses a cookie whose name and value add up to more than 4,096
+// bytes. A cookie this close to it gets a "Large" badge.
+const LARGE_COOKIE_BYTES = 3500;
+
 // `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
-// isProtected(cookie) }. Deleting one cookie takes two clicks (Delete, then
-// "Sure?"), and onDelete is only called after the second.
-export function renderCookieTable(tbody, cookies, handlers = {}) {
+// isProtected(cookie), onPick(cookie, ticked), isPicked(cookie) }. Deleting
+// one cookie takes two clicks (Delete, then "Sure?"), and onDelete is only
+// called after the second.
+//
+// `sort` is { key: "name" | "domain" | "expires", dir: "ascending" |
+// "descending" }.
+export function renderCookieTable(tbody, cookies, handlers = {}, sort = DEFAULT_SORT) {
   tbody.textContent = "";
 
-  const sorted = [...cookies].sort(
-    (a, b) => a.domain.localeCompare(b.domain) || a.name.localeCompare(b.name)
-  );
+  const sorted = sortCookies(cookies, sort);
 
   // Only one row can show "Sure?" at a time. Clicking another row's button
   // resets the rest.
@@ -40,27 +49,83 @@ export function renderCookieTable(tbody, cookies, handlers = {}) {
   }
 }
 
+export const DEFAULT_SORT = { key: "domain", dir: "ascending" };
+
+// Ties are broken by domain and then name, so the order never jumps about.
+// "example.com" and ".example.com" sort together.
+export function sortCookies(cookies, sort = DEFAULT_SORT) {
+  const host = (cookie) => String(cookie.domain || "").replace(/^\./, "");
+  const byDomainThenName = (a, b) =>
+    host(a).localeCompare(host(b)) || a.name.localeCompare(b.name);
+  const flip = sort.dir === "descending" ? -1 : 1;
+
+  return [...cookies].sort((a, b) => {
+    if (sort.key === "name") {
+      return flip * (a.name.localeCompare(b.name) || byDomainThenName(a, b));
+    }
+    if (sort.key === "expires") {
+      // Session cookies have no date, so they go last whichever way round.
+      const aSession = typeof a.expirationDate !== "number";
+      const bSession = typeof b.expirationDate !== "number";
+      if (aSession !== bSession) {
+        return aSession ? 1 : -1;
+      }
+      if (aSession) {
+        return byDomainThenName(a, b);
+      }
+      return flip * (a.expirationDate - b.expirationDate) || byDomainThenName(a, b);
+    }
+    return flip * byDomainThenName(a, b);
+  });
+}
+
 function buildRow(cookie, handlers, disarmers, disarmAll) {
   const row = document.createElement("tr");
   if (handlers.isProtected && handlers.isProtected(cookie)) {
     row.classList.add("kept-row");
   }
 
-  row.appendChild(textCell(cookie.name, "mono name"));
+  row.appendChild(pickCell(cookie, handlers));
+
+  const name = textCell(cookie.name, "mono name");
+  name.title = cookie.name + " (" + formatBytes(cookieBytes(cookie)) + ")";
+  row.appendChild(name);
   row.appendChild(valueCell(cookie.value));
   row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
   row.appendChild(breakableCell(cookie.path, "/", "mono path"));
 
-  const expires = textCell(formatExpiry(cookie), "nowrap");
+  const expires = textCell(formatExpiry(cookie), "nowrap expires");
   expires.title = formatExpiryFull(cookie);
   if (typeof cookie.expirationDate !== "number") {
     expires.classList.add("session");
+  }
+  if (expiresSoon(cookie)) {
+    expires.classList.add("expires-soon");
   }
   row.appendChild(expires);
 
   row.appendChild(flagsCell(cookie));
   row.appendChild(actionsCell(cookie, handlers, disarmers, disarmAll));
   return row;
+}
+
+// A tick box for choosing cookies by hand, for "Just the ticked cookies".
+function pickCell(cookie, handlers) {
+  const cell = document.createElement("td");
+  cell.className = "pick";
+
+  const box = document.createElement("input");
+  box.type = "checkbox";
+  box.checked = handlers.isPicked ? handlers.isPicked(cookie) : false;
+  box.setAttribute("aria-label", "Tick " + cookie.name);
+  box.addEventListener("change", () => {
+    if (handlers.onPick) {
+      handlers.onPick(cookie, box.checked);
+    }
+  });
+
+  cell.appendChild(box);
+  return cell;
 }
 
 function actionsCell(cookie, handlers, disarmers, disarmAll) {
@@ -229,6 +294,16 @@ function flagsCell(cookie) {
   }
   if (cookie.partitionKey) {
     cell.appendChild(badge("Partitioned", "Partitioned (CHIPS) cookie"));
+  }
+
+  const bytes = cookieBytes(cookie);
+  if (bytes >= LARGE_COOKIE_BYTES) {
+    const large = badge(
+      "Large",
+      formatBytes(bytes) + ". Chrome won't keep a cookie over 4 KB (name and value together)."
+    );
+    large.classList.add("large");
+    cell.appendChild(large);
   }
 
   cell.appendChild(

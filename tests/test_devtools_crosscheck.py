@@ -48,15 +48,16 @@ def devtools_cookies(cdp):
 
 def displayed_rows(page):
     """What the popup's table shows, read from the page."""
+    # Cells are found by class, not position, so a new column can't shift them.
     return page.evaluate("""() => Array.from(document.querySelectorAll('#cookie-rows tr')).map(tr => {
-        const cells = tr.querySelectorAll('td');
+        const text = (selector) => tr.querySelector(selector).textContent.trim();
         return {
-            name: cells[0].textContent.trim(),
-            value: cells[1].textContent.trim(),
-            domain: cells[2].textContent.trim(),
-            path: cells[3].textContent.trim(),
-            expires: cells[4].textContent.trim(),
-            flags: Array.from(cells[5].querySelectorAll('.badge')).map(b => b.textContent.trim()),
+            name: text('td.name'),
+            value: text('td.value'),
+            domain: text('td.domain'),
+            path: text('td.path'),
+            expires: text('td.expires'),
+            flags: Array.from(tr.querySelectorAll('td.flags .badge')).map(b => b.textContent.trim()),
         };
     })""")
 

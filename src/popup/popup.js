@@ -13,8 +13,17 @@ import {
   filterCookies,
   baseHostOf,
   getAllCookies,
+  cookieKey,
 } from "../lib/cookies.js";
-import { toJson, toNetscape, toHeader, parseImport, planImport } from "../lib/transfer.js";
+import {
+  toJson,
+  toNetscape,
+  toHeader,
+  toPlaywright,
+  toCurl,
+  parseImport,
+  planImport,
+} from "../lib/transfer.js";
 import { copyWithFeedback } from "./clipboard.js";
 import {
   loadProtected,
@@ -26,6 +35,8 @@ import {
 import {
   pluralise,
   formatCount,
+  headerBytes,
+  formatBytes,
   formatExpiryFull,
   toLocalDateTimeValue,
   fromLocalDateTimeValue,
@@ -38,7 +49,14 @@ import {
   mirror,
   watchSystemTheme,
 } from "../lib/theme.js";
-import { renderCookieTable } from "./render.js";
+import { renderCookieTable, DEFAULT_SORT } from "./render.js";
+import {
+  saveLastDelete,
+  loadLastDelete,
+  clearLastDelete,
+  restoreCookies,
+  describeAge,
+} from "../lib/undo.js";
 
 // The site in the current tab, as { origin, hostname }.
 let page = null;
@@ -63,7 +81,18 @@ let shownCookies = [];
 // The cookies the user has marked as Kept. See src/lib/protect.js.
 let protectedKeys = new Set();
 
+// How the table is sorted. Kept in memory only, so every open starts with
+// the default.
+let sort = DEFAULT_SORT;
+
+// The cookies ticked in the table, as cookieKey()s. "Just the ticked
+// cookies" deletes and exports exactly these. Kept in memory only.
+let picked = new Set();
+
 const el = (id) => document.getElementById(id);
+
+// Above this, the popup warns that the site's cookies are getting too big.
+const SIZE_WARNING_BYTES = 6 * 1024;
 
 // Opened with "Open in a tab", the page is popup.html?tab=<id>, where <id> is
 // the tab it was opened from. Otherwise it's the toolbar popup.
@@ -164,6 +193,7 @@ async function loadCurrentPage() {
 
   showState("main");
   await refresh();
+  await offerStoredUndo();
 }
 
 // Reloads the table, then the delete count. These must run one after the
@@ -203,20 +233,43 @@ function drawTable() {
   const query = el("search-input").value;
   shownCookies = filterCookies(pageCookies, query);
 
+  // Forget ticks for cookies that have gone, after a delete for example.
+  const onPage = new Set(pageCookies.map(cookieKey));
+  picked = new Set([...picked].filter((key) => onPage.has(key)));
+
   renderCookieTable(el("cookie-rows"), shownCookies, {
     onEdit: openEditor,
     onDelete: deleteOne,
     onProtect: toggleProtected,
     isProtected: (cookie) => isProtected(protectedKeys, cookie),
-  });
+    onPick: pickCookie,
+    isPicked: (cookie) => picked.has(cookieKey(cookie)),
+  }, sort);
+  showPicked();
 
   const filtering = query.trim() !== "";
   el("search-clear").hidden = !filtering;
 
-  el("cookie-count").textContent = filtering
-    ? pluralise(shownCookies.length, "cookie", "cookies") +
-      " of " + pluralise(pageCookies.length, "cookie", "cookies")
-    : pluralise(pageCookies.length, "cookie", "cookies");
+  // "about", because this page's list also has cookies for other paths,
+  // which a browser only sends on those paths.
+  const bytes = headerBytes(pageCookies);
+  el("cookie-count").textContent =
+    (filtering
+      ? pluralise(shownCookies.length, "cookie", "cookies") +
+        " of " + pluralise(pageCookies.length, "cookie", "cookies")
+      : pluralise(pageCookies.length, "cookie", "cookies")) +
+    (bytes > 0 ? " · about " + formatBytes(bytes) : "");
+
+  // Many servers refuse requests with more than 8 KB of headers, and a site
+  // that has piled up cookies is a common reason someone can't log in.
+  const warning = el("size-warning");
+  warning.hidden = bytes <= SIZE_WARNING_BYTES;
+  warning.textContent = warning.hidden
+    ? ""
+    : "This site's cookies add up to about " +
+      formatBytes(bytes) +
+      ". Many servers refuse more than 8 KB, which can stop you logging in. " +
+      "Deleting this site's cookies usually fixes it.";
 
   // "Just the cookies shown" only appears while searching.
   el("scope-matches-row").hidden = !filtering;
@@ -238,6 +291,86 @@ function drawTable() {
   el("cookie-table").hidden = nothingAtAll || nothingMatched;
 }
 
+// Clicking a heading sorts by it. Clicking it again reverses the order.
+function sortBy(key) {
+  sort =
+    sort.key === key
+      ? { key, dir: sort.dir === "ascending" ? "descending" : "ascending" }
+      : { key, dir: "ascending" };
+
+  for (const button of document.querySelectorAll("th button.sort")) {
+    const heading = button.parentElement;
+    if (button.dataset.sort === sort.key) {
+      heading.setAttribute("aria-sort", sort.dir);
+    } else {
+      heading.removeAttribute("aria-sort");
+    }
+  }
+  drawTable();
+}
+
+// --- ticking cookies -------------------------------------------------------
+
+// The cookies on this page that are ticked, hidden by a search or not.
+function pickedCookies() {
+  return pageCookies.filter((cookie) => picked.has(cookieKey(cookie)));
+}
+
+// Ticking doesn't redraw the table, so focus stays on the box just ticked.
+function pickCookie(cookie, ticked) {
+  const before = picked.size;
+  if (ticked) {
+    picked.add(cookieKey(cookie));
+  } else {
+    picked.delete(cookieKey(cookie));
+  }
+  scopeAfterPicking(before);
+}
+
+// The tick box in the header ticks or unticks every cookie shown.
+function pickAllShown(ticked) {
+  const before = picked.size;
+  for (const cookie of shownCookies) {
+    if (ticked) {
+      picked.add(cookieKey(cookie));
+    } else {
+      picked.delete(cookieKey(cookie));
+    }
+  }
+  for (const box of document.querySelectorAll("#cookie-rows td.pick input")) {
+    box.checked = ticked;
+  }
+  scopeAfterPicking(before);
+}
+
+// The first tick switches the delete panel to the ticked cookies, which is
+// always a smaller set than the scope it replaces. Unticking the last one
+// goes back to "This page".
+function scopeAfterPicking(before) {
+  showPicked();
+  if (before === 0 && picked.size > 0) {
+    document.querySelector('input[name="scope"][value="picked"]').checked = true;
+  }
+  el("delete-result").hidden = true;
+  refreshScope();
+}
+
+// The header tick box and the "Just the ticked cookies" option.
+function showPicked() {
+  const shownPicked = shownCookies.filter((cookie) => picked.has(cookieKey(cookie))).length;
+  const all = el("pick-all");
+  all.checked = shownCookies.length > 0 && shownPicked === shownCookies.length;
+  all.indeterminate = shownPicked > 0 && shownPicked < shownCookies.length;
+  all.disabled = shownCookies.length === 0;
+
+  const count = pickedCookies().length;
+  el("scope-picked-row").hidden = count === 0;
+  el("scope-target-picked").textContent = count > 0 ? pluralise(count, "cookie", "cookies") : "";
+  if (count === 0 && selectedScope() === "picked") {
+    document.querySelector('input[name="scope"][value="page"]').checked = true;
+  }
+}
+
 // --- delete scope ----------------------------------------------------------
 
 function selectedScope() {
@@ -257,12 +390,15 @@ async function refreshScope() {
 
   let inScope;
   try {
-    // "matches" deletes exactly the rows on screen, so it uses the table's
-    // own list rather than asking Chrome again.
-    inScope =
-      selectedScope() === "matches"
-        ? shownCookies
-        : await getCookiesForScope(selectedScope(), page);
+    // "matches" and "picked" delete exactly the rows chosen in the table, so
+    // they use the table's own list rather than asking Chrome again.
+    if (selectedScope() === "matches") {
+      inScope = shownCookies;
+    } else if (selectedScope() === "picked") {
+      inScope = pickedCookies();
+    } else {
+      inScope = await getCookiesForScope(selectedScope(), page);
+    }
   } catch (error) {
     scopeCookies = [];
     scopeAll = [];
@@ -356,7 +492,7 @@ async function runDelete() {
   result.textContent = "Deleting…";
 
   try {
-    const { removed, failed } = await removeCookies(scopeCookies);
+    const { removed, removedCookies, failed } = await removeCookies(scopeCookies);
 
     if (failed.length === 0) {
       result.textContent = "Deleted " + pluralise(removed, "cookie", "cookies") + ".";
@@ -369,6 +505,7 @@ async function runDelete() {
         pluralise(failed.length, "cookie", "cookies") +
         " could not be deleted, and may be protected by the browser.";
     }
+    await offerUndo(result, removedCookies);
   } catch (error) {
     result.className = "result error";
     result.textContent = "The delete failed: " + error.message;
@@ -592,6 +729,95 @@ async function deleteOne(cookie) {
       : "Couldn't delete " + cookie.name + ". It may be protected by the browser.",
     !ok
   );
+  if (ok) {
+    await offerUndo(el("main-message"), [cookie]);
+  }
+
+  await refresh();
+}
+
+// --- undo ------------------------------------------------------------------
+
+// Remembers what a delete removed and adds an Undo button to its message.
+// Setting the message's text later removes the button. That's fine: the
+// delete can still be undone from the next open, for up to 10 minutes.
+async function offerUndo(message, removedCookies) {
+  if (removedCookies.length === 0) {
+    return;
+  }
+  const { error } = await saveLastDelete(removedCookies);
+  if (error) {
+    message.append(" " + error);
+    return;
+  }
+  appendUndoButton(message);
+}
+
+function appendUndoButton(message) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "row-button undo-button";
+  button.textContent = "Undo";
+  button.addEventListener("click", () => runUndo(message, button));
+  message.append(" ", button);
+}
+
+// On opening, offer to undo a delete made in the last 10 minutes, unless
+// something more important is already showing.
+async function offerStoredUndo() {
+  const last = await loadLastDelete();
+  if (!last || !el("main-message").hidden) {
+    return;
+  }
+
+  // "example.com" and ".example.com" are the same site to a reader.
+  const count = last.cookies.length;
+  const sites = Array.from(
+    new Set(last.cookies.map((cookie) => String(cookie.domain || "").replace(/^\./, "")))
+  );
+  const what = count === 1 ? last.cookies[0].name : pluralise(count, "cookie", "cookies");
+  const where =
+    sites.length === 1 ? " from " + sites[0] : " across " + pluralise(sites.length, "site", "sites");
+
+  showMainMessage(
+    "Deleted " + what + where + " " + describeAge(Date.now() / 1000 - last.at) + ".",
+    false
+  );
+  appendUndoButton(el("main-message"));
+}
+
+async function runUndo(message, button) {
+  button.disabled = true;
+
+  const last = await loadLastDelete();
+  if (!last) {
+    message.className = "result error";
+    message.textContent = "There's nothing to undo. Undo only lasts 10 minutes after a delete.";
+    return;
+  }
+
+  message.className = "result";
+  message.textContent = "Restoring…";
+
+  const { restored, expired, failures } = await restoreCookies(last.cookies);
+  await clearLastDelete();
+
+  const parts = ["Restored " + pluralise(restored, "cookie", "cookies") + "."];
+  if (expired > 0) {
+    parts.push(
+      pluralise(expired, "cookie has", "cookies have") +
+        " expired since, so " +
+        (expired === 1 ? "it wasn't" : "they weren't") +
+        " put back."
+    );
+  }
+  if (failures.length > 0) {
+    parts.push(
+      "Chrome refused " + pluralise(failures.length, "cookie", "cookies") + ": " + failures.join(" ")
+    );
+  }
+  message.className = failures.length > 0 ? "result error" : "result";
+  message.textContent = parts.join(" ");
 
   await refresh();
 }
@@ -612,6 +838,7 @@ function buildExport() {
     domain: baseHostOf(page.hostname),
     all: "all-sites",
     matches: page.hostname + "-search",
+    picked: page.hostname + "-ticked",
   }[selectedScope()];
   const base = "cookies-" + scopeName + "-" + date;
 
@@ -620,6 +847,12 @@ function buildExport() {
   }
   if (format === "header") {
     return { text: toHeader(scopeAll), filename: base + "-header.txt", type: "text/plain" };
+  }
+  if (format === "curl") {
+    return { text: toCurl(scopeAll, page.origin + "/"), filename: base + "-curl.sh", type: "text/plain" };
+  }
+  if (format === "playwright") {
+    return { text: toPlaywright(scopeAll), filename: base + "-playwright.json", type: "application/json" };
   }
   return { text: toJson(scopeAll), filename: base + ".json", type: "application/json" };
 }
@@ -634,21 +867,22 @@ function openExport() {
     (kept > 0 ? ", including " + pluralise(kept, "kept cookie", "kept cookies") : "") +
     ".";
 
-  // A Cookie header is what a browser sends to one page. "This page" (and a
-  // search within it) is exactly that set, even when it mixes example.com
-  // and www.example.com cookies. The wider scopes only qualify when every
-  // cookie has the same domain.
-  const header = document.querySelector('input[name="format"][value="header"]');
-  const onePage =
-    selectedScope() === "page" ||
-    selectedScope() === "matches" ||
-    new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1;
-  header.disabled = !onePage;
-  el("header-note").textContent = onePage
-    ? "Names and values only, as a browser sends them to this page."
-    : "Only for the cookies of one page. Choose “This page” to use it.";
-  if (!onePage && header.checked) {
-    document.querySelector('input[name="format"][value="json"]').checked = true;
+  // The Cookie header and curl both send cookies to one page, so they're
+  // only offered when the cookies are one page's.
+  const onePage = exportIsOnePage(domains);
+  const onePageFormats = [
+    ["header", "Names and values only, as a browser sends them to this page."],
+    ["curl", "Sends these cookies to this page, for bash or zsh."],
+  ];
+  for (const [format, note] of onePageFormats) {
+    const radio = document.querySelector('input[name="format"][value="' + format + '"]');
+    radio.disabled = !onePage;
+    el(format + "-note").textContent = onePage
+      ? note
+      : "Only for the cookies of one page. Choose “This page” to use it.";
+    if (!onePage && radio.checked) {
+      document.querySelector('input[name="format"][value="json"]').checked = true;
+    }
   }
 
   el("export-result").hidden = true;
@@ -656,6 +890,19 @@ function openExport() {
   showExportText();
   showState("export");
   el("export-copy").focus();
+}
+
+// Whether the cookies being exported are what a browser sends to one page.
+// "This page" (and a search within it) is exactly that set, even when it
+// mixes example.com and www.example.com cookies. The wider scopes only
+// qualify when every cookie has the same domain.
+function exportIsOnePage(domains) {
+  return (
+    selectedScope() === "page" ||
+    selectedScope() === "matches" ||
+    selectedScope() === "picked" ||
+    new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1
+  );
 }
 
 function showExportText() {
@@ -973,6 +1220,11 @@ el("search-clear").addEventListener("click", () => {
   refreshScope();
   el("search-input").focus();
 });
+
+el("pick-all").addEventListener("change", () => pickAllShown(el("pick-all").checked));
+for (const button of document.querySelectorAll("th button.sort")) {
+  button.addEventListener("click", () => sortBy(button.dataset.sort));
+}
 
 el("add-button").addEventListener("click", () => openEditor(null));
 el("edit-cancel").addEventListener("click", closeEditor);

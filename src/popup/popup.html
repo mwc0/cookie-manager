@@ -131,6 +131,7 @@
       </header>
 
       <p id="main-message" class="result" role="status" hidden></p>
+      <p id="size-warning" class="result" role="status" hidden></p>
 
       <!-- Filters the table. While searching, an extra delete option removes only
            the cookies shown. -->
@@ -154,6 +155,12 @@
         <h2>Delete or export cookies</h2>
 
         <div class="scopes" role="radiogroup" aria-label="What to delete">
+          <!-- Only shown while some cookies are ticked in the table. -->
+          <label class="scope" id="scope-picked-row" hidden>
+            <input type="radio" name="scope" value="picked" />
+            <span class="scope-label">Just the ticked cookies</span>
+            <span class="scope-target scope-note" id="scope-target-picked"></span>
+          </label>
           <!-- Only shown while searching. Without it, pressing Delete after a search
                would remove every cookie in the scope, not just the ones on screen. -->
           <label class="scope" id="scope-matches-row" hidden>
@@ -212,6 +219,7 @@
           <!-- Column widths are set here, so the table can't be wider than the popup.
                See "cookie table" in popup.css. -->
           <colgroup>
+            <col class="col-pick" />
             <col class="col-name" />
             <col class="col-value" />
             <col class="col-domain" />
@@ -222,11 +230,16 @@
           </colgroup>
           <thead>
             <tr>
-              <th scope="col">Name</th>
+              <th scope="col" class="pick">
+                <input type="checkbox" id="pick-all" title="Tick every cookie shown" aria-label="Tick every cookie shown" />
+              </th>
+              <!-- Name, Domain and Expires sort the table. popup.js sets aria-sort
+                   on the one in use. -->
+              <th scope="col"><button type="button" class="sort" data-sort="name">Name</button></th>
               <th scope="col">Value</th>
-              <th scope="col">Domain</th>
+              <th scope="col" aria-sort="ascending"><button type="button" class="sort" data-sort="domain">Domain</button></th>
               <th scope="col">Path</th>
-              <th scope="col">Expires</th>
+              <th scope="col"><button type="button" class="sort" data-sort="expires">Expires</button></th>
               <th scope="col">Flags</th>
               <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
@@ -335,6 +348,11 @@
           <span class="scope-note muted">Compatible with other cookie editors. Keeps every detail.</span>
         </label>
         <label class="scope">
+          <input type="radio" name="format" value="playwright" />
+          <span class="scope-label">Playwright</span>
+          <span class="scope-note muted">A storageState file, for starting a test already logged in.</span>
+        </label>
+        <label class="scope">
           <input type="radio" name="format" value="netscape" />
           <span class="scope-label">cookies.txt</span>
           <span class="scope-note muted">For curl, wget, yt-dlp and other tools. Can't hold SameSite or partitions.</span>
@@ -343,6 +361,11 @@
           <input type="radio" name="format" value="header" />
           <span class="scope-label">Cookie header</span>
           <span class="scope-note muted" id="header-note">Names and values only, for one site.</span>
+        </label>
+        <label class="scope">
+          <input type="radio" name="format" value="curl" />
+          <span class="scope-label">curl command</span>
+          <span class="scope-note muted" id="curl-note">Sends these cookies to this page, for bash or zsh.</span>
         </label>
       </div>
 

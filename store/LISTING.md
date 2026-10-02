@@ -51,13 +51,17 @@ Before you delete anything, cookieZ shows you how many cookies will go and which
 
 Features:
 - See every cookie for the current site: name, value, domain, path, expiry and flags
-- Delete cookies for this page, this site and its subdomains, or every site
+- Delete cookies for this page, this site and its subdomains, every site, or just the ones you tick
+- Undo a delete for 10 minutes afterwards
 - Create new cookies and edit any field
 - Delete a single cookie
 - Search by name, value, domain or path, then delete only the results
-- Export cookies as JSON, cookies.txt (Netscape) or a Cookie header, then copy or download
+- Export cookies as JSON, cookies.txt (Netscape), a Playwright storageState file, a Cookie header or a curl command, then copy or download
 - Import JSON (from cookieZ or another cookie editor) or cookies.txt, with a preview before anything is added
 - Copy a cookie's value in one click
+- Sort by name, domain or expiry, and see at a glance which cookies expire soon
+- See how big each site's cookies are, with a warning when they get big enough to stop logins
+- Open it with Alt+Shift+K
 - Open cookieZ in a full tab for long lists and long values
 - Mark cookies as "Kept" so cookieZ never deletes them
 - Works in incognito, kept separate from your normal cookies
@@ -117,8 +121,12 @@ marked as "Kept", so the extension remembers to exclude them from deletion
 after the popup closes. Each entry holds a cookie's name, domain and path,
 plus its partition key for partitioned (CHIPS) cookies. It never holds cookie
 values. Second, the user's colour theme choice, "light" or "dark", saved only
-if they pick the opposite of their system theme.
-Stored via chrome.storage.local; nothing is synced or transmitted.
+if they pick the opposite of their system theme. Both are stored via
+chrome.storage.local.
+Also, for the Undo button, the cookies removed by the most recent delete are
+held in chrome.storage.session (memory only, never written to disk, cleared
+by the browser on exit). Only the last delete is held, and it is dropped
+after 10 minutes or once used. Nothing is synced or transmitted.
 ```
 
 ### Host permission (`*://*/*`, optional)
