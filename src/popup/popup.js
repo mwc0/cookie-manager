@@ -5,7 +5,6 @@ import { hasHostAccess, requestHostAccess } from "../lib/permissions.js";
 import {
   getCookiesForPage,
   getCookiesForScope,
-  summarise,
   removeCookie,
   removeCookies,
   writeCookie,
@@ -14,6 +13,7 @@ import {
   baseHostOf,
   getAllCookies,
   cookieKey,
+  sitesOf,
 } from "../lib/cookies.js";
 import {
   toJson,
@@ -40,6 +40,7 @@ import {
   formatExpiryFull,
   toLocalDateTimeValue,
   fromLocalDateTimeValue,
+  decodeValue,
 } from "../lib/format.js";
 import {
   loadTheme,
@@ -351,7 +352,6 @@ function scopeAfterPicking(before) {
   if (before === 0 && picked.size > 0) {
     document.querySelector('input[name="scope"][value="picked"]').checked = true;
   }
-  el("delete-result").hidden = true;
   refreshScope();
 }
 
@@ -414,7 +414,8 @@ async function refreshScope() {
   const { deletable, kept } = partitionByProtection(protectedKeys, inScope);
   scopeCookies = deletable;
 
-  const { count, domains } = summarise(scopeCookies);
+  const count = scopeCookies.length;
+  const sites = sitesOf(scopeCookies);
   const keptNote =
     kept.length > 0
       ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
@@ -430,25 +431,19 @@ async function refreshScope() {
   }
 
   summaryLine.textContent =
-    "Will delete " +
-    pluralise(count, "cookie", "cookies") +
-    (domains.length === 1
-      ? " from " + domains[0]
-      : " across " + pluralise(domains.length, "domain", "domains")) +
-    "." +
-    keptNote;
+    "Will delete " + pluralise(count, "cookie", "cookies") + describeSites(sites) + "." + keptNote;
 
-  // List every domain, so the user sees exactly what will go first.
-  if (domains.length > 1) {
+  // List every site, so the user sees exactly what will go first.
+  if (sites.length > 1) {
     const list = el("scope-domains-list");
     list.textContent = "";
-    for (const domain of domains) {
+    for (const site of sites) {
       const item = document.createElement("li");
-      item.textContent = domain; // comes from websites, so never innerHTML
+      item.textContent = site; // comes from websites, so never innerHTML
       list.appendChild(item);
     }
     el("scope-domains-summary").textContent =
-      "Show the " + formatCount(domains.length) + " domains affected";
+      "Show the " + formatCount(sites.length) + " sites affected";
     details.open = false;
     details.hidden = false;
   }
@@ -464,24 +459,26 @@ function cancelConfirm() {
   el("export-button").hidden = false;
 }
 
+// " from example.com" for one site, " across 3 sites" for more.
+function describeSites(sites) {
+  return sites.length === 1 ? " from " + sites[0] : " across " + pluralise(sites.length, "site", "sites");
+}
+
 function startConfirm() {
-  const { count, domains } = summarise(scopeCookies);
-
   el("confirm-text").textContent =
-    "Delete " +
-    pluralise(count, "cookie", "cookies") +
-    (domains.length === 1 ? " from " + domains[0] : " from " + pluralise(domains.length, "domain", "domains")) +
-    "?";
+    "Delete " + pluralise(scopeCookies.length, "cookie", "cookies") + describeSites(sitesOf(scopeCookies)) + "?";
 
-  el("delete-result").hidden = true;
+  el("main-message").hidden = true;
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
   el("confirm-row").hidden = false;
   el("confirm-yes").focus();
 }
 
+// The result goes in the status line under the header, like every other
+// result, with Undo next to it.
 async function runDelete() {
-  const result = el("delete-result");
+  const result = el("main-message");
   const yes = el("confirm-yes");
   const no = el("confirm-no");
 
@@ -577,8 +574,17 @@ function openEditor(cookie) {
     partition.hidden = true;
   }
 
+  showDecoded();
   showState("edit");
   el("field-name").focus();
+}
+
+// Shows the value URL-decoded or laid out as JSON, when that's easier to
+// read. Updated as the value is typed. See decodeValue() in format.js.
+function showDecoded() {
+  const decoded = decodeValue(el("field-value").value);
+  el("value-decoded").hidden = decoded === null;
+  el("value-decoded-text").textContent = decoded === null ? "" : decoded;
 }
 
 function closeEditor() {
@@ -858,18 +864,18 @@ function buildExport() {
 }
 
 function openExport() {
-  const { count, domains } = summarise(scopeAll);
+  const sites = sitesOf(scopeAll);
   const kept = scopeAll.length - scopeCookies.length;
 
   el("export-summary").textContent =
-    pluralise(count, "cookie", "cookies") +
-    (domains.length === 1 ? " from " + domains[0] : " from " + pluralise(domains.length, "domain", "domains")) +
+    pluralise(scopeAll.length, "cookie", "cookies") +
+    describeSites(sites) +
     (kept > 0 ? ", including " + pluralise(kept, "kept cookie", "kept cookies") : "") +
     ".";
 
   // The Cookie header and curl both send cookies to one page, so they're
   // only offered when the cookies are one page's.
-  const onePage = exportIsOnePage(domains);
+  const onePage = exportIsOnePage(sites);
   const onePageFormats = [
     ["header", "Names and values only, as a browser sends them to this page."],
     ["curl", "Sends these cookies to this page, for bash or zsh."],
@@ -896,12 +902,12 @@ function openExport() {
 // "This page" (and a search within it) is exactly that set, even when it
 // mixes example.com and www.example.com cookies. The wider scopes only
 // qualify when every cookie has the same domain.
-function exportIsOnePage(domains) {
+function exportIsOnePage(sites) {
   return (
     selectedScope() === "page" ||
     selectedScope() === "matches" ||
     selectedScope() === "picked" ||
-    new Set(domains.map((d) => d.replace(/^\./, ""))).size <= 1
+    sites.length <= 1
   );
 }
 
@@ -1238,10 +1244,7 @@ el("edit-form").addEventListener("submit", (event) => {
 });
 
 for (const radio of document.querySelectorAll('input[name="scope"]')) {
-  radio.addEventListener("change", () => {
-    el("delete-result").hidden = true;
-    refreshScope();
-  });
+  radio.addEventListener("change", refreshScope);
 }
 
 el("delete-button").addEventListener("click", startConfirm);
@@ -1267,6 +1270,65 @@ el("import-text").addEventListener("input", resetImportPreview);
 el("value-copy").addEventListener("click", () =>
   copyWithFeedback(el("value-copy"), el("field-value").value)
 );
+el("field-value").addEventListener("input", showDecoded);
+el("decoded-copy").addEventListener("click", () =>
+  copyWithFeedback(el("decoded-copy"), el("value-decoded-text").textContent)
+);
+
+el("help-button").addEventListener("click", () => {
+  el("main-message").hidden = true;
+  showState("help");
+  el("help-back").focus();
+});
+el("help-back").addEventListener("click", () => showState("main"));
+
+// --- keyboard --------------------------------------------------------------
+
+// The screen showing now, such as "main" or "edit".
+function currentState() {
+  const shown = document.querySelector(".state:not([hidden])");
+  return shown ? shown.id.replace(/^state-/, "") : "";
+}
+
+// Each screen's way back, for Esc.
+const BACK_BUTTONS = {
+  edit: "edit-cancel",
+  export: "export-back",
+  import: "import-back",
+  help: "help-back",
+};
+
+document.addEventListener("keydown", (event) => {
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return;
+  }
+
+  // Esc goes back from a screen, or backs out of "Delete these cookies?",
+  // instead of closing the popup. Whether Chrome lets a toolbar popup keep
+  // Esc for itself is checked by hand (see docs/NOTES.md in the private
+  // repo). In a tab it always works.
+  if (event.key === "Escape") {
+    const back = BACK_BUTTONS[currentState()];
+    if (back) {
+      event.preventDefault();
+      el(back).click();
+    } else if (currentState() === "main" && !el("confirm-row").hidden) {
+      event.preventDefault();
+      cancelConfirm();
+      el("delete-button").focus();
+    }
+    return;
+  }
+
+  // "/" jumps to the search box, unless you're typing somewhere already.
+  if (event.key === "/" && currentState() === "main") {
+    const typing = event.target.closest("input, textarea, select");
+    if (!typing) {
+      event.preventDefault();
+      el("search-input").focus();
+    }
+  }
+});
 el("confirm-no").addEventListener("click", cancelConfirm);
 el("confirm-yes").addEventListener("click", runDelete);
 

@@ -115,6 +115,18 @@ export function filterCookies(cookies, query) {
   });
 }
 
+// The sites these cookies belong to, for sentences like "Will delete 4
+// cookies from example.com". "example.com" and ".example.com" are one site
+// to a reader, so the leading dot is dropped. The table still shows each
+// cookie's exact domain.
+export function sitesOf(cookies) {
+  const sites = new Set();
+  for (const cookie of cookies) {
+    sites.add(String(cookie.domain || "").replace(/^\./, ""));
+  }
+  return Array.from(sites).sort();
+}
+
 // The count and the list of domains, shown before anything is deleted.
 export function summarise(cookies) {
   const domains = new Set();

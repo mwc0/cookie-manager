@@ -101,7 +101,7 @@ def main():
         confirmed = page.locator("#confirm-text").text_content().strip()
         page.locator("#confirm-yes").click()
         page.wait_for_timeout(1200)
-        reported = page.locator("#delete-result").text_content().strip()
+        reported = page.locator("#main-message").text_content().strip()
 
         remaining = page.evaluate(
             "async () => (await chrome.cookies.getAll({})).map(c => c.domain + '|' + c.name)"

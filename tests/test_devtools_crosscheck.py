@@ -116,13 +116,14 @@ def check_fields(r, context, ext_id):
     # The popup shortens SameSite, so check it separately.
     locked = truth.get("locked", {})
     r.check("the SameSite badge matches DevTools' value",
-            "SS:Strict" in shown.get("locked", {}).get("flags", []) and locked.get("sameSite") == "Strict",
+            "SameSite Strict" in shown.get("locked", {}).get("flags", []) and locked.get("sameSite") == "Strict",
             f"badge={shown.get('locked', {}).get('flags')}, DevTools sameSite={locked.get('sameSite')!r}")
 
     # Host-only vs domain-wide. Saving a cookie depends on getting this right.
-    r.check("the HostOnly badge matches DevTools' leading-dot convention",
-            "HostOnly" in shown.get("plain", {}).get("flags", [])
-            and "HostOnly" not in shown.get("wide", {}).get("flags", [])
+    # Domain-wide cookies are the unusual ones, so they get the badge.
+    r.check("the Subdomains badge matches DevTools' leading-dot convention",
+            "Subdomains" in shown.get("wide", {}).get("flags", [])
+            and "Subdomains" not in shown.get("plain", {}).get("flags", [])
             and truth.get("wide", {}).get("domain", "").startswith("."),
             f"wide domain per DevTools = {truth.get('wide', {}).get('domain')!r}")
 

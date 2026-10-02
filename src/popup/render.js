@@ -14,6 +14,7 @@ import {
   formatBytes,
 } from "../lib/format.js";
 import { copyWithFeedback } from "./clipboard.js";
+import { iconButton, setIconContent } from "./icons.js";
 
 // Short enough that a row fits the popup's width. Long values can be clicked
 // to show in full.
@@ -85,6 +86,29 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
     row.classList.add("kept-row");
   }
 
+  // Clicking a row opens it in the editor, unless the click was on one of
+  // its own controls, or was the end of selecting some text to copy. The
+  // Edit button does the same for keyboard users.
+  //
+  // The click's path is checked, not event.target: clicking Delete swaps
+  // its icon for "Sure?", so by the time the click reaches the row, the
+  // icon that was clicked is no longer in the page.
+  row.addEventListener("click", (event) => {
+    const onControl = event
+      .composedPath()
+      .some((node) => node instanceof Element && node.matches("button, input, label"));
+    if (onControl) {
+      return;
+    }
+    if (String(window.getSelection()) !== "") {
+      return;
+    }
+    disarmAll();
+    if (handlers.onEdit) {
+      handlers.onEdit(cookie);
+    }
+  });
+
   row.appendChild(pickCell(cookie, handlers));
 
   const name = textCell(cookie.name, "mono name");
@@ -110,9 +134,13 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
 }
 
 // A tick box for choosing cookies by hand, for "Just the ticked cookies".
+// It sits in a label that fills the cell, so the whole cell can be clicked:
+// the box alone is smaller than the 24px WCAG asks for.
 function pickCell(cookie, handlers) {
   const cell = document.createElement("td");
   cell.className = "pick";
+  const target = document.createElement("label");
+  target.className = "pick-target";
 
   const box = document.createElement("input");
   box.type = "checkbox";
@@ -124,10 +152,17 @@ function pickCell(cookie, handlers) {
     }
   });
 
-  cell.appendChild(box);
+  target.appendChild(box);
+  cell.appendChild(target);
   return cell;
 }
 
+// Keep, Edit and Delete, as icon buttons. Each has its name in a hidden
+// span, so screen readers read "Keep", "Edit", "Delete".
+//
+// The first click on Delete turns it into a filled "Sure?" (in words) with a
+// cancel button next to it, and hides Keep and Edit so they can't be hit by
+// mistake. The second click deletes.
 function actionsCell(cookie, handlers, disarmers, disarmAll) {
   const cell = document.createElement("td");
   cell.className = "row-actions";
@@ -135,15 +170,17 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
   const protectedNow = handlers.isProtected ? handlers.isProtected(cookie) : false;
 
   // Called "Keep", not "Protect", because it only stops this extension
-  // deleting the cookie. See src/lib/protect.js.
-  const keep = document.createElement("button");
-  keep.type = "button";
-  keep.className = "row-button keep" + (protectedNow ? " kept" : "");
-  keep.textContent = protectedNow ? "Kept" : "Keep";
+  // deleting the cookie. See src/lib/protect.js. A kept cookie's bookmark is
+  // filled in.
+  const keep = iconButton("keep", protectedNow ? "Kept" : "Keep", { filled: protectedNow });
+  keep.classList.add("keep");
+  if (protectedNow) {
+    keep.classList.add("kept");
+  }
   keep.setAttribute("aria-pressed", protectedNow ? "true" : "false");
   keep.title = protectedNow
-    ? "This cookie is excluded from deletes. Click to stop keeping it."
-    : "Exclude this cookie from deletes made here";
+    ? "Kept: left out of every delete. Click to stop keeping it."
+    : "Keep: leave this cookie out of every delete made here";
   keep.addEventListener("click", () => {
     disarmAll();
     if (handlers.onProtect) {
@@ -151,10 +188,8 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     }
   });
 
-  const edit = document.createElement("button");
-  edit.type = "button";
-  edit.className = "row-button edit";
-  edit.textContent = "Edit";
+  const edit = iconButton("edit", "Edit");
+  edit.classList.add("edit");
   edit.title = "Edit this cookie";
   edit.addEventListener("click", () => {
     disarmAll();
@@ -163,25 +198,31 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     }
   });
 
-  const remove = document.createElement("button");
-  remove.type = "button";
-  remove.className = "row-button danger";
-  remove.textContent = "Delete";
+  const remove = iconButton("delete", "Delete");
+  remove.classList.add("danger");
 
   // A kept cookie can't be deleted. The button is disabled, not hidden, so
   // its tooltip can say why.
   if (protectedNow) {
     remove.disabled = true;
-    remove.title = "Kept cookies aren't deleted. Click Kept to allow it.";
+    remove.title = "Kept cookies aren't deleted. Click the bookmark to allow it.";
   } else {
     remove.title = "Delete this cookie";
   }
 
+  const cancel = iconButton("cancel", "Don't delete");
+  cancel.classList.add("cancel");
+  cancel.hidden = true;
+
   let armed = false;
   const disarm = () => {
     armed = false;
-    remove.textContent = "Delete";
+    setIconContent(remove, "delete", "Delete");
     remove.classList.remove("armed");
+    remove.classList.add("icon-only");
+    keep.hidden = false;
+    edit.hidden = false;
+    cancel.hidden = true;
   };
   disarmers.push(disarm);
 
@@ -190,7 +231,11 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
       disarmAll();
       armed = true;
       remove.textContent = "Sure?";
+      remove.classList.remove("icon-only");
       remove.classList.add("armed");
+      keep.hidden = true;
+      edit.hidden = true;
+      cancel.hidden = false;
       return;
     }
     disarm();
@@ -199,9 +244,15 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     }
   });
 
+  cancel.addEventListener("click", () => {
+    disarm();
+    remove.focus();
+  });
+
   cell.appendChild(keep);
   cell.appendChild(edit);
   cell.appendChild(remove);
+  cell.appendChild(cancel);
   return cell;
 }
 
@@ -234,7 +285,8 @@ function breakableCell(text, separator, className) {
 }
 
 // Long values show a preview. Click to see the whole value, with a Copy
-// button under it.
+// button under it. A short value is plain text: a disabled button would
+// swallow the click that opens the row in the editor.
 function valueCell(value) {
   const cell = document.createElement("td");
   cell.className = "mono value";
@@ -242,58 +294,66 @@ function valueCell(value) {
   const full = value == null ? "" : String(value);
   const needsToggle = full.length > VALUE_PREVIEW_LENGTH;
 
+  if (!needsToggle) {
+    const text = document.createElement("span");
+    text.className = "value-text" + (full === "" ? " muted" : "");
+    text.textContent = full === "" ? "(empty)" : full;
+    cell.appendChild(text);
+    return cell;
+  }
+
   const button = document.createElement("button");
   button.type = "button";
   button.className = "value-toggle";
-  button.textContent = needsToggle ? truncate(full, VALUE_PREVIEW_LENGTH) : full;
+  button.textContent = truncate(full, VALUE_PREVIEW_LENGTH);
 
-  if (full === "") {
-    button.textContent = "(empty)";
-    button.classList.add("muted");
-    button.disabled = true;
-  } else if (needsToggle) {
-    const copy = document.createElement("button");
-    copy.type = "button";
-    copy.className = "row-button copy";
-    copy.textContent = "Copy";
-    copy.title = "Copy the whole value";
-    copy.hidden = true;
-    copy.addEventListener("click", () => copyWithFeedback(copy, full));
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "row-button copy";
+  copy.textContent = "Copy";
+  copy.title = "Copy the whole value";
+  copy.hidden = true;
+  copy.addEventListener("click", () => copyWithFeedback(copy, full));
 
-    button.title = "Click to show the full value";
-    button.addEventListener("click", () => {
-      const expanded = cell.classList.toggle("expanded");
-      button.textContent = expanded ? full : truncate(full, VALUE_PREVIEW_LENGTH);
-      button.title = expanded ? "Click to collapse" : "Click to show the full value";
-      copy.hidden = !expanded;
-    });
-
-    cell.appendChild(button);
-    cell.appendChild(copy);
-    return cell;
-  } else {
-    button.disabled = true;
-  }
+  button.title = "Click to show the full value";
+  button.addEventListener("click", () => {
+    const expanded = cell.classList.toggle("expanded");
+    button.textContent = expanded ? full : truncate(full, VALUE_PREVIEW_LENGTH);
+    button.title = expanded ? "Click to collapse" : "Click to show the full value";
+    copy.hidden = !expanded;
+  });
 
   cell.appendChild(button);
+  cell.appendChild(copy);
   return cell;
 }
 
+// Only what's unusual about a cookie gets a badge, in words. Most cookies
+// are for one host and have no SameSite set, so those get nothing, rather
+// than the same badges on every row. The editor shows every setting.
 function flagsCell(cookie) {
   const cell = document.createElement("td");
   cell.className = "flags";
+  const host = String(cookie.domain || "").replace(/^\./, "");
 
   if (cookie.secure) {
-    cell.appendChild(badge("Secure", "Sent over HTTPS only"));
+    cell.appendChild(badge("Secure", "Only sent over HTTPS"));
   }
   if (cookie.httpOnly) {
-    cell.appendChild(badge("HttpOnly", "Not readable by page JavaScript"));
+    cell.appendChild(badge("HttpOnly", "Hidden from the page's own JavaScript"));
   }
-  if (cookie.hostOnly) {
-    cell.appendChild(badge("HostOnly", "Exact host only, not subdomains"));
+  if (!cookie.hostOnly) {
+    cell.appendChild(badge("Subdomains", "Also sent to every subdomain of " + host));
   }
   if (cookie.partitionKey) {
-    cell.appendChild(badge("Partitioned", "Partitioned (CHIPS) cookie"));
+    cell.appendChild(
+      badge("Partitioned", "Partitioned (CHIPS): kept separately for each site it's used on")
+    );
+  }
+  if (cookie.sameSite && cookie.sameSite !== "unspecified") {
+    cell.appendChild(
+      badge("SameSite " + formatSameSite(cookie.sameSite), SAME_SITE_MEANING[cookie.sameSite] || "")
+    );
   }
 
   const bytes = cookieBytes(cookie);
@@ -306,12 +366,14 @@ function flagsCell(cookie) {
     cell.appendChild(large);
   }
 
-  cell.appendChild(
-    badge("SS:" + formatSameSite(cookie.sameSite), "SameSite policy")
-  );
-
   return cell;
 }
+
+const SAME_SITE_MEANING = {
+  strict: "Only sent when you're on this site",
+  lax: "Sent on this site, and when you follow a link to it",
+  no_restriction: "Also sent when another site loads something from this one",
+};
 
 function badge(text, title) {
   const span = document.createElement("span");

@@ -7,7 +7,11 @@
    src/lib/theme.js), so the dark colours only need to be written once,
    below. There's no
    prefers-color-scheme fallback, so if apply-theme.js stops working, the
-   popup is always light. */
+   popup is always light.
+
+   Every pair of colours that sits on top of each other was checked for
+   contrast (WCAG 2.2 AA): 4.5:1 for text, 3:1 for the edges of controls.
+   Check again after changing one. */
 
 :root {
   color-scheme: light;
@@ -15,13 +19,20 @@
   --bg: #ffffff;
   --fg: #1a1a1a;
   --muted: #6b6b6b;
-  --line: #e0e0e0;
-  --panel: #f7f7f7;
+  /* Hairlines between things: table rows, panel borders. */
+  --line: #e3e3e3;
+  /* The edge of anything you can click or type into. Darker than --line, so
+     a control can be told apart from the background (3:1 or more on --bg
+     and --panel). */
+  --edge: #8a8a8a;
+  --panel: #f6f6f6;
+  /* A row under the mouse, a button being pressed. */
+  --hover: #ededed;
   --accent: #1a56b8;
   --danger: #b3261e;
   --danger-bg: #fdf0ef;
   --badge: #ececec;
-  --badge-fg: #5c5c5c;
+  --badge-fg: #555555;
   --selection: #cddcf6;
   --scrollbar: #c4c4c4;
 
@@ -42,13 +53,15 @@
   --bg: #1e1e1e;
   --fg: #e8e8e8;
   --muted: #9a9a9a;
-  --line: #3a3a3a;
-  --panel: #272727;
+  --line: #353535;
+  --edge: #767676;
+  --panel: #262626;
+  --hover: #2f2f2f;
   --accent: #7aa7ee;
   --danger: #f2837c;
   --danger-bg: #331f1e;
-  --badge: #3a3a3a;
-  --badge-fg: #b0b0b0;
+  --badge: #383838;
+  --badge-fg: #b8b8b8;
   --selection: #2e4a78;
   --scrollbar: #4a4a4a;
 
@@ -85,7 +98,8 @@ body {
 
 body,
 #table-wrap,
-#scope-domains ul {
+#scope-domains ul,
+.decoded pre {
   scrollbar-color: var(--scrollbar) transparent;
 }
 
@@ -96,6 +110,14 @@ body,
 /* Screens with a single message: permission, blocked page, error. */
 .notice h1 {
   margin-bottom: 8px;
+}
+
+.notice .site {
+  margin-bottom: 10px;
+}
+
+.notice .site h1 {
+  margin: 0;
 }
 
 .notice p {
@@ -109,12 +131,13 @@ h1 {
   font-weight: 600;
 }
 
+/* Small headings over a group: the delete panel, the table's columns. */
 h2 {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: var(--muted);
 }
 
@@ -139,24 +162,72 @@ p {
   white-space: nowrap;
 }
 
+/* A key on the keyboard, drawn like the keycap in the icon: a lighter face
+   with a thicker edge along the bottom. */
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--edge);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 600 11px/16px ui-monospace, "Cascadia Mono", Consolas, monospace;
+  text-align: center;
+}
+
+/* --- icons -------------------------------------------------------------- */
+
+/* Every icon is SVG drawn on a 24 x 24 grid with a 2px line, in the text
+   colour of whatever it sits in. See icons.js and the header in popup.html. */
+svg.icon {
+  display: block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+svg.icon.filled {
+  fill: currentColor;
+}
+
 /* --- buttons -------------------------------------------------------------- */
 
+/* One height for every button in the header and panels, so a row of them
+   lines up. Row buttons in the table are a little smaller, but still at
+   least 24px, the smallest target WCAG 2.2 allows. */
 button {
-  padding: 5px 11px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: var(--panel);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  background: var(--bg);
   color: var(--fg);
   font: inherit;
+  font-weight: 500;
   cursor: pointer;
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--muted);
+  border-color: var(--fg);
+}
+
+button:active:not(:disabled) {
+  background: var(--hover);
 }
 
 button:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: default;
 }
 
@@ -176,34 +247,96 @@ button.primary {
   color: var(--on-accent);
 }
 
+button.primary:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 86%, var(--fg));
+}
+
 button.danger {
   border-color: var(--danger);
   color: var(--danger);
 }
 
 button.danger:hover:not(:disabled) {
+  border-color: var(--danger);
   background: var(--danger-bg);
+}
+
+/* A square button holding just an icon. Its name is in a visually hidden
+   span, so screen readers still read it. */
+.icon-button {
+  width: 28px;
+  padding: 0;
 }
 
 /* --- header --------------------------------------------------------------- */
 
 .bar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
 }
 
 .bar p {
-  margin: 2px 0 0;
+  margin: 1px 0 0;
   font-size: 12px;
+}
+
+/* The keycap Z from the toolbar icon, next to the site name and on the
+   permission screen. */
+.site {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.site h1 {
+  overflow-wrap: anywhere;
+}
+
+.mark {
+  display: block;
+  flex: none;
+  width: 26px;
+  height: 26px;
+}
+
+.bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- status messages ---------------------------------------------------------
+
+   Results ("Deleted 6 cookies. Undo") always appear in one place, under the
+   header. The size warning has its own line below that, because it stays
+   for as long as the site has that many cookies. */
+
+.result {
+  margin: 9px 0 0;
+}
+
+#main-message,
+#size-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 10px;
+}
+
+.result.error {
+  color: var(--danger);
 }
 
 /* --- delete panel --------------------------------------------------------- */
 
 #delete-panel {
-  padding: 10px 12px;
+  padding: 10px 12px 12px;
   margin-bottom: 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -213,13 +346,13 @@ button.danger:hover:not(:disabled) {
 .scopes {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 1px;
 }
 
 .scope {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 7px;
   padding: 2px 0;
   cursor: pointer;
 }
@@ -236,14 +369,15 @@ button.danger:hover:not(:disabled) {
   font-family: inherit;
 }
 
+/* The panel's most important line: exactly what the button will do. */
 .scope-summary {
-  margin: 9px 0 0;
+  margin: 10px 0 0;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 #scope-domains {
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: 12px;
 }
 
@@ -262,6 +396,10 @@ button.danger:hover:not(:disabled) {
 }
 
 .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   margin-top: 10px;
 }
 
@@ -275,15 +413,54 @@ button.danger:hover:not(:disabled) {
   font-weight: 600;
 }
 
-.result {
-  margin: 9px 0 0;
+/* --- search ------------------------------------------------------------ */
+
+.search {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
-/* The messages above the search box ("Saved changes to…") need space
-   under them, or they touch the search field. */
-#main-message,
-#size-warning {
-  margin: 0 0 10px;
+/* Holds the search box and the "/" key that jumps to it. */
+.search-field {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.search input[type="search"] {
+  flex: 1;
+  min-height: 28px;
+  padding: 4px 34px 4px 8px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  font: inherit;
+  caret-color: var(--accent);
+}
+
+.search input[type="search"]::placeholder {
+  color: var(--muted);
+}
+
+.search input[type="search"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* Shown only while the box is empty and not in use, as a hint. */
+.search-key {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search input:focus ~ .search-key,
+.search input:not(:placeholder-shown) ~ .search-key {
+  display: none;
 }
 
 /* --- cookie table --------------------------------------------------------- */
@@ -309,11 +486,11 @@ table {
 }
 
 .col-pick {
-  width: 28px;
+  width: 30px;
 }
 
 .col-name {
-  width: 104px;
+  width: 108px;
 }
 
 .col-domain {
@@ -330,30 +507,32 @@ table {
 
 .col-flags {
   /* Two badges fit on a line. */
-  width: 130px;
+  width: 132px;
 }
 
 .col-actions {
-  /* Wide enough for Keep, Edit and Delete, including "Kept" and "Sure?". */
-  width: 146px;
+  /* Three 26px buttons, or "Sure?" and its cancel button. */
+  width: 102px;
 }
 
 th {
-  padding: 6px;
-  border-bottom: 1px solid var(--line);
+  padding: 7px 6px 6px;
+  border-bottom: 1px solid var(--edge);
   background: var(--panel);
   text-align: left;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: var(--muted);
 }
 
 /* The sortable headings look like the others, with an arrow on the one in
    use. */
 th button.sort {
+  min-height: 0;
   padding: 0;
+  gap: 4px;
   border: none;
   background: none;
   color: inherit;
@@ -366,16 +545,27 @@ th button.sort:hover {
   color: var(--fg);
 }
 
-th[aria-sort="ascending"] button.sort::after {
-  content: " \2191";
+th[aria-sort] button.sort {
+  color: var(--fg);
+}
+
+/* The arrow is a small SVG used as a mask, so it takes the heading's
+   colour. It's part of the stylesheet, not fetched from anywhere. */
+th[aria-sort] button.sort::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 9V1.5M1.5 5 5 1.5 8.5 5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 9V1.5M1.5 5 5 1.5 8.5 5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 th[aria-sort="descending"] button.sort::after {
-  content: " \2193";
+  transform: rotate(180deg);
 }
 
 td {
-  padding: 5px 6px;
+  padding: 6px;
   border-bottom: 1px solid var(--line);
   /* Line up with the top of the cell. With baseline alignment, an expanded
      value pushed the rest of the row down to its last line. */
@@ -386,9 +576,18 @@ tr:last-child td {
   border-bottom: none;
 }
 
+/* Clicking a row opens it in the editor, so it shows it can be clicked. */
+#cookie-rows tr {
+  cursor: pointer;
+}
+
+#cookie-rows tr:hover td {
+  background: var(--hover);
+}
+
 td.name {
-  /* The widest fixed column, since the name is how people find a cookie.
-     break-all handles the rare very long name. */
+  /* The name is how people find a cookie, so it's bold. break-all handles
+     the rare very long name. */
   font-weight: 600;
   word-break: break-all;
 }
@@ -400,15 +599,35 @@ td.path {
   overflow-wrap: anywhere;
 }
 
-/* The tick boxes. The padding is trimmed so the box sits in line with the
-   first line of the row. */
+/* The tick boxes. Each sits in a label that fills its cell, so the target
+   is the whole cell, not just the box. */
 th.pick,
 td.pick {
-  padding-right: 0;
+  padding: 0;
+}
+
+.pick-target {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 30px;
+  padding-top: 7px;
+  cursor: pointer;
+}
+
+th .pick-target {
+  padding-top: 6px;
+}
+
+/* A little bigger than Chrome's default, and easier to hit. */
+input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
 }
 
 .pick input {
-  margin: 1px 0 0;
+  display: block;
+  margin: 0;
 }
 
 /* Expires within a day. */
@@ -421,17 +640,26 @@ td.session {
   font-style: italic;
 }
 
+/* A value short enough to show whole is plain text. A longer one is a
+   button that shows the rest. */
+.value-text,
 .value-toggle {
+  display: block;
   max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.value-toggle {
+  min-height: 0;
   padding: 0;
   border: none;
   background: none;
   color: inherit;
   font: inherit;
   text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: pointer;
 }
 
 .value-toggle:hover:not(:disabled) {
@@ -445,12 +673,19 @@ td.value.expanded .value-toggle {
 
 .badge {
   display: inline-block;
-  padding: 1px 5px;
-  margin: 0 3px 2px 0;
+  padding: 0 5px;
+  margin: 0 3px 3px 0;
   border-radius: 3px;
   background: var(--badge);
-  font-size: 10px;
+  font-size: 11px;
+  line-height: 18px;
   color: var(--badge-fg);
+  white-space: nowrap;
+}
+
+.badge.large {
+  color: var(--danger);
+  font-weight: 600;
 }
 
 .empty {
@@ -461,9 +696,79 @@ td.value.expanded .value-toggle {
 
 /* --- row actions ------------------------------------------------------- */
 
-.bar-actions {
-  display: flex;
-  gap: 6px;
+td.row-actions {
+  /* Less padding than other cells, because the buttons have their own.
+     This lines them up with the first line of the row. */
+  padding-top: 3px;
+  padding-bottom: 3px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.row-button {
+  min-height: 26px;
+  min-width: 26px;
+  padding: 0 7px;
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+td.row-actions .row-button:first-child {
+  margin-left: 0;
+}
+
+.row-button.icon-only {
+  width: 26px;
+  padding: 0;
+}
+
+/* Stops the focus ring overlapping the next button. */
+.row-button:focus-visible {
+  outline-offset: 1px;
+}
+
+.row-button.danger {
+  color: var(--danger);
+  border-color: var(--edge);
+}
+
+/* A Delete button waiting for its second click ("Sure?"). It's filled in
+   so it clearly looks different.
+
+   The :hover selector is needed. Without it, the danger:hover rule above
+   wins, and the button shows white text on a pale background, which looks
+   blank. The button is always hovered at this point, since it was just
+   clicked.
+
+   "Yes, delete" (.solid) in the delete panel is the same moment, so it
+   looks the same. */
+.row-button.danger.armed,
+button.row-button.danger.armed:hover:not(:disabled),
+button.danger.solid,
+button.danger.solid:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--on-danger);
+}
+
+.row-button.danger.armed {
+  width: auto;
+  padding: 0 9px;
+  font-weight: 600;
+}
+
+/* Screen readers need a name for the actions column, and for every icon
+   button. Sighted users see the icons. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* --- theme control ------------------------------------------------------
@@ -474,9 +779,10 @@ td.value.expanded .value-toggle {
 .theme {
   display: flex;
   align-items: stretch;
+  height: 28px;
   /* Keeps the ends round whatever the height. */
   border-radius: 999px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--edge);
   background: var(--bg);
   overflow: hidden;
 }
@@ -502,7 +808,7 @@ td.value.expanded .value-toggle {
 }
 
 .theme label:hover {
-  background: var(--panel);
+  background: var(--hover);
   color: var(--fg);
 }
 
@@ -521,68 +827,10 @@ td.value.expanded .value-toggle {
   outline-offset: -3px;
 }
 
-td.row-actions {
-  /* Less top padding than other cells, because the buttons have their own.
-     This lines their text up with the rest of the row. */
-  padding-top: 2px;
-  padding-bottom: 2px;
-  white-space: nowrap;
-  text-align: right;
-}
-
-.row-button {
-  padding: 2px 6px;
-  margin-left: 3px;
-  font-size: 12px;
-}
-
-/* Stops the focus ring overlapping the next button. */
-.row-button:focus-visible {
-  outline-offset: 1px;
-}
-
-.row-button.danger {
-  color: var(--danger);
-  border-color: var(--line);
-}
-
-/* A Delete button waiting for its second click ("Sure?"). It's filled in
-   so it clearly looks different.
-
-   The :hover selector is needed. Without it, the danger:hover rule above
-   wins, and the button shows white text on a pale background, which looks
-   blank. The button is always hovered at this point, since it was just
-   clicked.
-
-   "Yes, delete" (.solid) in the delete panel is the same moment, so it
-   looks the same. */
-.row-button.danger.armed,
-button.row-button.danger.armed:hover:not(:disabled),
-button.danger.solid,
-button.danger.solid:hover:not(:disabled) {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: var(--on-danger);
-}
-
-/* Screen readers need a name for the actions column. Sighted users don't
-   need a heading over the buttons. */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* --- the create / edit form -------------------------------------------- */
 
 #edit-form {
-  margin-top: 12px;
+  margin-top: 4px;
 }
 
 .field {
@@ -614,10 +862,11 @@ button.danger.solid:hover:not(:disabled) {
 .field textarea,
 .field select {
   width: 100%;
-  padding: 5px 7px;
+  min-height: 28px;
+  padding: 4px 7px;
   background: var(--bg);
   color: var(--fg);
-  border: 1px solid var(--line);
+  border: 1px solid var(--edge);
   border-radius: 4px;
   font: inherit;
   caret-color: var(--accent);
@@ -669,28 +918,22 @@ button.danger.solid:hover:not(:disabled) {
   margin: 2px 0;
 }
 
-/* --- search ------------------------------------------------------------ */
-
-.search {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
+/* The value, decoded: URL-encoding undone and JSON laid out on lines. Read
+   only. Copy it from here; the value itself is never changed by it. */
+.decoded {
+  margin-top: 8px;
 }
 
-.search input[type="search"] {
-  flex: 1;
-  padding: 5px 8px;
-  background: var(--bg);
-  color: var(--fg);
+.decoded pre {
+  max-height: 132px;
+  margin: 0;
+  padding: 6px 8px;
+  overflow: auto;
   border: 1px solid var(--line);
   border-radius: 4px;
-  font: inherit;
-  caret-color: var(--accent);
-}
-
-.search input[type="search"]:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
+  background: var(--panel);
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 /* --- kept cookies ------------------------------------------------------ */
@@ -709,7 +952,6 @@ tr.kept-row td.pick {
 .row-button.keep.kept {
   border-color: var(--accent);
   color: var(--accent);
-  font-weight: 600;
 }
 
 /* The hover case is written out for the same reason as the "Sure?" button
@@ -723,11 +965,10 @@ button.row-button.keep.kept:hover:not(:disabled) {
 
 /* The Copy button under an expanded value. */
 td.value .row-button.copy {
-  display: block;
   margin: 4px 0 0;
 }
 
-/* The editor's Copy button sits on the same line as the Value label. */
+/* The editor's Copy buttons sit on the same line as their label. */
 .field-label-row {
   display: flex;
   align-items: flex-end;
@@ -735,29 +976,22 @@ td.value .row-button.copy {
   margin-bottom: 4px;
 }
 
-.field .field-label-row label {
+.field .field-label-row label,
+.field .field-label-row .label {
   margin-bottom: 0;
-}
-
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 7px;
-}
-
-.icon-button svg {
-  display: block;
-  width: 15px;
-  height: 15px;
 }
 
 /* A button that reads as a link inside a sentence. */
 .link-button {
+  display: inline;
+  min-height: 0;
   padding: 0;
   border: none;
   background: none;
   color: var(--accent);
+  font-weight: inherit;
   text-decoration: underline;
+  text-underline-offset: 2px;
   cursor: pointer;
 }
 
@@ -776,12 +1010,12 @@ body.in-tab {
 .formats {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 1px;
   margin: 10px 0;
 }
 
 .formats .scope-label {
-  min-width: 94px;
+  min-width: 100px;
   font-weight: 600;
 }
 
@@ -791,7 +1025,7 @@ textarea.output {
   padding: 6px 8px;
   background: var(--bg);
   color: var(--fg);
-  border: 1px solid var(--line);
+  border: 1px solid var(--edge);
   border-radius: 4px;
   resize: vertical;
   caret-color: var(--accent);
@@ -800,11 +1034,6 @@ textarea.output {
 textarea.output:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
-}
-
-.badge.large {
-  color: var(--danger);
-  font-weight: 600;
 }
 
 .warning {
@@ -845,5 +1074,40 @@ textarea.output:focus {
   padding: 0 0 0 18px;
   overflow-y: auto;
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--muted);
+}
+
+/* --- help ------------------------------------------------------------------- */
+
+.help dl {
+  margin: 0;
+}
+
+.help dt {
+  margin: 12px 0 2px;
+  font-weight: 600;
+}
+
+.help dt:first-child {
+  margin-top: 0;
+}
+
+.help dd {
+  max-width: 72ch;
+  margin: 0;
+}
+
+.help .keys {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  align-items: center;
+  margin: 4px 0 0;
+}
+
+.help-contact {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
   color: var(--muted);
 }
