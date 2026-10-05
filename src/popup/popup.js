@@ -65,6 +65,24 @@ import {
 // The site in the current tab, as { origin, hostname }.
 let page = null;
 
+// Long values opened in the table, by cookie key, so they stay open when the
+// table is drawn again.
+let expanded = new Set();
+
+// For marking rows the site has just added or changed: each cookie's key and
+// what it looked like at the last load, then what's different this time.
+// See refreshTable().
+let seenCookies = null;
+let changedKeys = new Set();
+let lastChange = { added: 0, changed: 0, removed: 0 };
+
+// The row that's in the tab order. See setTabRow().
+let tabRowKey = null;
+
+// True while the editor is saving, so its own write isn't taken for the
+// site changing the cookie.
+let saving = false;
+
 // The cookies the chosen scope will delete. The count on screen comes from
 // this same list, so the number shown always matches what gets deleted.
 let scopeCookies = [];
@@ -186,6 +204,8 @@ async function loadCurrentPage() {
   }
 
   page = { origin: url.origin, hostname: url.hostname };
+  seenCookies = null;
+  expanded = new Set();
 
   el("main-message").hidden = true;
   el("site-name").textContent = url.hostname;
@@ -211,6 +231,7 @@ async function refresh() {
 async function refreshTable() {
   try {
     pageCookies = await getCookiesForPage(page);
+    noteChanges(pageCookies);
 
     const { keys, error } = await loadProtected();
     protectedKeys = keys;
@@ -231,15 +252,54 @@ async function refreshTable() {
   }
 }
 
+// What a cookie looked like, to tell whether it changed between loads.
+function fingerprintOf(cookie) {
+  return [cookie.value, cookie.expirationDate, cookie.secure, cookie.httpOnly, cookie.sameSite].join("\n");
+}
+
+// Compares this load with the last one. Nothing is marked on the first load
+// of a page, since everything would be new.
+function noteChanges(cookies) {
+  const previous = seenCookies;
+  seenCookies = new Map(cookies.map((cookie) => [cookieKey(cookie), fingerprintOf(cookie)]));
+  changedKeys = new Set();
+  lastChange = { added: 0, changed: 0, removed: 0 };
+  if (previous === null) {
+    return;
+  }
+
+  for (const [key, fingerprint] of seenCookies) {
+    if (!previous.has(key)) {
+      changedKeys.add(key);
+      lastChange.added += 1;
+    } else if (previous.get(key) !== fingerprint) {
+      changedKeys.add(key);
+      lastChange.changed += 1;
+    }
+  }
+  for (const key of previous.keys()) {
+    if (!seenCookies.has(key)) {
+      lastChange.removed += 1;
+    }
+  }
+}
+
 // Applies the search and draws the table. It filters the cookies already
 // loaded, so typing doesn't ask Chrome again on every key press.
 function drawTable() {
   const query = el("search-input").value;
   shownCookies = filterCookies(pageCookies, query);
 
-  // Forget ticks for cookies that have gone, after a delete for example.
+  // Forget ticks and opened values for cookies that have gone, after a
+  // delete for example.
   const onPage = new Set(pageCookies.map(cookieKey));
   picked = new Set([...picked].filter((key) => onPage.has(key)));
+  expanded = new Set([...expanded].filter((key) => onPage.has(key)));
+
+  const focus = focusInTable();
+  const changed = changedKeys;
+  // Only marked once. Typing in the search box redraws without them.
+  changedKeys = new Set();
 
   renderCookieTable(el("cookie-rows"), shownCookies, {
     onEdit: openEditor,
@@ -248,8 +308,28 @@ function drawTable() {
     isProtected: (cookie) => isProtected(protectedKeys, cookie),
     onPick: pickCookie,
     isPicked: (cookie) => picked.has(cookieKey(cookie)),
+    isChanged: (cookie) => changed.has(cookieKey(cookie)),
+    isExpanded: (cookie) => expanded.has(cookieKey(cookie)),
+    onExpand: (cookie, open) => {
+      if (open) {
+        expanded.add(cookieKey(cookie));
+      } else {
+        expanded.delete(cookieKey(cookie));
+      }
+    },
   }, sort);
+  setTabRow(tabRowKey);
+  restoreFocus(focus);
   showPicked();
+
+  if (changed.size > 0) {
+    const rows = el("cookie-rows");
+    setTimeout(() => {
+      for (const row of rows.querySelectorAll("tr.changed")) {
+        row.classList.remove("changed");
+      }
+    }, 3000);
+  }
 
   const filtering = query.trim() !== "";
   el("search-clear").hidden = !filtering;
@@ -312,6 +392,209 @@ function sortBy(key) {
   }
   drawTable();
 }
+
+// --- keyboard --------------------------------------------------------------
+
+// Only one row is in the tab order, so Tab doesn't stop on every row. The
+// arrow keys move between rows. It's the last row that had focus, or the
+// first.
+function setTabRow(key) {
+  const rows = [...el("cookie-rows").rows];
+  const chosen = rows.find((row) => row.dataset.key === key) || rows[0];
+  tabRowKey = chosen ? chosen.dataset.key : null;
+  for (const row of rows) {
+    row.tabIndex = row === chosen ? 0 : -1;
+  }
+}
+
+// Where focus is in the table, so a redraw can put it back. See
+// restoreFocus().
+function focusInTable() {
+  const active = document.activeElement;
+  const row = active && active.closest ? active.closest("#cookie-rows tr") : null;
+  if (!row) {
+    return null;
+  }
+  const control = ["button.keep", "button.edit", "td.pick input"].find((selector) => active.matches(selector));
+  return {
+    key: row.dataset.key,
+    index: [...el("cookie-rows").rows].indexOf(row),
+    control: control || null,
+  };
+}
+
+// Puts focus back on the same cookie, and the same button on it, if it's
+// still there. If it's gone, such as after a delete, focus goes to the row
+// that took its place, so the next key press carries on down the list.
+function restoreFocus(where) {
+  if (!where) {
+    return;
+  }
+  const rows = [...el("cookie-rows").rows];
+  if (rows.length === 0) {
+    el("search-input").focus();
+    return;
+  }
+  const same = rows.find((row) => row.dataset.key === where.key);
+  const row = same || rows[Math.min(where.index, rows.length - 1)];
+  const control = same && where.control ? row.querySelector(where.control) : null;
+  (control || row).focus();
+}
+
+function cookieForRow(row) {
+  return shownCookies.find((cookie) => cookieKey(cookie) === row.dataset.key) || null;
+}
+
+// The keys on a row with focus. Keys pressed on the row's own buttons do
+// what those buttons do, apart from Esc, which cancels "Sure?".
+function onTableKey(event) {
+  const row = event.target.closest("tr");
+  if (!row || event.ctrlKey || event.metaKey || event.altKey) {
+    return;
+  }
+
+  if (event.key === "Escape") {
+    const cancel = row.querySelector("button.cancel:not([hidden])");
+    if (cancel) {
+      event.preventDefault();
+      event.stopPropagation();
+      cancel.click();
+      row.focus();
+    }
+    return;
+  }
+  if (event.target !== row) {
+    return;
+  }
+
+  const rows = [...el("cookie-rows").rows];
+  const index = rows.indexOf(row);
+  const moveTo = (to) => rows[Math.max(0, Math.min(rows.length - 1, to))].focus();
+
+  if (event.key === "ArrowDown") {
+    moveTo(index + 1);
+  } else if (event.key === "ArrowUp") {
+    if (index === 0) {
+      el("search-input").focus();
+    } else {
+      moveTo(index - 1);
+    }
+  } else if (event.key === "Home") {
+    moveTo(0);
+  } else if (event.key === "End") {
+    moveTo(rows.length - 1);
+  } else if (event.key === "Enter") {
+    const cookie = cookieForRow(row);
+    if (cookie) {
+      openEditor(cookie);
+    }
+  } else if (event.key === " ") {
+    row.querySelector("td.pick input").click();
+  } else if (event.key === "k" || event.key === "K") {
+    row.querySelector("button.row-button.keep").click();
+  } else if (event.key === "Delete" || event.key === "Backspace") {
+    const remove = row.querySelector("button.row-button.danger");
+    if (remove.disabled) {
+      const cookie = cookieForRow(row);
+      showMainMessage(
+        (cookie ? cookie.name : "This cookie") +
+          " is being kept, so it can't be deleted. Press K to stop keeping it.",
+        true
+      );
+    } else {
+      remove.click();
+      remove.focus();
+    }
+  } else {
+    return;
+  }
+  event.preventDefault();
+}
+
+// --- following the site's changes ------------------------------------------
+
+// The table follows changes as they happen: the site setting a cookie on
+// login, say. Changes come in bursts, so they're gathered up and the table
+// is drawn again at most once a second.
+let liveTimer = null;
+let livePending = false;
+let lastLiveDraw = 0;
+
+// The same cookies getCookiesForPage() reads: this host, its parent
+// domains and its subdomains.
+function concernsPage(cookie) {
+  if (!page) {
+    return false;
+  }
+  const domain = String(cookie.domain || "").replace(/^\./, "");
+  const host = page.hostname;
+  return domain === host || host.endsWith("." + domain) || domain.endsWith("." + host);
+}
+
+// Never pulls the rug: the table isn't redrawn while another screen is open,
+// while "Delete these cookies?" is showing, or while a row says "Sure?".
+// It's redrawn as soon as none of those is true.
+function liveRedrawWaits() {
+  return (
+    currentState() !== "main" ||
+    !el("confirm-row").hidden ||
+    el("cookie-rows").querySelector(".armed") !== null
+  );
+}
+
+function scheduleLiveRedraw() {
+  if (liveTimer !== null) {
+    return;
+  }
+  const wait = Math.max(300, 1000 - (Date.now() - lastLiveDraw));
+  liveTimer = setTimeout(runLiveRedraw, wait);
+}
+
+async function runLiveRedraw() {
+  liveTimer = null;
+  if (!livePending) {
+    return;
+  }
+  if (liveRedrawWaits()) {
+    liveTimer = setTimeout(runLiveRedraw, 1000);
+    return;
+  }
+  livePending = false;
+  lastLiveDraw = Date.now();
+  await refresh();
+  announceChanges();
+}
+
+// "1 cookie added, 2 changed." for screen readers.
+function announceChanges() {
+  const parts = [
+    [lastChange.added, "added"],
+    [lastChange.changed, "changed"],
+    [lastChange.removed, "removed"],
+  ].filter(([count]) => count > 0);
+  if (parts.length === 0) {
+    return;
+  }
+  el("live-note").textContent =
+    parts
+      .map(([count, what], i) => (i === 0 ? pluralise(count, "cookie", "cookies") : formatCount(count)) + " " + what)
+      .join(", ") + ".";
+}
+
+function sameCookie(a, b) {
+  return cookieKey(a) === cookieKey(b);
+}
+
+chrome.cookies.onChanged.addListener(({ cookie }) => {
+  // The editor says so if the cookie open in it changes underneath it.
+  if (currentState() === "edit" && editing && !saving && sameCookie(cookie, editing)) {
+    el("edit-changed").hidden = false;
+  }
+  if (concernsPage(cookie)) {
+    livePending = true;
+    scheduleLiveRedraw();
+  }
+});
 
 // --- ticking cookies -------------------------------------------------------
 
@@ -535,6 +818,7 @@ function openEditor(cookie) {
   el("edit-title").textContent = cookie ? "Edit cookie" : "New cookie";
   el("edit-errors").hidden = true;
   el("edit-errors").textContent = "";
+  el("edit-changed").hidden = true;
 
   const isNew = !cookie;
   const secure = isNew ? page.origin.startsWith("https:") : Boolean(cookie.secure);
@@ -590,9 +874,15 @@ function showDecoded() {
   el("value-decoded-text").textContent = decoded === null ? "" : decoded;
 }
 
+// Focus goes back to the cookie's row, for anyone using the keyboard.
 function closeEditor() {
+  const key = editing ? cookieKey(editing) : null;
   editing = null;
   showState("main");
+  const row = key ? [...el("cookie-rows").rows].find((r) => r.dataset.key === key) : null;
+  if (row) {
+    row.focus();
+  }
 }
 
 // No expiry date while "Session cookie" is ticked.
@@ -671,7 +961,9 @@ async function saveEditor() {
   save.disabled = true;
 
   try {
+    saving = true;
     const { ok, cookie, error } = await writeCookie(editing, values);
+    saving = false;
 
     if (!ok) {
       showFormErrors([error]);
@@ -703,6 +995,7 @@ async function saveEditor() {
     // anyway so the form doesn't look stuck.
     showFormErrors([error && error.message ? error.message : String(error)]);
   } finally {
+    saving = false;
     save.disabled = false;
   }
 }
@@ -1330,6 +1623,21 @@ el("search-clear").addEventListener("click", () => {
 });
 
 el("pick-all").addEventListener("change", () => pickAllShown(el("pick-all").checked));
+el("cookie-rows").addEventListener("keydown", onTableKey);
+el("cookie-rows").addEventListener("focusin", (event) => {
+  const row = event.target.closest("tr");
+  if (row && row.dataset.key !== tabRowKey) {
+    setTabRow(row.dataset.key);
+  }
+});
+// Down from the search box goes into the table.
+el("search-input").addEventListener("keydown", (event) => {
+  const first = el("cookie-rows").rows[0];
+  if (event.key === "ArrowDown" && first && !el("cookie-table").hidden) {
+    event.preventDefault();
+    first.focus();
+  }
+});
 for (const button of document.querySelectorAll("th button.sort")) {
   button.addEventListener("click", () => sortBy(button.dataset.sort));
 }

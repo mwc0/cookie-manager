@@ -35,6 +35,8 @@
   --badge-fg: #555555;
   --selection: #cddcf6;
   --scrollbar: #c4c4c4;
+  /* A row just added or changed. Muted text still reads at 4.5:1 on it. */
+  --changed: #e6eefb;
 
   /* Text colour on filled accent and danger buttons. White text on the dark
      theme's pale buttons was too hard to read, so dark text is used there. */
@@ -64,6 +66,7 @@
   --badge-fg: #b8b8b8;
   --selection: #2e4a78;
   --scrollbar: #4a4a4a;
+  --changed: #24324a;
 
   --on-accent: #0f1f3d;
   --on-danger: #2b0d0b;
@@ -593,6 +596,32 @@ tr:last-child td {
   background: var(--hover);
 }
 
+/* Arrow keys move between rows, so a row can have focus. */
+#cookie-rows tr:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* A row just added or changed, by the site or by cookieZ, fades from a
+   blue tint back to normal. popup.js removes the class afterwards. Without
+   motion, the tint stays still for those few seconds instead. */
+#cookie-rows tr.changed td {
+  animation: changed-row 3s ease-out;
+}
+
+@keyframes changed-row {
+  from {
+    background-color: var(--changed);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #cookie-rows tr.changed td {
+    animation: none;
+    background: var(--changed);
+  }
+}
+
 td.name {
   /* The name is how people find a cookie, so it's bold. break-all handles
      the rare very long name. */
@@ -910,6 +939,15 @@ button.danger.solid:hover:not(:disabled) {
 .field label.check input {
   flex: none;
   margin: 0;
+}
+
+/* "The site changed this cookie while you were editing." */
+.notice {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
 }
 
 /* "Put them on localhost instead" in the import preview. The whole line is
