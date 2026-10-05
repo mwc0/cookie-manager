@@ -108,7 +108,7 @@ def main():
         confirm = page.locator("#confirm-text").text_content().strip()
         page.locator("#confirm-yes").click()
         page.wait_for_timeout(1200)
-        result = page.locator("#delete-result").text_content().strip()
+        result = page.locator("#main-message").text_content().strip()
 
         left = sorted(c["name"] for c in cookies_for(page, HOST))
         r.check("the claim, the confirm and the result agree on 3",

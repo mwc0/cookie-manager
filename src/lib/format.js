@@ -130,6 +130,38 @@ export function fromLocalDateTimeValue(text) {
   return Math.floor(date.getTime() / 1000);
 }
 
+// A cookie value made easier to read, for the editor's Decoded panel:
+// URL-encoding ("%7B%22a%22") undone, and JSON laid out on separate lines.
+// Returns null when decoding wouldn't change anything.
+//
+// JWTs ("eyJ...") are left alone. Decoding those is a paid-tier feature
+// (see docs/SPEC.md), and they're neither URL-encoded nor JSON as they
+// stand, so they come back as null here.
+export function decodeValue(value) {
+  const original = String(value == null ? "" : value);
+  let text = original;
+
+  if (/%[0-9a-f]{2}/i.test(text)) {
+    try {
+      text = decodeURIComponent(text);
+    } catch (error) {
+      // Not valid URL-encoding after all, such as a lone "%". Leave it.
+      text = original;
+    }
+  }
+
+  const trimmed = text.trim();
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      text = JSON.stringify(JSON.parse(trimmed), null, 2);
+    } catch (error) {
+      // Looks like JSON but isn't. Show it as it is.
+    }
+  }
+
+  return text === original ? null : text;
+}
+
 export function truncate(text, max) {
   const value = String(text == null ? "" : text);
   if (value.length <= max) {

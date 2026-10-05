@@ -111,7 +111,7 @@ def main():
         page.wait_for_timeout(300)
         page.locator("#confirm-yes").click()
         page.wait_for_timeout(1200)
-        result = page.locator("#delete-result")
+        result = page.locator("#main-message")
         r.check("the delete removes everything but the kept cookie",
                 names(snapshot(page)) == ["kept_one"], str(names(snapshot(page))))
         r.check("the result offers Undo",

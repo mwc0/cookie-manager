@@ -78,7 +78,7 @@ def main():
             {"url": SITE, "topLevelSite": TOP_LEVEL},
         )
         r.check("deleting at 'this page' scope really removes it", left == 0,
-                f"{left} remaining, result: {page.locator('#delete-result').text_content().strip()!r}")
+                f"{left} remaining, result: {page.locator('#main-message').text_content().strip()!r}")
         r.check("no console errors", not errors, str(errors[:3]))
 
         context.close()
