@@ -150,16 +150,18 @@
         <ul class="features">
           <li><strong>Lists every cookie</strong>For the site you're on, with domain, path, expiry and flags. Partitioned cookies included.</li>
           <li><strong>Deletes at the scope you pick</strong>This page, this domain and its subdomains, every site, or just the cookies you tick. The count and the list of sites are shown first.</li>
-          <li><strong>Undoes a delete</strong>Deleted the wrong thing? Undo puts the cookies back, for 10 minutes afterwards.</li>
+          <li><strong>Undoes a mistake</strong>Deleted, imported or saved the wrong thing? Undo puts the cookies back as they were, for 10 minutes afterwards.</li>
           <li><strong>Creates and edits cookies</strong>Click any cookie to change its name, value, domain, path, expiry, Secure, HttpOnly or SameSite. URL-encoded and JSON values are shown decoded too.</li>
-          <li><strong>Exports and imports</strong>JSON, cookies.txt, a Playwright file, a Cookie header or a curl command. Imports from other cookie editors too, with a preview first.</li>
+          <li><strong>Exports and imports</strong>JSON, cookies.txt, a Playwright file, a Cookie header or a curl command. Imports all of those, plus Set-Cookie lines and other cookie editors' JSON, with a preview first.</li>
+          <li><strong>Copies cookies between sites</strong>Import cookies from one site onto another, such as from a staging site to localhost.</li>
+          <li><strong>Keeps up with the site</strong>When a site sets or changes a cookie, the table updates by itself and marks what changed.</li>
           <li><strong>Shows how big they are</strong>Each site's total, with a warning when there are enough cookies to stop you logging in.</li>
           <li><strong>Searches</strong>By name, value, domain or path. While searching, you can delete just the cookies you can see.</li>
           <li><strong>Keeps the ones you need</strong>Mark a cookie as Kept and cookieZ won't delete it, even when you clear every site.</li>
           <li><strong>Tells you when Chrome changes things</strong>Chrome caps cookie expiry at about 400 days. If you ask for longer, cookieZ says so.</li>
           <li><strong>Works in incognito</strong>Incognito cookies stay separate from your normal ones.</li>
           <li><strong>Light or dark</strong>It starts in your system's theme and remembers if you pick the other one.</li>
-          <li><strong>Works from the keyboard</strong>Alt+Shift+K opens it, / jumps to the search and Esc goes back. Help is built in, and works offline.</li>
+          <li><strong>Works from the keyboard</strong>Alt+Shift+K opens it, / jumps to the search, the arrow keys move through cookies and Esc goes back. Help is built in, and works offline.</li>
         </ul>
       </div>
     </section>
@@ -184,7 +186,7 @@
         <ul class="facts">
           <li>At install, it only asks for access to cookies and storage.</li>
           <li>Access to websites is asked for separately, the first time you open it. You can say no.</li>
-          <li>It saves two things on your computer: the cookies you've marked as Kept, and your theme. For Undo, it holds your last delete in memory for 10 minutes, never on disk.</li>
+          <li>It saves two things on your computer: the cookies you've marked as Kept, and your theme. For Undo, it holds your last change in memory for 10 minutes, never on disk.</li>
         </ul>
         <p class="after-list"><a href="privacy/">Read the full privacy policy</a></p>
       </div>

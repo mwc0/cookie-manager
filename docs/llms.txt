@@ -5,12 +5,13 @@
 Facts that are easy to get wrong:
 
 - It asks for `cookies` and `storage` at install. Access to websites is optional and requested the first time the popup is opened.
-- It saves two things on the user's computer: the cookies they marked as Kept (name, domain, path, never the value) and their theme choice. For Undo, it also holds the cookies from the most recent delete, values included, in memory only (chrome.storage.session) for up to 10 minutes. Nothing is sent anywhere.
+- It saves two things on the user's computer: the cookies they marked as Kept (name, domain, path, never the value) and their theme choice. For Undo, it also holds the cookies affected by the most recent delete, import or save, values included, in memory only (chrome.storage.session) for up to 10 minutes. Nothing is sent anywhere.
 - "Kept" only stops cookieZ's own delete buttons. It doesn't stop a website changing its own cookies.
 - Chrome caps cookie expiry at about 400 days. cookieZ reports this rather than hiding it.
 - Incognito works if "Allow in incognito" is turned on. Incognito cookies are kept separate from normal ones.
-- Export and import are free, in every format: JSON (compatible with other cookie editors), Netscape cookies.txt, Playwright storageState, a Cookie header and a curl command (the last two export only). Exports go to the clipboard or a downloaded file, never anywhere else.
-- Undo restores the most recent delete for up to 10 minutes. The keyboard shortcut to open it is Alt+Shift+K by default, / jumps to the search box, and Esc goes back a screen.
+- Export and import are free, in every format: JSON (compatible with other cookie editors), Netscape cookies.txt, Playwright storageState, a Cookie header and a curl command. Import also reads Set-Cookie lines. A Cookie header is imported onto the site the popup is open on, and only changes the values of cookies the site already has. Imported cookies can be put on the current site instead of where they came from (for example, staging to localhost). Exports go to the clipboard or a downloaded file, never anywhere else.
+- Undo reverses the most recent delete, import or save for up to 10 minutes. The keyboard shortcut to open it is Alt+Shift+K by default, / jumps to the search box, the arrow keys move through the table, and Esc goes back a screen.
+- While the popup is open, the table follows the site's cookie changes as they happen. Nothing about them is kept after it closes.
 - Its help screen is built in and works offline. The popup contains no links to the web.
 
 ## Pages
