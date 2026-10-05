@@ -912,6 +912,25 @@ button.danger.solid:hover:not(:disabled) {
   margin: 0;
 }
 
+/* "Put them on localhost instead" in the import preview. The whole line is
+   the target, not just the box. */
+.check-row {
+  margin: 0 0 10px;
+}
+
+.check-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  cursor: pointer;
+}
+
+.check-row input {
+  flex: none;
+  margin: 0;
+}
+
 .errors {
   margin: 0 0 12px 0;
   padding: 8px 12px 8px 28px;

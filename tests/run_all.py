@@ -22,6 +22,7 @@ FILES = [
     "test_protect.py",
     "test_theme.py",
     "test_transfer.py",
+    "test_import_headers.py",
     "test_undo.py",
     "test_size.py",
     "test_pick.py",

@@ -447,7 +447,9 @@
 
       <p>
         Paste cookies exported as JSON (from cookieZ or another cookie
-        editor), or the contents of a cookies.txt file.
+        editor), a cookies.txt file, Set-Cookie lines, or a curl command
+        (from “Copy as cURL” in DevTools). A Cookie header on its own goes
+        on this site.
       </p>
 
       <!-- Choosing a file can close the popup in Chrome, so it's only offered
@@ -469,6 +471,12 @@
 
       <section id="import-preview" hidden>
         <p id="import-summary" class="scope-summary" role="status"></p>
+        <p id="import-move-row" class="check-row" hidden>
+          <label>
+            <input id="import-move" type="checkbox" />
+            <span>Put them on <span id="import-move-site"></span> instead</span>
+          </label>
+        </p>
         <details id="import-domains" hidden>
           <summary id="import-domains-summary"></summary>
           <ul id="import-domains-list"></ul>

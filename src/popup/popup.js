@@ -23,6 +23,9 @@ import {
   toCurl,
   parseImport,
   planImport,
+  matchSentCookies,
+  isForSite,
+  moveToSite,
 } from "../lib/transfer.js";
 import { copyWithFeedback } from "./clipboard.js";
 import {
@@ -1002,6 +1005,7 @@ let importPlan = null;
 
 function openImport() {
   el("main-message").hidden = true;
+  el("import-move").checked = false;
   el("import-file-row").hidden = !inTab;
   el("import-file-hint").hidden = inTab;
   resetImportPreview();
@@ -1031,7 +1035,21 @@ async function checkImport() {
   el("import-failures").hidden = true;
   resetImportPreview();
 
-  const { entries, problems } = parseImport(el("import-text").value);
+  const pageUrl = page.origin + "/";
+  const parsed = parseImport(el("import-text").value, { pageUrl });
+  let entries = parsed.entries;
+  let problems = parsed.problems;
+
+  // Cookies from another site can be put on this one instead, such as from
+  // a staging site to localhost. Only offered when some are from elsewhere.
+  const elsewhere = entries.some((entry) => !isForSite(entry, page.hostname));
+  el("import-move-site").textContent = page.hostname;
+  el("import-move-row").hidden = !elsewhere;
+  if (elsewhere && el("import-move").checked) {
+    const moved = moveToSite(entries, pageUrl);
+    entries = moved.entries;
+    problems = [...problems, ...moved.problems];
+  }
 
   let existing;
   try {
@@ -1040,6 +1058,11 @@ async function checkImport() {
     showImportResult("Couldn't read your current cookies to compare: " + error.message, true);
     return;
   }
+
+  // A Cookie header or curl command only has names and values. The rest
+  // comes from the cookies the site already has.
+  entries = matchSentCookies(entries, existing);
+  const fromHeader = parsed.format === "header" || parsed.format === "curl";
 
   const plan = planImport(
     entries,
@@ -1068,7 +1091,17 @@ async function checkImport() {
       parts.push(
         formatCount(replacing) +
           (replacing === 1 ? " of them replaces a cookie" : " of them replace cookies") +
-          " you already have."
+          " you already have." +
+          (fromHeader ? (replacing === 1 ? " Only its value changes." : " Only their values change.") : "")
+      );
+    }
+    const adding = count - replacing;
+    if (fromHeader && adding > 0) {
+      parts.push(
+        pluralise(adding, "new cookie", "new cookies") +
+          (adding === 1
+            ? " will be a session cookie, so Chrome removes it when it closes."
+            : " will be session cookies, so Chrome removes them when it closes.")
       );
     }
     if (kept > 0) {
@@ -1334,7 +1367,16 @@ el("import-confirm").addEventListener("click", runImport);
 el("import-cancel").addEventListener("click", resetImportPreview);
 el("import-file").addEventListener("change", readImportFile);
 // A changed paste has to be checked again before it can be imported.
-el("import-text").addEventListener("input", resetImportPreview);
+el("import-text").addEventListener("input", () => {
+  el("import-move").checked = false;
+  resetImportPreview();
+});
+// Ticking "Put them on this site instead" checks again with the cookies
+// moved, and leaves focus on the box.
+el("import-move").addEventListener("change", async () => {
+  await checkImport();
+  el("import-move").focus();
+});
 
 el("value-copy").addEventListener("click", () =>
   copyWithFeedback(el("value-copy"), el("field-value").value)
