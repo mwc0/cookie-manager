@@ -309,7 +309,8 @@ function identityOf(cookie) {
 // one is marked Kept. `now` is in seconds.
 //
 // Returns {
-//   toWrite: [{ entry, replaces, kept }],  what will be written
+//   toWrite: [{ entry, replaces, match, kept }],  what will be written, and
+//                                          the cookie each one replaces
 //   expired, duplicates,                    counts of what's skipped
 //   invalid: ["name: reason", ...],         cookies that can't be written
 //   domains: [...]                          the sites that will change
@@ -348,6 +349,7 @@ export function planImport(entries, existing, isKept, now) {
     toWrite.push({
       entry,
       replaces: Boolean(match),
+      match: match || null,
       kept: Boolean(match && isKept(match)),
     });
   }

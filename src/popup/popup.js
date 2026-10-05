@@ -52,10 +52,10 @@ import {
 } from "../lib/theme.js";
 import { renderCookieTable, DEFAULT_SORT } from "./render.js";
 import {
-  saveLastDelete,
-  loadLastDelete,
-  clearLastDelete,
-  restoreCookies,
+  saveLastChange,
+  loadLastChange,
+  clearLastChange,
+  undoChange,
   describeAge,
 } from "../lib/undo.js";
 
@@ -502,7 +502,7 @@ async function runDelete() {
         pluralise(failed.length, "cookie", "cookies") +
         " could not be deleted, and may be protected by the browser.";
     }
-    await offerUndo(result, removedCookies);
+    await offerUndo(result, { kind: "delete", restore: removedCookies });
   } catch (error) {
     result.className = "result error";
     result.textContent = "The delete failed: " + error.message;
@@ -675,13 +675,25 @@ async function saveEditor() {
       return;
     }
 
-    const wasEditing = Boolean(editing);
+    // What Undo needs. An edit puts the old cookie back. If the name, domain
+    // or path changed, the saved cookie is a second cookie, so Undo takes
+    // it away too. A new cookie is only taken away.
+    const original = editing;
+    const change = original
+      ? {
+          kind: "edit",
+          restore: [original],
+          remove: cookieKey(original) === cookieKey(cookie) ? [] : [cookie],
+        }
+      : { kind: "create", remove: [cookie] };
+
     closeEditor();
     showMainMessage(
-      (wasEditing ? "Saved changes to " + values.name + "." : "Created " + values.name + ".") +
+      (original ? "Saved changes to " + values.name + "." : "Created " + values.name + ".") +
         describeExpiryChange(values, cookie),
       false
     );
+    await offerUndo(el("main-message"), change);
     await refresh();
   } catch (error) {
     // Shouldn't happen, since writeCookie() catches its own errors. Show it
@@ -736,7 +748,7 @@ async function deleteOne(cookie) {
     !ok
   );
   if (ok) {
-    await offerUndo(el("main-message"), [cookie]);
+    await offerUndo(el("main-message"), { kind: "delete", restore: [cookie] });
   }
 
   await refresh();
@@ -744,14 +756,14 @@ async function deleteOne(cookie) {
 
 // --- undo ------------------------------------------------------------------
 
-// Remembers what a delete removed and adds an Undo button to its message.
-// Setting the message's text later removes the button. That's fine: the
-// delete can still be undone from the next open, for up to 10 minutes.
-async function offerUndo(message, removedCookies) {
-  if (removedCookies.length === 0) {
+// Remembers a change and adds an Undo button to its message. Setting the
+// message's text later removes the button. That's fine: the change can
+// still be undone from the next open, for up to 10 minutes.
+async function offerUndo(message, change) {
+  if ((change.restore || []).length + (change.remove || []).length === 0) {
     return;
   }
-  const { error } = await saveLastDelete(removedCookies);
+  const { error } = await saveLastChange(change);
   if (error) {
     message.append(" " + error);
     return;
@@ -768,61 +780,110 @@ function appendUndoButton(message) {
   message.append(" ", button);
 }
 
-// On opening, offer to undo a delete made in the last 10 minutes, unless
+// "Deleted 5 cookies from example.com", "Imported 12 cookies across 3
+// sites", "Saved changes to sid", "Created theme".
+function describeChange(change) {
+  if (change.kind === "edit") {
+    return "Saved changes to " + change.restore[0].name;
+  }
+  if (change.kind === "create") {
+    return "Created " + change.remove[0].name;
+  }
+
+  const affected = [...change.restore, ...change.remove];
+  const what =
+    affected.length === 1 ? affected[0].name : pluralise(affected.length, "cookie", "cookies");
+  const where = describeSites(sitesOf(affected));
+  return (change.kind === "import" ? "Imported " : "Deleted ") + what + where;
+}
+
+// On opening, offer to undo a change made in the last 10 minutes, unless
 // something more important is already showing.
 async function offerStoredUndo() {
-  const last = await loadLastDelete();
+  const last = await loadLastChange();
   if (!last || !el("main-message").hidden) {
     return;
   }
-
-  // "example.com" and ".example.com" are the same site to a reader.
-  const count = last.cookies.length;
-  const sites = Array.from(
-    new Set(last.cookies.map((cookie) => String(cookie.domain || "").replace(/^\./, "")))
-  );
-  const what = count === 1 ? last.cookies[0].name : pluralise(count, "cookie", "cookies");
-  const where =
-    sites.length === 1 ? " from " + sites[0] : " across " + pluralise(sites.length, "site", "sites");
-
   showMainMessage(
-    "Deleted " + what + where + " " + describeAge(Date.now() / 1000 - last.at) + ".",
+    describeChange(last) + " " + describeAge(Date.now() / 1000 - last.at) + ".",
     false
   );
   appendUndoButton(el("main-message"));
 }
 
+// What Undo did, in words. A delete says "Restored 5 cookies." An edit says
+// "Put sid back as it was." An import says "Removed 9 cookies and put back 3
+// cookies."
+function describeUndone(change, result) {
+  const { removed, restored, failures } = result;
+  if (change.kind === "delete") {
+    return "Restored " + pluralise(restored, "cookie", "cookies") + ".";
+  }
+  if (change.kind === "edit" && restored === 1 && failures.length === 0) {
+    return "Put " + change.restore[0].name + " back as it was.";
+  }
+  if (change.kind === "create" && removed === 1) {
+    return "Removed " + change.remove[0].name + ".";
+  }
+
+  const done = [];
+  if (removed > 0) {
+    done.push("removed " + pluralise(removed, "cookie", "cookies"));
+  }
+  if (restored > 0) {
+    done.push("put back " + pluralise(restored, "cookie", "cookies"));
+  }
+  if (done.length === 0) {
+    return "Nothing was changed.";
+  }
+  const sentence = done.join(" and ") + ".";
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+}
+
 async function runUndo(message, button) {
   button.disabled = true;
 
-  const last = await loadLastDelete();
+  const last = await loadLastChange();
   if (!last) {
     message.className = "result error";
-    message.textContent = "There's nothing to undo. Undo only lasts 10 minutes after a delete.";
+    message.textContent = "There's nothing to undo. Undo only lasts 10 minutes after a change.";
     return;
   }
 
   message.className = "result";
-  message.textContent = "Restoring…";
+  message.textContent = "Undoing…";
 
-  const { restored, expired, failures } = await restoreCookies(last.cookies);
-  await clearLastDelete();
+  // Read the Kept list fresh, so Undo never removes a cookie kept since.
+  const { keys } = await loadProtected();
+  const result = await undoChange(last, (cookie) => isProtected(keys, cookie));
+  await clearLastChange();
 
-  const parts = ["Restored " + pluralise(restored, "cookie", "cookies") + "."];
-  if (expired > 0) {
+  const parts = [describeUndone(last, result)];
+  if (result.kept > 0) {
     parts.push(
-      pluralise(expired, "cookie has", "cookies have") +
+      pluralise(result.kept, "cookie is", "cookies are") +
+        " marked Kept, so " +
+        (result.kept === 1 ? "it was" : "they were") +
+        " left alone."
+    );
+  }
+  if (result.expired > 0) {
+    parts.push(
+      pluralise(result.expired, "cookie has", "cookies have") +
         " expired since, so " +
-        (expired === 1 ? "it wasn't" : "they weren't") +
+        (result.expired === 1 ? "it wasn't" : "they weren't") +
         " put back."
     );
   }
-  if (failures.length > 0) {
+  if (result.failures.length > 0) {
     parts.push(
-      "Chrome refused " + pluralise(failures.length, "cookie", "cookies") + ": " + failures.join(" ")
+      "Chrome refused " +
+        pluralise(result.failures.length, "cookie", "cookies") +
+        ": " +
+        result.failures.join(" ")
     );
   }
-  message.className = failures.length > 0 ? "result error" : "result";
+  message.className = result.failures.length > 0 ? "result error" : "result";
   message.textContent = parts.join(" ");
 
   await refresh();
@@ -1066,9 +1127,11 @@ async function runImport() {
   let replaced = 0;
   let shortened = 0;
   const failures = [];
+  // For Undo: the cookies this import replaced, and the ones it added.
+  const change = { kind: "import", restore: [], remove: [] };
 
   // One at a time, so the result for each cookie is known.
-  for (const { entry, replaces } of plan.toWrite) {
+  for (const { entry, replaces, match } of plan.toWrite) {
     const { ok, cookie, error } = await writeCookie(null, entry);
     if (!ok) {
       failures.push(entry.name + " (" + entry.domain + "): " + error);
@@ -1076,8 +1139,10 @@ async function runImport() {
     }
     if (replaces) {
       replaced += 1;
+      change.restore.push(match);
     } else {
       created += 1;
+      change.remove.push(cookie);
     }
     if (describeExpiryChange(entry, cookie)) {
       shortened += 1;
@@ -1101,6 +1166,7 @@ async function runImport() {
     parts.push("Chrome refused " + pluralise(failures.length, "cookie", "cookies") + ":");
   }
   showImportResult(parts.join(" "), failures.length > 0);
+  await offerUndo(el("import-result"), change);
   fillList(el("import-failures"), failures);
 }
 
@@ -1117,9 +1183,12 @@ async function readImportFile() {
   }
 }
 
+// Back on the main screen, an import made just now can be undone from the
+// status line, like any other change.
 async function closeImport() {
   showState("main");
   await refresh();
+  await offerStoredUndo();
 }
 
 // --- open in a tab ---------------------------------------------------------

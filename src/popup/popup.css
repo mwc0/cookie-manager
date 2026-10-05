@@ -329,6 +329,14 @@ button.danger:hover:not(:disabled) {
   margin: 0 0 10px;
 }
 
+/* An import's result carries Undo too, so it lines up the same way. */
+#import-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
 .result.error {
   color: var(--danger);
 }
