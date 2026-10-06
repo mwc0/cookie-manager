@@ -2,25 +2,61 @@
    another server. Text sizes are in rem, so they follow the text size
    people set in their browser.
 
-   Colours match the icon and promo tile. Light or dark follows the system,
-   unless the visitor uses the button in the header (theme.js). */
+   The look: a dark page lit from above. The keycap Z in the header is the
+   light, one beam falls from it, and thin lines with corner dots mark where
+   things sit. Light or dark follows the system, unless the visitor uses the
+   button in the header (theme.js). */
+
+/* The site's one typeface. The file is in docs/fonts, so it comes from this
+   site like everything else. Its licence is next to it (OFL.txt). */
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("fonts/hanken-grotesk.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* The angle of the light that runs round the screenshots' edges. It has to
+   be registered like this before CSS can animate it. */
+@property --turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
 
 :root {
   color-scheme: light dark;
 
-  --ink: #1f2633;
-  --ink-soft: #4a5568;
-  --muted: #6b7486;
-  --bg: #ffffff;
-  --bg-alt: #f4f6fb;
-  --line: #dde2ec;
-  --key-top: #ffffff;
-  --key-bottom: #eaeef5;
-  --key-edge: #c2cad8;
-  --link: #1f4fbf;
-  --button-bg: #1f2633;
+  --sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+
+  /* The widest the page's content gets, and the gap inside the guide lines. */
+  --wrap: 1120px;
+  --pad: clamp(24px, 4vw, 56px);
+
+  /* Light theme: the same page in daylight. */
+  --field: #f2f4fa;
+  --plate: #ffffff;
+  --ink: #121829;
+  --ink-soft: #3f4860;
+  --muted: #5d667c;
+  --line: rgb(18 24 41 / 0.11);
+  --line-strong: rgb(18 24 41 / 0.26);
+  --tick: rgb(18 24 41 / 0.5);
+  --link: #1d4ec2;
+  /* The light's colour, as three numbers so it can be used at any strength. */
+  --light: 44 92 214;
+  --beam: 0.1;
+  --lit-top: #121829;
+  --lit-bottom: #2f4f9e;
+  --button-bg: #121829;
   --button-fg: #ffffff;
-  --shot-shadow: 0 1px 2px rgba(20, 30, 60, 0.06), 0 8px 24px rgba(20, 30, 60, 0.10);
+  --danger: 179 38 30;
+  --key-top: #ffffff;
+  --key-bottom: #e6ebf5;
+  --key-edge: #bcc5d6;
+  --plate-shadow: 0 1px 2px rgb(20 30 60 / 0.06), 0 14px 22px -16px rgb(20 30 60 / 0.3);
 }
 
 /* The dark colours are here twice. The first block follows the system and
@@ -28,37 +64,51 @@
    light/dark button. Keep the two lists the same. */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --ink: #e8ebf1;
-    --ink-soft: #b7bfcc;
-    --muted: #8d96a6;
-    --bg: #15181e;
-    --bg-alt: #1c2029;
-    --line: #2e3440;
-    --key-top: #343b49;
-    --key-bottom: #2a303c;
-    --key-edge: #4a5366;
-    --link: #8fb0ff;
-    --button-bg: #e8ebf1;
-    --button-fg: #15181e;
-    --shot-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --field: #05070f;
+    --plate: #0b0f1d;
+    --ink: #eef1fb;
+    --ink-soft: #aab3cf;
+    --muted: #7f89a8;
+    --line: rgb(160 180 255 / 0.13);
+    --line-strong: rgb(170 190 255 / 0.3);
+    --tick: rgb(190 205 255 / 0.6);
+    --link: #a9c0ff;
+    --light: 138 168 255;
+    --beam: 0.34;
+    --lit-top: #ffffff;
+    --lit-bottom: #8ea9f5;
+    --button-bg: #e9eeff;
+    --button-fg: #070b1a;
+    --danger: 255 120 110;
+    --key-top: #2f3858;
+    --key-bottom: #1b2136;
+    --key-edge: #4a5580;
+    --plate-shadow: 0 1px 0 rgb(255 255 255 / 0.05) inset;
   }
 }
 
 :root.dark {
   color-scheme: dark;
-  --ink: #e8ebf1;
-  --ink-soft: #b7bfcc;
-  --muted: #8d96a6;
-  --bg: #15181e;
-  --bg-alt: #1c2029;
-  --line: #2e3440;
-  --key-top: #343b49;
-  --key-bottom: #2a303c;
-  --key-edge: #4a5366;
-  --link: #8fb0ff;
-  --button-bg: #e8ebf1;
-  --button-fg: #15181e;
-  --shot-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --field: #05070f;
+  --plate: #0b0f1d;
+  --ink: #eef1fb;
+  --ink-soft: #aab3cf;
+  --muted: #7f89a8;
+  --line: rgb(160 180 255 / 0.13);
+  --line-strong: rgb(170 190 255 / 0.3);
+  --tick: rgb(190 205 255 / 0.6);
+  --link: #a9c0ff;
+  --light: 138 168 255;
+  --beam: 0.34;
+  --lit-top: #ffffff;
+  --lit-bottom: #8ea9f5;
+  --button-bg: #e9eeff;
+  --button-fg: #070b1a;
+  --danger: 255 120 110;
+  --key-top: #2f3858;
+  --key-bottom: #1b2136;
+  --key-edge: #4a5580;
+  --plate-shadow: 0 1px 0 rgb(255 255 255 / 0.05) inset;
 }
 
 :root.light {
@@ -73,15 +123,37 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--field);
   color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--sans);
   font-size: 1.0625rem;
   line-height: 1.6;
+}
+
+/* A faint grid behind the top of every page, fading out further down. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 72px 72px;
+  background-position: center top;
+  opacity: 0.45;
+  mask-image: radial-gradient(ellipse 70% 62% at 50% 0%, #000 0%, transparent 100%);
+}
+
+::selection {
+  background: rgb(var(--light) / 0.35);
+  color: var(--ink);
 }
 
 img {
@@ -92,15 +164,20 @@ img {
 
 a {
   color: var(--link);
-  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
 }
 
 code {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: 0.9em;
-  background: var(--bg-alt);
+  font-family: var(--mono);
+  font-size: 0.875em;
+  background: rgb(var(--light) / 0.08);
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: 5px;
   padding: 0.05em 0.35em;
 }
 
@@ -110,9 +187,8 @@ code {
 }
 
 .wrap {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 0 24px;
+  width: min(100% - 48px, var(--wrap));
+  margin-inline: auto;
 }
 
 /* Lets keyboard users skip past the header. Hidden above the page until
@@ -121,10 +197,10 @@ code {
   position: absolute;
   left: 16px;
   top: -10em;
-  padding: 8px 12px;
+  padding: 8px 14px;
   background: var(--button-bg);
   color: var(--button-fg);
-  border-radius: 6px;
+  border-radius: 999px;
   z-index: 10;
 }
 
@@ -147,22 +223,34 @@ code {
 
 /* --- header ------------------------------------------------------------- */
 
-.site-header {
-  border-bottom: 1px solid var(--line);
+/* Three columns: the links, the logo in the middle, and the source code
+   link and theme button at the end. */
+.site-header .wrap {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px 16px;
+  padding-block: 20px;
 }
 
-.site-header .wrap {
+.site-nav {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.header-end {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding-top: 14px;
-  padding-bottom: 14px;
+  gap: 12px;
 }
 
 /* "cookie" plus a keycap Z, as on the promo tile. */
 .wordmark {
+  grid-column: 2;
+  grid-row: 1;
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -185,7 +273,8 @@ code {
   border-radius: 0.4em;
   background: linear-gradient(180deg, var(--key-top) 0%, var(--key-bottom) 100%);
   border: 1px solid var(--key-edge);
-  box-shadow: 0 2px 0 var(--key-edge);
+  /* The hard edge under the key, and the glow of the light it gives off. */
+  box-shadow: 0 2px 0 var(--key-edge), 0 6px 26px 2px rgb(var(--light) / calc(var(--beam) * 1.6));
   font-size: 0.625em;
   letter-spacing: 0;
   position: relative;
@@ -195,7 +284,7 @@ code {
 .site-nav ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 22px;
+  gap: 4px 24px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -213,10 +302,30 @@ code {
   text-decoration: underline;
 }
 
-.header-end {
-  display: flex;
+/* The small outlined link to the source code. */
+.pill {
+  display: inline-flex;
   align-items: center;
-  gap: 18px;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.pill:hover {
+  border-color: var(--ink-soft);
+  background: rgb(var(--light) / 0.08);
+}
+
+.pill svg {
+  width: 15px;
+  height: 15px;
 }
 
 /* Shows the theme you'd switch to: a moon on the light page, a sun on the
@@ -229,10 +338,11 @@ code {
   height: 34px;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  background: transparent;
   color: var(--ink-soft);
   cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .theme-toggle[hidden] {
@@ -241,7 +351,8 @@ code {
 
 .theme-toggle:hover {
   color: var(--ink);
-  border-color: var(--muted);
+  border-color: var(--ink-soft);
+  background: rgb(var(--light) / 0.08);
 }
 
 .theme-toggle svg {
@@ -258,45 +369,72 @@ code {
   display: block;
 }
 
-/* On phones, the logo and button share the top row and the links go on the
-   row below. display: contents lets the button and nav be placed as if the
-   wrapper div wasn't there. */
-@media (max-width: 600px) {
-  .header-end {
-    display: contents;
+/* On narrow screens the logo moves to the left, and the links go on a row
+   of their own underneath. */
+@media (max-width: 760px) {
+  .site-header .wrap {
+    grid-template-columns: 1fr auto;
   }
 
-  .theme-toggle {
-    margin-left: auto;
+  .wordmark {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .header-end {
+    grid-column: 2;
   }
 
   .site-nav {
-    order: 1;
-    flex-basis: 100%;
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 }
 
-/* --- home: hero --------------------------------------------------------- */
+/* --- the guide lines ------------------------------------------------------
 
-.hero {
-  padding: 72px 0 40px;
-  text-align: center;
+   Two faint lines run down the page at the edges of the content, and every
+   section starts with a line across. Where they cross there's a small dot.
+   On phones there's no room for the side lines, so only the lines across
+   stay. */
+
+main {
+  position: relative;
 }
 
-.hero h1 {
-  margin: 0 auto;
-  max-width: 16em;
-  font-size: clamp(2.125rem, 5vw, 3.25rem);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+main::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: min(100% - 48px, var(--wrap));
+  border-inline: 1px solid var(--line);
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 220px, #000 calc(100% - 120px), transparent 100%);
 }
 
-.hero .lede {
-  margin: 20px auto 0;
-  max-width: 34em;
-  font-size: 1.1875rem;
-  color: var(--ink-soft);
+/* Four dots, one in each corner of a box. Used on the screenshots, the
+   headline and the other framed boxes. */
+.ticks::after {
+  content: "";
+  position: absolute;
+  inset: var(--tick-inset, 5px);
+  pointer-events: none;
+  background:
+    radial-gradient(circle, var(--tick) 0 1.2px, transparent 1.7px) left top / 4px 4px no-repeat,
+    radial-gradient(circle, var(--tick) 0 1.2px, transparent 1.7px) right top / 4px 4px no-repeat,
+    radial-gradient(circle, var(--tick) 0 1.2px, transparent 1.7px) left bottom / 4px 4px no-repeat,
+    radial-gradient(circle, var(--tick) 0 1.2px, transparent 1.7px) right bottom / 4px 4px no-repeat;
 }
+
+@media (max-width: 760px) {
+  main::before {
+    display: none;
+  }
+}
+
+/* --- buttons -------------------------------------------------------------- */
 
 .actions {
   display: flex;
@@ -306,188 +444,169 @@ code {
   margin-top: 32px;
 }
 
-.actions.start {
-  justify-content: flex-start;
-}
-
 .button {
-  display: inline-block;
-  padding: 11px 20px;
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
   border: 1px solid var(--button-bg);
   background: var(--button-bg);
   color: var(--button-fg);
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
+  /* A dark lip along the bottom, and light spilling out underneath. */
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.14), 0 14px 30px -14px rgb(var(--light) / 0.8);
+  transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+}
+
+.button:hover {
+  translate: 0 -1px;
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.14), 0 18px 34px -14px rgb(var(--light) / 1);
+}
+
+.button:active {
+  translate: 0 1px;
 }
 
 .button.secondary {
   background: transparent;
   color: var(--ink);
-  border-color: var(--line);
+  border-color: var(--line-strong);
+  box-shadow: none;
 }
 
 .button.secondary:hover {
-  border-color: var(--muted);
+  border-color: var(--ink-soft);
+  background: rgb(var(--light) / 0.08);
 }
 
-/* Used until the store listing is live. It isn't a link, so it can't lead
-   anywhere broken. */
-.button.pending {
-  background: transparent;
-  color: var(--muted);
-  border: 1px dashed var(--key-edge);
-  cursor: default;
+/* --- home: hero --------------------------------------------------------- */
+
+.hero {
+  position: relative;
+  padding: 64px 0 88px;
+  text-align: center;
+  /* Keeps the beam behind the text without it going behind the page. */
+  isolation: isolate;
+  /* The beam is wider than a phone's screen. This cuts it off at the sides,
+     so the page can't be dragged sideways. */
+  overflow-x: clip;
+}
+
+/* The beam: a soft cone of light from the top of the page, under the Z. */
+.beam {
+  position: absolute;
+  z-index: -1;
+  top: -100px;
+  left: 50%;
+  translate: -50% 0;
+  width: min(1180px, 160vw);
+  height: 900px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 34% 40% at 50% 0%, rgb(var(--light) / var(--beam)) 0%, transparent 72%),
+    conic-gradient(from 180deg at 50% 0%,
+      rgb(var(--light) / var(--beam)) 0deg,
+      rgb(var(--light) / calc(var(--beam) * 0.4)) 14deg,
+      transparent 27deg,
+      transparent 333deg,
+      rgb(var(--light) / calc(var(--beam) * 0.4)) 346deg,
+      rgb(var(--light) / var(--beam)) 360deg);
+  filter: blur(26px);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 94%);
+}
+
+/* The headline and the line under it sit in a box marked by four dots. */
+.hero-copy {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 36px clamp(16px, 5vw, 64px) 40px;
+  --tick-inset: 0px;
+}
+
+.hero h1 {
+  margin: 0 auto;
+  max-width: 13em;
+  font-size: clamp(2.5rem, 6.4vw, 4.75rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: var(--lit-top);
+}
+
+/* The headline is lit from above: brightest at the top, bluer lower down. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .hero h1 {
+    background: linear-gradient(180deg, var(--lit-top) 25%, var(--lit-bottom) 115%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* Room for the letters' tails, which the clipping would cut off. */
+    padding-bottom: 0.08em;
+  }
+}
+
+.hero .lede {
+  margin: 24px auto 0;
+  max-width: 33em;
+  font-size: 1.1875rem;
+  color: var(--ink-soft);
+  text-wrap: pretty;
 }
 
 .note {
-  margin-top: 12px;
+  margin: 14px 0 0;
   font-size: 0.875rem;
   color: var(--muted);
 }
 
-/* --- home: screenshot carousel -------------------------------------------
+/* --- screenshots ----------------------------------------------------------
 
-   A strip of screenshots that scrolls sideways and stops on one at a time.
-   That works with CSS alone. carousel.js adds the arrows and dots.
+   Every screenshot sits in a plate: a thin frame with a dot in each corner.
+   There are two images in each, one of the popup in its light theme and one
+   in its dark theme, and the page shows the one that matches. Only the one
+   showing is downloaded. */
 
-   820px is the popup's width (780px) plus room for the shadow, so the
-   screenshots are never stretched. */
-
-.showcase {
-  margin: 40px auto 0;
-  max-width: 820px;
-}
-
-.slides {
-  /* carousel.js measures slide positions from here. */
+.plate {
   position: relative;
-  display: flex;
-  align-items: center;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  overscroll-behavior-x: contain;
-  border-radius: 12px;
-}
-
-.slides:focus-visible {
-  outline-offset: 4px;
-}
-
-.slide {
-  flex: 0 0 100%;
-  margin: 0;
-  /* Room for the screenshot's shadow. */
-  padding: 8px 20px 12px;
-  scroll-snap-align: center;
-}
-
-.slide figure {
-  margin: 0;
-}
-
-.slide .shot {
-  margin: 0 auto;
-}
-
-.slide figcaption {
-  margin-top: 14px;
-  font-size: 0.9375rem;
-  color: var(--muted);
-}
-
-/* Hide the scrollbar once the arrows and dots are there. Without them, the
-   scrollbar is the only sign that the strip scrolls. */
-.has-controls .slides {
-  scrollbar-width: none;
-}
-
-.has-controls .slides::-webkit-scrollbar {
-  display: none;
-}
-
-.carousel-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.carousel-controls[hidden] {
-  display: none;
-}
-
-.carousel-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--ink);
-  cursor: pointer;
-}
-
-/* SVG arrows, because arrow characters look different in every font. */
-.carousel-arrow svg {
-  width: 16px;
-  height: 16px;
-}
-
-.carousel-arrow:hover:not(:disabled) {
-  border-color: var(--muted);
-}
-
-.carousel-arrow:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.carousel-dots {
-  display: flex;
-  gap: 4px;
-}
-
-/* 24px buttons, easy to hit, with a 10px dot inside. */
-.carousel-dot {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-
-.carousel-dot::before {
-  content: "";
-  display: block;
-  width: 10px;
-  height: 10px;
-  margin: auto;
-  border-radius: 50%;
-  border: 1.5px solid var(--muted);
-}
-
-.carousel-dot[aria-current="true"]::before {
-  background: var(--ink);
-  border-color: var(--ink);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .slides {
-    scroll-behavior: smooth;
-  }
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(180deg, rgb(var(--light) / 0.1), rgb(var(--light) / 0.02)),
+    var(--plate);
+  box-shadow: var(--plate-shadow);
 }
 
 .shot {
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  box-shadow: var(--shot-shadow);
+  border-radius: 9px;
+}
+
+.shot.for-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .shot.for-light {
+    display: none;
+  }
+
+  :root:not(.light) .shot.for-dark {
+    display: block;
+  }
+}
+
+:root.dark .shot.for-light {
+  display: none;
+}
+
+:root.dark .shot.for-dark {
+  display: block;
 }
 
 /* On phones the whole popup would shrink until its text is about 4px, so
@@ -501,39 +620,277 @@ code {
   }
 }
 
+/* --- home: the screenshot fan ---------------------------------------------
+
+   A strip of five screenshots that scrolls sideways and stops on one at a
+   time, with the ones either side showing behind it. That works with CSS
+   alone. carousel.js adds the row of icons underneath.
+
+   796px is the popup's width (780px) plus the plate's frame, so the
+   screenshots are never stretched. */
+
+.showcase {
+  --slide: min(796px, 86vw);
+  /* How far each screenshot tucks behind the one next to it. */
+  --tuck: 0px;
+  margin-top: 56px;
+}
+
+.slides {
+  /* carousel.js measures slide positions from here. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  /* Space at both ends, so the first and last screenshots can reach the
+     middle. */
+  padding: 24px calc(50% - var(--slide) / 2 + var(--tuck)) 16px;
+  /* Fades the screenshots out towards the edges of the screen. */
+  mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%);
+}
+
+.slide {
+  position: relative;
+  flex: 0 0 var(--slide);
+  margin: 0 calc(var(--tuck) * -1);
+  scroll-snap-align: center;
+}
+
+/* The strip opens on the overview, which is the middle one of the five, so
+   there's a screenshot either side of it. carousel.js does the same for
+   browsers that don't know this property yet. */
+.slide[data-start] {
+  scroll-initial-target: nearest;
+}
+
+.slide figure {
+  margin: 0;
+}
+
+.slide figcaption {
+  margin-top: 18px;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+/* In browsers that can tie an animation to scrolling, the screenshot in the
+   middle is full size and the ones either side shrink, dim and tuck behind
+   it. Other browsers show a plain strip. */
+@supports (animation-timeline: view()) {
+  .showcase {
+    --tuck: 30px;
+  }
+
+  .slide {
+    animation: slide-focus linear both;
+    animation-timeline: view(inline);
+  }
+
+  @keyframes slide-focus {
+    0%,
+    100% {
+      scale: 0.8;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    50% {
+      scale: 1;
+      opacity: 1;
+      z-index: 5;
+    }
+  }
+}
+
+/* A light that runs round the edge of each screenshot in the fan. */
+.slide .plate::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: conic-gradient(from var(--turn), transparent 0 78%, rgb(var(--light) / 0.95) 92%, transparent 100%);
+  /* Cuts out the middle, so only the 1px edge is drawn. */
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+/* Hide the scrollbar once the icons are there. Without them, the scrollbar
+   is the only sign that the strip scrolls. */
+.has-controls .slides {
+  scrollbar-width: none;
+}
+
+.has-controls .slides::-webkit-scrollbar {
+  display: none;
+}
+
+/* The row of icons under the fan: one for each screenshot, joined by a
+   line. Hidden until carousel.js sets it up. */
+.rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: clamp(4px, 3vw, 36px);
+  width: fit-content;
+  margin: 20px auto 0;
+}
+
+.rail[hidden] {
+  display: none;
+}
+
+/* The line joining the icons. It runs between the middles of the first and
+   last icons. */
+.rail::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  left: 36px;
+  right: 36px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.rail-node {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 72px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.rail-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  /* Solid, so the joining line doesn't show through. */
+  background:
+    linear-gradient(180deg, rgb(var(--light) / 0.1), rgb(var(--light) / 0.02)),
+    var(--plate);
+  transition: border-color 0.25s, box-shadow 0.25s, color 0.25s;
+}
+
+.rail-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.rail-node:hover {
+  color: var(--ink-soft);
+}
+
+.rail-node:hover .rail-icon {
+  border-color: var(--ink-soft);
+}
+
+.rail-node[aria-current="true"] {
+  color: var(--ink);
+}
+
+.rail-node[aria-current="true"] .rail-icon {
+  border-color: rgb(var(--light) / 0.9);
+  box-shadow: 0 8px 22px -6px rgb(var(--light) / 0.7);
+}
+
+.rail-node:focus-visible {
+  outline: none;
+}
+
+.rail-node:focus-visible .rail-icon {
+  outline: 2px solid var(--link);
+  outline-offset: 3px;
+}
+
 /* --- home: sections ------------------------------------------------------ */
 
 .section {
-  padding: 64px 0;
+  position: relative;
+  padding: 104px 0 96px;
   border-top: 1px solid var(--line);
 }
 
-.section.alt {
-  background: var(--bg-alt);
+/* The dots where the line across meets the two lines down the page. */
+.section::before {
+  content: "";
+  position: absolute;
+  top: -2.5px;
+  left: 50%;
+  translate: -50% 0;
+  width: calc(min(100% - 48px, var(--wrap)) + 3px);
+  height: 4px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, var(--tick) 0 1.2px, transparent 1.7px) left center / 4px 4px no-repeat,
+    radial-gradient(circle, var(--tick) 0 1.2px, transparent 1.7px) right center / 4px 4px no-repeat;
+}
+
+/* Keeps a section's content clear of the lines down the page. */
+.section > .wrap {
+  padding-inline: var(--pad);
 }
 
 .section h2 {
-  margin: 0 0 16px;
-  font-size: 1.875rem;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  margin: 0 0 20px;
+  max-width: 18em;
+  font-size: clamp(1.9rem, 3.6vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 .section p {
   margin: 0 0 16px;
   max-width: 38em;
   color: var(--ink-soft);
+  text-wrap: pretty;
 }
 
 .section p:last-child {
   margin-bottom: 0;
 }
 
+.section h3 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* A section with its text in the middle: "Can't log in" and the last one. */
+.section.centred {
+  text-align: center;
+}
+
+.section.centred h2,
+.section.centred p {
+  margin-inline: auto;
+}
+
+.section.centred p {
+  max-width: 34em;
+  font-size: 1.1875rem;
+}
+
 /* Text beside a screenshot. They stack on narrow screens. */
 .split {
   display: grid;
-  grid-template-columns: 1fr 1.25fr;
-  gap: 48px;
+  grid-template-columns: 1fr 1.35fr;
+  gap: clamp(32px, 5vw, 72px);
   align-items: center;
 }
 
@@ -541,10 +898,10 @@ code {
   order: 2;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 900px) {
   .split {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 32px;
   }
 
   .split.flip > :first-child {
@@ -552,95 +909,367 @@ code {
   }
 }
 
-.section h3 {
-  margin: 0 0 10px;
-  font-size: 1.3125rem;
-  line-height: 1.3;
+/* The delete section is lit in red: on this site red only ever means
+   delete. */
+.section.danger {
+  background: radial-gradient(ellipse 46% 70% at 76% 50%, rgb(var(--danger) / 0.13), transparent 72%);
+}
+
+.section.danger .plate {
+  border-color: rgb(var(--danger) / 0.45);
+  background:
+    linear-gradient(180deg, rgb(var(--danger) / 0.12), rgb(var(--danger) / 0.02)),
+    var(--plate);
+}
+
+@media (max-width: 900px) {
+  .section.danger {
+    background: radial-gradient(ellipse 90% 46% at 50% 76%, rgb(var(--danger) / 0.13), transparent 72%);
+  }
 }
 
 /* The "A closer look" rows. */
 .tour {
-  margin-top: 36px;
+  margin-top: 48px;
 }
 
 .tour + .tour {
-  margin-top: 56px;
+  margin-top: 88px;
+}
+
+/* --- home: the feature list ------------------------------------------------
+
+   Drawn like the cookie table in the popup: a heading row, then one row for
+   each feature, with its name on the left and what it does on the right. */
+
+.ledger {
+  margin-top: 40px;
+  padding: 0;
+  overflow: hidden;
+  /* Where the pointer is, for the glow that follows it (spotlight.js). */
+  --spot-x: 50%;
+  --spot-y: -40%;
+}
+
+.ledger::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(420px circle at var(--spot-x) var(--spot-y), rgb(var(--light) / 0.14), transparent 70%);
+}
+
+.ledger-head,
+.features li {
+  display: grid;
+  grid-template-columns: minmax(11rem, 19rem) 1fr;
+  gap: 4px 32px;
+  padding: 15px clamp(18px, 3vw, 32px);
+}
+
+.ledger-head {
+  padding-block: 12px;
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 8px 40px;
-  margin: 28px 0 0;
+  position: relative;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .features li {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--line);
   color: var(--ink-soft);
+  transition: background-color 0.2s;
+}
+
+.features li + li {
+  border-top: 1px solid var(--line);
+}
+
+.features li:hover {
+  background: rgb(var(--light) / 0.06);
 }
 
 .features strong {
-  display: block;
+  font-weight: 600;
   color: var(--ink);
 }
 
+@media (max-width: 700px) {
+  .ledger-head {
+    display: none;
+  }
+
+  .features li {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- home: the "nothing leaves" diagram ------------------------------------
+
+   A box for your computer with three parts joined by lines, and the
+   internet outside it on a line that's cut. Screen readers get one sentence
+   instead (the aria-label in the HTML). */
+
+.wire {
+  display: flex;
+  align-items: center;
+  margin-top: 48px;
+  font-size: 0.9375rem;
+}
+
+.wire-box {
+  position: relative;
+  flex: 1 1 auto;
+  padding: 44px clamp(16px, 3vw, 32px) 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgb(var(--light) / 0.08), rgb(var(--light) / 0.01)),
+    var(--plate);
+  box-shadow: var(--plate-shadow);
+}
+
+.wire-title {
+  position: absolute;
+  top: 14px;
+  left: clamp(16px, 3vw, 32px);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.wire-row {
+  display: flex;
+  align-items: center;
+}
+
+.chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--plate);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.chip.lit {
+  border-color: rgb(var(--light) / 0.9);
+  box-shadow: 0 10px 26px -8px rgb(var(--light) / 0.7);
+  font-weight: 600;
+}
+
+.chip.off {
+  border-style: dashed;
+  color: var(--muted);
+  background: transparent;
+}
+
+/* A line between two parts, with a light moving along it both ways:
+   cookieZ reads cookies and writes them. */
+.wire-link {
+  position: relative;
+  flex: 1 1 24px;
+  min-width: 24px;
+  height: 1px;
+  background: var(--line-strong);
+  overflow: hidden;
+}
+
+.wire-link::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgb(var(--light) / 1), transparent);
+}
+
+/* The line to the internet: dashed, with a gap in the middle and its
+   label above the gap. */
+.wire-cut {
+  position: relative;
+  flex: 0 1 160px;
+  min-width: 72px;
+  height: 1px;
+}
+
+.wire-cut::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, var(--line-strong) 50%, transparent 0) left center / 8px 1px repeat-x;
+  mask-image: linear-gradient(90deg, #000 0 32%, transparent 32% 68%, #000 68%);
+}
+
+.wire-cut-label {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  translate: -50% 0;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+/* Narrower than this, the diagram runs top to bottom instead. */
+@media (max-width: 900px) {
+  .wire,
+  .wire-row {
+    flex-direction: column;
+  }
+
+  .wire-box {
+    align-self: stretch;
+  }
+
+  .wire-link {
+    flex: none;
+    width: 1px;
+    min-width: 0;
+    height: 32px;
+  }
+
+  .wire-link::after {
+    width: 100%;
+    height: 44%;
+    background: linear-gradient(180deg, transparent, rgb(var(--light) / 1), transparent);
+  }
+
+  .wire-cut {
+    flex: none;
+    width: 1px;
+    min-width: 0;
+    height: 80px;
+  }
+
+  .wire-cut::before {
+    background:
+      linear-gradient(180deg, var(--line-strong) 50%, transparent 0) center top / 1px 8px repeat-y;
+    mask-image: linear-gradient(180deg, #000 0 30%, transparent 30% 70%, #000 70%);
+  }
+
+  /* Down here the label goes in the gap itself. */
+  .wire-cut-label {
+    top: 50%;
+    bottom: auto;
+    translate: -50% -50%;
+  }
+}
+
+/* The three facts under the diagram: three columns divided by lines. */
 .facts {
-  margin: 20px 0 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 48px 0 0;
   padding: 0;
   list-style: none;
+  border-block: 1px solid var(--line);
+  --tick-inset: -2px;
 }
 
 .facts li {
-  position: relative;
-  padding: 6px 0 6px 26px;
+  padding: 24px 28px;
   color: var(--ink-soft);
+}
+
+.facts li:first-child {
+  padding-left: 0;
+}
+
+.facts li:last-child {
+  padding-right: 0;
+}
+
+.facts li + li {
+  border-left: 1px solid var(--line);
+}
+
+@media (max-width: 900px) {
+  .facts {
+    grid-template-columns: 1fr;
+  }
+
+  .facts li {
+    padding: 18px 0;
+  }
+
+  .facts li + li {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
 }
 
 /* The list above has no bottom margin, so the paragraph adds the space. */
 .section p.after-list {
-  margin-top: 20px;
-}
-
-.facts li::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 0.95em;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: var(--ink);
+  margin-top: 24px;
 }
 
 /* --- text pages (privacy, support) --------------------------------------- */
 
 .page {
-  padding: 56px 0 72px;
+  padding: 72px 0 104px;
+  /* Keeps the glow behind the text without it going behind the page, and
+     cuts it off at the sides on narrow screens. */
+  isolation: isolate;
+  overflow-x: clip;
 }
 
+/* A quieter light at the top of the text pages. */
+.page::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -100px;
+  left: 50%;
+  translate: -50% 0;
+  width: min(900px, 140vw);
+  height: 480px;
+  pointer-events: none;
+  background: radial-gradient(ellipse 50% 60% at 50% 0%, rgb(var(--light) / calc(var(--beam) * 0.8)), transparent 72%);
+  filter: blur(26px);
+}
+
+/* The text column sits in the middle of the page. */
 .prose {
   max-width: 44em;
 }
 
 .prose h1 {
-  margin: 0 0 8px;
-  font-size: 2.375rem;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .prose h2 {
-  margin: 40px 0 10px;
-  font-size: 1.5rem;
-  line-height: 1.25;
+  margin: 56px 0 12px;
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .prose h3 {
-  margin: 28px 0 8px;
+  margin: 32px 0 8px;
   font-size: 1.1875rem;
+  font-weight: 600;
 }
 
 .prose p,
@@ -648,8 +1277,16 @@ code {
   color: var(--ink-soft);
 }
 
+.prose strong {
+  color: var(--ink);
+}
+
 .prose ul {
   padding-left: 1.3em;
+}
+
+.prose li::marker {
+  color: var(--muted);
 }
 
 .prose .updated {
@@ -664,33 +1301,69 @@ code {
 }
 
 .prose .aside {
-  padding: 14px 18px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--bg-alt);
+  padding: 16px 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgb(var(--light) / 0.08), rgb(var(--light) / 0.02)),
+    var(--plate);
 }
 
-/* Questions and answers use <details>, so no script is needed. */
+/* Questions and answers use <details>, so no script is needed. The plus
+   sign is drawn here, and its upright stroke goes when the answer opens. */
+.faq {
+  border-top: 1px solid var(--line);
+}
+
 .faq details {
   border-bottom: 1px solid var(--line);
-  padding: 14px 0;
 }
 
 .faq summary {
+  position: relative;
+  padding: 18px 40px 18px 0;
   cursor: pointer;
   font-weight: 600;
   color: var(--ink);
+  list-style: none;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq summary::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  translate: 0 -50%;
+  background:
+    linear-gradient(var(--muted) 0 0) center / 100% 1.5px no-repeat,
+    linear-gradient(var(--muted) 0 0) center / 1.5px 100% no-repeat;
+  transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq details[open] summary::after {
+  background: linear-gradient(var(--ink) 0 0) center / 100% 1.5px no-repeat;
+  rotate: 180deg;
+}
+
+.faq summary:hover {
+  color: var(--link);
 }
 
 .faq details p {
-  margin: 10px 0 0;
+  margin: 0 0 20px;
 }
 
 /* --- footer -------------------------------------------------------------- */
 
 .site-footer {
   border-top: 1px solid var(--line);
-  padding: 28px 0 40px;
+  padding: 32px 0 48px;
   font-size: 0.875rem;
   color: var(--muted);
 }
@@ -705,7 +1378,7 @@ code {
 .site-footer ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 20px;
+  gap: 4px 22px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -713,10 +1386,136 @@ code {
 
 .site-footer a {
   color: var(--muted);
+  text-decoration: none;
 }
 
 .site-footer a:hover {
   color: var(--ink);
+  text-decoration: underline;
+}
+
+/* --- movement -------------------------------------------------------------
+
+   Everything here is extra. With "reduce motion" turned on in the system
+   settings none of it runs, and the page looks the same as it does once the
+   movement has finished. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .slides {
+    scroll-behavior: smooth;
+  }
+
+  /* When the home page opens: the beam switches on, then the headline, the
+     text, the buttons and the screenshots arrive one after another. */
+  .beam {
+    animation: beam-on 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .hero-copy,
+  .hero .actions,
+  .hero .note,
+  .showcase {
+    animation: arrive 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .hero-copy {
+    animation-delay: 0.15s;
+  }
+
+  .hero .actions {
+    animation-delay: 0.3s;
+  }
+
+  .hero .note {
+    animation-delay: 0.38s;
+  }
+
+  .showcase {
+    animation-name: arrive-far;
+    animation-duration: 1.3s;
+    animation-delay: 0.45s;
+  }
+
+  /* The light running round each screenshot in the fan. */
+  .slide .plate::before {
+    animation: turn 7s linear infinite;
+  }
+
+  /* The lights moving along the lines in the diagram. */
+  .wire-link::after {
+    animation: travel 2.6s ease-in-out infinite alternate;
+  }
+
+  /* Lower down, the screenshots, the feature list and the diagram rise
+     into place as they scroll into view. Only in browsers that can tie an
+     animation to scrolling; in others they're simply there. */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 24%;
+    }
+  }
+}
+
+@keyframes beam-on {
+  from {
+    opacity: 0;
+    scale: 0.5 1;
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+    filter: blur(8px);
+  }
+}
+
+@keyframes arrive-far {
+  from {
+    opacity: 0;
+    translate: 0 56px;
+    filter: blur(10px);
+  }
+}
+
+@keyframes turn {
+  to {
+    --turn: 360deg;
+  }
+}
+
+@keyframes travel {
+  from {
+    translate: -100% 0;
+  }
+
+  to {
+    translate: 230% 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 40px;
+    scale: 0.97;
+  }
+}
+
+/* The diagram runs top to bottom on narrow screens, so its lights do too. */
+@media (max-width: 900px) {
+  @keyframes travel {
+    from {
+      translate: 0 -100%;
+    }
+
+    to {
+      translate: 0 230%;
+    }
+  }
 }
 
 /* --- touch screens ------------------------------------------------------- */
@@ -737,24 +1536,17 @@ code {
     margin-block: -12px;
   }
 
-  /* The round buttons stay the same size but get a bigger tap area. The dots
-     are only 4px apart, so theirs only grows up and down. */
-  .theme-toggle,
-  .carousel-arrow,
-  .carousel-dot {
+  /* The pill and the round button stay the same size but get a bigger tap
+     area. */
+  .pill,
+  .theme-toggle {
     position: relative;
   }
 
-  .theme-toggle::after,
-  .carousel-arrow::after {
+  .pill::after,
+  .theme-toggle::after {
     content: "";
     position: absolute;
     inset: -5px;
-  }
-
-  .carousel-dot::after {
-    content: "";
-    position: absolute;
-    inset: -10px 0;
   }
 }

@@ -1,8 +1,8 @@
-// Arrows and dots for the screenshot carousel on the home page.
+// The row of icons under the screenshot fan on the home page.
 //
-// The carousel works without this file, as a strip you can scroll sideways
-// (see .slides in style.css). This adds the buttons and keeps the dots in
-// step with the screenshot showing.
+// The fan works without this file, as a strip you can scroll sideways
+// (see .slides in style.css). This makes the icons under it work, and keeps
+// them in step with the screenshot showing.
 
 (function () {
   const carousel = document.querySelector(".showcase");
@@ -10,12 +10,14 @@
 
   const scroller = carousel.querySelector(".slides");
   const slides = Array.from(scroller.querySelectorAll(".slide"));
-  const controls = carousel.querySelector(".carousel-controls");
-  const dotsBox = carousel.querySelector(".carousel-dots");
-  const [prev, next] = carousel.querySelectorAll(".carousel-arrow");
+  const rail = carousel.querySelector(".rail");
+  const nodes = Array.from(rail.querySelectorAll(".rail-node"));
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  let current = 0;
+  // The strip opens on the screenshot marked data-start in the HTML: the
+  // overview, in the middle of the five.
+  const start = Math.max(0, slides.findIndex((slide) => slide.hasAttribute("data-start")));
+  let current = start;
 
   // Screen readers aren't told when the strip scrolls, so this hidden line
   // says which screenshot is showing.
@@ -24,24 +26,19 @@
   status.setAttribute("aria-live", "polite");
   carousel.appendChild(status);
 
-  const dots = slides.map((slide, i) => {
-    const dot = document.createElement("button");
-    dot.type = "button";
-    dot.className = "carousel-dot";
-    dot.setAttribute("aria-label", "Show screenshot " + (i + 1) + " of " + slides.length);
-    dot.addEventListener("click", () => goTo(i));
-    dotsBox.appendChild(dot);
-    return dot;
+  nodes.forEach((node, i) => {
+    node.addEventListener("click", () => goTo(i));
   });
 
-  function goTo(i) {
-    i = Math.max(0, Math.min(slides.length - 1, i));
-    // Scrolls only the strip. scrollIntoView would move the whole page too.
+  function goTo(i, smooth = true) {
+    const slide = slides[i];
+    // Scrolls only the strip, to where this screenshot sits in the middle.
+    // scrollIntoView would move the whole page too.
     scroller.scrollTo({
-      left: slides[i].offsetLeft,
-      behavior: reduceMotion.matches ? "auto" : "smooth",
+      left: slide.offsetLeft - (scroller.clientWidth - slide.offsetWidth) / 2,
+      behavior: smooth && !reduceMotion.matches ? "smooth" : "instant",
     });
-    setCurrent(i);
+    setCurrent(i, smooth);
   }
 
   function setCurrent(i, announce = true) {
@@ -51,26 +48,13 @@
         (caption ? ": " + caption.textContent : "");
     }
     current = i;
-    dots.forEach((dot, n) => {
-      if (n === i) dot.setAttribute("aria-current", "true");
-      else dot.removeAttribute("aria-current");
+    nodes.forEach((node, n) => {
+      if (n === i) node.setAttribute("aria-current", "true");
+      else node.removeAttribute("aria-current");
     });
-
-    // A disabled button can't keep focus. If the arrow being used is about
-    // to be disabled, move focus to the other one first, or keyboard users
-    // lose their place.
-    const atStart = i === 0;
-    const atEnd = i === slides.length - 1;
-    if (atStart && document.activeElement === prev) next.focus();
-    if (atEnd && document.activeElement === next) prev.focus();
-    prev.disabled = atStart;
-    next.disabled = atEnd;
   }
 
-  prev.addEventListener("click", () => goTo(current - 1));
-  next.addEventListener("click", () => goTo(current + 1));
-
-  // Keeps the dots right when someone swipes instead of clicking. Chrome and
+  // Keeps the icons right when someone swipes instead of clicking. Chrome and
   // Edge have scrollsnapchange for this. Other browsers watch which slide is
   // in the middle of the strip.
   if ("onscrollsnapchange" in HTMLElement.prototype) {
@@ -90,7 +74,9 @@
     slides.forEach((slide) => observer.observe(slide));
   }
 
-  setCurrent(0, false);
-  controls.hidden = false;
+  // Chrome already opens the strip in the right place (scroll-initial-target
+  // in style.css). This does it for the browsers that don't.
+  goTo(start, false);
+  rail.hidden = false;
   carousel.classList.add("has-controls");
 })();

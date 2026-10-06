@@ -29,9 +29,12 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="apple-touch-icon" href="images/icon-128.png">
-  <link rel="stylesheet" href="style.css?v=2026-10-02">
-  <script src="carousel.js?v=2026-10-02" defer></script>
-  <script src="theme.js?v=2026-10-02" defer></script>
+  <!-- The headline uses this font, so fetch it straight away. -->
+  <link rel="preload" href="fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css?v=2026-10-06">
+  <script src="carousel.js?v=2026-10-06" defer></script>
+  <script src="spotlight.js?v=2026-10-06" defer></script>
+  <script src="theme.js?v=2026-10-06" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -39,15 +42,20 @@
   <header class="site-header">
     <div class="wrap">
       <a class="wordmark" href="./" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="privacy/">Privacy</a></li>
+          <li><a href="support/">Support</a></li>
+        </ul>
+      </nav>
       <div class="header-end">
-        <nav class="site-nav" aria-label="Main">
-          <ul>
-            <li><a href="#features">Features</a></li>
-            <li><a href="privacy/">Privacy</a></li>
-            <li><a href="support/">Support</a></li>
-            <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
-          </ul>
-        </nav>
+        <a class="pill" href="https://github.com/mwc0/cookie-manager">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 8-4 4 4 4m6-8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Source code
+        </a>
         <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
           <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
@@ -72,72 +80,108 @@
 
   <main id="main">
     <section class="hero">
+      <!-- The beam of light. Decoration only. -->
+      <div class="beam" aria-hidden="true"></div>
       <div class="wrap">
-        <h1>See, edit and delete the cookies on any site</h1>
-        <p class="lede">cookieZ is a free cookie editor for Chrome. When you ask it to delete everything, it deletes everything. No ads, no tracking, and it never connects to the internet.</p>
+        <div class="hero-copy ticks">
+          <h1>See, edit and delete the cookies on any site</h1>
+          <p class="lede">cookieZ is a free cookie editor for Chrome. When you ask it to delete everything, it deletes everything. No ads, no tracking, and it never connects to the internet.</p>
+        </div>
         <div class="actions">
           <a class="button" href="https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb">Add to Chrome</a>
           <a class="button secondary" href="https://github.com/mwc0/cookie-manager">View the source</a>
         </div>
         <p class="note">Free. Works in Chrome and other Chromium browsers.</p>
-        <!-- Five screenshots in a strip that scrolls sideways. It works without
-             JavaScript. carousel.js adds the arrows and dots. -->
-        <section class="showcase" aria-roledescription="carousel" aria-label="Screenshots of cookieZ">
-          <div class="slides" tabindex="0" role="group" aria-label="Screenshots. Scroll sideways or use the arrow keys.">
+      </div>
+      <!-- Five screenshots in a strip that scrolls sideways. It works without
+           JavaScript. carousel.js adds the row of icons underneath. The
+           strip opens on the one marked data-start. Each screenshot is
+           there twice, light and dark; style.css shows the one that matches
+           the page. -->
+      <section class="showcase" aria-roledescription="carousel" aria-label="Screenshots of cookieZ">
+        <div class="slides" tabindex="0" role="group" aria-label="Screenshots. Scroll sideways or use the arrow keys.">
             <div class="slide" role="group" aria-roledescription="slide" aria-label="1 of 5">
               <figure>
-                <img class="shot" src="images/popup-01-overview.webp?v=2026-10-02" srcset="images/popup-01-overview@2x.webp?v=2026-10-02 2x" width="780" height="555" fetchpriority="high"
-                     alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
-                <figcaption>Every cookie on the site you're on</figcaption>
+                <div class="plate ticks">
+                  <img class="shot for-light" src="images/popup-03-edit.webp?v=2026-10-06" srcset="images/popup-03-edit@2x.webp?v=2026-10-06 2x" width="780" height="574" loading="lazy"
+                       alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
+                  <img class="shot for-dark" src="images/popup-03-edit-dark.webp?v=2026-10-06" srcset="images/popup-03-edit-dark@2x.webp?v=2026-10-06 2x" width="780" height="574" loading="lazy"
+                       alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
+                </div>
+                <figcaption>Create or edit any field</figcaption>
               </figure>
             </div>
             <div class="slide" role="group" aria-roledescription="slide" aria-label="2 of 5">
               <figure>
-                <img class="shot" src="images/popup-02-delete-scope.webp?v=2026-10-02" srcset="images/popup-02-delete-scope@2x.webp?v=2026-10-02 2x" width="780" height="580" loading="lazy"
-                     alt="The delete panel with All sites selected: 7 cookies across 5 domains, with the five domains listed underneath.">
-                <figcaption>See exactly what will be deleted, before it happens</figcaption>
+                <div class="plate ticks">
+                  <img class="shot for-light" src="images/popup-04-search.webp?v=2026-10-06" srcset="images/popup-04-search@2x.webp?v=2026-10-06 2x" width="780" height="440" loading="lazy"
+                       alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
+                  <img class="shot for-dark" src="images/popup-04-search-dark.webp?v=2026-10-06" srcset="images/popup-04-search-dark@2x.webp?v=2026-10-06 2x" width="780" height="440" loading="lazy"
+                       alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
+                </div>
+                <figcaption>Search, then delete only what's shown</figcaption>
               </figure>
             </div>
-            <div class="slide" role="group" aria-roledescription="slide" aria-label="3 of 5">
+            <div class="slide" data-start role="group" aria-roledescription="slide" aria-label="3 of 5">
               <figure>
-                <img class="shot" src="images/popup-03-edit.webp?v=2026-10-02" srcset="images/popup-03-edit@2x.webp?v=2026-10-02 2x" width="780" height="574" loading="lazy"
-                     alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
-                <figcaption>Create or edit any field</figcaption>
+                <div class="plate ticks">
+                  <img class="shot for-light" src="images/popup-01-overview.webp?v=2026-10-06" srcset="images/popup-01-overview@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                       alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
+                  <img class="shot for-dark" src="images/popup-01-overview-dark.webp?v=2026-10-06" srcset="images/popup-01-overview-dark@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                       alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
+                </div>
+                <figcaption>Every cookie on the site you're on</figcaption>
               </figure>
             </div>
             <div class="slide" role="group" aria-roledescription="slide" aria-label="4 of 5">
               <figure>
-                <img class="shot" src="images/popup-04-search.webp?v=2026-10-02" srcset="images/popup-04-search@2x.webp?v=2026-10-02 2x" width="780" height="440" loading="lazy"
-                     alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
-                <figcaption>Search, then delete only what's shown</figcaption>
+                <div class="plate ticks">
+                  <img class="shot for-light" src="images/popup-02-delete-scope.webp?v=2026-10-06" srcset="images/popup-02-delete-scope@2x.webp?v=2026-10-06 2x" width="780" height="580" loading="lazy"
+                       alt="The delete panel with All sites selected: 7 cookies across 4 sites, with the four sites listed underneath.">
+                  <img class="shot for-dark" src="images/popup-02-delete-scope-dark.webp?v=2026-10-06" srcset="images/popup-02-delete-scope-dark@2x.webp?v=2026-10-06 2x" width="780" height="580" loading="lazy"
+                       alt="The delete panel with All sites selected: 7 cookies across 4 sites, with the four sites listed underneath.">
+                </div>
+                <figcaption>See exactly what will be deleted, before it happens</figcaption>
               </figure>
             </div>
             <div class="slide" role="group" aria-roledescription="slide" aria-label="5 of 5">
               <figure>
-                <img class="shot" src="images/popup-05-keep.webp?v=2026-10-02" srcset="images/popup-05-keep@2x.webp?v=2026-10-02 2x" width="780" height="555" loading="lazy"
-                     alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
+                <div class="plate ticks">
+                  <img class="shot for-light" src="images/popup-05-keep.webp?v=2026-10-06" srcset="images/popup-05-keep@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                       alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
+                  <img class="shot for-dark" src="images/popup-05-keep-dark.webp?v=2026-10-06" srcset="images/popup-05-keep-dark@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                       alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
+                </div>
                 <figcaption>Keep the cookies you don't want to lose</figcaption>
               </figure>
             </div>
-          </div>
-          <div class="carousel-controls" hidden>
-            <button type="button" class="carousel-arrow" data-step="-1" aria-label="Previous screenshot">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+        </div>
+        <div class="rail" hidden>
+            <button type="button" class="rail-node">
+              <span class="rail-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 19.5h3.6L19 8.6 15.4 5 4.5 15.9v3.6ZM13.5 6.9l3.6 3.6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Edit<span class="visually-hidden"> screenshot</span></span>
             </button>
-            <div class="carousel-dots"></div>
-            <button type="button" class="carousel-arrow" data-step="1" aria-label="Next screenshot">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+            <button type="button" class="rail-node">
+              <span class="rail-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="m19.5 19.5-4.2-4.2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Search<span class="visually-hidden"> screenshot</span></span>
             </button>
-          </div>
-        </section>
-      </div>
+            <button type="button" class="rail-node">
+              <span class="rail-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 10h17M9.5 10v9" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>See<span class="visually-hidden"> screenshot</span></span>
+            </button>
+            <button type="button" class="rail-node">
+              <span class="rail-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 11.6a1 1 0 0 0 1 .9h7.4a1 1 0 0 0 1-.9L17.5 7M10 11v5M14 11v5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Delete<span class="visually-hidden"> screenshot</span></span>
+            </button>
+            <button type="button" class="rail-node">
+              <span class="rail-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.5 4.5h9a1 1 0 0 1 1 1v14l-5.5-3.8-5.5 3.8v-14a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Keep<span class="visually-hidden"> screenshot</span></span>
+            </button>
+        </div>
+      </section>
     </section>
 
-    <section class="section alt">
+    <section class="section centred">
       <div class="wrap">
         <h2>Can't log in to a site?</h2>
         <p>A lot of login problems go away once you clear that one site's cookies. Chrome hides this a few menus deep. With cookieZ it's two clicks, and you see exactly what's about to go before anything is deleted.</p>
@@ -147,34 +191,43 @@
     <section class="section" id="features">
       <div class="wrap">
         <h2>What it does</h2>
-        <ul class="features">
-          <li><strong>Lists every cookie</strong>For the site you're on, with domain, path, expiry and flags. Partitioned cookies included.</li>
-          <li><strong>Deletes at the scope you pick</strong>This page, this domain and its subdomains, every site, or just the cookies you tick. The count and the list of sites are shown first.</li>
-          <li><strong>Undoes a mistake</strong>Deleted, imported or saved the wrong thing? Undo puts the cookies back as they were, for 10 minutes afterwards.</li>
-          <li><strong>Creates and edits cookies</strong>Click any cookie to change its name, value, domain, path, expiry, Secure, HttpOnly or SameSite. URL-encoded and JSON values are shown decoded too.</li>
-          <li><strong>Exports and imports</strong>JSON, cookies.txt, a Playwright file, a Cookie header or a curl command. Imports all of those, plus Set-Cookie lines and other cookie editors' JSON, with a preview first.</li>
-          <li><strong>Copies cookies between sites</strong>Import cookies from one site onto another, such as from a staging site to localhost.</li>
-          <li><strong>Keeps up with the site</strong>When a site sets or changes a cookie, the table updates by itself and marks what changed.</li>
-          <li><strong>Shows how big they are</strong>Each site's total, with a warning when there are enough cookies to stop you logging in.</li>
-          <li><strong>Searches</strong>By name, value, domain or path. While searching, you can delete just the cookies you can see.</li>
-          <li><strong>Keeps the ones you need</strong>Mark a cookie as Kept and cookieZ won't delete it, even when you clear every site.</li>
-          <li><strong>Tells you when Chrome changes things</strong>Chrome caps cookie expiry at about 400 days. If you ask for longer, cookieZ says so.</li>
-          <li><strong>Works in incognito</strong>Incognito cookies stay separate from your normal ones.</li>
-          <li><strong>Light or dark</strong>It starts in your system's theme and remembers if you pick the other one.</li>
-          <li><strong>Works from the keyboard</strong>Alt+Shift+K opens it, / jumps to the search, the arrow keys move through cookies and Esc goes back. Help is built in, and works offline.</li>
-        </ul>
+        <!-- Laid out like the cookie table in the popup. The heading row is
+             only for looks, so screen readers skip it. -->
+        <div class="plate ledger ticks reveal">
+          <div class="ledger-head" aria-hidden="true"><span>Name</span><span>What it does</span></div>
+          <ul class="features">
+            <li><strong>Lists every cookie</strong> <span>For the site you're on, with domain, path, expiry and flags. Partitioned cookies included.</span></li>
+            <li><strong>Deletes at the scope you pick</strong> <span>This page, this domain and its subdomains, every site, or just the cookies you tick. The count and the list of sites are shown first.</span></li>
+            <li><strong>Undoes a mistake</strong> <span>Deleted, imported or saved the wrong thing? Undo puts the cookies back as they were, for 10 minutes afterwards.</span></li>
+            <li><strong>Creates and edits cookies</strong> <span>Click any cookie to change its name, value, domain, path, expiry, Secure, HttpOnly or SameSite. URL-encoded and JSON values are shown decoded too.</span></li>
+            <li><strong>Exports and imports</strong> <span>JSON, cookies.txt, a Playwright file, a Cookie header or a curl command. Imports all of those, plus Set-Cookie lines and other cookie editors' JSON, with a preview first.</span></li>
+            <li><strong>Copies cookies between sites</strong> <span>Import cookies from one site onto another, such as from a staging site to localhost.</span></li>
+            <li><strong>Keeps up with the site</strong> <span>When a site sets or changes a cookie, the table updates by itself and marks what changed.</span></li>
+            <li><strong>Shows how big they are</strong> <span>Each site's total, with a warning when there are enough cookies to stop you logging in.</span></li>
+            <li><strong>Searches</strong> <span>By name, value, domain or path. While searching, you can delete just the cookies you can see.</span></li>
+            <li><strong>Keeps the ones you need</strong> <span>Mark a cookie as Kept and cookieZ won't delete it, even when you clear every site.</span></li>
+            <li><strong>Tells you when Chrome changes things</strong> <span>Chrome caps cookie expiry at about 400 days. If you ask for longer, cookieZ says so.</span></li>
+            <li><strong>Works in incognito</strong> <span>Incognito cookies stay separate from your normal ones.</span></li>
+            <li><strong>Light or dark</strong> <span>It starts in your system's theme and remembers if you pick the other one.</span></li>
+            <li><strong>Works from the keyboard</strong> <span>Alt+Shift+K opens it, / jumps to the search, the arrow keys move through cookies and Esc goes back. Help is built in, and works offline.</span></li>
+          </ul>
+        </div>
       </div>
     </section>
 
-    <section class="section alt">
+    <section class="section danger">
       <div class="wrap split">
         <div>
           <h2>Delete all means all</h2>
           <p>Some cookie extensions say they've cleared everything when they've only cleared the site you're on. cookieZ shows you how many cookies will go and which sites they belong to, before it does anything.</p>
           <p>That number comes from the same lookup that does the deleting, so what it says and what it does can't drift apart. Partitioned cookies, which many tools miss, are included.</p>
         </div>
-        <img class="shot" src="images/popup-02-delete-scope.webp?v=2026-10-02" srcset="images/popup-02-delete-scope@2x.webp?v=2026-10-02 2x" width="780" height="580" loading="lazy"
-             alt="The delete panel with All sites selected: 7 cookies across 5 domains, with the five domains listed underneath.">
+        <div class="plate ticks reveal">
+          <img class="shot for-light" src="images/popup-02-delete-scope.webp?v=2026-10-06" srcset="images/popup-02-delete-scope@2x.webp?v=2026-10-06 2x" width="780" height="580" loading="lazy"
+               alt="The delete panel with All sites selected: 7 cookies across 4 sites, with the four sites listed underneath.">
+          <img class="shot for-dark" src="images/popup-02-delete-scope-dark.webp?v=2026-10-06" srcset="images/popup-02-delete-scope-dark@2x.webp?v=2026-10-06 2x" width="780" height="580" loading="lazy"
+               alt="The delete panel with All sites selected: 7 cookies across 4 sites, with the four sites listed underneath.">
+        </div>
       </div>
     </section>
 
@@ -183,7 +236,23 @@
         <h2>Nothing leaves your computer</h2>
         <p>An extension that can read your cookies can read your logins, so you should be able to check what it does with them. cookieZ makes no network requests at all. No analytics, no error reports, no update checks, no fonts or scripts from the web.</p>
         <p>You don't have to take that on trust. Open Chrome's DevTools, watch the Network tab and use the extension: nothing goes out. Or read the code. It's plain JavaScript with no build step and no dependencies, and all of it is <a href="https://github.com/mwc0/cookie-manager">on GitHub</a>.</p>
-        <ul class="facts">
+        <!-- A picture of the paragraph above. Screen readers get the
+             aria-label instead of the boxes. -->
+        <div class="wire reveal" role="img" aria-label="Diagram. On your computer, cookies move between Chrome's cookie store, cookieZ and your screen. The line from your computer to the internet is cut: there is no connection.">
+          <div class="wire-box">
+            <span class="wire-title">Your computer</span>
+            <div class="wire-row">
+              <span class="chip">Chrome's cookie store</span>
+              <span class="wire-link"></span>
+              <span class="chip lit">cookieZ</span>
+              <span class="wire-link"></span>
+              <span class="chip">Your screen</span>
+            </div>
+          </div>
+          <span class="wire-cut"><span class="wire-cut-label">No connection</span></span>
+          <span class="chip off">The internet</span>
+        </div>
+        <ul class="facts ticks">
           <li>At install, it only asks for access to cookies and storage.</li>
           <li>Access to websites is asked for separately, the first time you open it. You can say no.</li>
           <li>It saves two things on your computer: the cookies you've marked as Kept, and your theme. For Undo, it holds your last change in memory for 10 minutes, never on disk.</li>
@@ -192,7 +261,7 @@
       </div>
     </section>
 
-    <section class="section alt">
+    <section class="section">
       <div class="wrap">
         <h2>A closer look</h2>
         <div class="split tour">
@@ -200,33 +269,45 @@
             <h3>Edit any field</h3>
             <p>Change a cookie's value, expiry, path or flags, or make a new one. A cookie that was only for one host stays that way, and a session cookie doesn't quietly become permanent.</p>
           </div>
-          <img class="shot" src="images/popup-03-edit.webp?v=2026-10-02" srcset="images/popup-03-edit@2x.webp?v=2026-10-02 2x" width="780" height="574" loading="lazy"
-               alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
+          <div class="plate ticks reveal">
+            <img class="shot for-light" src="images/popup-03-edit.webp?v=2026-10-06" srcset="images/popup-03-edit@2x.webp?v=2026-10-06 2x" width="780" height="574" loading="lazy"
+                 alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
+            <img class="shot for-dark" src="images/popup-03-edit-dark.webp?v=2026-10-06" srcset="images/popup-03-edit-dark@2x.webp?v=2026-10-06 2x" width="780" height="574" loading="lazy"
+                 alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
+          </div>
         </div>
         <div class="split flip tour">
           <div>
             <h3>Search, then delete what you see</h3>
             <p>Filter by name, value, domain or path. An extra delete option appears that removes only the cookies left on screen.</p>
           </div>
-          <img class="shot" src="images/popup-04-search.webp?v=2026-10-02" srcset="images/popup-04-search@2x.webp?v=2026-10-02 2x" width="780" height="440" loading="lazy"
-               alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
+          <div class="plate ticks reveal">
+            <img class="shot for-light" src="images/popup-04-search.webp?v=2026-10-06" srcset="images/popup-04-search@2x.webp?v=2026-10-06 2x" width="780" height="440" loading="lazy"
+                 alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
+            <img class="shot for-dark" src="images/popup-04-search-dark.webp?v=2026-10-06" srcset="images/popup-04-search-dark@2x.webp?v=2026-10-06 2x" width="780" height="440" loading="lazy"
+                 alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
+          </div>
         </div>
         <div class="split tour">
           <div>
             <h3>Keep the logins you need</h3>
             <p>Mark a cookie as Kept and it's left alone by every delete, even "All sites". The summary tells you how many it's skipping.</p>
           </div>
-          <img class="shot" src="images/popup-05-keep.webp?v=2026-10-02" srcset="images/popup-05-keep@2x.webp?v=2026-10-02 2x" width="780" height="555" loading="lazy"
-               alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
+          <div class="plate ticks reveal">
+            <img class="shot for-light" src="images/popup-05-keep.webp?v=2026-10-06" srcset="images/popup-05-keep@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                 alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
+            <img class="shot for-dark" src="images/popup-05-keep-dark.webp?v=2026-10-06" srcset="images/popup-05-keep-dark@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                 alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section">
+    <section class="section centred">
       <div class="wrap">
         <h2>Free, and open source</h2>
         <p>cookieZ is free to use, with no ads. The code is published under the MIT licence, so you can read it, check that the version in the Chrome Web Store matches it, and build it yourself if you'd rather.</p>
-        <div class="actions start">
+        <div class="actions">
           <a class="button" href="https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb">Add to Chrome</a>
           <a class="button secondary" href="https://github.com/mwc0/cookie-manager/releases">Releases</a>
         </div>
