@@ -914,6 +914,9 @@ td.value.expanded .value-toggle {
   margin: 0 3px 3px 0;
   border-radius: 5px;
   background: var(--badge);
+  /* A badge is a description, not something stored, so it isn't monospace
+     even inside a monospace cell. */
+  font-family: var(--sans);
   font-size: 11px;
   line-height: 18px;
   color: var(--badge-fg);
