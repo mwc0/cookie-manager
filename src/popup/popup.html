@@ -325,6 +325,8 @@
             <button id="value-copy" class="row-button" type="button" title="Copy the value">Copy</button>
           </div>
           <textarea id="field-value" name="value" class="mono" rows="4" spellcheck="false"></textarea>
+          <!-- Shown once the cookie is getting close to Chrome's size limit. -->
+          <p id="value-size" class="field-note muted" hidden></p>
 
           <!-- Shown when the value is URL-encoded or JSON: the same value,
                easier to read. It never changes the value. -->
@@ -368,6 +370,13 @@
               <span>Session cookie: deleted when the browser closes</span>
             </label>
             <input id="field-expiry" name="expirationDate" type="datetime-local" />
+            <!-- Shortcuts: each sets the date that far from now. -->
+            <div class="presets" role="group" aria-label="Expire in">
+              <button class="row-button" type="button" data-expire-in="3600">1 hour</button>
+              <button class="row-button" type="button" data-expire-in="86400">1 day</button>
+              <button class="row-button" type="button" data-expire-in="604800">1 week</button>
+              <button class="row-button" type="button" data-expire-in="31536000">1 year</button>
+            </div>
           </div>
         </div>
 
@@ -397,6 +406,8 @@
         <div class="actions">
           <button id="edit-save" class="primary" type="submit">Save</button>
           <button id="edit-cancel-2" type="button">Cancel</button>
+          <!-- Only when editing a cookie that already exists. -->
+          <button id="edit-duplicate" type="button" title="Start a new cookie with these details" hidden>Duplicate</button>
         </div>
       </form>
     </section>

@@ -1074,6 +1074,29 @@ button.danger.solid:hover:not(:disabled) {
   color: var(--muted);
 }
 
+/* A small line under a field, such as the value's size. */
+.field-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.field-note.error {
+  color: var(--danger);
+}
+
+/* The expiry shortcuts, under the date. */
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.presets .row-button {
+  margin-left: 0;
+}
+
 /* Checkboxes sit on the same line as their label. */
 .field label.check {
   display: flex;

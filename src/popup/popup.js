@@ -14,6 +14,7 @@ import {
   getAllCookies,
   cookieKey,
   sitesOf,
+  MAX_COOKIE_BYTES,
 } from "../lib/cookies.js";
 import {
   toJson,
@@ -39,6 +40,8 @@ import {
   pluralise,
   formatCount,
   headerBytes,
+  cookieBytes,
+  LARGE_COOKIE_BYTES,
   formatBytes,
   formatExpiryFull,
   toLocalDateTimeValue,
@@ -861,9 +864,49 @@ function openEditor(cookie) {
     partition.hidden = true;
   }
 
+  // A partitioned cookie can't be made here, so it can't be duplicated.
+  el("edit-duplicate").hidden = isNew || Boolean(cookie.partitionKey);
+
   showDecoded();
+  showValueSize();
   showState("edit");
   el("field-name").focus();
+}
+
+// Says how big the cookie is once it's close to Chrome's limit, and turns
+// red once it's over. Updated as the name or value is typed.
+function showValueSize() {
+  const bytes = cookieBytes({ name: el("field-name").value, value: el("field-value").value });
+  const note = el("value-size");
+  note.hidden = bytes < LARGE_COOKIE_BYTES;
+  note.textContent =
+    bytes.toLocaleString("en-GB") + " of " + MAX_COOKIE_BYTES.toLocaleString("en-GB") +
+    " bytes (name and value together).";
+  note.className = bytes > MAX_COOKIE_BYTES ? "field-note error" : "field-note muted";
+}
+
+// The expiry shortcuts. Each sets the date that many seconds from now.
+function expireIn(seconds) {
+  el("field-session").checked = false;
+  syncExpiryEnabled();
+  el("field-expiry").value = toLocalDateTimeValue(Date.now() / 1000 + seconds);
+}
+
+// Turns the editor into a new cookie with the details already filled in,
+// including anything typed since it was opened. The cookie being edited is
+// left alone. Saving goes the usual way, so Undo works on it.
+function duplicateCookie() {
+  editing = null;
+  el("edit-title").textContent = "New cookie";
+  el("edit-duplicate").hidden = true;
+  el("edit-changed").hidden = true;
+  showFormErrors([]);
+
+  const name = el("field-name");
+  name.value = name.value.trim() + "_copy";
+  showValueSize();
+  name.focus();
+  name.select();
 }
 
 // Shows the value URL-decoded or laid out as JSON, when that's easier to
@@ -1690,6 +1733,12 @@ el("value-copy").addEventListener("click", () =>
   copyWithFeedback(el("value-copy"), el("field-value").value)
 );
 el("field-value").addEventListener("input", showDecoded);
+el("field-value").addEventListener("input", showValueSize);
+el("field-name").addEventListener("input", showValueSize);
+el("edit-duplicate").addEventListener("click", duplicateCookie);
+for (const button of document.querySelectorAll("[data-expire-in]")) {
+  button.addEventListener("click", () => expireIn(Number(button.dataset.expireIn)));
+}
 el("decoded-copy").addEventListener("click", () =>
   copyWithFeedback(el("decoded-copy"), el("value-decoded-text").textContent)
 );
