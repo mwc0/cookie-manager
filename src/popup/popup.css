@@ -475,6 +475,7 @@ button.danger:hover:not(:disabled) {
 #delete-panel,
 #table-wrap,
 #kept-wrap,
+#changes-wrap,
 #import-preview {
   position: relative;
   border: 1px solid var(--line-strong);
@@ -488,6 +489,7 @@ button.danger:hover:not(:disabled) {
 #delete-panel::after,
 #table-wrap::after,
 #kept-wrap::after,
+#changes-wrap::after,
 #import-preview::after {
   content: "";
   position: absolute;
@@ -1290,6 +1292,37 @@ button.row-button.keep.kept:hover:not(:disabled) {
   padding-top: 3px;
   padding-bottom: 3px;
   text-align: right;
+}
+
+/* The list of what changed. */
+#changes-intro {
+  max-width: 72ch;
+  color: var(--fg-soft);
+}
+
+#changes-wrap {
+  overflow: hidden;
+}
+
+#changes-table .changes-time-col {
+  width: 84px;
+}
+
+#changes-table .changes-what-col {
+  width: 220px;
+}
+
+#changes-table td.changes-name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+#changes-table td.changes-site {
+  overflow-wrap: anywhere;
+}
+
+#changes-table td.changes-time {
+  color: var(--muted);
 }
 
 /* --- copy, open in a tab ---------------------------------------------------- */

@@ -83,6 +83,18 @@ let seenCookies = null;
 let changedKeys = new Set();
 let lastChange = { added: 0, changed: 0, removed: 0 };
 
+// What has happened to this site's cookies while cookieZ has been open,
+// newest first, for the "What changed" screen: { at, name, domain, what }.
+// Names only, never values. In memory only, so it's gone when cookieZ
+// closes, and it starts again if the tab moves to another site.
+let changeLog = [];
+const CHANGE_LOG_LIMIT = 200;
+
+// When a site changes a cookie, Chrome reports the old one being removed
+// and then the new one being set. This remembers the first half, so the
+// second can be listed as "Changed" and not "Added".
+let overwritten = new Set();
+
 // The row that's in the tab order. See setTabRow().
 let tabRowKey = null;
 
@@ -214,6 +226,12 @@ async function loadCurrentPage() {
     return;
   }
 
+  // A different site: the list of changes starts again.
+  if (!page || page.hostname !== url.hostname) {
+    changeLog = [];
+    overwritten = new Set();
+  }
+
   page = { origin: url.origin, hostname: url.hostname };
   seenCookies = null;
   expanded = new Set();
@@ -335,6 +353,7 @@ function drawTable() {
   restoreFocus(focus);
   showPicked();
   showKeptLink();
+  showChangesLink();
 
   if (changed.size > 0) {
     const rows = el("cookie-rows");
@@ -630,12 +649,96 @@ function sameCookie(a, b) {
   return cookieKey(a) === cookieKey(b);
 }
 
-chrome.cookies.onChanged.addListener(({ cookie }) => {
+// Chrome's reason for a change, in plain words. `removed` is false when a
+// cookie was set, and true when one went away.
+function describeCookieEvent(key, removed, cause) {
+  if (!removed) {
+    return overwritten.delete(key) ? "Changed" : "Added";
+  }
+  if (cause === "expired") {
+    return "Expired";
+  }
+  if (cause === "expired_overwrite") {
+    return "Removed, by setting a date in the past";
+  }
+  if (cause === "evicted") {
+    return "Removed by Chrome to make room";
+  }
+  return "Removed";
+}
+
+// Adds one change to the list. Returns false for the first half of a
+// change (see `overwritten`), which isn't listed by itself.
+function logChange(cookie, removed, cause) {
+  const key = cookieKey(cookie);
+  if (removed && cause === "overwrite") {
+    overwritten.add(key);
+    return false;
+  }
+
+  changeLog.unshift({
+    at: Date.now(),
+    name: cookie.name,
+    domain: String(cookie.domain || "").replace(/^\./, ""),
+    what: describeCookieEvent(key, removed, cause),
+  });
+  changeLog.length = Math.min(changeLog.length, CHANGE_LOG_LIMIT);
+  return true;
+}
+
+// "3 changes" next to the cookie count, once there's something to list.
+function showChangesLink() {
+  el("changes-link").hidden = changeLog.length === 0;
+  el("changes-open").textContent = pluralise(changeLog.length, "change", "changes");
+}
+
+function drawChanges() {
+  const rows = el("changes-rows");
+  rows.textContent = "";
+
+  for (const change of changeLog) {
+    const row = document.createElement("tr");
+    const cells = [
+      [new Date(change.at).toLocaleTimeString(), "nowrap changes-time"],
+      [change.name, "mono changes-name"],
+      [change.domain, "mono changes-site"],
+      [change.what, "changes-what"],
+    ];
+    for (const [text, className] of cells) {
+      const cell = document.createElement("td");
+      cell.className = className;
+      cell.textContent = text;
+      row.appendChild(cell);
+    }
+    rows.appendChild(row);
+  }
+}
+
+function openChanges() {
+  drawChanges();
+  showState("changes");
+  el("changes-back").focus();
+}
+
+function closeChanges() {
+  el("changes-rows").textContent = "";
+  showState("main");
+  el("changes-open").focus();
+}
+
+chrome.cookies.onChanged.addListener(({ cookie, removed, cause }) => {
   // The editor says so if the cookie open in it changes underneath it.
   if (currentState() === "edit" && editing && !saving && sameCookie(cookie, editing)) {
     el("edit-changed").hidden = false;
   }
   if (concernsPage(cookie)) {
+    if (logChange(cookie, removed, cause)) {
+      showChangesLink();
+      // The list keeps up if it's the screen showing.
+      if (currentState() === "changes") {
+        drawChanges();
+      }
+    }
     livePending = true;
     scheduleLiveRedraw();
   }
@@ -1836,6 +1939,8 @@ el("search-clear").addEventListener("click", () => {
   el("search-input").focus();
 });
 
+el("changes-open").addEventListener("click", openChanges);
+el("changes-back").addEventListener("click", closeChanges);
 el("kept-open").addEventListener("click", openKept);
 el("kept-back").addEventListener("click", closeKept);
 el("kept-clear").addEventListener("click", startKeptConfirm);
@@ -1941,6 +2046,7 @@ function currentState() {
 // Each screen's way back, for Esc.
 const BACK_BUTTONS = {
   kept: "kept-back",
+  changes: "changes-back",
   edit: "edit-cancel",
   export: "export-back",
   import: "import-back",

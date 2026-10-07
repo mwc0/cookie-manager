@@ -30,6 +30,7 @@ FILES = [
     "test_pick.py",
     "test_table.py",
     "test_live.py",
+    "test_changes.py",
     "test_keyboard.py",
     "test_ui.py",
     "test_no_network.py",

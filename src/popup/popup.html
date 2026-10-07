@@ -89,7 +89,15 @@
           <svg class="mark" aria-hidden="true" focusable="false"><use href="#keycap" /></svg>
           <div>
             <h1 id="site-name"></h1>
-            <p id="cookie-count" class="muted"></p>
+            <!-- The count, then "3 changes" once the site's cookies have
+                 changed since cookieZ was opened. -->
+            <p class="count-line">
+              <span id="cookie-count"></span>
+              <span id="changes-link" hidden>
+                <span aria-hidden="true">&middot;</span>
+                <button id="changes-open" class="link-button" type="button" title="See what changed"></button>
+              </span>
+            </p>
             <!-- Says what the site just changed, for screen readers. The
                  table marks the rows for everyone else. -->
             <p id="live-note" class="visually-hidden" aria-live="polite"></p>
@@ -538,6 +546,42 @@
       <ul id="import-failures" class="errors" hidden></ul>
     </section>
 
+    <!-- What has happened to this site's cookies while cookieZ has been
+         open. Names only, never values, and held in memory: it's gone when
+         cookieZ closes. -->
+    <section id="state-changes" class="state" hidden>
+      <header class="bar">
+        <h1>What changed</h1>
+        <button id="changes-back" type="button">Back</button>
+      </header>
+
+      <p id="changes-intro">
+        What has happened to this site's cookies since you opened cookieZ,
+        newest first, whether the site did it or you did. Nothing here is
+        saved: the list is gone when cookieZ closes.
+      </p>
+
+      <div id="changes-wrap">
+        <table id="changes-table">
+          <colgroup>
+            <col class="changes-time-col" />
+            <col />
+            <col />
+            <col class="changes-what-col" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Time</th>
+              <th scope="col">Name</th>
+              <th scope="col">Site</th>
+              <th scope="col">What happened</th>
+            </tr>
+          </thead>
+          <tbody id="changes-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- Every cookie marked as Kept, on every site. It shows the saved list
          and nothing else: it never looks up other sites' cookies. -->
     <section id="state-kept" class="state" hidden>
@@ -613,7 +657,9 @@
         <dd>
           The site, or cookieZ, has just added or changed that cookie. The
           table follows changes as they happen, so you don't need to press
-          Refresh.
+          Refresh. Click <strong>changes</strong> next to the cookie count
+          to see a list of what was added, changed, removed or expired since
+          you opened cookieZ.
         </dd>
 
         <dt>What does the bookmark do?</dt>
