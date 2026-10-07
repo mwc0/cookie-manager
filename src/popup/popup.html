@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <title>cookieZ</title>
-    <!-- Local stylesheet only. No web fonts and nothing from a CDN. -->
+    <!-- Everything here is inside the extension: the stylesheet, and the one
+         font file it uses (fonts/). Nothing is fetched from the web. -->
+    <link rel="preload" href="fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="popup.css" />
 
     <!-- Not a module and not deferred, so it runs before the popup is drawn.
@@ -13,12 +15,19 @@
   <body>
     <!-- The keycap Z from the toolbar icon, drawn the same way as in
          tests/make_icons.py, and shown with <use href="#keycap">. Its colours
-         are the icon's, so it looks the same in both themes. -->
+         come from the theme (the keycap rules in popup.css): a dark key on
+         the dark theme, like the icon, and a light key on the light one. -->
     <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="keycap-face" x1="0" y1="0" x2="0" y2="1">
+          <stop class="keycap-face-top" offset="0" />
+          <stop class="keycap-face-bottom" offset="1" />
+        </linearGradient>
+      </defs>
       <symbol id="keycap" viewBox="8 8 112 112">
-        <rect x="8" y="8" width="112" height="112" rx="24" fill="#b3bccb" />
-        <rect x="18" y="14" width="92" height="80" rx="16" fill="#f5f8fc" />
-        <g fill="#1f2633">
+        <rect class="keycap-edge" x="8" y="8" width="112" height="112" rx="24" />
+        <rect x="18" y="14" width="92" height="80" rx="16" fill="url(#keycap-face)" />
+        <g class="keycap-z">
           <rect x="38" y="28" width="52" height="14" />
           <polygon points="90,42 70,42 38,66 58,66" />
           <rect x="38" y="66" width="52" height="14" />

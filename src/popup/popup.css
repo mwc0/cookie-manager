@@ -1,4 +1,18 @@
-/* System fonts only. A web font would be a network request. */
+/* The popup shares its look with the website (docs/style.css): a dark field
+   lit from above, plates with a dot in each corner, and one typeface.
+
+   The typeface is a file inside the extension (fonts/), loaded from the
+   extension itself. Nothing is fetched from the web. Its licence is next to
+   it (OFL.txt). */
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("fonts/hanken-grotesk.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  /* The file is local and loads at once, so wait for it instead of drawing
+     the text in another font first. */
+  font-display: block;
+}
 
 /* Theme.
 
@@ -11,37 +25,67 @@
 
    Every pair of colours that sits on top of each other was checked for
    contrast (WCAG 2.2 AA): 4.5:1 for text, 3:1 for the edges of controls.
-   Check again after changing one. */
+   Check again after changing one.
+
+   --fg, --muted and --changed must stay six-digit hex colours. A test reads
+   them to check their contrast (tests/test_live.py). */
 
 :root {
   color-scheme: light;
 
-  --bg: #ffffff;
-  --fg: #1a1a1a;
-  --muted: #6b6b6b;
-  /* Hairlines between things: table rows, panel borders. */
-  --line: #e3e3e3;
-  /* The edge of anything you can click or type into. Darker than --line, so
-     a control can be told apart from the background (3:1 or more on --bg
-     and --panel). */
-  --edge: #8a8a8a;
-  --panel: #f6f6f6;
+  --sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* For anything literally stored: names, values, domains, paths. */
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+
+  /* The page behind everything. */
+  --bg: #f2f4fa;
+  --fg: #121829;
+  /* Body copy that isn't the main thing on its line. */
+  --fg-soft: #3f4860;
+  --muted: #566076;
+  /* Hairlines between things: table rows. */
+  --line: rgb(18 24 41 / 0.12);
+  /* The edge of a plate. */
+  --line-strong: rgb(18 24 41 / 0.26);
+  /* The edge of anything you can click or type into. Solid, and darker than
+     the lines, so a control can be told apart from what's behind it (3:1 or
+     more on --bg and --panel). */
+  --edge: #79839d;
+  /* A plate: the delete panel, the table, a text field. */
+  --panel: #ffffff;
   /* A row under the mouse, a button being pressed. */
-  --hover: #ededed;
-  --accent: #1a56b8;
+  --hover: rgb(44 92 214 / 0.08);
+  /* The light's colour, as three numbers so it can be used at any
+     strength, and how strong the beam behind the header is. */
+  --light: 44 92 214;
+  --beam: 0.13;
+  /* Links, focus rings, the chosen theme, a kept row's marker. */
+  --accent: #1d4ec2;
   --danger: #b3261e;
-  --danger-bg: #fdf0ef;
-  --badge: #ececec;
-  --badge-fg: #555555;
-  --selection: #cddcf6;
-  --scrollbar: #c4c4c4;
+  --danger-bg: #fbeceb;
+  --badge: rgb(18 24 41 / 0.07);
+  --badge-fg: #3f4860;
+  --selection: rgb(44 92 214 / 0.3);
+  --scrollbar: rgb(18 24 41 / 0.3);
   /* A row just added or changed. Muted text still reads at 4.5:1 on it. */
-  --changed: #e6eefb;
+  --changed: #dfe8fb;
+  /* The dots in the corners of a plate. */
+  --tick: rgb(18 24 41 / 0.5);
 
   /* Text colour on filled accent and danger buttons. White text on the dark
      theme's pale buttons was too hard to read, so dark text is used there. */
   --on-accent: #ffffff;
   --on-danger: #ffffff;
+  /* The one filled button on a screen (Save, Grant access). */
+  --button-bg: #121829;
+  --button-fg: #ffffff;
+  /* The dark lip along the bottom of a filled button. Same in both themes. */
+  --lip: rgb(0 0 0 / 0.14);
+
+  /* The keycap Z, and keys drawn the same way. */
+  --key-top: #ffffff;
+  --key-bottom: #e6ebf5;
+  --key-edge: #bcc5d6;
 
   /* Radios and checkboxes use the accent colour in both themes. */
   accent-color: var(--accent);
@@ -52,28 +96,40 @@
      picker. */
   color-scheme: dark;
 
-  --bg: #1e1e1e;
-  --fg: #e8e8e8;
-  --muted: #9a9a9a;
-  --line: #353535;
-  --edge: #767676;
-  --panel: #262626;
-  --hover: #2f2f2f;
-  --accent: #7aa7ee;
-  --danger: #f2837c;
-  --danger-bg: #331f1e;
-  --badge: #383838;
-  --badge-fg: #b8b8b8;
-  --selection: #2e4a78;
-  --scrollbar: #4a4a4a;
-  --changed: #24324a;
+  --bg: #05070f;
+  --fg: #eef1fb;
+  --fg-soft: #aab3cf;
+  --muted: #8a93b2;
+  --line: rgb(160 180 255 / 0.13);
+  --line-strong: rgb(170 190 255 / 0.3);
+  --edge: #6b7699;
+  --panel: #0b0f1d;
+  --hover: rgb(138 168 255 / 0.1);
+  --light: 138 168 255;
+  --beam: 0.24;
+  --accent: #a9c0ff;
+  --danger: #ff786e;
+  --danger-bg: #2a1518;
+  --badge: rgb(160 180 255 / 0.13);
+  --badge-fg: #aab3cf;
+  --selection: rgb(138 168 255 / 0.35);
+  --scrollbar: rgb(170 190 255 / 0.3);
+  --changed: #16213f;
+  --tick: rgb(190 205 255 / 0.6);
 
-  --on-accent: #0f1f3d;
+  --on-accent: #070b1a;
   --on-danger: #2b0d0b;
+  --button-bg: #e9eeff;
+  --button-fg: #070b1a;
+
+  --key-top: #2f3858;
+  --key-bottom: #1b2136;
+  --key-edge: #4a5580;
 }
 
 ::selection {
   background: var(--selection);
+  color: var(--fg);
 }
 
 * {
@@ -96,7 +152,40 @@ body {
   overflow-y: auto;
   background: var(--bg);
   color: var(--fg);
-  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 13px/1.45 var(--sans);
+}
+
+/* The beam: a soft light behind the header, coming from the keycap Z in the
+   top left corner. It sits behind everything and scrolls away with the
+   page. */
+body::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 190px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 300px 120px at 29px 26px, rgb(var(--light) / var(--beam)), transparent 72%),
+    radial-gradient(ellipse 620px 170px at 29px 0, rgb(var(--light) / calc(var(--beam) * 0.55)), transparent 72%);
+}
+
+/* When the popup opens, it arrives once: a third of a second, then it's
+   still. It's on <body>, so it doesn't play again when the screen changes.
+   With "reduce motion" on in the system settings it doesn't play at all. */
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    animation: arrive 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
 }
 
 body,
@@ -132,6 +221,7 @@ h1 {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 /* Small headings over a group: the delete panel, the table's columns. */
@@ -157,7 +247,7 @@ p {
 }
 
 .mono {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  font-family: var(--mono);
   font-size: 12px;
 }
 
@@ -171,12 +261,12 @@ kbd {
   display: inline-block;
   min-width: 20px;
   padding: 0 5px;
-  border: 1px solid var(--edge);
+  border: 1px solid var(--key-edge);
   border-bottom-width: 2px;
-  border-radius: 4px;
-  background: var(--bg);
+  border-radius: 5px;
+  background: linear-gradient(180deg, var(--key-top), var(--key-bottom));
   color: var(--fg);
-  font: 600 11px/16px ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font: 600 11px/16px var(--mono);
   text-align: center;
 }
 
@@ -211,22 +301,26 @@ button {
   justify-content: center;
   gap: 6px;
   min-height: 28px;
-  padding: 0 10px;
+  padding: 0 12px;
   border: 1px solid var(--edge);
-  border-radius: 4px;
-  background: var(--bg);
+  /* Fully rounded ends, like the website's buttons. */
+  border-radius: 999px;
+  /* See-through, so a button looks right on the page and on a plate. */
+  background: transparent;
   color: var(--fg);
   font: inherit;
   font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 button:hover:not(:disabled) {
   border-color: var(--fg);
+  background: var(--hover);
 }
 
 button:active:not(:disabled) {
-  background: var(--hover);
+  background: rgb(var(--light) / 0.18);
 }
 
 button:disabled {
@@ -244,15 +338,20 @@ input[type="checkbox"]:focus-visible {
   outline-offset: 2px;
 }
 
+/* The one filled button on a screen. It has a dark lip along the bottom and
+   light spilling out underneath, as on the website. */
 button.primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--on-accent);
+  border-color: var(--button-bg);
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--lip), 0 8px 16px -9px rgb(var(--light) / 0.9);
 }
 
 button.primary:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 86%, var(--fg));
+  border-color: var(--button-bg);
+  background: var(--button-bg);
+  box-shadow: inset 0 -2px 0 var(--lip), 0 10px 20px -8px rgb(var(--light) / 1);
 }
 
 button.danger {
@@ -265,7 +364,7 @@ button.danger:hover:not(:disabled) {
   background: var(--danger-bg);
 }
 
-/* A square button holding just an icon. Its name is in a visually hidden
+/* A round button holding just an icon. Its name is in a visually hidden
    span, so screen readers still read it. */
 .icon-button {
   width: 28px;
@@ -285,6 +384,9 @@ button.danger:hover:not(:disabled) {
 .bar p {
   margin: 1px 0 0;
   font-size: 12px;
+  /* The cookie count sits in the brightest part of the beam, where the
+     usual muted grey would be too faint to read. */
+  color: var(--fg-soft);
 }
 
 /* The keycap Z from the toolbar icon, next to the site name and on the
@@ -305,6 +407,26 @@ button.danger:hover:not(:disabled) {
   flex: none;
   width: 26px;
   height: 26px;
+  /* The key gives off the light. */
+  filter: drop-shadow(0 3px 9px rgb(var(--light) / calc(var(--beam) * 2)));
+}
+
+/* The parts of the keycap (the symbol is in popup.html). They take the
+   theme's colours, so the key is dark on the dark theme, like the icon. */
+.keycap-edge {
+  fill: var(--key-edge);
+}
+
+.keycap-face-top {
+  stop-color: var(--key-top);
+}
+
+.keycap-face-bottom {
+  stop-color: var(--key-bottom);
+}
+
+.keycap-z {
+  fill: var(--fg);
 }
 
 .bar-actions {
@@ -344,14 +466,43 @@ button.danger:hover:not(:disabled) {
   color: var(--danger);
 }
 
+/* --- plates -----------------------------------------------------------------
+
+   A plate is a framed box: the delete panel, the table, the import
+   preview. Each has a faint wash of the light inside it and a dot in each
+   corner, as on the website. */
+
+#delete-panel,
+#table-wrap,
+#import-preview {
+  position: relative;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgb(var(--light) / 0.07), rgb(var(--light) / 0.02)),
+    var(--panel);
+}
+
+/* The four dots. */
+#delete-panel::after,
+#table-wrap::after,
+#import-preview::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, var(--tick) 0 1px, transparent 1.5px) left top / 3px 3px no-repeat,
+    radial-gradient(circle, var(--tick) 0 1px, transparent 1.5px) right top / 3px 3px no-repeat,
+    radial-gradient(circle, var(--tick) 0 1px, transparent 1.5px) left bottom / 3px 3px no-repeat,
+    radial-gradient(circle, var(--tick) 0 1px, transparent 1.5px) right bottom / 3px 3px no-repeat;
+}
+
 /* --- delete panel --------------------------------------------------------- */
 
 #delete-panel {
-  padding: 10px 12px 12px;
+  padding: 11px 14px 14px;
   margin-bottom: 12px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--panel);
 }
 
 .scopes {
@@ -369,7 +520,7 @@ button.danger:hover:not(:disabled) {
 }
 
 .scope-target {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-family: var(--mono);
   font-size: 12px;
   color: var(--muted);
 }
@@ -402,7 +553,7 @@ button.danger:hover:not(:disabled) {
   margin: 6px 0 0;
   padding: 0 0 0 18px;
   overflow-y: auto;
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-family: var(--mono);
   color: var(--muted);
 }
 
@@ -442,11 +593,11 @@ button.danger:hover:not(:disabled) {
 .search input[type="search"] {
   flex: 1;
   min-height: 28px;
-  padding: 4px 34px 4px 8px;
-  background: var(--bg);
+  padding: 4px 34px 4px 10px;
+  background: var(--panel);
   color: var(--fg);
   border: 1px solid var(--edge);
-  border-radius: 4px;
+  border-radius: 8px;
   font: inherit;
   caret-color: var(--accent);
 }
@@ -477,8 +628,6 @@ button.danger:hover:not(:disabled) {
 /* --- cookie table --------------------------------------------------------- */
 
 #table-wrap {
-  border: 1px solid var(--line);
-  border-radius: 6px;
   /* Scrolls sideways if it has to. Don't change this to overflow: hidden:
      that hid the row buttons when the table was too wide. */
   overflow-x: auto;
@@ -528,8 +677,8 @@ table {
 
 th {
   padding: 7px 6px 6px;
-  border-bottom: 1px solid var(--edge);
-  background: var(--panel);
+  border-bottom: 1px solid var(--line-strong);
+  background: rgb(var(--light) / 0.05);
   text-align: left;
   font-size: 11px;
   font-weight: 600;
@@ -712,7 +861,7 @@ td.value.expanded .value-toggle {
   display: inline-block;
   padding: 0 5px;
   margin: 0 3px 3px 0;
-  border-radius: 3px;
+  border-radius: 5px;
   background: var(--badge);
   font-size: 11px;
   line-height: 18px;
@@ -747,6 +896,8 @@ td.row-actions {
   min-width: 26px;
   padding: 0 7px;
   margin-left: 4px;
+  /* Rounded squares, not pills: three sit side by side in every row. */
+  border-radius: 8px;
   font-size: 12px;
 }
 
@@ -820,7 +971,6 @@ button.danger.solid:hover:not(:disabled) {
   /* Keeps the ends round whatever the height. */
   border-radius: 999px;
   border: 1px solid var(--edge);
-  background: var(--bg);
   overflow: hidden;
 }
 
@@ -831,7 +981,6 @@ button.danger.solid:hover:not(:disabled) {
   align-items: center;
   justify-content: center;
   width: 32px;
-  background: var(--bg);
   color: var(--muted);
   cursor: pointer;
   user-select: none;
@@ -900,11 +1049,11 @@ button.danger.solid:hover:not(:disabled) {
 .field select {
   width: 100%;
   min-height: 28px;
-  padding: 4px 7px;
-  background: var(--bg);
+  padding: 4px 8px;
+  background: var(--panel);
   color: var(--fg);
   border: 1px solid var(--edge);
-  border-radius: 4px;
+  border-radius: 8px;
   font: inherit;
   caret-color: var(--accent);
 }
@@ -921,7 +1070,7 @@ button.danger.solid:hover:not(:disabled) {
 }
 
 .field input:disabled {
-  background: var(--panel);
+  background: transparent;
   color: var(--muted);
 }
 
@@ -941,12 +1090,13 @@ button.danger.solid:hover:not(:disabled) {
   margin: 0;
 }
 
-/* "The site changed this cookie while you were editing." */
-.notice {
+/* "The site changed this cookie while you were editing." It's a paragraph;
+   the message screens use the same class name and must not get this box. */
+p.notice {
   margin: 0 0 10px;
   padding: 6px 10px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
   background: var(--panel);
 }
 
@@ -975,7 +1125,7 @@ button.danger.solid:hover:not(:disabled) {
   list-style: disc;
   background: var(--danger-bg);
   border: 1px solid var(--danger);
-  border-radius: 4px;
+  border-radius: 8px;
   color: var(--danger);
 }
 
@@ -994,8 +1144,8 @@ button.danger.solid:hover:not(:disabled) {
   margin: 0;
   padding: 6px 8px;
   overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
   background: var(--panel);
   white-space: pre-wrap;
   word-break: break-all;
@@ -1006,7 +1156,7 @@ button.danger.solid:hover:not(:disabled) {
 /* A kept cookie won't be deleted, so its row looks different. Anyone
    checking the table before pressing Delete can see what will stay. */
 tr.kept-row td {
-  background: var(--panel);
+  background: rgb(var(--light) / 0.07);
 }
 
 /* A line down the left edge of a kept row. The tick box is the first cell. */
@@ -1088,10 +1238,12 @@ textarea.output {
   display: block;
   width: 100%;
   padding: 6px 8px;
-  background: var(--bg);
+  background: var(--panel);
   color: var(--fg);
   border: 1px solid var(--edge);
-  border-radius: 4px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
   resize: vertical;
   caret-color: var(--accent);
 }
@@ -1108,10 +1260,7 @@ textarea.output:focus {
 
 #import-preview {
   margin-top: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--panel);
+  padding: 11px 14px 12px;
 }
 
 #import-preview .scope-summary {
@@ -1138,7 +1287,7 @@ textarea.output:focus {
   margin: 6px 0 0;
   padding: 0 0 0 18px;
   overflow-y: auto;
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-family: var(--mono);
   color: var(--muted);
 }
 
