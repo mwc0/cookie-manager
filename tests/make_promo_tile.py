@@ -11,8 +11,8 @@ The tile is just the name, a line, and three words. In search results it's
 shown at less than half size, next to the name and icon, so anything more
 detailed can't be read.
 
-It's the website's look: a dark page lit from above, with the Z as a dark
-keycap that gives off light. The keycap stops the name looking like a typo
+It's the website's look, kept quiet: a dark page with a soft glow rising
+from the bottom centre, and the Z as a dark keycap that gives off light. The keycap stops the name looking like a typo
 for "cookies". Because it's a raised shape and not just a different colour,
 it still stands out when the tile is small.
 
@@ -49,12 +49,9 @@ PAGE = """<!DOCTYPE html>
   body {{
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    /* The dark page, with the beam falling from the top centre. */
+    /* The dark page, with a soft glow coming up from the bottom centre. */
     background:
-      radial-gradient(ellipse 260px 150px at 50% 0, rgba(138, 168, 255, 0.34), transparent 72%),
-      conic-gradient(from 180deg at 50% -30px,
-        rgba(138, 168, 255, 0.26) 0deg, transparent 34deg,
-        transparent 326deg, rgba(138, 168, 255, 0.26) 360deg),
+      radial-gradient(ellipse 330px 150px at 50% 100%, rgba(138, 168, 255, 0.24), transparent 72%),
       #05070f;
     font-family: "Hanken Grotesk", sans-serif;
     color: #eef1fb;
