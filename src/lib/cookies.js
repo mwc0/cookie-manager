@@ -1,7 +1,7 @@
 // Everything that talks to chrome.cookies goes through this file, so the
 // awkward parts of that API are handled in one place.
 
-import { cookieBytes } from "./format.js";
+import { cookieBytes, expiresSoon, LARGE_COOKIE_BYTES } from "./format.js";
 
 // Chrome won't store a cookie whose name and value together are bigger than
 // this many bytes.
@@ -119,6 +119,38 @@ export function filterCookies(cookies, query) {
       .join("\n");
     return haystack.includes(needle);
   });
+}
+
+// The quick filters above the table. Each one is a yes-or-no question
+// about a single cookie. "kept" isn't here, because whether a cookie is kept
+// isn't part of the cookie: filterByFlags() is told that separately.
+export const FILTERS = {
+  secure: (cookie) => Boolean(cookie.secure),
+  httponly: (cookie) => Boolean(cookie.httpOnly),
+  session: (cookie) => typeof cookie.expirationDate !== "number",
+  soon: (cookie) => expiresSoon(cookie),
+  large: (cookie) => cookieBytes(cookie) >= LARGE_COOKIE_BYTES,
+  partitioned: (cookie) => Boolean(cookie.partitionKey),
+};
+
+// Whether one cookie passes one filter. `isKept` is a function that says
+// whether a cookie is marked as Kept.
+export function passesFilter(cookie, name, isKept) {
+  if (name === "kept") {
+    return Boolean(isKept(cookie));
+  }
+  return Boolean(FILTERS[name] && FILTERS[name](cookie));
+}
+
+// The cookies that pass every filter that's switched on. `active` is a Set
+// of filter names. With none switched on, every cookie passes.
+export function filterByFlags(cookies, active, isKept) {
+  if (active.size === 0) {
+    return cookies;
+  }
+  return cookies.filter((cookie) =>
+    [...active].every((name) => passesFilter(cookie, name, isKept))
+  );
 }
 
 // The sites these cookies belong to, for sentences like "Will delete 4

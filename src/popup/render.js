@@ -67,6 +67,9 @@ export function sortCookies(cookies, sort = DEFAULT_SORT) {
     if (sort.key === "name") {
       return flip * (a.name.localeCompare(b.name) || byDomainThenName(a, b));
     }
+    if (sort.key === "size") {
+      return flip * (cookieBytes(a) - cookieBytes(b)) || byDomainThenName(a, b);
+    }
     if (sort.key === "expires") {
       // Session cookies have no date, so they go last whichever way round.
       const aSession = typeof a.expirationDate !== "number";
@@ -124,6 +127,8 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   name.title = cookie.name + " (" + formatBytes(cookieBytes(cookie)) + ")";
   row.appendChild(name);
   row.appendChild(valueCell(cookie, handlers));
+  // Only shown when cookieZ is open in a tab. See .size in popup.css.
+  row.appendChild(textCell(formatBytes(cookieBytes(cookie)), "nowrap size"));
   row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
   row.appendChild(breakableCell(cookie.path, "/", "mono path"));
 

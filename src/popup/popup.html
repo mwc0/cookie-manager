@@ -180,8 +180,8 @@
       <p id="main-message" class="result" role="status" hidden></p>
       <p id="size-warning" class="result" role="status" hidden></p>
 
-      <!-- Filters the table. While searching, an extra delete option removes only
-           the cookies shown. -->
+      <!-- Filters the table. While searching or filtering, an extra delete
+           option removes only the cookies shown. -->
       <div class="search">
         <label for="search-input" class="visually-hidden">Search cookies</label>
         <span class="search-field">
@@ -195,7 +195,19 @@
           <!-- A hint that "/" jumps here. Hidden while the box is in use. -->
           <kbd class="search-key" aria-hidden="true">/</kbd>
         </span>
-        <button id="search-clear" type="button" hidden title="Clear the search">
+        <!-- Quick filters. Each shows only the cookies it describes, and they
+             add up: Secure and Session together shows cookies that are both.
+             popup.js hides any that no cookie on this site matches. -->
+        <div id="filters" class="filters" role="group" aria-label="Show only" hidden>
+          <button type="button" class="chip" data-filter="secure" aria-pressed="false">Secure</button>
+          <button type="button" class="chip" data-filter="httponly" aria-pressed="false">HttpOnly</button>
+          <button type="button" class="chip" data-filter="session" aria-pressed="false">Session</button>
+          <button type="button" class="chip" data-filter="kept" aria-pressed="false">Kept</button>
+          <button type="button" class="chip" data-filter="soon" aria-pressed="false">Expiring soon</button>
+          <button type="button" class="chip" data-filter="large" aria-pressed="false">Large</button>
+          <button type="button" class="chip" data-filter="partitioned" aria-pressed="false">Partitioned</button>
+        </div>
+        <button id="search-clear" type="button" hidden title="Clear the search and the filters">
           Clear
         </button>
       </div>
@@ -272,6 +284,7 @@
             <col class="col-pick" />
             <col class="col-name" />
             <col class="col-value" />
+            <col class="col-size" />
             <col class="col-domain" />
             <col class="col-path" />
             <col class="col-expires" />
@@ -285,10 +298,13 @@
                   <input type="checkbox" id="pick-all" aria-label="Tick every cookie shown" />
                 </label>
               </th>
-              <!-- Name, Domain and Expires sort the table. popup.js sets aria-sort
-                   on the one in use. -->
+              <!-- Name, Value, Domain and Expires sort the table. Value sorts by
+                   size, biggest first. popup.js sets aria-sort on the one in
+                   use. The Size column only shows when there's room for it:
+                   open in a tab. -->
               <th scope="col"><button type="button" class="sort" data-sort="name">Name</button></th>
-              <th scope="col">Value</th>
+              <th scope="col"><button type="button" class="sort" data-sort="size" title="Sort by size">Value</button></th>
+              <th scope="col" class="size">Size</th>
               <th scope="col" aria-sort="ascending"><button type="button" class="sort" data-sort="domain">Domain</button></th>
               <th scope="col">Path</th>
               <th scope="col"><button type="button" class="sort" data-sort="expires">Expires</button></th>

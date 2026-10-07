@@ -577,8 +577,11 @@ button.danger:hover:not(:disabled) {
 
 /* --- search ------------------------------------------------------------ */
 
+/* The search box, then the quick filters, on one line. If the filters
+   don't fit beside the box they drop to a line of their own. */
 .search {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 12px;
 }
@@ -586,8 +589,29 @@ button.danger:hover:not(:disabled) {
 /* Holds the search box and the "/" key that jumps to it. */
 .search-field {
   position: relative;
-  flex: 1;
+  flex: 1 1 230px;
   display: flex;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* A quick filter. Lit when it's switched on. */
+.chip {
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--fg-soft);
+}
+
+.chip[aria-pressed="true"],
+button.chip[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgb(var(--light) / 0.16);
+  color: var(--fg);
+  box-shadow: 0 5px 12px -7px rgb(var(--light) / 0.9);
 }
 
 .search input[type="search"] {
@@ -651,6 +675,29 @@ table {
 
 .col-name {
   width: 108px;
+}
+
+/* The Size column only shows when cookieZ is open in a tab, where there's
+   room for it. In the popup, sorting by size still works (the Value
+   heading), and a cookie's size is in the tip on its name. */
+.col-size,
+th.size,
+td.size {
+  display: none;
+}
+
+body.in-tab .col-size {
+  display: table-column;
+  width: 76px;
+}
+
+body.in-tab th.size,
+body.in-tab td.size {
+  display: table-cell;
+}
+
+td.size {
+  color: var(--muted);
 }
 
 .col-domain {

@@ -10,6 +10,8 @@ import {
   writeCookie,
   validateCookieValues,
   filterCookies,
+  filterByFlags,
+  passesFilter,
   baseHostOf,
   getAllCookies,
   cookieKey,
@@ -113,6 +115,10 @@ let sort = DEFAULT_SORT;
 // The cookies ticked in the table, as cookieKey()s. "Just the ticked
 // cookies" deletes and exports exactly these. Kept in memory only.
 let picked = new Set();
+
+// The quick filters that are switched on, by name ("secure", "kept"...).
+// Kept in memory only, so every open starts with none.
+let activeFilters = new Set();
 
 const el = (id) => document.getElementById(id);
 
@@ -291,7 +297,9 @@ function noteChanges(cookies) {
 // loaded, so typing doesn't ask Chrome again on every key press.
 function drawTable() {
   const query = el("search-input").value;
-  shownCookies = filterCookies(pageCookies, query);
+  const isKept = (cookie) => isProtected(protectedKeys, cookie);
+  shownCookies = filterByFlags(filterCookies(pageCookies, query), activeFilters, isKept);
+  drawFilters(isKept);
 
   // Forget ticks and opened values for cookies that have gone, after a
   // delete for example.
@@ -334,7 +342,7 @@ function drawTable() {
     }, 3000);
   }
 
-  const filtering = query.trim() !== "";
+  const filtering = query.trim() !== "" || activeFilters.size > 0;
   el("search-clear").hidden = !filtering;
 
   // "about", because this page's list also has cookies for other paths,
@@ -358,7 +366,7 @@ function drawTable() {
       ". Many servers refuse more than 8 KB, which can stop you logging in. " +
       "Deleting this site's cookies usually fixes it.";
 
-  // "Just the cookies shown" only appears while searching.
+  // "Just the cookies shown" only appears while searching or filtering.
   el("scope-matches-row").hidden = !filtering;
   el("scope-target-matches").textContent = filtering
     ? pluralise(shownCookies.length, "match", "matches")
@@ -371,19 +379,50 @@ function drawTable() {
   const nothingAtAll = pageCookies.length === 0;
   const nothingMatched = !nothingAtAll && shownCookies.length === 0;
 
-  el("empty-message").textContent = nothingMatched
-    ? "No cookies here match “" + query.trim() + "”."
-    : "No cookies are set for this site.";
+  el("empty-message").textContent = !nothingMatched
+    ? "No cookies are set for this site."
+    : query.trim() === ""
+      ? "No cookies here match those filters."
+      : activeFilters.size > 0
+        ? "No cookies here match “" + query.trim() + "” and those filters."
+        : "No cookies here match “" + query.trim() + "”.";
   el("empty-message").hidden = !(nothingAtAll || nothingMatched);
   el("cookie-table").hidden = nothingAtAll || nothingMatched;
 }
 
+// The quick filters. One that no cookie on this site matches is hidden,
+// unless it's switched on, so it can always be switched off again.
+function drawFilters(isKept) {
+  let anyShown = false;
+  for (const chip of document.querySelectorAll("#filters .chip")) {
+    const name = chip.dataset.filter;
+    const on = activeFilters.has(name);
+    const matches = pageCookies.some((cookie) => passesFilter(cookie, name, isKept));
+    chip.hidden = !on && !matches;
+    chip.setAttribute("aria-pressed", on ? "true" : "false");
+    anyShown = anyShown || !chip.hidden;
+  }
+  el("filters").hidden = !anyShown;
+}
+
+function toggleFilter(name) {
+  if (activeFilters.has(name)) {
+    activeFilters.delete(name);
+  } else {
+    activeFilters.add(name);
+  }
+  drawTable();
+  refreshScope();
+}
+
 // Clicking a heading sorts by it. Clicking it again reverses the order.
+// Size starts with the biggest first, since that's the one people look for.
 function sortBy(key) {
+  const first = key === "size" ? "descending" : "ascending";
   sort =
     sort.key === key
       ? { key, dir: sort.dir === "ascending" ? "descending" : "ascending" }
-      : { key, dir: "ascending" };
+      : { key, dir: first };
 
   for (const button of document.querySelectorAll("th button.sort")) {
     const heading = button.parentElement;
@@ -1658,8 +1697,13 @@ el("search-input").addEventListener("input", () => {
   refreshScope();
 });
 
+for (const chip of document.querySelectorAll("#filters .chip")) {
+  chip.addEventListener("click", () => toggleFilter(chip.dataset.filter));
+}
+
 el("search-clear").addEventListener("click", () => {
   el("search-input").value = "";
+  activeFilters = new Set();
   drawTable();
   refreshScope();
   el("search-input").focus();
