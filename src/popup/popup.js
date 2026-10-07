@@ -356,9 +356,11 @@ function drawTable() {
   showChangesLink();
 
   if (changed.size > 0) {
-    const rows = el("cookie-rows");
+    // Only the rows marked by this draw. Looking them up again when the
+    // timer fires would also clear rows that a later draw has just marked.
+    const marked = [...el("cookie-rows").querySelectorAll("tr.changed")];
     setTimeout(() => {
-      for (const row of rows.querySelectorAll("tr.changed")) {
+      for (const row of marked) {
         row.classList.remove("changed");
       }
     }, 3000);
