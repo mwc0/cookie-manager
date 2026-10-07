@@ -17,14 +17,6 @@
   font-display: swap;
 }
 
-/* The angle of the light that runs round the screenshots' edges. It has to
-   be registered like this before CSS can animate it. */
-@property --turn {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
 :root {
   color-scheme: light dark;
 
@@ -40,7 +32,7 @@
   --plate: #ffffff;
   --ink: #121829;
   --ink-soft: #3f4860;
-  --muted: #5d667c;
+  --muted: #566076;
   --line: rgb(18 24 41 / 0.11);
   --line-strong: rgb(18 24 41 / 0.26);
   --tick: rgb(18 24 41 / 0.5);
@@ -56,6 +48,8 @@
   --key-top: #ffffff;
   --key-bottom: #e6ebf5;
   --key-edge: #bcc5d6;
+  /* The dark lip along the bottom of a filled button. Same in both themes. */
+  --lip: rgb(0 0 0 / 0.14);
   --plate-shadow: 0 1px 2px rgb(20 30 60 / 0.06), 0 14px 22px -16px rgb(20 30 60 / 0.3);
 }
 
@@ -68,7 +62,7 @@
     --plate: #0b0f1d;
     --ink: #eef1fb;
     --ink-soft: #aab3cf;
-    --muted: #7f89a8;
+    --muted: #8a93b2;
     --line: rgb(160 180 255 / 0.13);
     --line-strong: rgb(170 190 255 / 0.3);
     --tick: rgb(190 205 255 / 0.6);
@@ -93,7 +87,7 @@
   --plate: #0b0f1d;
   --ink: #eef1fb;
   --ink-soft: #aab3cf;
-  --muted: #7f89a8;
+  --muted: #8a93b2;
   --line: rgb(160 180 255 / 0.13);
   --line-strong: rgb(170 190 255 / 0.3);
   --tick: rgb(190 205 255 / 0.6);
@@ -197,7 +191,7 @@ code {
   position: absolute;
   left: 16px;
   top: -10em;
-  padding: 8px 14px;
+  padding: 10px 14px;
   background: var(--button-bg);
   color: var(--button-fg);
   border-radius: 999px;
@@ -369,25 +363,24 @@ code {
   display: block;
 }
 
-/* On narrow screens the logo moves to the left, and the links go on a row
-   of their own underneath. */
-@media (max-width: 760px) {
+/* On narrow screens the logo goes on the left with the source code link
+   and theme button beside it, and the links go on a row of their own
+   underneath. If the logo and the buttons don't fit on one row (large text
+   on a small phone), the buttons drop to the next row instead of pushing
+   the page wider than the screen.
+
+   47.5em is 760px at the usual text size. It's in em so that someone who
+   has set their browser's text larger gets this layout sooner. */
+@media (max-width: 47.5em) {
   .site-header .wrap {
-    grid-template-columns: 1fr auto;
-  }
-
-  .wordmark {
-    grid-column: 1;
-    justify-self: start;
-  }
-
-  .header-end {
-    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
   }
 
   .site-nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    order: 1;
+    flex-basis: 100%;
   }
 }
 
@@ -428,7 +421,15 @@ main::before {
     radial-gradient(circle, var(--tick) 0 1.2px, transparent 1.7px) right bottom / 4px 4px no-repeat;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 47.5em) {
+  main::before {
+    display: none;
+  }
+}
+
+/* Windows high-contrast mode would draw the two side lines in solid black,
+   so they're left out there. */
+@media (forced-colors: active) {
   main::before {
     display: none;
   }
@@ -457,13 +458,13 @@ main::before {
   font-weight: 600;
   text-decoration: none;
   /* A dark lip along the bottom, and light spilling out underneath. */
-  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.14), 0 14px 30px -14px rgb(var(--light) / 0.8);
+  box-shadow: inset 0 -2px 0 var(--lip), 0 14px 30px -14px rgb(var(--light) / 0.8);
   transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
 }
 
 .button:hover {
   translate: 0 -1px;
-  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.14), 0 18px 34px -14px rgb(var(--light) / 1);
+  box-shadow: inset 0 -2px 0 var(--lip), 0 18px 34px -14px rgb(var(--light) / 1);
 }
 
 .button:active {
@@ -704,17 +705,47 @@ main::before {
   }
 }
 
-/* A light that runs round the edge of each screenshot in the fan. */
-.slide .plate::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  pointer-events: none;
-  background: conic-gradient(from var(--turn), transparent 0 78%, rgb(var(--light) / 0.95) 92%, transparent 100%);
-  /* Cuts out the middle, so only the 1px edge is drawn. */
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+/* The light on a screenshot's top edge, as if the beam were falling on it.
+
+   .edge is an empty span inside each plate in the fan. It's cut down to a
+   1px ring round the plate, and inside it is a big square with a bright
+   patch at the top. When the page opens, the square in the middle
+   screenshot turns once, so the light runs round the edge and comes back
+   to rest at the top (see "movement" below).
+
+   Browsers that can't cut the ring out don't show it at all. */
+.edge {
+  display: none;
+}
+
+@supports (mask-composite: exclude) {
+  .edge {
+    display: block;
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    overflow: hidden;
+    pointer-events: none;
+    /* Cuts out the middle, so only the 1px edge is drawn. */
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+
+  .edge::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    /* Bigger than the plate's diagonal, so it covers the ring at any angle. */
+    width: 160%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    background: conic-gradient(from 0deg,
+      rgb(var(--light) / 0.95) 0deg,
+      transparent 42deg,
+      transparent 318deg,
+      rgb(var(--light) / 0.95) 360deg);
+  }
 }
 
 /* Hide the scrollbar once the icons are there. Without them, the scrollbar
@@ -728,13 +759,18 @@ main::before {
 }
 
 /* The row of icons under the fan: one for each screenshot, joined by a
-   line. Hidden until carousel.js sets it up. */
+   line. Hidden until carousel.js sets it up.
+
+   The five icons share the row's width, up to 72px each, so the row fits
+   a 320px phone. */
 .rail {
-  position: relative;
+  /* The space between two icons' columns. The joining lines use it too. */
+  --gap: clamp(0px, 3vw, 36px);
   display: flex;
   justify-content: center;
-  gap: clamp(4px, 3vw, 36px);
-  width: fit-content;
+  gap: var(--gap);
+  /* 504px is five 72px columns and four 36px gaps. */
+  width: min(100% - 24px, 504px);
   margin: 20px auto 0;
 }
 
@@ -742,24 +778,15 @@ main::before {
   display: none;
 }
 
-/* The line joining the icons. It runs between the middles of the first and
-   last icons. */
-.rail::before {
-  content: "";
-  position: absolute;
-  top: 22px;
-  left: 36px;
-  right: 36px;
-  height: 1px;
-  background: var(--line-strong);
-}
-
 .rail-node {
   position: relative;
   display: grid;
   justify-items: center;
+  align-content: start;
   gap: 8px;
-  width: 72px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 72px;
   padding: 0;
   border: 0;
   background: none;
@@ -769,7 +796,29 @@ main::before {
   cursor: pointer;
 }
 
+/* The line from each icon back to the one before it: from the middle of
+   this column to the middle of the last one. */
+.rail-node + .rail-node::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  right: 50%;
+  width: calc(100% + var(--gap));
+  height: 1px;
+  background: var(--line-strong);
+}
+
+/* If the text is set very large, a label may be wider than its column.
+   This lets it break instead of running into the next one. */
+.rail-node > span:last-child {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .rail-icon {
+  /* Above the joining lines. */
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 44px;
@@ -968,6 +1017,10 @@ main::before {
 }
 
 .ledger-head {
+  /* Solid and on top, so the glow that follows the pointer never goes
+     behind this small grey text and makes it hard to read. */
+  position: relative;
+  background: var(--plate);
   padding-block: 12px;
   border-bottom: 1px solid var(--line-strong);
   font-size: 0.75rem;
@@ -1084,7 +1137,9 @@ main::before {
   min-width: 24px;
   height: 1px;
   background: var(--line-strong);
-  overflow: hidden;
+  /* "clip", not "hidden": hidden would make this line count as a scrolling
+     box, and the light's movement is tied to the page's scrolling. */
+  overflow: clip;
 }
 
 .wire-link::after {
@@ -1094,6 +1149,8 @@ main::before {
   left: 0;
   width: 44%;
   height: 100%;
+  /* At rest the light sits in the middle of the line. */
+  translate: 64% 0;
   background: linear-gradient(90deg, transparent, rgb(var(--light) / 1), transparent);
 }
 
@@ -1146,6 +1203,7 @@ main::before {
   .wire-link::after {
     width: 100%;
     height: 44%;
+    translate: 0 64%;
     background: linear-gradient(180deg, transparent, rgb(var(--light) / 1), transparent);
   }
 
@@ -1398,7 +1456,10 @@ main::before {
 
    Everything here is extra. With "reduce motion" turned on in the system
    settings none of it runs, and the page looks the same as it does once the
-   movement has finished. */
+   movement has finished.
+
+   Nothing loops. The opening plays once, and after that things only move
+   while the page is being scrolled, so a page left open does no work. */
 
 @media (prefers-reduced-motion: no-preference) {
   .slides {
@@ -1406,54 +1467,61 @@ main::before {
   }
 
   /* When the home page opens: the beam switches on, then the headline, the
-     text, the buttons and the screenshots arrive one after another. */
+     buttons and the screenshots arrive one after another. The headline is
+     never invisible. It starts blurred and sharpens. */
   .beam {
     animation: beam-on 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .hero-copy,
+  .hero-copy {
+    animation: sharpen 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
   .hero .actions,
   .hero .note,
   .showcase {
     animation: arrive 1s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .hero-copy {
-    animation-delay: 0.15s;
-  }
-
   .hero .actions {
-    animation-delay: 0.3s;
+    animation-delay: 0.2s;
   }
 
   .hero .note {
-    animation-delay: 0.38s;
+    animation-delay: 0.28s;
   }
 
   .showcase {
     animation-name: arrive-far;
     animation-duration: 1.3s;
-    animation-delay: 0.45s;
+    animation-delay: 0.35s;
   }
 
-  /* The light running round each screenshot in the fan. */
-  .slide .plate::before {
-    animation: turn 7s linear infinite;
+  /* Then the light goes once round the edge of the middle screenshot and
+     comes to rest at the top. It moves for about four seconds. */
+  .slide[data-start] .edge::before {
+    animation: sweep 4.2s cubic-bezier(0.45, 0, 0.2, 1) 1.2s both;
   }
 
-  /* The lights moving along the lines in the diagram. */
-  .wire-link::after {
-    animation: travel 2.6s ease-in-out infinite alternate;
-  }
-
-  /* Lower down, the screenshots, the feature list and the diagram rise
-     into place as they scroll into view. Only in browsers that can tie an
-     animation to scrolling; in others they're simply there. */
+  /* Lower down, things move with the scrolling, in browsers that can tie
+     an animation to it. In others they're simply there. */
   @supports (animation-timeline: view()) {
+    /* The screenshots, the feature list and the diagram rise into place as
+       they come into view. */
     .reveal {
       animation: rise linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 24%;
+    }
+
+    /* The lights on the diagram's lines run along them and back as the
+       diagram is scrolled past: cookieZ reads cookies and writes them.
+       They're in the middle of the lines when the diagram is in the
+       middle of the screen. */
+    .wire-link::after {
+      animation: travel linear both;
+      animation-timeline: view();
+      animation-range: cover 5% cover 95%;
     }
   }
 }
@@ -1462,6 +1530,13 @@ main::before {
   from {
     opacity: 0;
     scale: 0.5 1;
+  }
+}
+
+@keyframes sharpen {
+  from {
+    translate: 0 16px;
+    filter: blur(8px);
   }
 }
 
@@ -1481,18 +1556,20 @@ main::before {
   }
 }
 
-@keyframes turn {
-  to {
-    --turn: 360deg;
+@keyframes sweep {
+  from {
+    rotate: -1turn;
   }
 }
 
 @keyframes travel {
-  from {
+  0%,
+  75% {
     translate: -100% 0;
   }
 
-  to {
+  25%,
+  100% {
     translate: 230% 0;
   }
 }
@@ -1508,11 +1585,13 @@ main::before {
 /* The diagram runs top to bottom on narrow screens, so its lights do too. */
 @media (max-width: 900px) {
   @keyframes travel {
-    from {
+    0%,
+    75% {
       translate: 0 -100%;
     }
 
-    to {
+    25%,
+    100% {
       translate: 0 230%;
     }
   }
@@ -1534,6 +1613,13 @@ main::before {
   .site-footer ul {
     row-gap: 0;
     margin-block: -12px;
+  }
+
+  /* The logo is a link home. This makes it 44px tall to tap without moving
+     anything. */
+  .wordmark {
+    padding-block: 10px;
+    margin-block: -10px;
   }
 
   /* The pill and the round button stay the same size but get a bigger tap

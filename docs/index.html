@@ -31,17 +31,16 @@
   <link rel="apple-touch-icon" href="images/icon-128.png">
   <!-- The headline uses this font, so fetch it straight away. -->
   <link rel="preload" href="fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=2026-10-06">
-  <script src="carousel.js?v=2026-10-06" defer></script>
-  <script src="spotlight.js?v=2026-10-06" defer></script>
-  <script src="theme.js?v=2026-10-06" defer></script>
+  <link rel="stylesheet" href="style.css?v=2026-10-07">
+  <script src="carousel.js?v=2026-10-07" defer></script>
+  <script src="spotlight.js?v=2026-10-07" defer></script>
+  <script src="theme.js?v=2026-10-07" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
   <header class="site-header">
     <div class="wrap">
-      <a class="wordmark" href="./" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
       <nav class="site-nav" aria-label="Main">
         <ul>
           <li><a href="#features">Features</a></li>
@@ -49,6 +48,7 @@
           <li><a href="support/">Support</a></li>
         </ul>
       </nav>
+      <a class="wordmark" href="./" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
       <div class="header-end">
         <a class="pill" href="https://github.com/mwc0/cookie-manager">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -97,15 +97,17 @@
            JavaScript. carousel.js adds the row of icons underneath. The
            strip opens on the one marked data-start. Each screenshot is
            there twice, light and dark; style.css shows the one that matches
-           the page. -->
+           the page. The empty "edge" span in each is the light on its top
+           edge. -->
       <section class="showcase" aria-roledescription="carousel" aria-label="Screenshots of cookieZ">
         <div class="slides" tabindex="0" role="group" aria-label="Screenshots. Scroll sideways or use the arrow keys.">
             <div class="slide" role="group" aria-roledescription="slide" aria-label="1 of 5">
               <figure>
                 <div class="plate ticks">
-                  <img class="shot for-light" src="images/popup-03-edit.webp?v=2026-10-06" srcset="images/popup-03-edit@2x.webp?v=2026-10-06 2x" width="780" height="574" loading="lazy"
+                  <span class="edge" aria-hidden="true"></span>
+                  <img class="shot for-light" src="images/popup-03-edit.webp?v=2026-10-07" srcset="images/popup-03-edit@2x.webp?v=2026-10-07 2x" width="780" height="574" loading="lazy"
                        alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
-                  <img class="shot for-dark" src="images/popup-03-edit-dark.webp?v=2026-10-06" srcset="images/popup-03-edit-dark@2x.webp?v=2026-10-06 2x" width="780" height="574" loading="lazy"
+                  <img class="shot for-dark" src="images/popup-03-edit-dark.webp?v=2026-10-07" srcset="images/popup-03-edit-dark@2x.webp?v=2026-10-07 2x" width="780" height="574" loading="lazy"
                        alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
                 </div>
                 <figcaption>Create or edit any field</figcaption>
@@ -114,9 +116,10 @@
             <div class="slide" role="group" aria-roledescription="slide" aria-label="2 of 5">
               <figure>
                 <div class="plate ticks">
-                  <img class="shot for-light" src="images/popup-04-search.webp?v=2026-10-06" srcset="images/popup-04-search@2x.webp?v=2026-10-06 2x" width="780" height="440" loading="lazy"
+                  <span class="edge" aria-hidden="true"></span>
+                  <img class="shot for-light" src="images/popup-04-search.webp?v=2026-10-07" srcset="images/popup-04-search@2x.webp?v=2026-10-07 2x" width="780" height="440" loading="lazy"
                        alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
-                  <img class="shot for-dark" src="images/popup-04-search-dark.webp?v=2026-10-06" srcset="images/popup-04-search-dark@2x.webp?v=2026-10-06 2x" width="780" height="440" loading="lazy"
+                  <img class="shot for-dark" src="images/popup-04-search-dark.webp?v=2026-10-07" srcset="images/popup-04-search-dark@2x.webp?v=2026-10-07 2x" width="780" height="440" loading="lazy"
                        alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
                 </div>
                 <figcaption>Search, then delete only what's shown</figcaption>
@@ -125,9 +128,10 @@
             <div class="slide" data-start role="group" aria-roledescription="slide" aria-label="3 of 5">
               <figure>
                 <div class="plate ticks">
-                  <img class="shot for-light" src="images/popup-01-overview.webp?v=2026-10-06" srcset="images/popup-01-overview@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                  <span class="edge" aria-hidden="true"></span>
+                  <img class="shot for-light" src="images/popup-01-overview.webp?v=2026-10-07" srcset="images/popup-01-overview@2x.webp?v=2026-10-07 2x" width="780" height="555" loading="lazy"
                        alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
-                  <img class="shot for-dark" src="images/popup-01-overview-dark.webp?v=2026-10-06" srcset="images/popup-01-overview-dark@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                  <img class="shot for-dark" src="images/popup-01-overview-dark.webp?v=2026-10-07" srcset="images/popup-01-overview-dark@2x.webp?v=2026-10-07 2x" width="780" height="555" loading="lazy"
                        alt="The cookieZ popup on example.com, listing four cookies with their domain, path, expiry and flags, and the delete panel above them.">
                 </div>
                 <figcaption>Every cookie on the site you're on</figcaption>
@@ -136,9 +140,10 @@
             <div class="slide" role="group" aria-roledescription="slide" aria-label="4 of 5">
               <figure>
                 <div class="plate ticks">
-                  <img class="shot for-light" src="images/popup-02-delete-scope.webp?v=2026-10-06" srcset="images/popup-02-delete-scope@2x.webp?v=2026-10-06 2x" width="780" height="580" loading="lazy"
+                  <span class="edge" aria-hidden="true"></span>
+                  <img class="shot for-light" src="images/popup-02-delete-scope.webp?v=2026-10-07" srcset="images/popup-02-delete-scope@2x.webp?v=2026-10-07 2x" width="780" height="580" loading="lazy"
                        alt="The delete panel with All sites selected: 7 cookies across 4 sites, with the four sites listed underneath.">
-                  <img class="shot for-dark" src="images/popup-02-delete-scope-dark.webp?v=2026-10-06" srcset="images/popup-02-delete-scope-dark@2x.webp?v=2026-10-06 2x" width="780" height="580" loading="lazy"
+                  <img class="shot for-dark" src="images/popup-02-delete-scope-dark.webp?v=2026-10-07" srcset="images/popup-02-delete-scope-dark@2x.webp?v=2026-10-07 2x" width="780" height="580" loading="lazy"
                        alt="The delete panel with All sites selected: 7 cookies across 4 sites, with the four sites listed underneath.">
                 </div>
                 <figcaption>See exactly what will be deleted, before it happens</figcaption>
@@ -147,9 +152,10 @@
             <div class="slide" role="group" aria-roledescription="slide" aria-label="5 of 5">
               <figure>
                 <div class="plate ticks">
-                  <img class="shot for-light" src="images/popup-05-keep.webp?v=2026-10-06" srcset="images/popup-05-keep@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                  <span class="edge" aria-hidden="true"></span>
+                  <img class="shot for-light" src="images/popup-05-keep.webp?v=2026-10-07" srcset="images/popup-05-keep@2x.webp?v=2026-10-07 2x" width="780" height="555" loading="lazy"
                        alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
-                  <img class="shot for-dark" src="images/popup-05-keep-dark.webp?v=2026-10-06" srcset="images/popup-05-keep-dark@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+                  <img class="shot for-dark" src="images/popup-05-keep-dark.webp?v=2026-10-07" srcset="images/popup-05-keep-dark@2x.webp?v=2026-10-07 2x" width="780" height="555" loading="lazy"
                        alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
                 </div>
                 <figcaption>Keep the cookies you don't want to lose</figcaption>
@@ -223,9 +229,9 @@
           <p>That number comes from the same lookup that does the deleting, so what it says and what it does can't drift apart. Partitioned cookies, which many tools miss, are included.</p>
         </div>
         <div class="plate ticks reveal">
-          <img class="shot for-light" src="images/popup-02-delete-scope.webp?v=2026-10-06" srcset="images/popup-02-delete-scope@2x.webp?v=2026-10-06 2x" width="780" height="580" loading="lazy"
+          <img class="shot for-light" src="images/popup-02-delete-scope.webp?v=2026-10-07" srcset="images/popup-02-delete-scope@2x.webp?v=2026-10-07 2x" width="780" height="580" loading="lazy"
                alt="The delete panel with All sites selected: 7 cookies across 4 sites, with the four sites listed underneath.">
-          <img class="shot for-dark" src="images/popup-02-delete-scope-dark.webp?v=2026-10-06" srcset="images/popup-02-delete-scope-dark@2x.webp?v=2026-10-06 2x" width="780" height="580" loading="lazy"
+          <img class="shot for-dark" src="images/popup-02-delete-scope-dark.webp?v=2026-10-07" srcset="images/popup-02-delete-scope-dark@2x.webp?v=2026-10-07 2x" width="780" height="580" loading="lazy"
                alt="The delete panel with All sites selected: 7 cookies across 4 sites, with the four sites listed underneath.">
         </div>
       </div>
@@ -270,9 +276,9 @@
             <p>Change a cookie's value, expiry, path or flags, or make a new one. A cookie that was only for one host stays that way, and a session cookie doesn't quietly become permanent.</p>
           </div>
           <div class="plate ticks reveal">
-            <img class="shot for-light" src="images/popup-03-edit.webp?v=2026-10-06" srcset="images/popup-03-edit@2x.webp?v=2026-10-06 2x" width="780" height="574" loading="lazy"
+            <img class="shot for-light" src="images/popup-03-edit.webp?v=2026-10-07" srcset="images/popup-03-edit@2x.webp?v=2026-10-07 2x" width="780" height="574" loading="lazy"
                  alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
-            <img class="shot for-dark" src="images/popup-03-edit-dark.webp?v=2026-10-06" srcset="images/popup-03-edit-dark@2x.webp?v=2026-10-06 2x" width="780" height="574" loading="lazy"
+            <img class="shot for-dark" src="images/popup-03-edit-dark.webp?v=2026-10-07" srcset="images/popup-03-edit-dark@2x.webp?v=2026-10-07 2x" width="780" height="574" loading="lazy"
                  alt="The editor creating a new cookie, with every field shown: name, value, domain, path, SameSite, expiry and flags.">
           </div>
         </div>
@@ -282,9 +288,9 @@
             <p>Filter by name, value, domain or path. An extra delete option appears that removes only the cookies left on screen.</p>
           </div>
           <div class="plate ticks reveal">
-            <img class="shot for-light" src="images/popup-04-search.webp?v=2026-10-06" srcset="images/popup-04-search@2x.webp?v=2026-10-06 2x" width="780" height="440" loading="lazy"
+            <img class="shot for-light" src="images/popup-04-search.webp?v=2026-10-07" srcset="images/popup-04-search@2x.webp?v=2026-10-07 2x" width="780" height="440" loading="lazy"
                  alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
-            <img class="shot for-dark" src="images/popup-04-search-dark.webp?v=2026-10-06" srcset="images/popup-04-search-dark@2x.webp?v=2026-10-06 2x" width="780" height="440" loading="lazy"
+            <img class="shot for-dark" src="images/popup-04-search-dark.webp?v=2026-10-07" srcset="images/popup-04-search-dark@2x.webp?v=2026-10-07 2x" width="780" height="440" loading="lazy"
                  alt="A search for 'token' showing one matching cookie, with the delete scope set to just the cookies shown.">
           </div>
         </div>
@@ -294,9 +300,9 @@
             <p>Mark a cookie as Kept and it's left alone by every delete, even "All sites". The summary tells you how many it's skipping.</p>
           </div>
           <div class="plate ticks reveal">
-            <img class="shot for-light" src="images/popup-05-keep.webp?v=2026-10-06" srcset="images/popup-05-keep@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+            <img class="shot for-light" src="images/popup-05-keep.webp?v=2026-10-07" srcset="images/popup-05-keep@2x.webp?v=2026-10-07 2x" width="780" height="555" loading="lazy"
                  alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
-            <img class="shot for-dark" src="images/popup-05-keep-dark.webp?v=2026-10-06" srcset="images/popup-05-keep-dark@2x.webp?v=2026-10-06 2x" width="780" height="555" loading="lazy"
+            <img class="shot for-dark" src="images/popup-05-keep-dark.webp?v=2026-10-07" srcset="images/popup-05-keep-dark@2x.webp?v=2026-10-07 2x" width="780" height="555" loading="lazy"
                  alt="A cookie marked as Kept. Its delete button is disabled and the summary says one kept cookie will be left alone.">
           </div>
         </div>

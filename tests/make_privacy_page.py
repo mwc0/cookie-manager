@@ -59,8 +59,8 @@ TEMPLATE = """<!DOCTYPE html>
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=2026-10-06">
-  <script src="../theme.js?v=2026-10-06" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2026-10-07">
+  <script src="../theme.js?v=2026-10-07" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
@@ -69,7 +69,6 @@ TEMPLATE = """<!DOCTYPE html>
 
   <header class="site-header">
     <div class="wrap">
-      <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
       <nav class="site-nav" aria-label="Main">
         <ul>
           <li><a href="../#features">Features</a></li>
@@ -77,6 +76,7 @@ TEMPLATE = """<!DOCTYPE html>
           <li><a href="../support/">Support</a></li>
         </ul>
       </nav>
+      <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
       <div class="header-end">
         <a class="pill" href="https://github.com/mwc0/cookie-manager">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
