@@ -20,6 +20,11 @@ The store images are always exactly 1280x800 PNGs.
 
 The first store image is also copied to docs/images/01-overview.png, the
 preview image shown when someone shares a link to the website.
+
+The five captures are then taken a second time with the browser set to dark,
+for the website only: popup-NAME-dark.webp and popup-NAME-dark@2x.webp. The
+website shows those on its dark theme. The store images are always the light
+ones.
 """
 
 import base64
@@ -135,105 +140,127 @@ def compose(context, png_bytes, caption, out_path, clipped=False):
     frame.close()
 
 
+def shoot(p, dark=False):
+    """
+    Takes the five screenshots once.
+
+    The light pass writes the store images and the website's light captures.
+    The dark pass (dark=True) starts the browser with a dark system theme,
+    which the popup follows, and writes only the website's dark captures.
+    """
+    # The whole browser runs at 2x. It has to be set here, when the
+    # browser starts. An earlier version tried to open a separate 2x
+    # window later, which failed without an error and gave 1x images.
+    context = launch(
+        p,
+        "screenshots-dark" if dark else "screenshots",
+        device_scale_factor=2,
+        color_scheme="dark" if dark else "light",
+    )
+    ext_id = extension_id(context)
+
+    shot_page = context.new_page()
+    shot_page.set_viewport_size({"width": 800, "height": 700})
+    stub_active_tab(shot_page, SITE)
+    shot_page.goto(popup_url(ext_id))
+    shot_page.wait_for_timeout(400)
+    grant_host_permission(shot_page)
+    shot_page.evaluate(
+        "async (cookies) => { for (const c of cookies) await chrome.cookies.set(c); }",
+        COOKIES,
+    )
+    shot_page.close()
+
+    page = context.new_page()
+    stub_active_tab(page, SITE)
+    page.goto(popup_url(ext_id))
+    page.wait_for_timeout(1400)
+
+    def capture(name, caption):
+        page.mouse.move(0, 0)  # no stray hover states
+        page.wait_for_timeout(250)
+        clipped = page.evaluate(
+            "() => document.body.scrollHeight > document.body.clientHeight + 2"
+        )
+        body = page.locator("body")
+        png = body.screenshot()  # 2x, 1560px wide
+
+        # The website gets both sizes, and each browser only downloads the
+        # one it needs (see srcset in docs/index.html).
+        suffix = "-dark" if dark else ""
+        (SITE_OUT / f"popup-{name}{suffix}.webp").write_bytes(to_webp(context, body.screenshot(scale="css")))
+        (SITE_OUT / f"popup-{name}{suffix}@2x.webp").write_bytes(to_webp(context, png))
+        if dark:
+            print(f"  wrote popup-{name}-dark.webp")
+            return
+
+        compose(context, png, caption, OUT / f"{name}.png", clipped)
+        if name == SHOTS[0][0]:
+            # The website's link preview image. Written here so it always
+            # matches the store copy.
+            (SITE_OUT / "01-overview.png").write_bytes((OUT / f"{name}.png").read_bytes())
+        print(f"  wrote {name}.png" + ("  (content scrolls; faded)" if clipped else ""))
+
+    # 1. overview
+    capture(*SHOTS[0])
+
+    # 2. the delete scope indicator, all sites, domains expanded
+    page.locator('input[name="scope"][value="all"]').check()
+    page.wait_for_timeout(900)
+    page.evaluate("() => { const d = document.getElementById('scope-domains'); if (d) d.open = true; }")
+    page.wait_for_timeout(300)
+    capture(*SHOTS[1])
+    page.evaluate("() => { const d = document.getElementById('scope-domains'); if (d) d.open = false; }")
+    page.locator('input[name="scope"][value="page"]').check()
+    page.wait_for_timeout(700)
+
+    # 3. the editor, mid-edit
+    page.locator("#add-button").click()
+    page.wait_for_timeout(400)
+    page.fill("#field-name", "feature_flag")
+    page.fill("#field-value", "beta-enabled")
+    page.uncheck("#field-session")
+    page.fill("#field-expiry", "2027-06-30T12:00")
+    # Remove focus, or the screenshot shows a focus ring and selected
+    # text left behind by fill(), which would look like bugs.
+    page.evaluate("() => document.activeElement && document.activeElement.blur()")
+    page.wait_for_timeout(300)
+    capture(*SHOTS[2])
+    page.locator("#edit-cancel").click()
+    page.wait_for_timeout(600)
+
+    # 4. search, with its own delete scope selected
+    page.fill("#search-input", "token")
+    page.wait_for_timeout(700)
+    page.locator('input[name="scope"][value="matches"]').check()
+    page.wait_for_timeout(800)
+    capture(*SHOTS[3])
+    page.fill("#search-input", "")
+    page.wait_for_timeout(700)
+
+    # 5. a kept cookie
+    row = page.locator("tr", has=page.locator("td.name", has_text="session_id"))
+    row.locator("button.row-button.keep").first.click()
+    page.wait_for_timeout(900)
+    # Reopen the popup first. Otherwise the "Keeping session_id" message
+    # is still showing, and it pushes the kept row down into the faded
+    # bottom edge where it's hard to see.
+    page.reload()
+    page.wait_for_timeout(1400)
+    page.locator('input[name="scope"][value="page"]').check()
+    page.wait_for_timeout(800)
+    capture(*SHOTS[4])
+
+    page.close()
+    context.close()
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as p:
-        # The whole browser runs at 2x. It has to be set here, when the
-        # browser starts. An earlier version tried to open a separate 2x
-        # window later, which failed without an error and gave 1x images.
-        context = launch(p, "screenshots", device_scale_factor=2)
-        ext_id = extension_id(context)
-
-        shot_page = context.new_page()
-        shot_page.set_viewport_size({"width": 800, "height": 700})
-        stub_active_tab(shot_page, SITE)
-        shot_page.goto(popup_url(ext_id))
-        shot_page.wait_for_timeout(400)
-        grant_host_permission(shot_page)
-        shot_page.evaluate(
-            "async (cookies) => { for (const c of cookies) await chrome.cookies.set(c); }",
-            COOKIES,
-        )
-        shot_page.close()
-
-        page = context.new_page()
-        stub_active_tab(page, SITE)
-        page.goto(popup_url(ext_id))
-        page.wait_for_timeout(1400)
-
-        def capture(name, caption):
-            page.mouse.move(0, 0)  # no stray hover states
-            page.wait_for_timeout(250)
-            clipped = page.evaluate(
-                "() => document.body.scrollHeight > document.body.clientHeight + 2"
-            )
-            body = page.locator("body")
-            png = body.screenshot()  # 2x, 1560px wide
-            compose(context, png, caption, OUT / f"{name}.png", clipped)
-
-            # The website gets both sizes, and each browser only downloads the
-            # one it needs (see srcset in docs/index.html).
-            (SITE_OUT / f"popup-{name}.webp").write_bytes(to_webp(context, body.screenshot(scale="css")))
-            (SITE_OUT / f"popup-{name}@2x.webp").write_bytes(to_webp(context, png))
-            if name == SHOTS[0][0]:
-                # The website's link preview image. Written here so it always
-                # matches the store copy.
-                (SITE_OUT / "01-overview.png").write_bytes((OUT / f"{name}.png").read_bytes())
-            print(f"  wrote {name}.png" + ("  (content scrolls; faded)" if clipped else ""))
-
-        # 1. overview
-        capture(*SHOTS[0])
-
-        # 2. the delete scope indicator, all sites, domains expanded
-        page.locator('input[name="scope"][value="all"]').check()
-        page.wait_for_timeout(900)
-        page.evaluate("() => { const d = document.getElementById('scope-domains'); if (d) d.open = true; }")
-        page.wait_for_timeout(300)
-        capture(*SHOTS[1])
-        page.evaluate("() => { const d = document.getElementById('scope-domains'); if (d) d.open = false; }")
-        page.locator('input[name="scope"][value="page"]').check()
-        page.wait_for_timeout(700)
-
-        # 3. the editor, mid-edit
-        page.locator("#add-button").click()
-        page.wait_for_timeout(400)
-        page.fill("#field-name", "feature_flag")
-        page.fill("#field-value", "beta-enabled")
-        page.uncheck("#field-session")
-        page.fill("#field-expiry", "2027-06-30T12:00")
-        # Remove focus, or the screenshot shows a focus ring and selected
-        # text left behind by fill(), which would look like bugs.
-        page.evaluate("() => document.activeElement && document.activeElement.blur()")
-        page.wait_for_timeout(300)
-        capture(*SHOTS[2])
-        page.locator("#edit-cancel").click()
-        page.wait_for_timeout(600)
-
-        # 4. search, with its own delete scope selected
-        page.fill("#search-input", "token")
-        page.wait_for_timeout(700)
-        page.locator('input[name="scope"][value="matches"]').check()
-        page.wait_for_timeout(800)
-        capture(*SHOTS[3])
-        page.fill("#search-input", "")
-        page.wait_for_timeout(700)
-
-        # 5. a kept cookie
-        row = page.locator("tr", has=page.locator("td.name", has_text="session_id"))
-        row.locator("button.row-button.keep").first.click()
-        page.wait_for_timeout(900)
-        # Reopen the popup first. Otherwise the "Keeping session_id" message
-        # is still showing, and it pushes the kept row down into the faded
-        # bottom edge where it's hard to see.
-        page.reload()
-        page.wait_for_timeout(1400)
-        page.locator('input[name="scope"][value="page"]').check()
-        page.wait_for_timeout(800)
-        capture(*SHOTS[4])
-
-        page.close()
-        context.close()
+        shoot(p)
+        shoot(p, dark=True)
 
     print(f"\n{len(SHOTS)} screenshots in {OUT}")
     print("Check each one before uploading: no real values, nothing cut off.")

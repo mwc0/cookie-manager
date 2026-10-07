@@ -52,16 +52,18 @@ Before you delete anything, cookieZ shows you how many cookies will go and which
 Features:
 - See every cookie for the current site: name, value, domain, path, expiry and flags
 - Delete cookies for this page, this site and its subdomains, every site, or just the ones you tick
-- Undo a delete for 10 minutes afterwards
+- Undo a delete, an import or an edit for 10 minutes afterwards
 - Click a cookie to edit any field, or create a new one. URL-encoded and JSON values are shown decoded
 - Delete a single cookie
 - Search by name, value, domain or path, then delete only the results
 - Export cookies as JSON, cookies.txt (Netscape), a Playwright storageState file, a Cookie header or a curl command, then copy or download
-- Import JSON (from cookieZ or another cookie editor) or cookies.txt, with a preview before anything is added
+- Import JSON (from cookieZ or another cookie editor), cookies.txt, Set-Cookie lines, a Cookie header or a curl command (from Copy as cURL in DevTools), with a preview before anything is added
+- Copy cookies from one site to another, such as from a staging site to localhost
 - Copy a cookie's value in one click
 - Sort by name, domain or expiry, and see at a glance which cookies expire soon
+- The table updates by itself when a site sets or changes a cookie, and marks what changed
 - See how big each site's cookies are, with a warning when they get big enough to stop logins
-- Open it with Alt+Shift+K, press / to search and Esc to go back
+- Open it with Alt+Shift+K, press / to search, move through cookies with the arrow keys, and press Esc to go back
 - Built-in help that works offline
 - Open cookieZ in a full tab for long lists and long values
 - Mark cookies as "Kept" so cookieZ never deletes them
@@ -124,10 +126,11 @@ plus its partition key for partitioned (CHIPS) cookies. It never holds cookie
 values. Second, the user's colour theme choice, "light" or "dark", saved only
 if they pick the opposite of their system theme. Both are stored via
 chrome.storage.local.
-Also, for the Undo button, the cookies removed by the most recent delete are
-held in chrome.storage.session (memory only, never written to disk, cleared
-by the browser on exit). Only the last delete is held, and it is dropped
-after 10 minutes or once used. Nothing is synced or transmitted.
+Also, for the Undo button, the cookies affected by the most recent delete,
+import or save are held in chrome.storage.session (memory only, never
+written to disk, cleared by the browser on exit): the cookies as they were
+before, and any the change added. Only the last change is held, and it is
+dropped after 10 minutes or once used. Nothing is synced or transmitted.
 ```
 
 ### Host permission (`*://*/*`, optional)

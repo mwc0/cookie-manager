@@ -13,6 +13,7 @@ import {
   cookieBytes,
   formatBytes,
 } from "../lib/format.js";
+import { cookieKey } from "../lib/cookies.js";
 import { copyWithFeedback } from "./clipboard.js";
 import { iconButton, setIconContent } from "./icons.js";
 
@@ -25,9 +26,14 @@ const VALUE_PREVIEW_LENGTH = 28;
 const LARGE_COOKIE_BYTES = 3500;
 
 // `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
-// isProtected(cookie), onPick(cookie, ticked), isPicked(cookie) }. Deleting
-// one cookie takes two clicks (Delete, then "Sure?"), and onDelete is only
-// called after the second.
+// isProtected(cookie), onPick(cookie, ticked), isPicked(cookie),
+// isChanged(cookie), isExpanded(cookie), onExpand(cookie, expanded) }.
+// Deleting one cookie takes two clicks (Delete, then "Sure?"), and onDelete
+// is only called after the second.
+//
+// Each row carries its cookie's key in data-key, and can take keyboard
+// focus (tabindex -1). popup.js decides which row is in the tab order and
+// handles the keys.
 //
 // `sort` is { key: "name" | "domain" | "expires", dir: "ascending" |
 // "descending" }.
@@ -82,8 +88,14 @@ export function sortCookies(cookies, sort = DEFAULT_SORT) {
 
 function buildRow(cookie, handlers, disarmers, disarmAll) {
   const row = document.createElement("tr");
+  row.dataset.key = cookieKey(cookie);
+  row.tabIndex = -1;
   if (handlers.isProtected && handlers.isProtected(cookie)) {
     row.classList.add("kept-row");
+  }
+  // Just added or changed, by the site or by cookieZ. See popup.css.
+  if (handlers.isChanged && handlers.isChanged(cookie)) {
+    row.classList.add("changed");
   }
 
   // Clicking a row opens it in the editor, unless the click was on one of
@@ -114,7 +126,7 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   const name = textCell(cookie.name, "mono name");
   name.title = cookie.name + " (" + formatBytes(cookieBytes(cookie)) + ")";
   row.appendChild(name);
-  row.appendChild(valueCell(cookie.value));
+  row.appendChild(valueCell(cookie, handlers));
   row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
   row.appendChild(breakableCell(cookie.path, "/", "mono path"));
 
@@ -286,12 +298,14 @@ function breakableCell(text, separator, className) {
 
 // Long values show a preview. Click to see the whole value, with a Copy
 // button under it. A short value is plain text: a disabled button would
-// swallow the click that opens the row in the editor.
-function valueCell(value) {
+// swallow the click that opens the row in the editor. An opened value stays
+// open when the table is drawn again, such as when the site changes a
+// cookie.
+function valueCell(cookie, handlers) {
   const cell = document.createElement("td");
   cell.className = "mono value";
 
-  const full = value == null ? "" : String(value);
+  const full = cookie.value == null ? "" : String(cookie.value);
   const needsToggle = full.length > VALUE_PREVIEW_LENGTH;
 
   if (!needsToggle) {
@@ -315,12 +329,19 @@ function valueCell(value) {
   copy.hidden = true;
   copy.addEventListener("click", () => copyWithFeedback(copy, full));
 
-  button.title = "Click to show the full value";
-  button.addEventListener("click", () => {
-    const expanded = cell.classList.toggle("expanded");
+  const show = (expanded) => {
+    cell.classList.toggle("expanded", expanded);
     button.textContent = expanded ? full : truncate(full, VALUE_PREVIEW_LENGTH);
     button.title = expanded ? "Click to collapse" : "Click to show the full value";
     copy.hidden = !expanded;
+  };
+  show(Boolean(handlers.isExpanded && handlers.isExpanded(cookie)));
+  button.addEventListener("click", () => {
+    const expanded = !cell.classList.contains("expanded");
+    show(expanded);
+    if (handlers.onExpand) {
+      handlers.onExpand(cookie, expanded);
+    }
   });
 
   cell.appendChild(button);

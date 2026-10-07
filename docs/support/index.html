@@ -28,24 +28,31 @@
   <meta property="og:image:height" content="800">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
-  <link rel="stylesheet" href="../style.css?v=2026-10-02">
-  <script src="../theme.js?v=2026-10-02" defer></script>
+  <!-- The heading uses this font, so fetch it straight away. -->
+  <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../style.css?v=2026-10-07">
+  <script src="../theme.js?v=2026-10-07" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
   <header class="site-header">
     <div class="wrap">
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../#features">Features</a></li>
+          <li><a href="../privacy/">Privacy</a></li>
+          <li><a href="./" aria-current="page">Support</a></li>
+        </ul>
+      </nav>
       <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
       <div class="header-end">
-        <nav class="site-nav" aria-label="Main">
-          <ul>
-            <li><a href="../#features">Features</a></li>
-            <li><a href="../privacy/">Privacy</a></li>
-            <li><a href="./" aria-current="page">Support</a></li>
-            <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
-          </ul>
-        </nav>
+        <a class="pill" href="https://github.com/mwc0/cookie-manager">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 8-4 4 4 4m6-8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Source code
+        </a>
         <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
           <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
@@ -89,15 +96,15 @@
         </details>
         <details>
           <summary>Is there a keyboard shortcut?</summary>
-          <p>Yes. Press Alt+Shift+K to open cookieZ, / to jump to the search box, and Esc to go back from the editor, export, import or help. To change the first one, go to <code>chrome://extensions/shortcuts</code>. If another extension already uses Alt+Shift+K, Chrome leaves cookieZ without one, and you can pick your own there.</p>
+          <p>Yes. Press Alt+Shift+K to open cookieZ, / to jump to the search box, and Esc to go back from the editor, export, import or help. In the table, the arrow keys move between cookies, Enter edits one, Space ticks it, K keeps it and Delete deletes it, after asking. To change the first one, go to <code>chrome://extensions/shortcuts</code>. If another extension already uses Alt+Shift+K, Chrome leaves cookieZ without one, and you can pick your own there.</p>
         </details>
         <details>
           <summary>What does Keep do?</summary>
           <p>The bookmark button on each row marks a cookie as Kept. A cookie marked as Kept is left out of every delete cookieZ makes, including "All sites". It only affects cookieZ's own delete buttons. The website that set the cookie can still change or remove it.</p>
         </details>
         <details>
-          <summary>I deleted the wrong cookies. Can I get them back?</summary>
-          <p>Yes, for 10 minutes. Click Undo next to the "Deleted" message, or open cookieZ again and click Undo at the top. Only the most recent delete can be undone. To make this possible, cookieZ holds the deleted cookies in memory for those 10 minutes. They're never written to disk, and closing the browser clears them.</p>
+          <summary>I deleted or changed the wrong cookies. Can I get them back?</summary>
+          <p>Yes, for 10 minutes. This works for a delete, an import, or a cookie you saved in the editor. Click Undo next to the message, or open cookieZ again and click Undo at the top. Only the most recent change can be undone. To make this possible, cookieZ holds the cookies as they were in memory for those 10 minutes. They're never written to disk, and closing the browser clears them.</p>
         </details>
         <details>
           <summary>I set an expiry date and it changed</summary>
@@ -109,7 +116,7 @@
         </details>
         <details>
           <summary>How do I move cookies to another browser or tool?</summary>
-          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. The Playwright option makes a storageState file for starting automated tests already logged in. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. You'll see how many cookies will be added, and for which sites, before anything changes. An export includes login cookies, so treat it like a password.</p>
+          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. The Playwright option makes a storageState file for starting automated tests already logged in. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. Import also takes Set-Cookie lines, a Cookie header (which goes on the site you're on) or a curl command from "Copy as cURL" in DevTools. To copy cookies from one site to another, such as from staging to localhost, open cookieZ on the site they should go to, and tick "Put them on this site instead". You'll see how many cookies will be added, and for which sites, before anything changes. An export includes login cookies, so treat it like a password.</p>
         </details>
         <details>
           <summary>What does the size next to the cookie count mean?</summary>

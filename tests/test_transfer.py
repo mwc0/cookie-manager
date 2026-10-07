@@ -264,7 +264,6 @@ def main():
         before = snapshot(page)
         checks = [
             ("[{ not json", "couldn't be read"),
-            ("a=1; b=2", "Cookie header"),
             ("just some words", "cookies.txt format"),
             ("", "nothing to import"),
         ]

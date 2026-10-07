@@ -23,6 +23,9 @@ import {
   toCurl,
   parseImport,
   planImport,
+  matchSentCookies,
+  isForSite,
+  moveToSite,
 } from "../lib/transfer.js";
 import { copyWithFeedback } from "./clipboard.js";
 import {
@@ -52,15 +55,33 @@ import {
 } from "../lib/theme.js";
 import { renderCookieTable, DEFAULT_SORT } from "./render.js";
 import {
-  saveLastDelete,
-  loadLastDelete,
-  clearLastDelete,
-  restoreCookies,
+  saveLastChange,
+  loadLastChange,
+  clearLastChange,
+  undoChange,
   describeAge,
 } from "../lib/undo.js";
 
 // The site in the current tab, as { origin, hostname }.
 let page = null;
+
+// Long values opened in the table, by cookie key, so they stay open when the
+// table is drawn again.
+let expanded = new Set();
+
+// For marking rows the site has just added or changed: each cookie's key and
+// what it looked like at the last load, then what's different this time.
+// See refreshTable().
+let seenCookies = null;
+let changedKeys = new Set();
+let lastChange = { added: 0, changed: 0, removed: 0 };
+
+// The row that's in the tab order. See setTabRow().
+let tabRowKey = null;
+
+// True while the editor is saving, so its own write isn't taken for the
+// site changing the cookie.
+let saving = false;
 
 // The cookies the chosen scope will delete. The count on screen comes from
 // this same list, so the number shown always matches what gets deleted.
@@ -183,6 +204,8 @@ async function loadCurrentPage() {
   }
 
   page = { origin: url.origin, hostname: url.hostname };
+  seenCookies = null;
+  expanded = new Set();
 
   el("main-message").hidden = true;
   el("site-name").textContent = url.hostname;
@@ -208,6 +231,7 @@ async function refresh() {
 async function refreshTable() {
   try {
     pageCookies = await getCookiesForPage(page);
+    noteChanges(pageCookies);
 
     const { keys, error } = await loadProtected();
     protectedKeys = keys;
@@ -228,15 +252,54 @@ async function refreshTable() {
   }
 }
 
+// What a cookie looked like, to tell whether it changed between loads.
+function fingerprintOf(cookie) {
+  return [cookie.value, cookie.expirationDate, cookie.secure, cookie.httpOnly, cookie.sameSite].join("\n");
+}
+
+// Compares this load with the last one. Nothing is marked on the first load
+// of a page, since everything would be new.
+function noteChanges(cookies) {
+  const previous = seenCookies;
+  seenCookies = new Map(cookies.map((cookie) => [cookieKey(cookie), fingerprintOf(cookie)]));
+  changedKeys = new Set();
+  lastChange = { added: 0, changed: 0, removed: 0 };
+  if (previous === null) {
+    return;
+  }
+
+  for (const [key, fingerprint] of seenCookies) {
+    if (!previous.has(key)) {
+      changedKeys.add(key);
+      lastChange.added += 1;
+    } else if (previous.get(key) !== fingerprint) {
+      changedKeys.add(key);
+      lastChange.changed += 1;
+    }
+  }
+  for (const key of previous.keys()) {
+    if (!seenCookies.has(key)) {
+      lastChange.removed += 1;
+    }
+  }
+}
+
 // Applies the search and draws the table. It filters the cookies already
 // loaded, so typing doesn't ask Chrome again on every key press.
 function drawTable() {
   const query = el("search-input").value;
   shownCookies = filterCookies(pageCookies, query);
 
-  // Forget ticks for cookies that have gone, after a delete for example.
+  // Forget ticks and opened values for cookies that have gone, after a
+  // delete for example.
   const onPage = new Set(pageCookies.map(cookieKey));
   picked = new Set([...picked].filter((key) => onPage.has(key)));
+  expanded = new Set([...expanded].filter((key) => onPage.has(key)));
+
+  const focus = focusInTable();
+  const changed = changedKeys;
+  // Only marked once. Typing in the search box redraws without them.
+  changedKeys = new Set();
 
   renderCookieTable(el("cookie-rows"), shownCookies, {
     onEdit: openEditor,
@@ -245,8 +308,28 @@ function drawTable() {
     isProtected: (cookie) => isProtected(protectedKeys, cookie),
     onPick: pickCookie,
     isPicked: (cookie) => picked.has(cookieKey(cookie)),
+    isChanged: (cookie) => changed.has(cookieKey(cookie)),
+    isExpanded: (cookie) => expanded.has(cookieKey(cookie)),
+    onExpand: (cookie, open) => {
+      if (open) {
+        expanded.add(cookieKey(cookie));
+      } else {
+        expanded.delete(cookieKey(cookie));
+      }
+    },
   }, sort);
+  setTabRow(tabRowKey);
+  restoreFocus(focus);
   showPicked();
+
+  if (changed.size > 0) {
+    const rows = el("cookie-rows");
+    setTimeout(() => {
+      for (const row of rows.querySelectorAll("tr.changed")) {
+        row.classList.remove("changed");
+      }
+    }, 3000);
+  }
 
   const filtering = query.trim() !== "";
   el("search-clear").hidden = !filtering;
@@ -309,6 +392,209 @@ function sortBy(key) {
   }
   drawTable();
 }
+
+// --- keyboard --------------------------------------------------------------
+
+// Only one row is in the tab order, so Tab doesn't stop on every row. The
+// arrow keys move between rows. It's the last row that had focus, or the
+// first.
+function setTabRow(key) {
+  const rows = [...el("cookie-rows").rows];
+  const chosen = rows.find((row) => row.dataset.key === key) || rows[0];
+  tabRowKey = chosen ? chosen.dataset.key : null;
+  for (const row of rows) {
+    row.tabIndex = row === chosen ? 0 : -1;
+  }
+}
+
+// Where focus is in the table, so a redraw can put it back. See
+// restoreFocus().
+function focusInTable() {
+  const active = document.activeElement;
+  const row = active && active.closest ? active.closest("#cookie-rows tr") : null;
+  if (!row) {
+    return null;
+  }
+  const control = ["button.keep", "button.edit", "td.pick input"].find((selector) => active.matches(selector));
+  return {
+    key: row.dataset.key,
+    index: [...el("cookie-rows").rows].indexOf(row),
+    control: control || null,
+  };
+}
+
+// Puts focus back on the same cookie, and the same button on it, if it's
+// still there. If it's gone, such as after a delete, focus goes to the row
+// that took its place, so the next key press carries on down the list.
+function restoreFocus(where) {
+  if (!where) {
+    return;
+  }
+  const rows = [...el("cookie-rows").rows];
+  if (rows.length === 0) {
+    el("search-input").focus();
+    return;
+  }
+  const same = rows.find((row) => row.dataset.key === where.key);
+  const row = same || rows[Math.min(where.index, rows.length - 1)];
+  const control = same && where.control ? row.querySelector(where.control) : null;
+  (control || row).focus();
+}
+
+function cookieForRow(row) {
+  return shownCookies.find((cookie) => cookieKey(cookie) === row.dataset.key) || null;
+}
+
+// The keys on a row with focus. Keys pressed on the row's own buttons do
+// what those buttons do, apart from Esc, which cancels "Sure?".
+function onTableKey(event) {
+  const row = event.target.closest("tr");
+  if (!row || event.ctrlKey || event.metaKey || event.altKey) {
+    return;
+  }
+
+  if (event.key === "Escape") {
+    const cancel = row.querySelector("button.cancel:not([hidden])");
+    if (cancel) {
+      event.preventDefault();
+      event.stopPropagation();
+      cancel.click();
+      row.focus();
+    }
+    return;
+  }
+  if (event.target !== row) {
+    return;
+  }
+
+  const rows = [...el("cookie-rows").rows];
+  const index = rows.indexOf(row);
+  const moveTo = (to) => rows[Math.max(0, Math.min(rows.length - 1, to))].focus();
+
+  if (event.key === "ArrowDown") {
+    moveTo(index + 1);
+  } else if (event.key === "ArrowUp") {
+    if (index === 0) {
+      el("search-input").focus();
+    } else {
+      moveTo(index - 1);
+    }
+  } else if (event.key === "Home") {
+    moveTo(0);
+  } else if (event.key === "End") {
+    moveTo(rows.length - 1);
+  } else if (event.key === "Enter") {
+    const cookie = cookieForRow(row);
+    if (cookie) {
+      openEditor(cookie);
+    }
+  } else if (event.key === " ") {
+    row.querySelector("td.pick input").click();
+  } else if (event.key === "k" || event.key === "K") {
+    row.querySelector("button.row-button.keep").click();
+  } else if (event.key === "Delete" || event.key === "Backspace") {
+    const remove = row.querySelector("button.row-button.danger");
+    if (remove.disabled) {
+      const cookie = cookieForRow(row);
+      showMainMessage(
+        (cookie ? cookie.name : "This cookie") +
+          " is being kept, so it can't be deleted. Press K to stop keeping it.",
+        true
+      );
+    } else {
+      remove.click();
+      remove.focus();
+    }
+  } else {
+    return;
+  }
+  event.preventDefault();
+}
+
+// --- following the site's changes ------------------------------------------
+
+// The table follows changes as they happen: the site setting a cookie on
+// login, say. Changes come in bursts, so they're gathered up and the table
+// is drawn again at most once a second.
+let liveTimer = null;
+let livePending = false;
+let lastLiveDraw = 0;
+
+// The same cookies getCookiesForPage() reads: this host, its parent
+// domains and its subdomains.
+function concernsPage(cookie) {
+  if (!page) {
+    return false;
+  }
+  const domain = String(cookie.domain || "").replace(/^\./, "");
+  const host = page.hostname;
+  return domain === host || host.endsWith("." + domain) || domain.endsWith("." + host);
+}
+
+// Never pulls the rug: the table isn't redrawn while another screen is open,
+// while "Delete these cookies?" is showing, or while a row says "Sure?".
+// It's redrawn as soon as none of those is true.
+function liveRedrawWaits() {
+  return (
+    currentState() !== "main" ||
+    !el("confirm-row").hidden ||
+    el("cookie-rows").querySelector(".armed") !== null
+  );
+}
+
+function scheduleLiveRedraw() {
+  if (liveTimer !== null) {
+    return;
+  }
+  const wait = Math.max(300, 1000 - (Date.now() - lastLiveDraw));
+  liveTimer = setTimeout(runLiveRedraw, wait);
+}
+
+async function runLiveRedraw() {
+  liveTimer = null;
+  if (!livePending) {
+    return;
+  }
+  if (liveRedrawWaits()) {
+    liveTimer = setTimeout(runLiveRedraw, 1000);
+    return;
+  }
+  livePending = false;
+  lastLiveDraw = Date.now();
+  await refresh();
+  announceChanges();
+}
+
+// "1 cookie added, 2 changed." for screen readers.
+function announceChanges() {
+  const parts = [
+    [lastChange.added, "added"],
+    [lastChange.changed, "changed"],
+    [lastChange.removed, "removed"],
+  ].filter(([count]) => count > 0);
+  if (parts.length === 0) {
+    return;
+  }
+  el("live-note").textContent =
+    parts
+      .map(([count, what], i) => (i === 0 ? pluralise(count, "cookie", "cookies") : formatCount(count)) + " " + what)
+      .join(", ") + ".";
+}
+
+function sameCookie(a, b) {
+  return cookieKey(a) === cookieKey(b);
+}
+
+chrome.cookies.onChanged.addListener(({ cookie }) => {
+  // The editor says so if the cookie open in it changes underneath it.
+  if (currentState() === "edit" && editing && !saving && sameCookie(cookie, editing)) {
+    el("edit-changed").hidden = false;
+  }
+  if (concernsPage(cookie)) {
+    livePending = true;
+    scheduleLiveRedraw();
+  }
+});
 
 // --- ticking cookies -------------------------------------------------------
 
@@ -502,7 +788,7 @@ async function runDelete() {
         pluralise(failed.length, "cookie", "cookies") +
         " could not be deleted, and may be protected by the browser.";
     }
-    await offerUndo(result, removedCookies);
+    await offerUndo(result, { kind: "delete", restore: removedCookies });
   } catch (error) {
     result.className = "result error";
     result.textContent = "The delete failed: " + error.message;
@@ -532,6 +818,7 @@ function openEditor(cookie) {
   el("edit-title").textContent = cookie ? "Edit cookie" : "New cookie";
   el("edit-errors").hidden = true;
   el("edit-errors").textContent = "";
+  el("edit-changed").hidden = true;
 
   const isNew = !cookie;
   const secure = isNew ? page.origin.startsWith("https:") : Boolean(cookie.secure);
@@ -587,9 +874,15 @@ function showDecoded() {
   el("value-decoded-text").textContent = decoded === null ? "" : decoded;
 }
 
+// Focus goes back to the cookie's row, for anyone using the keyboard.
 function closeEditor() {
+  const key = editing ? cookieKey(editing) : null;
   editing = null;
   showState("main");
+  const row = key ? [...el("cookie-rows").rows].find((r) => r.dataset.key === key) : null;
+  if (row) {
+    row.focus();
+  }
 }
 
 // No expiry date while "Session cookie" is ticked.
@@ -668,26 +961,41 @@ async function saveEditor() {
   save.disabled = true;
 
   try {
+    saving = true;
     const { ok, cookie, error } = await writeCookie(editing, values);
+    saving = false;
 
     if (!ok) {
       showFormErrors([error]);
       return;
     }
 
-    const wasEditing = Boolean(editing);
+    // What Undo needs. An edit puts the old cookie back. If the name, domain
+    // or path changed, the saved cookie is a second cookie, so Undo takes
+    // it away too. A new cookie is only taken away.
+    const original = editing;
+    const change = original
+      ? {
+          kind: "edit",
+          restore: [original],
+          remove: cookieKey(original) === cookieKey(cookie) ? [] : [cookie],
+        }
+      : { kind: "create", remove: [cookie] };
+
     closeEditor();
     showMainMessage(
-      (wasEditing ? "Saved changes to " + values.name + "." : "Created " + values.name + ".") +
+      (original ? "Saved changes to " + values.name + "." : "Created " + values.name + ".") +
         describeExpiryChange(values, cookie),
       false
     );
+    await offerUndo(el("main-message"), change);
     await refresh();
   } catch (error) {
     // Shouldn't happen, since writeCookie() catches its own errors. Show it
     // anyway so the form doesn't look stuck.
     showFormErrors([error && error.message ? error.message : String(error)]);
   } finally {
+    saving = false;
     save.disabled = false;
   }
 }
@@ -736,7 +1044,7 @@ async function deleteOne(cookie) {
     !ok
   );
   if (ok) {
-    await offerUndo(el("main-message"), [cookie]);
+    await offerUndo(el("main-message"), { kind: "delete", restore: [cookie] });
   }
 
   await refresh();
@@ -744,14 +1052,14 @@ async function deleteOne(cookie) {
 
 // --- undo ------------------------------------------------------------------
 
-// Remembers what a delete removed and adds an Undo button to its message.
-// Setting the message's text later removes the button. That's fine: the
-// delete can still be undone from the next open, for up to 10 minutes.
-async function offerUndo(message, removedCookies) {
-  if (removedCookies.length === 0) {
+// Remembers a change and adds an Undo button to its message. Setting the
+// message's text later removes the button. That's fine: the change can
+// still be undone from the next open, for up to 10 minutes.
+async function offerUndo(message, change) {
+  if ((change.restore || []).length + (change.remove || []).length === 0) {
     return;
   }
-  const { error } = await saveLastDelete(removedCookies);
+  const { error } = await saveLastChange(change);
   if (error) {
     message.append(" " + error);
     return;
@@ -768,61 +1076,110 @@ function appendUndoButton(message) {
   message.append(" ", button);
 }
 
-// On opening, offer to undo a delete made in the last 10 minutes, unless
+// "Deleted 5 cookies from example.com", "Imported 12 cookies across 3
+// sites", "Saved changes to sid", "Created theme".
+function describeChange(change) {
+  if (change.kind === "edit") {
+    return "Saved changes to " + change.restore[0].name;
+  }
+  if (change.kind === "create") {
+    return "Created " + change.remove[0].name;
+  }
+
+  const affected = [...change.restore, ...change.remove];
+  const what =
+    affected.length === 1 ? affected[0].name : pluralise(affected.length, "cookie", "cookies");
+  const where = describeSites(sitesOf(affected));
+  return (change.kind === "import" ? "Imported " : "Deleted ") + what + where;
+}
+
+// On opening, offer to undo a change made in the last 10 minutes, unless
 // something more important is already showing.
 async function offerStoredUndo() {
-  const last = await loadLastDelete();
+  const last = await loadLastChange();
   if (!last || !el("main-message").hidden) {
     return;
   }
-
-  // "example.com" and ".example.com" are the same site to a reader.
-  const count = last.cookies.length;
-  const sites = Array.from(
-    new Set(last.cookies.map((cookie) => String(cookie.domain || "").replace(/^\./, "")))
-  );
-  const what = count === 1 ? last.cookies[0].name : pluralise(count, "cookie", "cookies");
-  const where =
-    sites.length === 1 ? " from " + sites[0] : " across " + pluralise(sites.length, "site", "sites");
-
   showMainMessage(
-    "Deleted " + what + where + " " + describeAge(Date.now() / 1000 - last.at) + ".",
+    describeChange(last) + " " + describeAge(Date.now() / 1000 - last.at) + ".",
     false
   );
   appendUndoButton(el("main-message"));
 }
 
+// What Undo did, in words. A delete says "Restored 5 cookies." An edit says
+// "Put sid back as it was." An import says "Removed 9 cookies and put back 3
+// cookies."
+function describeUndone(change, result) {
+  const { removed, restored, failures } = result;
+  if (change.kind === "delete") {
+    return "Restored " + pluralise(restored, "cookie", "cookies") + ".";
+  }
+  if (change.kind === "edit" && restored === 1 && failures.length === 0) {
+    return "Put " + change.restore[0].name + " back as it was.";
+  }
+  if (change.kind === "create" && removed === 1) {
+    return "Removed " + change.remove[0].name + ".";
+  }
+
+  const done = [];
+  if (removed > 0) {
+    done.push("removed " + pluralise(removed, "cookie", "cookies"));
+  }
+  if (restored > 0) {
+    done.push("put back " + pluralise(restored, "cookie", "cookies"));
+  }
+  if (done.length === 0) {
+    return "Nothing was changed.";
+  }
+  const sentence = done.join(" and ") + ".";
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+}
+
 async function runUndo(message, button) {
   button.disabled = true;
 
-  const last = await loadLastDelete();
+  const last = await loadLastChange();
   if (!last) {
     message.className = "result error";
-    message.textContent = "There's nothing to undo. Undo only lasts 10 minutes after a delete.";
+    message.textContent = "There's nothing to undo. Undo only lasts 10 minutes after a change.";
     return;
   }
 
   message.className = "result";
-  message.textContent = "Restoring…";
+  message.textContent = "Undoing…";
 
-  const { restored, expired, failures } = await restoreCookies(last.cookies);
-  await clearLastDelete();
+  // Read the Kept list fresh, so Undo never removes a cookie kept since.
+  const { keys } = await loadProtected();
+  const result = await undoChange(last, (cookie) => isProtected(keys, cookie));
+  await clearLastChange();
 
-  const parts = ["Restored " + pluralise(restored, "cookie", "cookies") + "."];
-  if (expired > 0) {
+  const parts = [describeUndone(last, result)];
+  if (result.kept > 0) {
     parts.push(
-      pluralise(expired, "cookie has", "cookies have") +
+      pluralise(result.kept, "cookie is", "cookies are") +
+        " marked Kept, so " +
+        (result.kept === 1 ? "it was" : "they were") +
+        " left alone."
+    );
+  }
+  if (result.expired > 0) {
+    parts.push(
+      pluralise(result.expired, "cookie has", "cookies have") +
         " expired since, so " +
-        (expired === 1 ? "it wasn't" : "they weren't") +
+        (result.expired === 1 ? "it wasn't" : "they weren't") +
         " put back."
     );
   }
-  if (failures.length > 0) {
+  if (result.failures.length > 0) {
     parts.push(
-      "Chrome refused " + pluralise(failures.length, "cookie", "cookies") + ": " + failures.join(" ")
+      "Chrome refused " +
+        pluralise(result.failures.length, "cookie", "cookies") +
+        ": " +
+        result.failures.join(" ")
     );
   }
-  message.className = failures.length > 0 ? "result error" : "result";
+  message.className = result.failures.length > 0 ? "result error" : "result";
   message.textContent = parts.join(" ");
 
   await refresh();
@@ -941,6 +1298,7 @@ let importPlan = null;
 
 function openImport() {
   el("main-message").hidden = true;
+  el("import-move").checked = false;
   el("import-file-row").hidden = !inTab;
   el("import-file-hint").hidden = inTab;
   resetImportPreview();
@@ -970,7 +1328,21 @@ async function checkImport() {
   el("import-failures").hidden = true;
   resetImportPreview();
 
-  const { entries, problems } = parseImport(el("import-text").value);
+  const pageUrl = page.origin + "/";
+  const parsed = parseImport(el("import-text").value, { pageUrl });
+  let entries = parsed.entries;
+  let problems = parsed.problems;
+
+  // Cookies from another site can be put on this one instead, such as from
+  // a staging site to localhost. Only offered when some are from elsewhere.
+  const elsewhere = entries.some((entry) => !isForSite(entry, page.hostname));
+  el("import-move-site").textContent = page.hostname;
+  el("import-move-row").hidden = !elsewhere;
+  if (elsewhere && el("import-move").checked) {
+    const moved = moveToSite(entries, pageUrl);
+    entries = moved.entries;
+    problems = [...problems, ...moved.problems];
+  }
 
   let existing;
   try {
@@ -979,6 +1351,11 @@ async function checkImport() {
     showImportResult("Couldn't read your current cookies to compare: " + error.message, true);
     return;
   }
+
+  // A Cookie header or curl command only has names and values. The rest
+  // comes from the cookies the site already has.
+  entries = matchSentCookies(entries, existing);
+  const fromHeader = parsed.format === "header" || parsed.format === "curl";
 
   const plan = planImport(
     entries,
@@ -1007,7 +1384,17 @@ async function checkImport() {
       parts.push(
         formatCount(replacing) +
           (replacing === 1 ? " of them replaces a cookie" : " of them replace cookies") +
-          " you already have."
+          " you already have." +
+          (fromHeader ? (replacing === 1 ? " Only its value changes." : " Only their values change.") : "")
+      );
+    }
+    const adding = count - replacing;
+    if (fromHeader && adding > 0) {
+      parts.push(
+        pluralise(adding, "new cookie", "new cookies") +
+          (adding === 1
+            ? " will be a session cookie, so Chrome removes it when it closes."
+            : " will be session cookies, so Chrome removes them when it closes.")
       );
     }
     if (kept > 0) {
@@ -1066,9 +1453,11 @@ async function runImport() {
   let replaced = 0;
   let shortened = 0;
   const failures = [];
+  // For Undo: the cookies this import replaced, and the ones it added.
+  const change = { kind: "import", restore: [], remove: [] };
 
   // One at a time, so the result for each cookie is known.
-  for (const { entry, replaces } of plan.toWrite) {
+  for (const { entry, replaces, match } of plan.toWrite) {
     const { ok, cookie, error } = await writeCookie(null, entry);
     if (!ok) {
       failures.push(entry.name + " (" + entry.domain + "): " + error);
@@ -1076,8 +1465,10 @@ async function runImport() {
     }
     if (replaces) {
       replaced += 1;
+      change.restore.push(match);
     } else {
       created += 1;
+      change.remove.push(cookie);
     }
     if (describeExpiryChange(entry, cookie)) {
       shortened += 1;
@@ -1101,6 +1492,7 @@ async function runImport() {
     parts.push("Chrome refused " + pluralise(failures.length, "cookie", "cookies") + ":");
   }
   showImportResult(parts.join(" "), failures.length > 0);
+  await offerUndo(el("import-result"), change);
   fillList(el("import-failures"), failures);
 }
 
@@ -1117,9 +1509,12 @@ async function readImportFile() {
   }
 }
 
+// Back on the main screen, an import made just now can be undone from the
+// status line, like any other change.
 async function closeImport() {
   showState("main");
   await refresh();
+  await offerStoredUndo();
 }
 
 // --- open in a tab ---------------------------------------------------------
@@ -1228,6 +1623,21 @@ el("search-clear").addEventListener("click", () => {
 });
 
 el("pick-all").addEventListener("change", () => pickAllShown(el("pick-all").checked));
+el("cookie-rows").addEventListener("keydown", onTableKey);
+el("cookie-rows").addEventListener("focusin", (event) => {
+  const row = event.target.closest("tr");
+  if (row && row.dataset.key !== tabRowKey) {
+    setTabRow(row.dataset.key);
+  }
+});
+// Down from the search box goes into the table.
+el("search-input").addEventListener("keydown", (event) => {
+  const first = el("cookie-rows").rows[0];
+  if (event.key === "ArrowDown" && first && !el("cookie-table").hidden) {
+    event.preventDefault();
+    first.focus();
+  }
+});
 for (const button of document.querySelectorAll("th button.sort")) {
   button.addEventListener("click", () => sortBy(button.dataset.sort));
 }
@@ -1265,7 +1675,16 @@ el("import-confirm").addEventListener("click", runImport);
 el("import-cancel").addEventListener("click", resetImportPreview);
 el("import-file").addEventListener("change", readImportFile);
 // A changed paste has to be checked again before it can be imported.
-el("import-text").addEventListener("input", resetImportPreview);
+el("import-text").addEventListener("input", () => {
+  el("import-move").checked = false;
+  resetImportPreview();
+});
+// Ticking "Put them on this site instead" checks again with the cookies
+// moved, and leaves focus on the box.
+el("import-move").addEventListener("change", async () => {
+  await checkImport();
+  el("import-move").focus();
+});
 
 el("value-copy").addEventListener("click", () =>
   copyWithFeedback(el("value-copy"), el("field-value").value)

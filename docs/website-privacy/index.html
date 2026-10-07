@@ -28,24 +28,31 @@
   <meta property="og:image:height" content="800">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
-  <link rel="stylesheet" href="../style.css?v=2026-10-02">
-  <script src="../theme.js?v=2026-10-02" defer></script>
+  <!-- The heading uses this font, so fetch it straight away. -->
+  <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../style.css?v=2026-10-07">
+  <script src="../theme.js?v=2026-10-07" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
   <header class="site-header">
     <div class="wrap">
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../#features">Features</a></li>
+          <li><a href="../privacy/">Privacy</a></li>
+          <li><a href="../support/">Support</a></li>
+        </ul>
+      </nav>
       <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
       <div class="header-end">
-        <nav class="site-nav" aria-label="Main">
-          <ul>
-            <li><a href="../#features">Features</a></li>
-            <li><a href="../privacy/">Privacy</a></li>
-            <li><a href="../support/">Support</a></li>
-            <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
-          </ul>
-        </nav>
+        <a class="pill" href="https://github.com/mwc0/cookie-manager">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 8-4 4 4 4m6-8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Source code
+        </a>
         <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
           <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>

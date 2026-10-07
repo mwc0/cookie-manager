@@ -81,6 +81,9 @@
           <div>
             <h1 id="site-name"></h1>
             <p id="cookie-count" class="muted"></p>
+            <!-- Says what the site just changed, for screen readers. The
+                 table marks the rows for everyone else. -->
+            <p id="live-note" class="visually-hidden" aria-live="polite"></p>
           </div>
         </div>
         <div class="bar-actions">
@@ -376,6 +379,10 @@
         </div>
 
         <p id="edit-partition" class="muted" hidden></p>
+        <p id="edit-changed" class="notice" role="status" hidden>
+          The site changed this cookie while you were editing. Saving will
+          overwrite it.
+        </p>
         <ul id="edit-errors" class="errors" hidden></ul>
 
         <div class="actions">
@@ -447,7 +454,9 @@
 
       <p>
         Paste cookies exported as JSON (from cookieZ or another cookie
-        editor), or the contents of a cookies.txt file.
+        editor), a cookies.txt file, Set-Cookie lines, or a curl command
+        (from “Copy as cURL” in DevTools). A Cookie header on its own goes
+        on this site.
       </p>
 
       <!-- Choosing a file can close the popup in Chrome, so it's only offered
@@ -469,6 +478,12 @@
 
       <section id="import-preview" hidden>
         <p id="import-summary" class="scope-summary" role="status"></p>
+        <p id="import-move-row" class="check-row" hidden>
+          <label>
+            <input id="import-move" type="checkbox" />
+            <span>Put them on <span id="import-move-site"></span> instead</span>
+          </label>
+        </p>
         <details id="import-domains" hidden>
           <summary id="import-domains-summary"></summary>
           <ul id="import-domains-list"></ul>
@@ -503,11 +518,18 @@
           profile. The count and the sites are always shown first.
         </dd>
 
-        <dt>I deleted the wrong cookies</dt>
+        <dt>I deleted or changed the wrong cookies</dt>
         <dd>
           Click <strong>Undo</strong> in the message at the top. It works
-          for 10 minutes after a delete, even if you close cookieZ, and only
-          for the most recent delete.
+          for 10 minutes after a delete, an import or a Save, even if you
+          close cookieZ, and only for the most recent one.
+        </dd>
+
+        <dt>Why did a row light up?</dt>
+        <dd>
+          The site, or cookieZ, has just added or changed that cookie. The
+          table follows changes as they happen, so you don't need to press
+          Refresh.
         </dd>
 
         <dt>What does the bookmark do?</dt>
@@ -541,8 +563,18 @@
             <span>Open cookieZ. Change it at chrome://extensions/shortcuts.</span>
             <span><kbd>/</kbd></span>
             <span>Search the cookies.</span>
+            <span><kbd>↑</kbd> <kbd>↓</kbd></span>
+            <span>Move between cookies. <kbd>Home</kbd> and <kbd>End</kbd> jump to the first and last.</span>
+            <span><kbd>Enter</kbd></span>
+            <span>Edit the cookie.</span>
+            <span><kbd>Space</kbd></span>
+            <span>Tick it.</span>
+            <span><kbd>K</kbd></span>
+            <span>Keep it, or stop keeping it.</span>
+            <span><kbd>Delete</kbd></span>
+            <span>Delete it. It asks "Sure?" first: press <kbd>Enter</kbd> to delete.</span>
             <span><kbd>Esc</kbd></span>
-            <span>Go back from this screen, the editor, export or import.</span>
+            <span>Go back from this screen, the editor, export or import, or cancel a delete.</span>
           </div>
         </dd>
 
