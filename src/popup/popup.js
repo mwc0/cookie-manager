@@ -37,6 +37,8 @@ import {
   isProtected,
   partitionByProtection,
   pruneProtected,
+  listProtected,
+  unprotectKeys,
 } from "../lib/protect.js";
 import {
   pluralise,
@@ -332,6 +334,7 @@ function drawTable() {
   setTabRow(tabRowKey);
   restoreFocus(focus);
   showPicked();
+  showKeptLink();
 
   if (changed.size > 0) {
     const rows = el("cookie-rows");
@@ -1105,6 +1108,130 @@ async function toggleProtected(cookie, shouldKeep) {
   await refreshScope();
 }
 
+// --- the list of kept cookies ----------------------------------------------
+
+// "Kept cookies: 3" in the delete panel. It counts the whole saved list, not
+// just this site's, so the list can be reached from any site.
+function showKeptLink() {
+  const link = el("kept-open");
+  link.hidden = protectedKeys.size === 0;
+  link.textContent = "Kept cookies: " + formatCount(protectedKeys.size);
+}
+
+async function openKept() {
+  el("kept-message").hidden = true;
+  cancelKeptConfirm();
+  showState("kept");
+  await drawKept();
+  el("kept-back").focus();
+}
+
+// Draws the saved list. Built with textContent, like the main table, since
+// cookie names come from websites.
+async function drawKept() {
+  const { entries, error } = await listProtected();
+  if (error) {
+    showKeptMessage(error, true);
+  }
+
+  const rows = el("kept-rows");
+  rows.textContent = "";
+
+  for (const entry of entries) {
+    const row = document.createElement("tr");
+
+    const name = document.createElement("td");
+    name.className = "mono kept-name";
+    name.textContent = entry.name;
+    row.appendChild(name);
+
+    const site = document.createElement("td");
+    site.className = "mono kept-site";
+    site.textContent = entry.domain;
+    if (entry.partitionKey) {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = "Partitioned";
+      badge.title = "Kept separately for " + (entry.partitionKey.topLevelSite || "another site");
+      site.appendChild(document.createTextNode(" "));
+      site.appendChild(badge);
+    }
+    row.appendChild(site);
+
+    const path = document.createElement("td");
+    path.className = "mono kept-path";
+    path.textContent = entry.path;
+    row.appendChild(path);
+
+    const action = document.createElement("td");
+    action.className = "kept-action";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "row-button kept-stop";
+    button.textContent = "Stop keeping";
+    button.addEventListener("click", () => stopKeeping([entry], entry.name + " on " + entry.domain));
+    action.appendChild(button);
+    row.appendChild(action);
+
+    rows.appendChild(row);
+  }
+
+  el("kept-table").hidden = entries.length === 0;
+  el("kept-empty").hidden = entries.length > 0;
+  el("kept-clear").hidden = entries.length === 0;
+  return entries;
+}
+
+function showKeptMessage(text, isError) {
+  const message = el("kept-message");
+  message.textContent = text;
+  message.className = isError ? "result error" : "result";
+  message.hidden = false;
+}
+
+async function stopKeeping(entries, described) {
+  const { keys, error } = await unprotectKeys(entries.map((entry) => entry.key));
+  protectedKeys = keys;
+  cancelKeptConfirm();
+  await drawKept();
+  if (error) {
+    showKeptMessage(error, true);
+  } else {
+    showKeptMessage("No longer keeping " + described + ".", false);
+  }
+}
+
+// "Stop keeping all" asks first, like the delete panel.
+async function startKeptConfirm() {
+  const { entries } = await listProtected();
+  el("kept-confirm-text").textContent =
+    "Stop keeping " + (entries.length === 1 ? "this cookie" : "all " + formatCount(entries.length) + " cookies") + "?";
+  el("kept-clear").hidden = true;
+  el("kept-confirm").hidden = false;
+  el("kept-confirm-no").focus();
+}
+
+function cancelKeptConfirm() {
+  el("kept-confirm").hidden = true;
+  el("kept-clear").hidden = false;
+}
+
+async function stopKeepingAll() {
+  const { entries } = await listProtected();
+  await stopKeeping(entries, pluralise(entries.length, "cookie", "cookies"));
+}
+
+// Back to the table, redrawn, since what's kept may have changed.
+async function closeKept() {
+  el("kept-rows").textContent = "";
+  showState("main");
+  drawTable();
+  await refreshScope();
+  if (!el("kept-open").hidden) {
+    el("kept-open").focus();
+  }
+}
+
 // Deletes one cookie from its row. The row already asked "Sure?".
 async function deleteOne(cookie) {
   // The button is disabled for kept cookies, but check again in case the
@@ -1709,6 +1836,15 @@ el("search-clear").addEventListener("click", () => {
   el("search-input").focus();
 });
 
+el("kept-open").addEventListener("click", openKept);
+el("kept-back").addEventListener("click", closeKept);
+el("kept-clear").addEventListener("click", startKeptConfirm);
+el("kept-confirm-yes").addEventListener("click", stopKeepingAll);
+el("kept-confirm-no").addEventListener("click", () => {
+  cancelKeptConfirm();
+  el("kept-clear").focus();
+});
+
 el("pick-all").addEventListener("change", () => pickAllShown(el("pick-all").checked));
 el("cookie-rows").addEventListener("keydown", onTableKey);
 el("cookie-rows").addEventListener("focusin", (event) => {
@@ -1804,6 +1940,7 @@ function currentState() {
 
 // Each screen's way back, for Esc.
 const BACK_BUTTONS = {
+  kept: "kept-back",
   edit: "edit-cancel",
   export: "export-back",
   import: "import-back",

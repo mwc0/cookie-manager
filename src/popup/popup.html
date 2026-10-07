@@ -264,6 +264,9 @@
           <button id="export-button" type="button" disabled>
             Export&hellip;
           </button>
+          <!-- Opens the list of every kept cookie, on any site. Only shown
+               when there is one. -->
+          <button id="kept-open" class="link-button kept-link" type="button" hidden></button>
 
           <div id="confirm-row" class="confirm" hidden>
             <span id="confirm-text"></span>
@@ -535,6 +538,51 @@
       <ul id="import-failures" class="errors" hidden></ul>
     </section>
 
+    <!-- Every cookie marked as Kept, on every site. It shows the saved list
+         and nothing else: it never looks up other sites' cookies. -->
+    <section id="state-kept" class="state" hidden>
+      <header class="bar">
+        <h1>Kept cookies</h1>
+        <button id="kept-back" type="button">Back</button>
+      </header>
+
+      <p id="kept-intro">
+        cookieZ leaves these out of every delete. This is the whole list it
+        has saved, for every site: names, never values.
+      </p>
+      <p id="kept-message" class="result" role="status" hidden></p>
+
+      <div id="kept-wrap">
+        <table id="kept-table">
+          <colgroup>
+            <col />
+            <col />
+            <col class="kept-path-col" />
+            <col class="kept-action-col" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Site</th>
+              <th scope="col">Path</th>
+              <th scope="col"><span class="visually-hidden">Stop keeping</span></th>
+            </tr>
+          </thead>
+          <tbody id="kept-rows"></tbody>
+        </table>
+        <p id="kept-empty" class="muted empty" hidden>No cookies are marked as Kept.</p>
+      </div>
+
+      <div class="actions">
+        <button id="kept-clear" class="danger" type="button">Stop keeping all&hellip;</button>
+        <span id="kept-confirm" class="confirm" hidden>
+          <span id="kept-confirm-text"></span>
+          <button id="kept-confirm-yes" class="danger solid" type="button">Yes, stop keeping</button>
+          <button id="kept-confirm-no" type="button">Cancel</button>
+        </span>
+      </div>
+    </section>
+
     <!-- Help that works offline. Nothing here is a link: the extension
          doesn't open web pages or fetch anything, so the support site is
          written out for you to visit yourself. -->
@@ -572,7 +620,9 @@
         <dd>
           It marks a cookie as <strong>Kept</strong>, so cookieZ leaves it out
           of every delete, even "All sites". It doesn't stop the website
-          changing or removing the cookie itself.
+          changing or removing the cookie itself. To see every cookie you've
+          kept, on any site, click <strong>Kept cookies</strong> under the
+          delete options.
         </dd>
 
         <dt>What do the badges mean?</dt>

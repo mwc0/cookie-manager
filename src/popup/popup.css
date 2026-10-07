@@ -474,6 +474,7 @@ button.danger:hover:not(:disabled) {
 
 #delete-panel,
 #table-wrap,
+#kept-wrap,
 #import-preview {
   position: relative;
   border: 1px solid var(--line-strong);
@@ -486,6 +487,7 @@ button.danger:hover:not(:disabled) {
 /* The four dots. */
 #delete-panel::after,
 #table-wrap::after,
+#kept-wrap::after,
 #import-preview::after {
   content: "";
   position: absolute;
@@ -1244,6 +1246,50 @@ tr.kept-row td.pick {
 button.row-button.keep.kept:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* "Kept cookies: 3" at the end of the delete panel's buttons. */
+.kept-link {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+/* The list of every kept cookie. */
+#kept-intro {
+  max-width: 72ch;
+  color: var(--fg-soft);
+}
+
+#kept-wrap {
+  overflow: hidden;
+}
+
+#kept-table td {
+  vertical-align: middle;
+}
+
+#kept-table td.kept-name {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+#kept-table td.kept-site,
+#kept-table td.kept-path {
+  overflow-wrap: anywhere;
+}
+
+#kept-table .kept-path-col {
+  width: 120px;
+}
+
+#kept-table .kept-action-col {
+  width: 124px;
+}
+
+#kept-table td.kept-action {
+  padding-top: 3px;
+  padding-bottom: 3px;
+  text-align: right;
 }
 
 /* --- copy, open in a tab ---------------------------------------------------- */

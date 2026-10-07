@@ -21,6 +21,7 @@ FILES = [
     "test_search.py",
     "test_filters.py",
     "test_protect.py",
+    "test_kept_list.py",
     "test_theme.py",
     "test_transfer.py",
     "test_import_headers.py",
