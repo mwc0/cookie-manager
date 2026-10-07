@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 5 October 2026**
+**Last updated: 7 October 2026**
 
 ## The short version
 
@@ -72,6 +72,9 @@ is there.
 Nothing is stored for cookies you have not marked as Kept. Uninstalling the
 extension removes the list, and the theme setting with it.
 
+You can see the whole list, for every site, on the **Kept cookies** screen in
+the extension, and remove anything from it there.
+
 ### Your last change, for Undo
 
 When you delete cookies, import cookies or save a cookie in the editor,
@@ -103,7 +106,10 @@ cookieZ reads your cookies in order to show them to you, which is what
 it is for. This happens only while the popup is open, only in response to you
 opening it, and the results only ever reach your own screen. While it is
 open, Chrome also tells it when a site changes a cookie, so the table can
-show the change. Nothing about those changes is kept once the popup closes.
+show the change and the **What changed** screen can list it. That list holds
+the cookie's name, its site, the time, and whether it was added, changed,
+removed or expired. It never holds the cookie's value. It is kept in memory
+only, and nothing about those changes is kept once the popup closes.
 
 Cookie values are shown in the popup's table. They are never transmitted, and
 never stored by the extension, except for the short-lived Undo copy described

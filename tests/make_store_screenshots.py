@@ -21,10 +21,17 @@ The store images are always exactly 1280x800 PNGs.
 The first store image is also copied to docs/images/01-overview.png, the
 preview image shown when someone shares a link to the website.
 
-The five captures are then taken a second time with the browser set to dark,
-for the website only: popup-NAME-dark.webp and popup-NAME-dark@2x.webp. The
-website shows those on its dark theme. The store images are always the light
-ones.
+The five captures are taken twice, once with the browser set to light and
+once set to dark, which the popup follows. The website gets both:
+popup-NAME.webp and popup-NAME-dark.webp, each also at 2x. It shows the one
+that matches the page's theme.
+
+The store images lead with the dark look, like the website. One of the
+five, the editor, is the light one, to show both themes exist. STORE_LIGHT
+below says which.
+
+The captions use the typeface bundled with the extension. It's read from
+src/popup/fonts and put inside the page, so nothing is fetched.
 """
 
 import base64
@@ -41,7 +48,9 @@ from helpers import (
     stub_active_tab,
 )
 
-OUT = Path(__file__).resolve().parent.parent / "store" / "screenshots"
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "store" / "screenshots"
+FONT = ROOT / "src" / "popup" / "fonts" / "hanken-grotesk.woff2"
 
 # Popup captures for the website, without the caption and grey background,
 # so the popup fills the image.
@@ -65,34 +74,74 @@ SHOTS = [
     ("01-overview", "See every cookie on the site you're on"),
     ("02-delete-scope", "Delete all of them, and see exactly what that means first"),
     ("03-edit", "Create and edit any field of a cookie"),
-    ("04-search", "Search, then delete only what you're looking at"),
+    ("04-search", "Search or filter, then delete only what you're looking at"),
     ("05-keep", "Keep the cookies you don't want to lose"),
 ]
 
-# The background the popup sits on. System fonts only, like the extension.
+# The store images are the dark captures, except these, which are light.
+STORE_LIGHT = {"03-edit"}
+
+# What differs between the two frames the popup is shown on. `fade` is the
+# popup's own background colour, for the fade at the bottom of a capture
+# that scrolls.
+FRAME_THEMES = {
+    "dark": {
+        "page": "#05070f", "ink": "#eef1fb", "light": "138, 168, 255", "beam": "0.34",
+        "edge": "rgba(170, 190, 255, 0.34)", "plate": "#0b0f1d", "dot": "rgba(200, 212, 255, 0.75)",
+        "shadow": "0 30px 60px -30px rgba(138, 168, 255, 0.45)", "fade": "5, 7, 15",
+    },
+    "light": {
+        "page": "#f2f4fa", "ink": "#121829", "light": "44, 92, 214", "beam": "0.14",
+        "edge": "rgba(18, 24, 41, 0.26)", "plate": "#ffffff", "dot": "rgba(18, 24, 41, 0.5)",
+        "shadow": "0 2px 4px rgba(20, 30, 60, 0.06), 0 26px 44px -26px rgba(20, 30, 60, 0.35)", "fade": "242, 244, 250",
+    },
+}
+
+# The page the popup sits on: the website's look. A dark (or light) field
+# with the beam falling from the top centre, the caption, and the popup in a
+# plate with a dot in each corner.
 FRAME = """<!DOCTYPE html>
 <html><head><meta charset="utf-8"><style>
+  @font-face {
+    font-family: "Hanken Grotesk";
+    src: url("data:font/woff2;base64,__FONT__") format("woff2");
+    font-weight: 100 900;
+  }
   html, body { margin: 0; padding: 0; width: 1280px; height: 800px; }
   body {
     display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 30px;
-    background: linear-gradient(160deg, #f4f6fb 0%, #e8ecf5 100%);
-    font: 500 27px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    color: #1f2633;
+    justify-content: center; gap: 26px;
+    background:
+      radial-gradient(ellipse 420px 260px at 50% 0, rgba(__LIGHT__, __BEAM__), transparent 72%),
+      conic-gradient(from 180deg at 50% -40px,
+        rgba(__LIGHT__, calc(__BEAM__ * 0.8)) 0deg, transparent 30deg,
+        transparent 330deg, rgba(__LIGHT__, calc(__BEAM__ * 0.8)) 360deg),
+      __PAGE__;
+    font-family: "Hanken Grotesk", sans-serif;
+    color: __INK__;
   }
-  h1 { margin: 0; padding: 0 60px; font-size: 29px; font-weight: 600;
-       letter-spacing: -0.01em; text-align: center; }
-  .shot { position: relative; width: 780px; border-radius: 10px;
-          box-shadow: 0 16px 40px rgba(20, 30, 60, 0.18),
-                      0 2px 6px rgba(20, 30, 60, 0.10); }
+  h1 { margin: 0; padding: 0 60px; font-size: 31px; font-weight: 600;
+       letter-spacing: -0.025em; text-align: center; }
+  .shot { position: relative; width: 780px; padding: 8px; border-radius: 18px;
+          border: 1px solid __EDGE__; background: __PLATE__;
+          box-shadow: __SHADOW__; }
   img { width: 780px; display: block; border-radius: 10px; }
+  /* The four dots in the plate's corners. */
+  .shot::before {
+    content: ""; position: absolute; inset: 3px; pointer-events: none;
+    background:
+      radial-gradient(circle, __DOT__ 0 1.2px, transparent 1.7px) left top / 4px 4px no-repeat,
+      radial-gradient(circle, __DOT__ 0 1.2px, transparent 1.7px) right top / 4px 4px no-repeat,
+      radial-gradient(circle, __DOT__ 0 1.2px, transparent 1.7px) left bottom / 4px 4px no-repeat,
+      radial-gradient(circle, __DOT__ 0 1.2px, transparent 1.7px) right bottom / 4px 4px no-repeat;
+  }
   /* Only added when the popup's content scrolls. The fade shows there's more
      below, instead of the image ending halfway through a row, which looks
      broken. */
   .shot.clipped::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 72px;
+    content: ""; position: absolute; left: 8px; right: 8px; bottom: 8px; height: 72px;
     border-radius: 0 0 10px 10px;
-    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 85%);
+    background: linear-gradient(to bottom, rgba(__FADE__, 0) 0%, rgba(__FADE__, 0.94) 85%);
   }
 </style></head>
 <body><h1>__CAPTION__</h1><div class="shot __CLIPPED__"><img src="__IMAGE__"></div></body></html>"""
@@ -123,16 +172,23 @@ def to_webp(context, png_bytes):
     return base64.b64decode(webp)
 
 
-def compose(context, png_bytes, caption, out_path, clipped=False):
+def compose(context, png_bytes, caption, out_path, theme, clipped=False):
     """Put a popup capture on a 1280x800 canvas with a caption."""
     data_uri = "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
-    frame = context.new_page()
-    frame.set_viewport_size({"width": 1280, "height": 800})
-    frame.set_content(
+    html = (
         FRAME.replace("__CAPTION__", caption)
         .replace("__IMAGE__", data_uri)
         .replace("__CLIPPED__", "clipped" if clipped else "")
+        .replace("__FONT__", base64.b64encode(FONT.read_bytes()).decode("ascii"))
     )
+    for name, value in FRAME_THEMES[theme].items():
+        html = html.replace("__" + name.upper() + "__", value)
+
+    frame = context.new_page()
+    frame.set_viewport_size({"width": 1280, "height": 800})
+    frame.set_content(html)
+    # Waits for the font, or the caption can be drawn in a fallback.
+    frame.evaluate("() => document.fonts.ready")
     frame.wait_for_timeout(300)
     # scale="css" keeps the image at exactly 1280x800, which the store needs,
     # even though the browser runs at 2x.
@@ -144,9 +200,9 @@ def shoot(p, dark=False):
     """
     Takes the five screenshots once.
 
-    The light pass writes the store images and the website's light captures.
-    The dark pass (dark=True) starts the browser with a dark system theme,
-    which the popup follows, and writes only the website's dark captures.
+    Each pass writes the website's captures for its theme, and the store
+    images that use that theme (see STORE_LIGHT). The dark pass (dark=True)
+    starts the browser with a dark system theme, which the popup follows.
     """
     # The whole browser runs at 2x. It has to be set here, when the
     # browser starts. An earlier version tried to open a separate 2x
@@ -190,16 +246,17 @@ def shoot(p, dark=False):
         suffix = "-dark" if dark else ""
         (SITE_OUT / f"popup-{name}{suffix}.webp").write_bytes(to_webp(context, body.screenshot(scale="css")))
         (SITE_OUT / f"popup-{name}{suffix}@2x.webp").write_bytes(to_webp(context, png))
-        if dark:
-            print(f"  wrote popup-{name}-dark.webp")
+        theme = "dark" if dark else "light"
+        if (name in STORE_LIGHT) != (theme == "light"):
+            print(f"  wrote popup-{name}{suffix}.webp")
             return
 
-        compose(context, png, caption, OUT / f"{name}.png", clipped)
+        compose(context, png, caption, OUT / f"{name}.png", theme, clipped)
         if name == SHOTS[0][0]:
             # The website's link preview image. Written here so it always
             # matches the store copy.
             (SITE_OUT / "01-overview.png").write_bytes((OUT / f"{name}.png").read_bytes())
-        print(f"  wrote {name}.png" + ("  (content scrolls; faded)" if clipped else ""))
+        print(f"  wrote {name}.png ({theme})" + ("  (content scrolls; faded)" if clipped else ""))
 
     # 1. overview
     capture(*SHOTS[0])
@@ -229,13 +286,13 @@ def shoot(p, dark=False):
     page.locator("#edit-cancel").click()
     page.wait_for_timeout(600)
 
-    # 4. search, with its own delete scope selected
-    page.fill("#search-input", "token")
+    # 4. a filter switched on, with its own delete scope selected
+    page.locator('#filters .chip[data-filter="secure"]').click()
     page.wait_for_timeout(700)
     page.locator('input[name="scope"][value="matches"]').check()
     page.wait_for_timeout(800)
     capture(*SHOTS[3])
-    page.fill("#search-input", "")
+    page.locator("#search-clear").click()
     page.wait_for_timeout(700)
 
     # 5. a kept cookie

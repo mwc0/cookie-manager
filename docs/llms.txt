@@ -13,6 +13,11 @@ Facts that are easy to get wrong:
 - Undo reverses the most recent delete, import or save for up to 10 minutes. The keyboard shortcut to open it is Alt+Shift+K by default, / jumps to the search box, the arrow keys move through the table, and Esc goes back a screen.
 - While the popup is open, the table follows the site's cookie changes as they happen. Nothing about them is kept after it closes.
 - Its help screen is built in and works offline. The popup contains no links to the web.
+- Quick filters (Secure, HttpOnly, Session, Kept, Expiring soon, Large, Partitioned) narrow the table, and "Just the cookies shown" deletes exactly what a search or filter leaves on screen. The table can be sorted by name, size, domain or expiry.
+- The editor explains why Chrome would refuse a cookie before trying: over 4,096 bytes, or breaking the `__Host-` or `__Secure-` name rules. It has expiry shortcuts and a Duplicate button.
+- A "Kept cookies" screen lists every cookie marked as Kept, on any site, from the saved list only (names, never values), and lets the user stop keeping them.
+- A "What changed" screen lists what was added, changed, removed or expired on the current site while cookieZ was open. Names only, held in memory, gone when it closes.
+- Its typeface (Hanken Grotesk) is a file inside the extension package. No font is fetched from the web.
 
 ## Pages
 
