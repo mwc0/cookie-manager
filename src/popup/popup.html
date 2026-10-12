@@ -90,12 +90,18 @@
           <div>
             <h1 id="site-name"></h1>
             <!-- The count, then "3 changes" once the site's cookies have
-                 changed since cookieZ was opened. -->
+                 changed since cookieZ was opened, then the way into the
+                 site rules. That last one says what the rule is doing when
+                 it's blocking something. -->
             <p class="count-line">
               <span id="cookie-count"></span>
               <span id="changes-link" hidden>
                 <span aria-hidden="true">&middot;</span>
                 <button id="changes-open" class="link-button" type="button" title="See what changed"></button>
+              </span>
+              <span id="rules-link">
+                <span aria-hidden="true">&middot;</span>
+                <button id="rules-open" class="link-button" type="button" title="Choose which cookies this site may set">Site rules</button>
               </span>
             </p>
             <!-- Says what the site just changed, for screen readers. The
@@ -339,6 +345,12 @@
         <h1 id="edit-title"></h1>
         <button id="edit-cancel" type="button">Back</button>
       </header>
+
+      <!-- Shown when the site rules block every cookie on this site. -->
+      <p id="edit-rule-note" class="result" hidden>
+        Your site rules block cookies on this site. You can still save one
+        here, but the site won't be able to read it.
+      </p>
 
       <form id="edit-form" autocomplete="off">
         <div class="field">
@@ -627,6 +639,147 @@
       </div>
     </section>
 
+    <!-- Site rules: which sites may set cookies. cookieZ saves the list and
+         hands it to Chrome, and Chrome does the blocking, so it works while
+         cookieZ is closed. See src/lib/rules.js. -->
+    <section id="state-rules" class="state" hidden>
+      <header class="bar">
+        <h1>Site rules</h1>
+        <button id="rules-back" type="button">Back</button>
+      </header>
+
+      <p id="rules-intro">
+        Choose which sites may set cookies. Chrome follows these rules all
+        the time, even when cookieZ is closed. Nothing is sent anywhere.
+      </p>
+      <p id="rules-message" class="result" role="status" hidden></p>
+
+      <!-- Shown until the extra permission is given. -->
+      <div id="rules-gate" hidden>
+        <p>
+          To set rules, cookieZ needs Chrome's permission to change site
+          settings. Chrome's prompt also mentions the camera, microphone and
+          location, because one permission covers every site setting.
+          cookieZ only ever changes the cookie setting.
+        </p>
+        <p id="rules-gate-saved" hidden>
+          Your saved rules are listed below, but Chrome isn't following them
+          until you allow this again.
+        </p>
+        <p>
+          <button id="rules-grant" class="primary" type="button">Allow cookieZ to set rules</button>
+        </p>
+      </div>
+
+      <p id="rules-incognito" hidden>
+        Rules are set from a normal window. They apply in incognito windows
+        too.
+      </p>
+
+      <div id="rules-body" hidden>
+        <section id="rules-site" class="rules-group">
+          <h2 id="rules-site-heading">On <span id="rules-site-name"></span></h2>
+          <div class="rule-options" role="radiogroup" aria-labelledby="rules-site-heading">
+            <label class="rule-option">
+              <input type="radio" name="site-rule" value="allow" />
+              <span>
+                <strong>Allow all cookies</strong>
+                <span class="rule-note">Including ones from other companies on its pages.</span>
+              </span>
+            </label>
+            <label class="rule-option">
+              <input type="radio" name="site-rule" value="own-only" />
+              <span>
+                <strong>Block other companies' cookies</strong>
+                <span class="rule-note">
+                  The site keeps its own cookies, so signing in still works.
+                  Embedded videos, maps and "sign in with" buttons from other
+                  companies may stop working.
+                </span>
+              </span>
+            </label>
+            <label class="rule-option">
+              <input type="radio" name="site-rule" value="block" />
+              <span>
+                <strong>Block all cookies</strong>
+                <span class="rule-note">
+                  The site can't set or read any cookie. You'll be signed
+                  out, and it may not work at all.
+                </span>
+              </span>
+            </label>
+          </div>
+          <p id="rules-site-note" class="field-note" hidden></p>
+
+          <!-- Blocking doesn't remove the cookies a site already has, so
+               this offers to. It goes through the usual delete: kept
+               cookies are left alone, and Undo works. -->
+          <div id="rules-cleanup" class="confirm" hidden>
+            <span id="rules-cleanup-text"></span>
+            <button id="rules-cleanup-yes" class="danger solid" type="button">Delete them</button>
+            <button id="rules-cleanup-no" type="button">Leave them</button>
+          </div>
+        </section>
+
+        <section id="rules-everywhere" class="rules-group">
+          <h2 id="rules-everywhere-heading">On every other site</h2>
+          <div class="rule-options" role="radiogroup" aria-labelledby="rules-everywhere-heading">
+            <label class="rule-option">
+              <input type="radio" name="everywhere-rule" value="allow" />
+              <span>
+                <strong>Allow cookies</strong>
+                <span class="rule-note">What Chrome normally does.</span>
+              </span>
+            </label>
+            <label class="rule-option">
+              <input type="radio" name="everywhere-rule" value="block" />
+              <span>
+                <strong>Block all cookies</strong>
+                <span class="rule-note">
+                  Only sites you've set to allow can use cookies. You won't
+                  be able to sign in anywhere else.
+                </span>
+              </span>
+            </label>
+          </div>
+          <div id="rules-everywhere-confirm" class="confirm" hidden>
+            <span>Block cookies on every site without a rule of its own?</span>
+            <button id="rules-everywhere-yes" class="danger solid" type="button">Yes, block them</button>
+            <button id="rules-everywhere-no" type="button">Cancel</button>
+          </div>
+        </section>
+
+        <h2 id="rules-list-heading">Sites with a rule of their own</h2>
+        <div id="rules-wrap">
+          <table id="rules-table" aria-labelledby="rules-list-heading">
+            <colgroup>
+              <col />
+              <col class="rules-rule-col" />
+              <col class="rules-action-col" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Site</th>
+                <th scope="col">Rule</th>
+                <th scope="col"><span class="visually-hidden">Remove</span></th>
+              </tr>
+            </thead>
+            <tbody id="rules-rows"></tbody>
+          </table>
+          <p id="rules-empty" class="muted empty" hidden>No site has a rule of its own.</p>
+        </div>
+
+        <div class="actions">
+          <button id="rules-clear" class="danger" type="button">Turn off all rules&hellip;</button>
+          <span id="rules-confirm" class="confirm" hidden>
+            <span>Turn off every rule? Chrome goes back to allowing cookies everywhere.</span>
+            <button id="rules-confirm-yes" class="danger solid" type="button">Yes, turn them off</button>
+            <button id="rules-confirm-no" type="button">Cancel</button>
+          </span>
+        </div>
+      </div>
+    </section>
+
     <!-- Help that works offline. Nothing here is a link: the extension
          doesn't open web pages or fetch anything, so the support site is
          written out for you to visit yourself. -->
@@ -671,6 +824,25 @@
           delete options.
         </dd>
 
+        <dt>Can I stop a site setting cookies?</dt>
+        <dd>
+          Yes. Click <strong>Site rules</strong> next to the cookie count.
+          For each site you can allow all cookies, block other companies'
+          cookies, or block every cookie. You can also block cookies on
+          every site except the ones you allow. Chrome does the blocking,
+          so it works while cookieZ is closed, and removing cookieZ removes
+          the rules. Chrome has its own switch for blocking other
+          companies' cookies everywhere, in its settings; cookieZ doesn't
+          change that.
+        </dd>
+
+        <dt>A site stopped working after I set a rule</dt>
+        <dd>
+          Open <strong>Site rules</strong> on that site and choose
+          <strong>Allow all cookies</strong>, or remove its rule from the
+          list. Then reload the page.
+        </dd>
+
         <dt>What do the badges mean?</dt>
         <dd>
           <strong>Secure</strong>: only sent over HTTPS.
@@ -706,7 +878,7 @@
             <span><kbd>Delete</kbd></span>
             <span>Delete it. It asks "Sure?" first: press <kbd>Enter</kbd> to delete.</span>
             <span><kbd>Esc</kbd></span>
-            <span>Go back from this screen, the editor, export or import, or cancel a delete.</span>
+            <span>Go back from this screen, the editor, export, import or site rules, or cancel a delete.</span>
           </div>
         </dd>
 

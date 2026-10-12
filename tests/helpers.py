@@ -44,16 +44,18 @@ _pregranted_ready = False
 
 def pregranted_extension():
     """
-    A copy of src/ with host access in the manifest from the start.
+    A copy of src/ with its optional permissions in the manifest from the
+    start: host access, and the one for setting site rules.
 
     Playwright can't click Chrome's permission prompt, so every call to
     chrome.permissions.request() would wait for someone to click Allow. A
-    required host permission is granted when the extension loads, with no
+    required permission is granted when the extension loads, with no
     prompt, so the tests can run on their own.
 
     src/manifest.json isn't changed, so the real extension still asks when
     it's first used. Because of this, most tests skip the permission code.
-    test_states.py loads the real src/ to test that part.
+    test_states.py loads the real src/ to test that part, and test_rules.py
+    checks what the real manifest asks for.
     """
     global _pregranted_ready
     if _pregranted_ready:
@@ -75,9 +77,12 @@ def pregranted_extension():
     # the extension having no access.
     optional = manifest.pop("optional_host_permissions", [])
     manifest["host_permissions"] = list(optional)
+    # The same for the site rules permission. See src/lib/rules.js.
+    extra = manifest.pop("optional_permissions", [])
+    manifest["permissions"] = list(manifest["permissions"]) + list(extra)
     path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
-    # The copy must match the real manifest apart from the host permission.
+    # The copy must match the real manifest apart from those permissions.
     # If anything else differs, the tests aren't testing what ships, so stop.
     original = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
     differing = {
@@ -85,7 +90,8 @@ def pregranted_extension():
         for key in set(original) | set(manifest)
         if original.get(key) != manifest.get(key)
     }
-    if differing != {"host_permissions", "optional_host_permissions"}:
+    expected = {"host_permissions", "optional_host_permissions", "permissions", "optional_permissions"}
+    if differing != expected:
         raise AssertionError(
             "the pre-granted copy differs from src/manifest.json in unexpected "
             f"ways: {sorted(differing)}"

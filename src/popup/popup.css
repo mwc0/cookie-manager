@@ -446,7 +446,9 @@ button.danger:hover:not(:disabled) {
 }
 
 #main-message,
-#size-warning {
+#size-warning,
+#rules-message,
+#edit-rule-note {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -476,6 +478,8 @@ button.danger:hover:not(:disabled) {
 #table-wrap,
 #kept-wrap,
 #changes-wrap,
+#rules-wrap,
+.rules-group,
 #import-preview {
   position: relative;
   border: 1px solid var(--line-strong);
@@ -490,6 +494,8 @@ button.danger:hover:not(:disabled) {
 #table-wrap::after,
 #kept-wrap::after,
 #changes-wrap::after,
+#rules-wrap::after,
+.rules-group::after,
 #import-preview::after {
   content: "";
   position: absolute;
@@ -1326,6 +1332,94 @@ button.row-button.keep.kept:hover:not(:disabled) {
 
 #changes-table td.changes-time {
   color: var(--muted);
+}
+
+/* --- site rules ---------------------------------------------------------- */
+
+#rules-intro,
+#rules-gate p,
+#rules-incognito {
+  max-width: 72ch;
+  color: var(--fg-soft);
+}
+
+.rules-group {
+  padding: 11px 14px 14px;
+  margin-bottom: 12px;
+}
+
+/* The site's name in "On example.com" is set like every other site name. */
+#rules-site-name {
+  font-family: var(--mono);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--fg);
+}
+
+.rule-options {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* A choice: the radio button, then its name with a line under it saying
+   what it will do. */
+.rule-option {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.rule-note {
+  display: block;
+  max-width: 68ch;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* While a rule can't be changed (in incognito), its choices are greyed. */
+.rule-option:has(input:disabled) {
+  cursor: default;
+  opacity: 0.6;
+}
+
+#rules-cleanup,
+#rules-everywhere-confirm {
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+#rules-wrap {
+  overflow: hidden;
+}
+
+#rules-table td {
+  vertical-align: middle;
+}
+
+#rules-table td.rules-site {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+#rules-table .rules-rule-col {
+  width: 250px;
+}
+
+#rules-table .rules-action-col {
+  width: 96px;
+}
+
+#rules-table td.rules-action {
+  padding-top: 3px;
+  padding-bottom: 3px;
+  text-align: right;
+}
+
+/* The confirm line under "Turn off all rules" can be long. */
+#rules-confirm {
+  flex-wrap: wrap;
 }
 
 /* --- copy, open in a tab ---------------------------------------------------- */

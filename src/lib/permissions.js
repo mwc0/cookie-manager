@@ -30,6 +30,34 @@ export async function requestHostAccess() {
   }
 }
 
+// --- site rules --------------------------------------------------------------
+//
+// Setting cookie rules needs one more permission, "contentSettings". It's
+// optional: nobody is asked at install, and it's only requested from the
+// rules screen. Everything else works without it. See rules.js.
+
+export const RULES_PERMISSION = "contentSettings";
+
+export async function hasRulesAccess() {
+  try {
+    return await chrome.permissions.contains({ permissions: [RULES_PERMISSION] });
+  } catch (error) {
+    console.warn("Permission check failed:", error);
+    return false;
+  }
+}
+
+// Must be called straight from a click, like requestHostAccess().
+// Returns { granted, error }.
+export async function requestRulesAccess() {
+  try {
+    const granted = await chrome.permissions.request({ permissions: [RULES_PERMISSION] });
+    return { granted, error: null };
+  } catch (error) {
+    return { granted: false, error: describeRequestFailure(error) };
+  }
+}
+
 function describeRequestFailure(error) {
   const message = error && error.message ? error.message : String(error);
 
