@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=1.5.0">
-  <script src="../theme.js?v=1.5.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=1.6.0">
+  <script src="../theme.js?v=1.6.0" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
@@ -80,7 +80,7 @@
   <main id="main" class="page">
     <div class="wrap prose">
       <h1>Privacy policy</h1>
-      <p class="updated">For the cookieZ browser extension. Last updated: 7 October 2026.</p>
+      <p class="updated">For the cookieZ browser extension. Last updated: 12 October 2026.</p>
       <p class="aside">This covers the extension. For this website, see the <a href="../website-privacy/">website privacy policy</a>.</p>
 
       <h2>The short version</h2>
@@ -112,7 +112,7 @@
 
       <h2>What this extension stores on your device</h2>
 
-      <p>Two things are saved on your own computer, and a third is held briefly in memory so your last change can be undone. None of them is ever transmitted.</p>
+      <p>Three things are saved on your own computer, and a fourth is held briefly in memory so your last change can be undone. None of them is ever transmitted.</p>
 
       <h3>Your colour theme</h3>
 
@@ -138,6 +138,14 @@
       <p>Nothing is stored for cookies you have not marked as Kept. Uninstalling the extension removes the list, and the theme setting with it.</p>
 
       <p>You can see the whole list, for every site, on the <strong>Kept cookies</strong> screen in the extension, and remove anything from it there.</p>
+
+      <h3>Your site rules</h3>
+
+      <p>If you use <strong>Site rules</strong> to choose which sites may set cookies, cookieZ saves your choices so it can show them to you and hand them to Chrome. Each entry is a site's name and the rule you picked for it: allow all cookies, block other companies' cookies, or block all cookies. There is one more setting, for every site without a rule of its own.</p>
+
+      <p>It never includes cookies or cookie values. It is a list of site names, so you should know it is there. It is stored using Chrome's <code>storage.local</code> API on your own computer, is not synced to any account, and is never transmitted.</p>
+
+      <p>Nothing is saved until you set a rule. You can see the whole list on the <strong>Site rules</strong> screen, remove any entry, or turn every rule off there. Uninstalling the extension removes the list, and Chrome stops following the rules.</p>
 
       <h3>Your last change, for Undo</h3>
 
@@ -169,11 +177,19 @@
 
       <p>Importing works the same way in reverse. The cookies you paste or choose are written to Chrome's cookie store and nowhere else.</p>
 
+      <h2>Blocking cookies</h2>
+
+      <p>Site rules are the one thing that goes on working while cookieZ is closed, so it is worth saying exactly how. cookieZ does not run in the background and does not watch your browsing. When you set a rule, it gives that rule to Chrome, using the same site settings you can see in Chrome's own settings pages, and Chrome does the blocking from then on. cookieZ is not told which sites you visit or which cookies were blocked.</p>
+
+      <p>When you next open cookieZ, it asks Chrome whether your saved rules are still in force, and sets them again if they are not. That check is made against the sites on your saved list only.</p>
+
       <h2>Permissions, and why each one exists</h2>
 
       <p><strong><code>cookies</code></strong>: required to read, create, edit and delete cookies. Without it the extension cannot do anything at all.</p>
 
       <p><strong><code>storage</code></strong>: required to remember which cookies you marked as Kept, and your colour theme, so both survive closing the popup, and to hold your last change in memory for Undo.</p>
+
+      <p><strong>Changing site settings</strong> (<code>contentSettings</code>): required only for <strong>Site rules</strong>. This permission is <strong>optional</strong> too. It is not part of the install prompt, and Chrome asks for it only if you click the button on the Site rules screen. Chrome's own wording for it is broad, and mentions the camera, microphone and location, because one permission covers every kind of site setting. cookieZ uses it for one thing: the setting that says whether a site may use cookies. You can decline it and everything else works as before, and you can revoke it later from the extension's Details page.</p>
 
       <p><strong>Access to websites</strong> (<code>*://*/*</code>): Chrome will not release a single cookie to an extension without permission for the site that cookie belongs to. This permission is <strong>optional</strong>: it is deliberately kept out of the install prompt and requested at runtime, the first time you open the popup. You can decline it, and you can revoke it later from the extension's Details page in <code>chrome://extensions</code>. It is used only to read and change cookies when you ask.</p>
 

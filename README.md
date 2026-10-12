@@ -26,6 +26,12 @@ A Chrome cookie manager (Manifest V3)
   you delete. It's a guard on this extension's own delete button, not
   protection from the website: nothing here stops a site changing its own
   cookies.
+- Lets you choose which sites may set cookies: allow all, block other
+  companies' cookies, or block every cookie, for one site or for every site
+  except the ones you allow. The extension has no background script, so it
+  doesn't do the blocking. It gives your choice to Chrome, and Chrome
+  enforces it, which is why it works while the popup is closed and why
+  removing the extension removes the rules.
 
 ## Permissions
 
@@ -33,6 +39,12 @@ The extension asks for `cookies` and `storage` at install, and nothing else.
 Access to websites is **optional** and requested at runtime, the first time you
 open the popup. Chrome will not release a single cookie to an extension without
 it.
+
+Setting site rules needs one more permission, `contentSettings`. It is
+**optional** too, and only requested if you click the button on the Site rules
+screen. Chrome's wording for it mentions the camera and microphone, because
+one permission covers every site setting. The code only touches the cookie
+setting: see `src/lib/rules.js`.
 
 ## What it will never do
 

@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 7 October 2026**
+**Last updated: 12 October 2026**
 
 ## The short version
 
@@ -34,7 +34,7 @@ component, so there is no place for your data to go even in principle.
 
 ## What this extension stores on your device
 
-Two things are saved on your own computer, and a third is held briefly in
+Three things are saved on your own computer, and a fourth is held briefly in
 memory so your last change can be undone. None of them is ever transmitted.
 
 ### Your colour theme
@@ -74,6 +74,23 @@ extension removes the list, and the theme setting with it.
 
 You can see the whole list, for every site, on the **Kept cookies** screen in
 the extension, and remove anything from it there.
+
+### Your site rules
+
+If you use **Site rules** to choose which sites may set cookies, cookieZ
+saves your choices so it can show them to you and hand them to Chrome. Each
+entry is a site's name and the rule you picked for it: allow all cookies,
+block other companies' cookies, or block all cookies. There is one more
+setting, for every site without a rule of its own.
+
+It never includes cookies or cookie values. It is a list of site names, so
+you should know it is there. It is stored using Chrome's `storage.local` API
+on your own computer, is not synced to any account, and is never transmitted.
+
+Nothing is saved until you set a rule. You can see the whole list on the
+**Site rules** screen, remove any entry, or turn every rule off there.
+Uninstalling the extension removes the list, and Chrome stops following the
+rules.
 
 ### Your last change, for Undo
 
@@ -121,6 +138,19 @@ cookieZ keeps no copy of either.
 Importing works the same way in reverse. The cookies you paste or choose are
 written to Chrome's cookie store and nowhere else.
 
+## Blocking cookies
+
+Site rules are the one thing that goes on working while cookieZ is closed,
+so it is worth saying exactly how. cookieZ does not run in the background
+and does not watch your browsing. When you set a rule, it gives that rule to
+Chrome, using the same site settings you can see in Chrome's own settings
+pages, and Chrome does the blocking from then on. cookieZ is not told which
+sites you visit or which cookies were blocked.
+
+When you next open cookieZ, it asks Chrome whether your saved rules are
+still in force, and sets them again if they are not. That check is made
+against the sites on your saved list only.
+
 ## Permissions, and why each one exists
 
 **`cookies`**: required to read, create, edit and delete cookies. Without it
@@ -129,6 +159,15 @@ the extension cannot do anything at all.
 **`storage`**: required to remember which cookies you marked as Kept, and
 your colour theme, so both survive closing the popup, and to hold your last
 change in memory for Undo.
+
+**Changing site settings** (`contentSettings`): required only for **Site
+rules**. This permission is **optional** too. It is not part of the install
+prompt, and Chrome asks for it only if you click the button on the Site rules
+screen. Chrome's own wording for it is broad, and mentions the camera,
+microphone and location, because one permission covers every kind of site
+setting. cookieZ uses it for one thing: the setting that says whether a site
+may use cookies. You can decline it and everything else works as before, and
+you can revoke it later from the extension's Details page.
 
 **Access to websites** (`*://*/*`): Chrome will not release a single cookie
 to an extension without permission for the site that cookie belongs to. This

@@ -4,8 +4,8 @@
 
 Facts that are easy to get wrong:
 
-- It asks for `cookies` and `storage` at install. Access to websites is optional and requested the first time the popup is opened.
-- It saves two things on the user's computer: the cookies they marked as Kept (name, domain, path, never the value) and their theme choice. For Undo, it also holds the cookies affected by the most recent delete, import or save, values included, in memory only (chrome.storage.session) for up to 10 minutes. Nothing is sent anywhere.
+- It asks for `cookies` and `storage` at install. Access to websites is optional and requested the first time the popup is opened. A third permission, `contentSettings`, is optional too and only requested if the user opens Site rules and clicks the button there.
+- It saves three things on the user's computer: the cookies they marked as Kept (name, domain, path, never the value), their site rules if they set any (site names and the rule for each), and their theme choice. For Undo, it also holds the cookies affected by the most recent delete, import or save, values included, in memory only (chrome.storage.session) for up to 10 minutes. Nothing is sent anywhere.
 - "Kept" only stops cookieZ's own delete buttons. It doesn't stop a website changing its own cookies.
 - Chrome caps cookie expiry at about 400 days. cookieZ reports this rather than hiding it.
 - Incognito works if "Allow in incognito" is turned on. Incognito cookies are kept separate from normal ones.
@@ -17,6 +17,7 @@ Facts that are easy to get wrong:
 - The editor explains why Chrome would refuse a cookie before trying: over 4,096 bytes, or breaking the `__Host-` or `__Secure-` name rules. It has expiry shortcuts and a Duplicate button.
 - A "Kept cookies" screen lists every cookie marked as Kept, on any site, from the saved list only (names, never values), and lets the user stop keeping them.
 - A "What changed" screen lists what was added, changed, removed or expired on the current site while cookieZ was open. Names only, held in memory, gone when it closes.
+- "Site rules" lets the user choose which sites may set cookies: allow all, block other companies' (third-party) cookies, or block all, per site, or block cookies on every site except an allowed list. cookieZ has no background script and does not block anything itself: it passes the choice to Chrome (chrome.contentSettings) and Chrome enforces it, including while cookieZ is closed. Uninstalling removes the rules. It does not try to tell which cookies are "essential", does not use tracker lists, and does not click cookie banners.
 - Its typeface (Hanken Grotesk) is a file inside the extension package. No font is fetched from the web.
 
 ## Pages
