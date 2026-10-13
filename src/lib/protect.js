@@ -117,3 +117,58 @@ export async function pruneProtected(protectedKeys, cookiesOnPage, pageDomains) 
     return { keys: protectedKeys, error: null };
   }
 }
+
+// --- the whole list, for the "Kept cookies" screen ------------------------
+//
+// These only read and change the saved list. They never ask Chrome for any
+// site's cookies, so the screen can show every kept cookie on every site
+// without looking at anything it hasn't already been told to keep.
+
+// Turns a saved key back into its parts. The opposite of protectionKeyOf().
+export function parseProtectionKey(key) {
+  const [domain, path, name, partition] = String(key).split("\n");
+  let partitionKey = null;
+  if (partition) {
+    try {
+      partitionKey = JSON.parse(partition);
+    } catch (error) {
+      // Not something this file wrote. Show the entry without it.
+      partitionKey = null;
+    }
+  }
+  return { key, domain: domain || "", path: path || "/", name: name || "", partitionKey };
+}
+
+// Every kept cookie, sorted by site and then name. Returns { entries, error }.
+export async function listProtected() {
+  const { keys, error } = await loadProtected();
+  const entries = Array.from(keys)
+    .map(parseProtectionKey)
+    .sort((a, b) => a.domain.localeCompare(b.domain) || a.name.localeCompare(b.name));
+  return { entries, error };
+}
+
+// Stops keeping the cookies with these saved keys. Returns { keys, error },
+// like setProtected().
+export async function unprotectKeys(keysToRemove) {
+  const { keys, error } = await loadProtected();
+  if (error) {
+    return { keys, error };
+  }
+
+  for (const key of keysToRemove) {
+    keys.delete(key);
+  }
+
+  try {
+    await chrome.storage.local.set({ [STORAGE_KEY]: Array.from(keys) });
+    return { keys, error: null };
+  } catch (storageError) {
+    return {
+      keys,
+      error:
+        "Couldn't save the protected list: " +
+        (storageError && storageError.message ? storageError.message : String(storageError)),
+    };
+  }
+}

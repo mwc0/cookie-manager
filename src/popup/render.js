@@ -11,6 +11,7 @@ import {
   formatSameSite,
   truncate,
   cookieBytes,
+  LARGE_COOKIE_BYTES,
   formatBytes,
 } from "../lib/format.js";
 import { cookieKey } from "../lib/cookies.js";
@@ -20,10 +21,6 @@ import { iconButton, setIconContent } from "./icons.js";
 // Short enough that a row fits the popup's width. Long values can be clicked
 // to show in full.
 const VALUE_PREVIEW_LENGTH = 28;
-
-// Chrome refuses a cookie whose name and value add up to more than 4,096
-// bytes. A cookie this close to it gets a "Large" badge.
-const LARGE_COOKIE_BYTES = 3500;
 
 // `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
 // isProtected(cookie), onPick(cookie, ticked), isPicked(cookie),
@@ -69,6 +66,9 @@ export function sortCookies(cookies, sort = DEFAULT_SORT) {
   return [...cookies].sort((a, b) => {
     if (sort.key === "name") {
       return flip * (a.name.localeCompare(b.name) || byDomainThenName(a, b));
+    }
+    if (sort.key === "size") {
+      return flip * (cookieBytes(a) - cookieBytes(b)) || byDomainThenName(a, b);
     }
     if (sort.key === "expires") {
       // Session cookies have no date, so they go last whichever way round.
@@ -127,6 +127,8 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   name.title = cookie.name + " (" + formatBytes(cookieBytes(cookie)) + ")";
   row.appendChild(name);
   row.appendChild(valueCell(cookie, handlers));
+  // Only shown when cookieZ is open in a tab. See .size in popup.css.
+  row.appendChild(textCell(formatBytes(cookieBytes(cookie)), "nowrap size"));
   row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
   row.appendChild(breakableCell(cookie.path, "/", "mono path"));
 

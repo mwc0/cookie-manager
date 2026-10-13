@@ -181,6 +181,11 @@ function byteLength(text) {
   return encoder.encode(String(text == null ? "" : text)).length;
 }
 
+// Chrome refuses a cookie whose name and value add up to more than 4,096
+// bytes. A cookie this close to it gets a "Large" badge, and the editor
+// starts showing its size.
+export const LARGE_COOKIE_BYTES = 3500;
+
 // Chrome's limit applies to a cookie's name and value together.
 export function cookieBytes(cookie) {
   return byteLength(cookie.name) + byteLength(cookie.value);

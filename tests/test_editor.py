@@ -203,6 +203,102 @@ def main():
         r.check("an expiry inside the cap does NOT claim it was shortened",
                 "shortened" not in near_message, repr(near_message.strip()))
 
+        # --- name prefixes Chrome enforces, and the size limit (1.5) ---
+        # Chrome refuses each of these with the same vague error, so the
+        # editor has to say which rule was broken before it tries.
+        def errors_shown():
+            return page.locator("#edit-errors").text_content() if page.locator("#edit-errors").is_visible() else ""
+
+        page.locator("#add-button").click()
+        page.wait_for_timeout(300)
+        r.check("a new cookie has no Duplicate button",
+                not page.locator("#edit-duplicate").is_visible())
+        page.fill("#field-name", "__Secure-token")
+        page.fill("#field-value", "x")
+        page.uncheck("#field-secure")
+        save(page)
+        r.check("TRAP: __Secure- without Secure is explained, not sent to Chrome",
+                "__Secure-" in errors_shown() and "Tick Secure" in errors_shown()
+                and len(named(cookies_for(page, HOST), "__Secure-token")) == 0,
+                repr(errors_shown()))
+
+        page.fill("#field-name", "__Host-id")
+        page.check("#field-secure")
+        page.uncheck("#field-hostonly")
+        page.fill("#field-path", "/account")
+        save(page)
+        host_error = errors_shown()
+        r.check("TRAP: __Host- says exactly what is missing",
+                "__Host-" in host_error and "host-only" in host_error and "on the path /" in host_error
+                and "isn't Secure" not in host_error,
+                repr(host_error))
+
+        page.check("#field-hostonly")
+        page.fill("#field-path", "/")
+        save(page)
+        host_cookie = named(cookies_for(page, HOST), "__Host-id")
+        r.check("a __Host- cookie that keeps the rules is saved",
+                len(host_cookie) == 1 and host_cookie[0]["secure"] and host_cookie[0]["hostOnly"]
+                and host_cookie[0]["path"] == "/",
+                json.dumps(host_cookie))
+
+        page.locator("#add-button").click()
+        page.wait_for_timeout(300)
+        page.fill("#field-name", "big")
+        page.fill("#field-value", "a" * 100)
+        r.check("a small cookie shows no size note",
+                not page.locator("#value-size").is_visible())
+        page.fill("#field-value", "a" * 3600)
+        near = page.locator("#value-size").text_content()
+        r.check("close to the limit, the editor shows the size",
+                page.locator("#value-size").is_visible() and "3,603 of 4,096" in near, repr(near))
+        page.fill("#field-value", "a" * 4200)
+        save(page)
+        r.check("TRAP: a cookie over 4,096 bytes is stopped with the reason",
+                "4,096 bytes" in errors_shown() and "4,203" in errors_shown()
+                and len(named(cookies_for(page, HOST), "big")) == 0,
+                repr(errors_shown()))
+        r.check("and the size note has turned red",
+                "error" in (page.locator("#value-size").get_attribute("class") or ""))
+
+        # --- expiry shortcuts ---
+        page.fill("#field-name", "one_day")
+        page.fill("#field-value", "x")
+        page.locator('[data-expire-in="86400"]').click()
+        shortcut = page.evaluate("""() => ({
+            session: document.getElementById('field-session').checked,
+            disabled: document.getElementById('field-expiry').disabled,
+            value: document.getElementById('field-expiry').value,
+        })""")
+        save(page)
+        one_day = named(cookies_for(page, HOST), "one_day")
+        hours_ahead = (one_day[0]["exp"] - page.evaluate("Date.now() / 1000")) / 3600 if one_day and one_day[0]["exp"] else None
+        r.check("the 1 day shortcut unticks Session and sets tomorrow's date",
+                not shortcut["session"] and not shortcut["disabled"] and shortcut["value"] != ""
+                and hours_ahead is not None and 23.9 < hours_ahead < 24.1,
+                f"{json.dumps(shortcut)}, saved {hours_ahead} hours ahead")
+
+        # --- duplicate ---
+        edit_button(row_for(page, "one_day")).click()
+        page.wait_for_timeout(300)
+        r.check("an existing cookie has a Duplicate button",
+                page.locator("#edit-duplicate").is_visible())
+        page.locator("#edit-duplicate").click()
+        page.wait_for_timeout(200)
+        duplicate = page.evaluate("""() => ({
+            title: document.getElementById('edit-title').textContent,
+            name: document.getElementById('field-name').value,
+            button: !document.getElementById('edit-duplicate').hidden,
+        })""")
+        save(page)
+        both = [len(named(cookies_for(page, HOST), n)) for n in ("one_day", "one_day_copy")]
+        r.check("Duplicate makes a second cookie and leaves the first alone",
+                duplicate == {"title": "New cookie", "name": "one_day_copy", "button": False} and both == [1, 1],
+                f"{json.dumps(duplicate)}, counts {both}")
+        r.check("and it can be undone like any new cookie",
+                page.locator("#main-message .undo-button").is_visible(),
+                repr(page.locator("#main-message").text_content().strip()))
+
         # --- deleting one, with its two-click arm ---
         row = row_for(page, "hostonly_c")
         delete_button(row).click()

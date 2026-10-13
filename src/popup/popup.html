@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <title>cookieZ</title>
-    <!-- Local stylesheet only. No web fonts and nothing from a CDN. -->
+    <!-- Everything here is inside the extension: the stylesheet, and the one
+         font file it uses (fonts/). Nothing is fetched from the web. -->
+    <link rel="preload" href="fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="popup.css" />
 
     <!-- Not a module and not deferred, so it runs before the popup is drawn.
@@ -13,12 +15,19 @@
   <body>
     <!-- The keycap Z from the toolbar icon, drawn the same way as in
          tests/make_icons.py, and shown with <use href="#keycap">. Its colours
-         are the icon's, so it looks the same in both themes. -->
+         come from the theme (the keycap rules in popup.css): a dark key on
+         the dark theme, like the icon, and a light key on the light one. -->
     <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="keycap-face" x1="0" y1="0" x2="0" y2="1">
+          <stop class="keycap-face-top" offset="0" />
+          <stop class="keycap-face-bottom" offset="1" />
+        </linearGradient>
+      </defs>
       <symbol id="keycap" viewBox="8 8 112 112">
-        <rect x="8" y="8" width="112" height="112" rx="24" fill="#b3bccb" />
-        <rect x="18" y="14" width="92" height="80" rx="16" fill="#f5f8fc" />
-        <g fill="#1f2633">
+        <rect class="keycap-edge" x="8" y="8" width="112" height="112" rx="24" />
+        <rect x="18" y="14" width="92" height="80" rx="16" fill="url(#keycap-face)" />
+        <g class="keycap-z">
           <rect x="38" y="28" width="52" height="14" />
           <polygon points="90,42 70,42 38,66 58,66" />
           <rect x="38" y="66" width="52" height="14" />
@@ -80,7 +89,15 @@
           <svg class="mark" aria-hidden="true" focusable="false"><use href="#keycap" /></svg>
           <div>
             <h1 id="site-name"></h1>
-            <p id="cookie-count" class="muted"></p>
+            <!-- The count, then "3 changes" once the site's cookies have
+                 changed since cookieZ was opened. -->
+            <p class="count-line">
+              <span id="cookie-count"></span>
+              <span id="changes-link" hidden>
+                <span aria-hidden="true">&middot;</span>
+                <button id="changes-open" class="link-button" type="button" title="See what changed"></button>
+              </span>
+            </p>
             <!-- Says what the site just changed, for screen readers. The
                  table marks the rows for everyone else. -->
             <p id="live-note" class="visually-hidden" aria-live="polite"></p>
@@ -171,8 +188,8 @@
       <p id="main-message" class="result" role="status" hidden></p>
       <p id="size-warning" class="result" role="status" hidden></p>
 
-      <!-- Filters the table. While searching, an extra delete option removes only
-           the cookies shown. -->
+      <!-- Filters the table. While searching or filtering, an extra delete
+           option removes only the cookies shown. -->
       <div class="search">
         <label for="search-input" class="visually-hidden">Search cookies</label>
         <span class="search-field">
@@ -186,7 +203,19 @@
           <!-- A hint that "/" jumps here. Hidden while the box is in use. -->
           <kbd class="search-key" aria-hidden="true">/</kbd>
         </span>
-        <button id="search-clear" type="button" hidden title="Clear the search">
+        <!-- Quick filters. Each shows only the cookies it describes, and they
+             add up: Secure and Session together shows cookies that are both.
+             popup.js hides any that no cookie on this site matches. -->
+        <div id="filters" class="filters" role="group" aria-label="Show only" hidden>
+          <button type="button" class="chip" data-filter="secure" aria-pressed="false">Secure</button>
+          <button type="button" class="chip" data-filter="httponly" aria-pressed="false">HttpOnly</button>
+          <button type="button" class="chip" data-filter="session" aria-pressed="false">Session</button>
+          <button type="button" class="chip" data-filter="kept" aria-pressed="false">Kept</button>
+          <button type="button" class="chip" data-filter="soon" aria-pressed="false">Expiring soon</button>
+          <button type="button" class="chip" data-filter="large" aria-pressed="false">Large</button>
+          <button type="button" class="chip" data-filter="partitioned" aria-pressed="false">Partitioned</button>
+        </div>
+        <button id="search-clear" type="button" hidden title="Clear the search and the filters">
           Clear
         </button>
       </div>
@@ -243,6 +272,9 @@
           <button id="export-button" type="button" disabled>
             Export&hellip;
           </button>
+          <!-- Opens the list of every kept cookie, on any site. Only shown
+               when there is one. -->
+          <button id="kept-open" class="link-button kept-link" type="button" hidden></button>
 
           <div id="confirm-row" class="confirm" hidden>
             <span id="confirm-text"></span>
@@ -263,6 +295,7 @@
             <col class="col-pick" />
             <col class="col-name" />
             <col class="col-value" />
+            <col class="col-size" />
             <col class="col-domain" />
             <col class="col-path" />
             <col class="col-expires" />
@@ -276,10 +309,13 @@
                   <input type="checkbox" id="pick-all" aria-label="Tick every cookie shown" />
                 </label>
               </th>
-              <!-- Name, Domain and Expires sort the table. popup.js sets aria-sort
-                   on the one in use. -->
+              <!-- Name, Value, Domain and Expires sort the table. Value sorts by
+                   size, biggest first. popup.js sets aria-sort on the one in
+                   use. The Size column only shows when there's room for it:
+                   open in a tab. -->
               <th scope="col"><button type="button" class="sort" data-sort="name">Name</button></th>
-              <th scope="col">Value</th>
+              <th scope="col"><button type="button" class="sort" data-sort="size" title="Sort by size">Value</button></th>
+              <th scope="col" class="size">Size</th>
               <th scope="col" aria-sort="ascending"><button type="button" class="sort" data-sort="domain">Domain</button></th>
               <th scope="col">Path</th>
               <th scope="col"><button type="button" class="sort" data-sort="expires">Expires</button></th>
@@ -316,6 +352,8 @@
             <button id="value-copy" class="row-button" type="button" title="Copy the value">Copy</button>
           </div>
           <textarea id="field-value" name="value" class="mono" rows="4" spellcheck="false"></textarea>
+          <!-- Shown once the cookie is getting close to Chrome's size limit. -->
+          <p id="value-size" class="field-note muted" hidden></p>
 
           <!-- Shown when the value is URL-encoded or JSON: the same value,
                easier to read. It never changes the value. -->
@@ -359,6 +397,13 @@
               <span>Session cookie: deleted when the browser closes</span>
             </label>
             <input id="field-expiry" name="expirationDate" type="datetime-local" />
+            <!-- Shortcuts: each sets the date that far from now. -->
+            <div class="presets" role="group" aria-label="Expire in">
+              <button class="row-button" type="button" data-expire-in="3600">1 hour</button>
+              <button class="row-button" type="button" data-expire-in="86400">1 day</button>
+              <button class="row-button" type="button" data-expire-in="604800">1 week</button>
+              <button class="row-button" type="button" data-expire-in="31536000">1 year</button>
+            </div>
           </div>
         </div>
 
@@ -388,6 +433,8 @@
         <div class="actions">
           <button id="edit-save" class="primary" type="submit">Save</button>
           <button id="edit-cancel-2" type="button">Cancel</button>
+          <!-- Only when editing a cookie that already exists. -->
+          <button id="edit-duplicate" type="button" title="Start a new cookie with these details" hidden>Duplicate</button>
         </div>
       </form>
     </section>
@@ -499,6 +546,87 @@
       <ul id="import-failures" class="errors" hidden></ul>
     </section>
 
+    <!-- What has happened to this site's cookies while cookieZ has been
+         open. Names only, never values, and held in memory: it's gone when
+         cookieZ closes. -->
+    <section id="state-changes" class="state" hidden>
+      <header class="bar">
+        <h1>What changed</h1>
+        <button id="changes-back" type="button">Back</button>
+      </header>
+
+      <p id="changes-intro">
+        What has happened to this site's cookies since you opened cookieZ,
+        newest first, whether the site did it or you did. Nothing here is
+        saved: the list is gone when cookieZ closes.
+      </p>
+
+      <div id="changes-wrap">
+        <table id="changes-table">
+          <colgroup>
+            <col class="changes-time-col" />
+            <col />
+            <col />
+            <col class="changes-what-col" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Time</th>
+              <th scope="col">Name</th>
+              <th scope="col">Site</th>
+              <th scope="col">What happened</th>
+            </tr>
+          </thead>
+          <tbody id="changes-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Every cookie marked as Kept, on every site. It shows the saved list
+         and nothing else: it never looks up other sites' cookies. -->
+    <section id="state-kept" class="state" hidden>
+      <header class="bar">
+        <h1>Kept cookies</h1>
+        <button id="kept-back" type="button">Back</button>
+      </header>
+
+      <p id="kept-intro">
+        cookieZ leaves these out of every delete. This is the whole list it
+        has saved, for every site: names, never values.
+      </p>
+      <p id="kept-message" class="result" role="status" hidden></p>
+
+      <div id="kept-wrap">
+        <table id="kept-table">
+          <colgroup>
+            <col />
+            <col />
+            <col class="kept-path-col" />
+            <col class="kept-action-col" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Site</th>
+              <th scope="col">Path</th>
+              <th scope="col"><span class="visually-hidden">Stop keeping</span></th>
+            </tr>
+          </thead>
+          <tbody id="kept-rows"></tbody>
+        </table>
+        <p id="kept-empty" class="muted empty" hidden>No cookies are marked as Kept.</p>
+      </div>
+
+      <div class="actions">
+        <button id="kept-clear" class="danger" type="button">Stop keeping all&hellip;</button>
+        <span id="kept-confirm" class="confirm" hidden>
+          <span id="kept-confirm-text"></span>
+          <button id="kept-confirm-yes" class="danger solid" type="button">Yes, stop keeping</button>
+          <button id="kept-confirm-no" type="button">Cancel</button>
+        </span>
+      </div>
+    </section>
+
     <!-- Help that works offline. Nothing here is a link: the extension
          doesn't open web pages or fetch anything, so the support site is
          written out for you to visit yourself. -->
@@ -529,14 +657,18 @@
         <dd>
           The site, or cookieZ, has just added or changed that cookie. The
           table follows changes as they happen, so you don't need to press
-          Refresh.
+          Refresh. Click <strong>changes</strong> next to the cookie count
+          to see a list of what was added, changed, removed or expired since
+          you opened cookieZ.
         </dd>
 
         <dt>What does the bookmark do?</dt>
         <dd>
           It marks a cookie as <strong>Kept</strong>, so cookieZ leaves it out
           of every delete, even "All sites". It doesn't stop the website
-          changing or removing the cookie itself.
+          changing or removing the cookie itself. To see every cookie you've
+          kept, on any site, click <strong>Kept cookies</strong> under the
+          delete options.
         </dd>
 
         <dt>What do the badges mean?</dt>

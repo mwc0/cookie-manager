@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=2026-10-07">
-  <script src="../theme.js?v=2026-10-07" defer></script>
+  <link rel="stylesheet" href="../style.css?v=1.5.0">
+  <script src="../theme.js?v=1.5.0" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -100,11 +100,23 @@
         </details>
         <details>
           <summary>What does Keep do?</summary>
-          <p>The bookmark button on each row marks a cookie as Kept. A cookie marked as Kept is left out of every delete cookieZ makes, including "All sites". It only affects cookieZ's own delete buttons. The website that set the cookie can still change or remove it.</p>
+          <p>The bookmark button on each row marks a cookie as Kept. A cookie marked as Kept is left out of every delete cookieZ makes, including "All sites". It only affects cookieZ's own delete buttons. The website that set the cookie can still change or remove it. To see every cookie you've kept, on any site, click "Kept cookies" under the delete options. You can stop keeping any of them there.</p>
         </details>
         <details>
           <summary>I deleted or changed the wrong cookies. Can I get them back?</summary>
           <p>Yes, for 10 minutes. This works for a delete, an import, or a cookie you saved in the editor. Click Undo next to the message, or open cookieZ again and click Undo at the top. Only the most recent change can be undone. To make this possible, cookieZ holds the cookies as they were in memory for those 10 minutes. They're never written to disk, and closing the browser clears them.</p>
+        </details>
+        <details>
+          <summary>What are the buttons next to the search box?</summary>
+          <p>They're filters. Click one to show only the cookies it describes: Secure, HttpOnly, Session, Kept, Expiring soon, Large or Partitioned. Click two and you see cookies that are both. A filter only appears when at least one cookie on the site matches it. While a filter is on, the delete options include "Just the cookies shown", so you can delete exactly what you're looking at.</p>
+        </details>
+        <details>
+          <summary>What does "changes" next to the cookie count mean?</summary>
+          <p>It's how many times this site's cookies have changed since you opened cookieZ. Click it for the list: which cookie was added, changed, removed or expired, and when. It shows names, never values, and it's gone when you close cookieZ.</p>
+        </details>
+        <details>
+          <summary>It says my cookie can't be saved</summary>
+          <p>Chrome refuses some cookies, and cookieZ tells you why before it tries. A cookie's name and value together can't be bigger than 4,096 bytes. A name starting with <code>__Secure-</code> only works on a Secure cookie. A name starting with <code>__Host-</code> only works on a cookie that is Secure, host-only and on the path <code>/</code>.</p>
         </details>
         <details>
           <summary>I set an expiry date and it changed</summary>

@@ -10,10 +10,13 @@ import {
   writeCookie,
   validateCookieValues,
   filterCookies,
+  filterByFlags,
+  passesFilter,
   baseHostOf,
   getAllCookies,
   cookieKey,
   sitesOf,
+  MAX_COOKIE_BYTES,
 } from "../lib/cookies.js";
 import {
   toJson,
@@ -34,11 +37,15 @@ import {
   isProtected,
   partitionByProtection,
   pruneProtected,
+  listProtected,
+  unprotectKeys,
 } from "../lib/protect.js";
 import {
   pluralise,
   formatCount,
   headerBytes,
+  cookieBytes,
+  LARGE_COOKIE_BYTES,
   formatBytes,
   formatExpiryFull,
   toLocalDateTimeValue,
@@ -76,6 +83,18 @@ let seenCookies = null;
 let changedKeys = new Set();
 let lastChange = { added: 0, changed: 0, removed: 0 };
 
+// What has happened to this site's cookies while cookieZ has been open,
+// newest first, for the "What changed" screen: { at, name, domain, what }.
+// Names only, never values. In memory only, so it's gone when cookieZ
+// closes, and it starts again if the tab moves to another site.
+let changeLog = [];
+const CHANGE_LOG_LIMIT = 200;
+
+// When a site changes a cookie, Chrome reports the old one being removed
+// and then the new one being set. This remembers the first half, so the
+// second can be listed as "Changed" and not "Added".
+let overwritten = new Set();
+
 // The row that's in the tab order. See setTabRow().
 let tabRowKey = null;
 
@@ -110,6 +129,10 @@ let sort = DEFAULT_SORT;
 // The cookies ticked in the table, as cookieKey()s. "Just the ticked
 // cookies" deletes and exports exactly these. Kept in memory only.
 let picked = new Set();
+
+// The quick filters that are switched on, by name ("secure", "kept"...).
+// Kept in memory only, so every open starts with none.
+let activeFilters = new Set();
 
 const el = (id) => document.getElementById(id);
 
@@ -203,6 +226,12 @@ async function loadCurrentPage() {
     return;
   }
 
+  // A different site: the list of changes starts again.
+  if (!page || page.hostname !== url.hostname) {
+    changeLog = [];
+    overwritten = new Set();
+  }
+
   page = { origin: url.origin, hostname: url.hostname };
   seenCookies = null;
   expanded = new Set();
@@ -288,7 +317,9 @@ function noteChanges(cookies) {
 // loaded, so typing doesn't ask Chrome again on every key press.
 function drawTable() {
   const query = el("search-input").value;
-  shownCookies = filterCookies(pageCookies, query);
+  const isKept = (cookie) => isProtected(protectedKeys, cookie);
+  shownCookies = filterByFlags(filterCookies(pageCookies, query), activeFilters, isKept);
+  drawFilters(isKept);
 
   // Forget ticks and opened values for cookies that have gone, after a
   // delete for example.
@@ -321,17 +352,21 @@ function drawTable() {
   setTabRow(tabRowKey);
   restoreFocus(focus);
   showPicked();
+  showKeptLink();
+  showChangesLink();
 
   if (changed.size > 0) {
-    const rows = el("cookie-rows");
+    // Only the rows marked by this draw. Looking them up again when the
+    // timer fires would also clear rows that a later draw has just marked.
+    const marked = [...el("cookie-rows").querySelectorAll("tr.changed")];
     setTimeout(() => {
-      for (const row of rows.querySelectorAll("tr.changed")) {
+      for (const row of marked) {
         row.classList.remove("changed");
       }
     }, 3000);
   }
 
-  const filtering = query.trim() !== "";
+  const filtering = query.trim() !== "" || activeFilters.size > 0;
   el("search-clear").hidden = !filtering;
 
   // "about", because this page's list also has cookies for other paths,
@@ -355,7 +390,7 @@ function drawTable() {
       ". Many servers refuse more than 8 KB, which can stop you logging in. " +
       "Deleting this site's cookies usually fixes it.";
 
-  // "Just the cookies shown" only appears while searching.
+  // "Just the cookies shown" only appears while searching or filtering.
   el("scope-matches-row").hidden = !filtering;
   el("scope-target-matches").textContent = filtering
     ? pluralise(shownCookies.length, "match", "matches")
@@ -368,19 +403,50 @@ function drawTable() {
   const nothingAtAll = pageCookies.length === 0;
   const nothingMatched = !nothingAtAll && shownCookies.length === 0;
 
-  el("empty-message").textContent = nothingMatched
-    ? "No cookies here match “" + query.trim() + "”."
-    : "No cookies are set for this site.";
+  el("empty-message").textContent = !nothingMatched
+    ? "No cookies are set for this site."
+    : query.trim() === ""
+      ? "No cookies here match those filters."
+      : activeFilters.size > 0
+        ? "No cookies here match “" + query.trim() + "” and those filters."
+        : "No cookies here match “" + query.trim() + "”.";
   el("empty-message").hidden = !(nothingAtAll || nothingMatched);
   el("cookie-table").hidden = nothingAtAll || nothingMatched;
 }
 
+// The quick filters. One that no cookie on this site matches is hidden,
+// unless it's switched on, so it can always be switched off again.
+function drawFilters(isKept) {
+  let anyShown = false;
+  for (const chip of document.querySelectorAll("#filters .chip")) {
+    const name = chip.dataset.filter;
+    const on = activeFilters.has(name);
+    const matches = pageCookies.some((cookie) => passesFilter(cookie, name, isKept));
+    chip.hidden = !on && !matches;
+    chip.setAttribute("aria-pressed", on ? "true" : "false");
+    anyShown = anyShown || !chip.hidden;
+  }
+  el("filters").hidden = !anyShown;
+}
+
+function toggleFilter(name) {
+  if (activeFilters.has(name)) {
+    activeFilters.delete(name);
+  } else {
+    activeFilters.add(name);
+  }
+  drawTable();
+  refreshScope();
+}
+
 // Clicking a heading sorts by it. Clicking it again reverses the order.
+// Size starts with the biggest first, since that's the one people look for.
 function sortBy(key) {
+  const first = key === "size" ? "descending" : "ascending";
   sort =
     sort.key === key
       ? { key, dir: sort.dir === "ascending" ? "descending" : "ascending" }
-      : { key, dir: "ascending" };
+      : { key, dir: first };
 
   for (const button of document.querySelectorAll("th button.sort")) {
     const heading = button.parentElement;
@@ -585,12 +651,96 @@ function sameCookie(a, b) {
   return cookieKey(a) === cookieKey(b);
 }
 
-chrome.cookies.onChanged.addListener(({ cookie }) => {
+// Chrome's reason for a change, in plain words. `removed` is false when a
+// cookie was set, and true when one went away.
+function describeCookieEvent(key, removed, cause) {
+  if (!removed) {
+    return overwritten.delete(key) ? "Changed" : "Added";
+  }
+  if (cause === "expired") {
+    return "Expired";
+  }
+  if (cause === "expired_overwrite") {
+    return "Removed, by setting a date in the past";
+  }
+  if (cause === "evicted") {
+    return "Removed by Chrome to make room";
+  }
+  return "Removed";
+}
+
+// Adds one change to the list. Returns false for the first half of a
+// change (see `overwritten`), which isn't listed by itself.
+function logChange(cookie, removed, cause) {
+  const key = cookieKey(cookie);
+  if (removed && cause === "overwrite") {
+    overwritten.add(key);
+    return false;
+  }
+
+  changeLog.unshift({
+    at: Date.now(),
+    name: cookie.name,
+    domain: String(cookie.domain || "").replace(/^\./, ""),
+    what: describeCookieEvent(key, removed, cause),
+  });
+  changeLog.length = Math.min(changeLog.length, CHANGE_LOG_LIMIT);
+  return true;
+}
+
+// "3 changes" next to the cookie count, once there's something to list.
+function showChangesLink() {
+  el("changes-link").hidden = changeLog.length === 0;
+  el("changes-open").textContent = pluralise(changeLog.length, "change", "changes");
+}
+
+function drawChanges() {
+  const rows = el("changes-rows");
+  rows.textContent = "";
+
+  for (const change of changeLog) {
+    const row = document.createElement("tr");
+    const cells = [
+      [new Date(change.at).toLocaleTimeString(), "nowrap changes-time"],
+      [change.name, "mono changes-name"],
+      [change.domain, "mono changes-site"],
+      [change.what, "changes-what"],
+    ];
+    for (const [text, className] of cells) {
+      const cell = document.createElement("td");
+      cell.className = className;
+      cell.textContent = text;
+      row.appendChild(cell);
+    }
+    rows.appendChild(row);
+  }
+}
+
+function openChanges() {
+  drawChanges();
+  showState("changes");
+  el("changes-back").focus();
+}
+
+function closeChanges() {
+  el("changes-rows").textContent = "";
+  showState("main");
+  el("changes-open").focus();
+}
+
+chrome.cookies.onChanged.addListener(({ cookie, removed, cause }) => {
   // The editor says so if the cookie open in it changes underneath it.
   if (currentState() === "edit" && editing && !saving && sameCookie(cookie, editing)) {
     el("edit-changed").hidden = false;
   }
   if (concernsPage(cookie)) {
+    if (logChange(cookie, removed, cause)) {
+      showChangesLink();
+      // The list keeps up if it's the screen showing.
+      if (currentState() === "changes") {
+        drawChanges();
+      }
+    }
     livePending = true;
     scheduleLiveRedraw();
   }
@@ -861,9 +1011,49 @@ function openEditor(cookie) {
     partition.hidden = true;
   }
 
+  // A partitioned cookie can't be made here, so it can't be duplicated.
+  el("edit-duplicate").hidden = isNew || Boolean(cookie.partitionKey);
+
   showDecoded();
+  showValueSize();
   showState("edit");
   el("field-name").focus();
+}
+
+// Says how big the cookie is once it's close to Chrome's limit, and turns
+// red once it's over. Updated as the name or value is typed.
+function showValueSize() {
+  const bytes = cookieBytes({ name: el("field-name").value, value: el("field-value").value });
+  const note = el("value-size");
+  note.hidden = bytes < LARGE_COOKIE_BYTES;
+  note.textContent =
+    bytes.toLocaleString("en-GB") + " of " + MAX_COOKIE_BYTES.toLocaleString("en-GB") +
+    " bytes (name and value together).";
+  note.className = bytes > MAX_COOKIE_BYTES ? "field-note error" : "field-note muted";
+}
+
+// The expiry shortcuts. Each sets the date that many seconds from now.
+function expireIn(seconds) {
+  el("field-session").checked = false;
+  syncExpiryEnabled();
+  el("field-expiry").value = toLocalDateTimeValue(Date.now() / 1000 + seconds);
+}
+
+// Turns the editor into a new cookie with the details already filled in,
+// including anything typed since it was opened. The cookie being edited is
+// left alone. Saving goes the usual way, so Undo works on it.
+function duplicateCookie() {
+  editing = null;
+  el("edit-title").textContent = "New cookie";
+  el("edit-duplicate").hidden = true;
+  el("edit-changed").hidden = true;
+  showFormErrors([]);
+
+  const name = el("field-name");
+  name.value = name.value.trim() + "_copy";
+  showValueSize();
+  name.focus();
+  name.select();
 }
 
 // Shows the value URL-decoded or laid out as JSON, when that's easier to
@@ -1021,6 +1211,130 @@ async function toggleProtected(cookie, shouldKeep) {
   // Redraw, and recount, since kept cookies aren't deleted.
   drawTable();
   await refreshScope();
+}
+
+// --- the list of kept cookies ----------------------------------------------
+
+// "Kept cookies: 3" in the delete panel. It counts the whole saved list, not
+// just this site's, so the list can be reached from any site.
+function showKeptLink() {
+  const link = el("kept-open");
+  link.hidden = protectedKeys.size === 0;
+  link.textContent = "Kept cookies: " + formatCount(protectedKeys.size);
+}
+
+async function openKept() {
+  el("kept-message").hidden = true;
+  cancelKeptConfirm();
+  showState("kept");
+  await drawKept();
+  el("kept-back").focus();
+}
+
+// Draws the saved list. Built with textContent, like the main table, since
+// cookie names come from websites.
+async function drawKept() {
+  const { entries, error } = await listProtected();
+  if (error) {
+    showKeptMessage(error, true);
+  }
+
+  const rows = el("kept-rows");
+  rows.textContent = "";
+
+  for (const entry of entries) {
+    const row = document.createElement("tr");
+
+    const name = document.createElement("td");
+    name.className = "mono kept-name";
+    name.textContent = entry.name;
+    row.appendChild(name);
+
+    const site = document.createElement("td");
+    site.className = "mono kept-site";
+    site.textContent = entry.domain;
+    if (entry.partitionKey) {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = "Partitioned";
+      badge.title = "Kept separately for " + (entry.partitionKey.topLevelSite || "another site");
+      site.appendChild(document.createTextNode(" "));
+      site.appendChild(badge);
+    }
+    row.appendChild(site);
+
+    const path = document.createElement("td");
+    path.className = "mono kept-path";
+    path.textContent = entry.path;
+    row.appendChild(path);
+
+    const action = document.createElement("td");
+    action.className = "kept-action";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "row-button kept-stop";
+    button.textContent = "Stop keeping";
+    button.addEventListener("click", () => stopKeeping([entry], entry.name + " on " + entry.domain));
+    action.appendChild(button);
+    row.appendChild(action);
+
+    rows.appendChild(row);
+  }
+
+  el("kept-table").hidden = entries.length === 0;
+  el("kept-empty").hidden = entries.length > 0;
+  el("kept-clear").hidden = entries.length === 0;
+  return entries;
+}
+
+function showKeptMessage(text, isError) {
+  const message = el("kept-message");
+  message.textContent = text;
+  message.className = isError ? "result error" : "result";
+  message.hidden = false;
+}
+
+async function stopKeeping(entries, described) {
+  const { keys, error } = await unprotectKeys(entries.map((entry) => entry.key));
+  protectedKeys = keys;
+  cancelKeptConfirm();
+  await drawKept();
+  if (error) {
+    showKeptMessage(error, true);
+  } else {
+    showKeptMessage("No longer keeping " + described + ".", false);
+  }
+}
+
+// "Stop keeping all" asks first, like the delete panel.
+async function startKeptConfirm() {
+  const { entries } = await listProtected();
+  el("kept-confirm-text").textContent =
+    "Stop keeping " + (entries.length === 1 ? "this cookie" : "all " + formatCount(entries.length) + " cookies") + "?";
+  el("kept-clear").hidden = true;
+  el("kept-confirm").hidden = false;
+  el("kept-confirm-no").focus();
+}
+
+function cancelKeptConfirm() {
+  el("kept-confirm").hidden = true;
+  el("kept-clear").hidden = false;
+}
+
+async function stopKeepingAll() {
+  const { entries } = await listProtected();
+  await stopKeeping(entries, pluralise(entries.length, "cookie", "cookies"));
+}
+
+// Back to the table, redrawn, since what's kept may have changed.
+async function closeKept() {
+  el("kept-rows").textContent = "";
+  showState("main");
+  drawTable();
+  await refreshScope();
+  if (!el("kept-open").hidden) {
+    el("kept-open").focus();
+  }
 }
 
 // Deletes one cookie from its row. The row already asked "Sure?".
@@ -1615,11 +1929,27 @@ el("search-input").addEventListener("input", () => {
   refreshScope();
 });
 
+for (const chip of document.querySelectorAll("#filters .chip")) {
+  chip.addEventListener("click", () => toggleFilter(chip.dataset.filter));
+}
+
 el("search-clear").addEventListener("click", () => {
   el("search-input").value = "";
+  activeFilters = new Set();
   drawTable();
   refreshScope();
   el("search-input").focus();
+});
+
+el("changes-open").addEventListener("click", openChanges);
+el("changes-back").addEventListener("click", closeChanges);
+el("kept-open").addEventListener("click", openKept);
+el("kept-back").addEventListener("click", closeKept);
+el("kept-clear").addEventListener("click", startKeptConfirm);
+el("kept-confirm-yes").addEventListener("click", stopKeepingAll);
+el("kept-confirm-no").addEventListener("click", () => {
+  cancelKeptConfirm();
+  el("kept-clear").focus();
 });
 
 el("pick-all").addEventListener("change", () => pickAllShown(el("pick-all").checked));
@@ -1690,6 +2020,12 @@ el("value-copy").addEventListener("click", () =>
   copyWithFeedback(el("value-copy"), el("field-value").value)
 );
 el("field-value").addEventListener("input", showDecoded);
+el("field-value").addEventListener("input", showValueSize);
+el("field-name").addEventListener("input", showValueSize);
+el("edit-duplicate").addEventListener("click", duplicateCookie);
+for (const button of document.querySelectorAll("[data-expire-in]")) {
+  button.addEventListener("click", () => expireIn(Number(button.dataset.expireIn)));
+}
 el("decoded-copy").addEventListener("click", () =>
   copyWithFeedback(el("decoded-copy"), el("value-decoded-text").textContent)
 );
@@ -1711,6 +2047,8 @@ function currentState() {
 
 // Each screen's way back, for Esc.
 const BACK_BUTTONS = {
+  kept: "kept-back",
+  changes: "changes-back",
   edit: "edit-cancel",
   export: "export-back",
   import: "import-back",

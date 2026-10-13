@@ -54,19 +54,23 @@ Features:
 - Delete cookies for this page, this site and its subdomains, every site, or just the ones you tick
 - Undo a delete, an import or an edit for 10 minutes afterwards
 - Click a cookie to edit any field, or create a new one. URL-encoded and JSON values are shown decoded
+- Set an expiry in one click (1 hour, 1 day, 1 week, 1 year), and duplicate a cookie
+- A plain reason when Chrome would refuse a cookie: over 4 KB, or breaking the __Host- or __Secure- name rules
 - Delete a single cookie
 - Search by name, value, domain or path, then delete only the results
+- Filter in one click: Secure, HttpOnly, Session, Kept, Expiring soon, Large or Partitioned
 - Export cookies as JSON, cookies.txt (Netscape), a Playwright storageState file, a Cookie header or a curl command, then copy or download
 - Import JSON (from cookieZ or another cookie editor), cookies.txt, Set-Cookie lines, a Cookie header or a curl command (from Copy as cURL in DevTools), with a preview before anything is added
 - Copy cookies from one site to another, such as from a staging site to localhost
 - Copy a cookie's value in one click
-- Sort by name, domain or expiry, and see at a glance which cookies expire soon
+- Sort by name, size, domain or expiry, and see at a glance which cookies expire soon
 - The table updates by itself when a site sets or changes a cookie, and marks what changed
+- See a list of what the site added, changed, removed or let expire while cookieZ was open
 - See how big each site's cookies are, with a warning when they get big enough to stop logins
 - Open it with Alt+Shift+K, press / to search, move through cookies with the arrow keys, and press Esc to go back
 - Built-in help that works offline
 - Open cookieZ in a full tab for long lists and long values
-- Mark cookies as "Kept" so cookieZ never deletes them
+- Mark cookies as "Kept" so cookieZ never deletes them, and see every kept cookie in one list
 - Works in incognito, kept separate from your normal cookies
 - Tells you when Chrome changes what you set (for example, Chrome caps expiry at about 400 days)
 - Light and dark mode

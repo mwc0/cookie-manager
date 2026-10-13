@@ -1,6 +1,12 @@
 // Everything that talks to chrome.cookies goes through this file, so the
 // awkward parts of that API are handled in one place.
 
+import { cookieBytes, expiresSoon, LARGE_COOKIE_BYTES } from "./format.js";
+
+// Chrome won't store a cookie whose name and value together are bigger than
+// this many bytes.
+export const MAX_COOKIE_BYTES = 4096;
+
 // chrome.cookies.set and remove need a URL, not a cookie. The scheme comes
 // from the Secure flag, and a leading dot on the domain has to be removed.
 export function buildCookieUrl(cookie) {
@@ -115,6 +121,38 @@ export function filterCookies(cookies, query) {
   });
 }
 
+// The quick filters above the table. Each one is a yes-or-no question
+// about a single cookie. "kept" isn't here, because whether a cookie is kept
+// isn't part of the cookie: filterByFlags() is told that separately.
+export const FILTERS = {
+  secure: (cookie) => Boolean(cookie.secure),
+  httponly: (cookie) => Boolean(cookie.httpOnly),
+  session: (cookie) => typeof cookie.expirationDate !== "number",
+  soon: (cookie) => expiresSoon(cookie),
+  large: (cookie) => cookieBytes(cookie) >= LARGE_COOKIE_BYTES,
+  partitioned: (cookie) => Boolean(cookie.partitionKey),
+};
+
+// Whether one cookie passes one filter. `isKept` is a function that says
+// whether a cookie is marked as Kept.
+export function passesFilter(cookie, name, isKept) {
+  if (name === "kept") {
+    return Boolean(isKept(cookie));
+  }
+  return Boolean(FILTERS[name] && FILTERS[name](cookie));
+}
+
+// The cookies that pass every filter that's switched on. `active` is a Set
+// of filter names. With none switched on, every cookie passes.
+export function filterByFlags(cookies, active, isKept) {
+  if (active.size === 0) {
+    return cookies;
+  }
+  return cookies.filter((cookie) =>
+    [...active].every((name) => passesFilter(cookie, name, isKept))
+  );
+}
+
 // The sites these cookies belong to, for sentences like "Will delete 4
 // cookies from example.com". "example.com" and ".example.com" are one site
 // to a reader, so the leading dot is dropped. The table still shows each
@@ -218,6 +256,48 @@ export function validateCookieValues(values, { imported = false } = {}) {
 
   if (/[;,]/.test(value)) {
     errors.push("A cookie value can't contain semicolons or commas.");
+  }
+
+  // TRAP: Chrome refuses a cookie over 4,096 bytes with the same vague error
+  // as everything else.
+  const bytes = cookieBytes({ name, value });
+  if (bytes > MAX_COOKIE_BYTES) {
+    errors.push(
+      "Chrome won't store a cookie bigger than 4,096 bytes (name and value together). " +
+        (imported ? "It is " : "This one is ") + bytes.toLocaleString("en-GB") + "."
+    );
+  }
+
+  // TRAP: a name starting with __Secure- or __Host- is a promise Chrome
+  // holds the cookie to. Break it and Chrome refuses the cookie, again with
+  // no reason given. Chrome ignores case when it checks these.
+  if (/^__secure-/i.test(name) && !values.secure) {
+    errors.push(
+      imported
+        ? "Its name starts with __Secure- but it isn't Secure, and Chrome won't accept that."
+        : "A name starting with __Secure- only works on a Secure cookie. Tick Secure, or change the name."
+    );
+  }
+
+  if (/^__host-/i.test(name)) {
+    const missing = [];
+    if (!values.secure) {
+      missing.push("Secure");
+    }
+    if (!values.hostOnly) {
+      missing.push("host-only");
+    }
+    if ((values.path || "/") !== "/") {
+      missing.push("on the path /");
+    }
+    if (missing.length > 0) {
+      errors.push(
+        (imported
+          ? "Its name starts with __Host-, so Chrome only accepts it if it is Secure, host-only and on the path /. It isn't "
+          : "A name starting with __Host- only works on a cookie that is Secure, host-only and on the path /. This one isn't ") +
+          missing.join(" or ") + "."
+      );
+    }
   }
 
   if (String(values.domain || "").trim() === "") {
