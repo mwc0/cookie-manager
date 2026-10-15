@@ -1340,14 +1340,33 @@ button.row-button.keep.kept:hover:not(:disabled) {
   width: 100%;
 }
 
-/* "What's new", once after an update. */
+/* "What's new", once after an update. OK sits at the end of the sentence
+   rather than dropping to a line of its own. */
 #whats-new {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
   margin: 0 0 10px;
   color: var(--fg-soft);
+}
+
+#whats-new-close {
+  margin-left: 2px;
+  padding: 0 4px;
+}
+
+/* Small link-style buttons and the new tick boxes still get a 24 px target. */
+#whats-new-close,
+#picked-clear {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+#value-json-row,
+.rules-always {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 24px;
+  cursor: pointer;
 }
 
 /* --- ticked cookies ------------------------------------------------------ */
@@ -1408,7 +1427,7 @@ button.row-button.keep.kept:hover:not(:disabled) {
 }
 
 .rules-always {
-  margin-top: 10px;
+  margin-top: 8px;
   font-size: 12px;
 }
 
