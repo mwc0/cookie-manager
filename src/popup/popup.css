@@ -1334,6 +1334,41 @@ button.row-button.keep.kept:hover:not(:disabled) {
   color: var(--muted);
 }
 
+/* --- ticked cookies ------------------------------------------------------ */
+
+/* A line above the table while cookies are ticked. */
+.picked-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+
+.picked-bar .row-button {
+  margin-left: 0;
+}
+
+#picked-count {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.picked-label {
+  margin-left: 8px;
+  color: var(--muted);
+}
+
+#picked-clear {
+  margin-left: auto;
+}
+
+#value-json-row {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
 /* --- site rules ---------------------------------------------------------- */
 
 #rules-intro,

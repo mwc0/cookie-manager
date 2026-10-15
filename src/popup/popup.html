@@ -293,6 +293,19 @@
 
       </section>
 
+      <!-- Only while cookies are ticked: things to do to all of them. -->
+      <div id="picked-bar" class="picked-bar" role="group" aria-label="Ticked cookies" hidden>
+        <span id="picked-count"></span>
+        <button id="picked-keep" class="row-button" type="button">Keep</button>
+        <button id="picked-unkeep" class="row-button" type="button">Stop keeping</button>
+        <span class="picked-label">Expire in</span>
+        <button class="row-button" type="button" data-picked-expire="3600">1 hour</button>
+        <button class="row-button" type="button" data-picked-expire="86400">1 day</button>
+        <button class="row-button" type="button" data-picked-expire="604800">1 week</button>
+        <button class="row-button" type="button" data-picked-expire="31536000">1 year</button>
+        <button id="picked-clear" class="link-button" type="button">Untick all</button>
+      </div>
+
       <div id="table-wrap">
         <table id="cookie-table">
           <!-- Column widths are set here, so the table can't be wider than the popup.
@@ -364,11 +377,17 @@
             <button id="value-copy" class="row-button" type="button" title="Copy the value">Copy</button>
           </div>
           <textarea id="field-value" name="value" class="mono" rows="4" spellcheck="false"></textarea>
+          <!-- Only for a value that is a JSON object or list. Ticked, the value
+               is laid out here and saved on one line again. -->
+          <label id="value-json-row" class="check" hidden>
+            <input id="field-json" type="checkbox" />
+            <span>Edit as JSON: laid out here, saved on one line</span>
+          </label>
           <!-- Shown once the cookie is getting close to Chrome's size limit. -->
           <p id="value-size" class="field-note muted" hidden></p>
 
-          <!-- Shown when the value is URL-encoded or JSON: the same value,
-               easier to read. It never changes the value. -->
+          <!-- Shown when the value is URL-encoded, JSON, Base64 or a date:
+               the same value, easier to read. It never changes the value. -->
           <div id="value-decoded" class="decoded" hidden>
             <div class="field-label-row">
               <span class="label" id="value-decoded-label">Decoded</span>
@@ -447,6 +466,7 @@
           <button id="edit-cancel-2" type="button">Cancel</button>
           <!-- Only when editing a cookie that already exists. -->
           <button id="edit-duplicate" type="button" title="Start a new cookie with these details" hidden>Duplicate</button>
+          <button id="edit-setcookie" type="button" title="Copy this cookie as the Set-Cookie line a server would send">Copy as Set-Cookie</button>
         </div>
       </form>
     </section>

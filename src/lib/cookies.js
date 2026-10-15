@@ -254,8 +254,11 @@ export function validateCookieValues(values, { imported = false } = {}) {
     errors.push("A cookie name can't contain spaces, semicolons, commas or equals signs.");
   }
 
-  if (/[;,]/.test(value)) {
-    errors.push("A cookie value can't contain semicolons or commas.");
+  // A semicolon ends a cookie's value, so it can't be in one. Commas can:
+  // Chrome stores them, and sites put JSON in cookies that has them. This
+  // refused commas until 1.7, which meant such a cookie couldn't be saved.
+  if (/;/.test(value)) {
+    errors.push("A cookie value can't contain a semicolon.");
   }
 
   // TRAP: Chrome refuses a cookie over 4,096 bytes with the same vague error

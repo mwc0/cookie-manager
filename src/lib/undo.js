@@ -87,7 +87,8 @@ export async function clearLastChange() {
 }
 
 // A cookie as Chrome reported it, turned into what writeCookie() takes.
-function valuesOf(cookie) {
+// Also used by popup.js to change one detail of many cookies at once.
+export function valuesOf(cookie) {
   const session = typeof cookie.expirationDate !== "number";
   return {
     name: cookie.name,

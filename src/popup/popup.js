@@ -46,6 +46,7 @@ import {
   toHeader,
   toPlaywright,
   toCurl,
+  toSetCookie,
   parseImport,
   planImport,
   matchSentCookies,
@@ -61,6 +62,8 @@ import {
   pruneProtected,
   listProtected,
   unprotectKeys,
+  protectCookies,
+  protectionKeyOf,
 } from "../lib/protect.js";
 import {
   pluralise,
@@ -72,7 +75,11 @@ import {
   formatExpiryFull,
   toLocalDateTimeValue,
   fromLocalDateTimeValue,
-  decodeValue,
+  describeValue,
+  isJsonValue,
+  isCompactJson,
+  prettyJson,
+  compactJson,
 } from "../lib/format.js";
 import {
   loadTheme,
@@ -89,6 +96,7 @@ import {
   clearLastChange,
   undoChange,
   describeAge,
+  valuesOf,
 } from "../lib/undo.js";
 
 // The site in the current tab, as { origin, hostname }.
@@ -838,6 +846,8 @@ function showPicked() {
   all.disabled = shownCookies.length === 0;
 
   const count = pickedCookies().length;
+  el("picked-bar").hidden = count === 0;
+  el("picked-count").textContent = pluralise(count, "cookie", "cookies") + " ticked:";
   el("scope-picked-row").hidden = count === 0;
   el("scope-target-picked").textContent = count > 0 ? pluralise(count, "cookie", "cookies") : "";
   if (count === 0 && selectedScope() === "picked") {
@@ -1013,7 +1023,11 @@ function openEditor(cookie) {
   const secure = isNew ? page.origin.startsWith("https:") : Boolean(cookie.secure);
 
   el("field-name").value = isNew ? "" : cookie.name;
-  el("field-value").value = isNew ? "" : cookie.value;
+  const value = isNew ? "" : cookie.value;
+  const asJson = isCompactJson(value);
+  el("field-json").checked = asJson;
+  el("field-value").value = asJson ? prettyJson(value) : value;
+  showJsonChoice();
 
   // A domain-wide cookie is stored with a leading dot (".example.com"). The
   // dot is hidden here because the Host-only checkbox already shows that.
@@ -1062,7 +1076,7 @@ function openEditor(cookie) {
 // Says how big the cookie is once it's close to Chrome's limit, and turns
 // red once it's over. Updated as the name or value is typed.
 function showValueSize() {
-  const bytes = cookieBytes({ name: el("field-name").value, value: el("field-value").value });
+  const bytes = cookieBytes({ name: el("field-name").value, value: valueToSave().value || el("field-value").value });
   const note = el("value-size");
   note.hidden = bytes < LARGE_COOKIE_BYTES;
   note.textContent =
@@ -1095,12 +1109,58 @@ function duplicateCookie() {
   name.select();
 }
 
-// Shows the value URL-decoded or laid out as JSON, when that's easier to
-// read. Updated as the value is typed. See decodeValue() in format.js.
+// Shows the value decoded, laid out or as a date, when that's easier to
+// read. Updated as the value is typed. See describeValue() in format.js.
+// Not while editing as JSON: the box above already shows it laid out.
 function showDecoded() {
-  const decoded = decodeValue(el("field-value").value);
-  el("value-decoded").hidden = decoded === null;
-  el("value-decoded-text").textContent = decoded === null ? "" : decoded;
+  const shown = el("field-json").checked ? null : describeValue(el("field-value").value);
+  el("value-decoded").hidden = shown === null;
+  el("value-decoded-label").textContent = shown ? shown.label : "Decoded";
+  el("value-decoded-text").textContent = shown ? shown.text : "";
+}
+
+// --- editing a value as JSON ---------------------------------------------
+
+// The value as it will be saved: on one line again if it's being edited as
+// JSON. Returns { value, error }; error is set if that JSON doesn't parse.
+function valueToSave() {
+  const text = el("field-value").value;
+  return el("field-json").checked ? compactJson(text) : { value: text, error: null };
+}
+
+// "Edit as JSON" is offered while the value is JSON, and stays while it's
+// ticked, so a typing mistake doesn't make it vanish.
+function showJsonChoice() {
+  el("value-json-row").hidden = !el("field-json").checked && !isJsonValue(el("field-value").value);
+}
+
+// Ticking lays the value out. Unticking puts it back on one line, unless
+// it no longer parses, in which case it's left as typed.
+function toggleJson() {
+  const box = el("field-value");
+  if (el("field-json").checked) {
+    if (isJsonValue(box.value)) {
+      box.value = prettyJson(box.value.trim());
+    }
+  } else {
+    const compact = compactJson(box.value);
+    if (!compact.error) {
+      box.value = compact.value;
+    }
+  }
+  showJsonChoice();
+  showDecoded();
+  showValueSize();
+}
+
+// Copies the cookie in the editor as a Set-Cookie line, as it would be saved.
+function copySetCookie() {
+  const values = readForm();
+  copyWithFeedback(el("edit-setcookie"), toSetCookie({
+    ...values,
+    domain: values.domain,
+    expirationDate: values.session ? null : values.expirationDate,
+  }));
 }
 
 // Focus goes back to the cookie's row, for anyone using the keyboard.
@@ -1124,7 +1184,7 @@ function readForm() {
 
   return {
     name: el("field-name").value.trim(),
-    value: el("field-value").value,
+    value: valueToSave().value ?? el("field-value").value,
     domain: el("field-domain").value.trim(),
     path: el("field-path").value.trim() || "/",
     sameSite: el("field-samesite").value,
@@ -1176,6 +1236,12 @@ function describeExpiryChange(values, saved) {
 }
 
 async function saveEditor() {
+  // JSON that no longer parses would be saved as broken text, so stop.
+  const json = valueToSave();
+  if (json.error) {
+    showFormErrors([json.error + " Fix it, or untick \"Edit as JSON\" to save it as typed."]);
+    return;
+  }
   const values = readForm();
 
   // Check first, because Chrome's own error doesn't say what's wrong.
@@ -1250,6 +1316,58 @@ async function toggleProtected(cookie, shouldKeep) {
   // Redraw, and recount, since kept cookies aren't deleted.
   drawTable();
   await refreshScope();
+}
+
+// --- things to do to every ticked cookie ----------------------------------
+
+async function keepPicked(shouldKeep) {
+  const cookies = pickedCookies();
+  const { keys, error } = shouldKeep
+    ? await protectCookies(cookies)
+    : await unprotectKeys(cookies.map(protectionKeyOf));
+  protectedKeys = keys;
+  if (error) {
+    showMainMessage(error, true);
+    return;
+  }
+  showMainMessage(
+    (shouldKeep ? "Keeping " : "No longer keeping ") + pluralise(cookies.length, "cookie", "cookies") + ".",
+    false
+  );
+  drawTable();
+  await refreshScope();
+}
+
+// Sets every ticked cookie to expire `seconds` from now. Each is written the
+// usual way, and Undo puts the old dates back.
+async function expirePicked(seconds) {
+  const cookies = pickedCookies();
+  const expirationDate = Math.floor(Date.now() / 1000) + seconds;
+  const changed = [];
+  const failures = [];
+
+  saving = true;
+  try {
+    for (const cookie of cookies) {
+      const { ok, error } = await writeCookie(cookie, { ...valuesOf(cookie), session: false, expirationDate });
+      if (ok) {
+        changed.push(cookie);
+      } else {
+        failures.push(cookie.name + ": " + error);
+      }
+    }
+  } finally {
+    saving = false;
+  }
+
+  const when = { 3600: "1 hour", 86400: "1 day", 604800: "1 week", 31536000: "1 year" }[seconds];
+  showMainMessage(
+    pluralise(changed.length, "cookie now expires", "cookies now expire") + " in " + when + "." +
+      (failures.length > 0 ? " Chrome refused " + failures.join(" ") : ""),
+    failures.length > 0
+  );
+  await offerUndo(el("main-message"), { kind: "expiry", restore: changed });
+  await refresh();
 }
 
 // --- the list of kept cookies ----------------------------------------------
@@ -1769,6 +1887,9 @@ function describeChange(change) {
   }
   if (change.kind === "create") {
     return "Created " + change.remove[0].name;
+  }
+  if (change.kind === "expiry") {
+    return "Changed when " + pluralise(change.restore.length, "cookie expires", "cookies expire");
   }
 
   const affected = [...change.restore, ...change.remove];
@@ -2410,13 +2531,31 @@ el("import-move").addEventListener("change", async () => {
   el("import-move").focus();
 });
 
+// Copies the value as it would be saved: on one line, if edited as JSON.
 el("value-copy").addEventListener("click", () =>
-  copyWithFeedback(el("value-copy"), el("field-value").value)
+  copyWithFeedback(el("value-copy"), valueToSave().value ?? el("field-value").value)
 );
 el("field-value").addEventListener("input", showDecoded);
 el("field-value").addEventListener("input", showValueSize);
 el("field-name").addEventListener("input", showValueSize);
 el("edit-duplicate").addEventListener("click", duplicateCookie);
+el("edit-setcookie").addEventListener("click", copySetCookie);
+el("field-json").addEventListener("change", toggleJson);
+el("field-value").addEventListener("input", showJsonChoice);
+el("picked-keep").addEventListener("click", () => keepPicked(true));
+el("picked-unkeep").addEventListener("click", () => keepPicked(false));
+// Unticks every cookie, including any a search is hiding.
+el("picked-clear").addEventListener("click", () => {
+  const before = picked.size;
+  picked = new Set();
+  for (const box of document.querySelectorAll("#cookie-rows td.pick input")) {
+    box.checked = false;
+  }
+  scopeAfterPicking(before);
+});
+for (const button of document.querySelectorAll("[data-picked-expire]")) {
+  button.addEventListener("click", () => expirePicked(Number(button.dataset.pickedExpire)));
+}
 for (const button of document.querySelectorAll("[data-expire-in]")) {
   button.addEventListener("click", () => expireIn(Number(button.dataset.expireIn)));
 }

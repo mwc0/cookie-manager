@@ -75,6 +75,34 @@ export function toHeader(cookies) {
   return cookies.map((cookie) => cookie.name + "=" + cookie.value).join("; ");
 }
 
+// One cookie as the Set-Cookie line a server would send to make it, for
+// pasting into server code or a test. A host-only cookie gets no Domain,
+// since that's what makes it host-only. fromSetCookie() reads it back.
+export function toSetCookie(cookie) {
+  const parts = [cookie.name + "=" + cookie.value];
+  if (!cookie.hostOnly) {
+    parts.push("Domain=" + String(cookie.domain || "").replace(/^\./, ""));
+  }
+  parts.push("Path=" + (cookie.path || "/"));
+  if (typeof cookie.expirationDate === "number") {
+    parts.push("Expires=" + new Date(cookie.expirationDate * 1000).toUTCString());
+  }
+  if (cookie.secure) {
+    parts.push("Secure");
+  }
+  if (cookie.httpOnly) {
+    parts.push("HttpOnly");
+  }
+  const sameSite = { strict: "Strict", lax: "Lax", no_restriction: "None" }[cookie.sameSite];
+  if (sameSite) {
+    parts.push("SameSite=" + sameSite);
+  }
+  if (cookie.partitionKey) {
+    parts.push("Partitioned");
+  }
+  return parts.join("; ");
+}
+
 // Playwright's storageState: { cookies, origins }. Only cookies are filled
 // in, since an extension can't read a site's localStorage without running
 // code on the page. Playwright marks a domain-wide cookie with a leading dot,
