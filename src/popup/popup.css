@@ -1334,6 +1334,22 @@ button.row-button.keep.kept:hover:not(:disabled) {
   color: var(--muted);
 }
 
+/* "Clear site data" asks on a line of its own, since it says more. */
+.data-confirm {
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* "What's new", once after an update. */
+#whats-new {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 10px;
+  color: var(--fg-soft);
+}
+
 /* --- ticked cookies ------------------------------------------------------ */
 
 /* A line above the table while cookies are ticked. */

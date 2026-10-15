@@ -196,6 +196,11 @@
         </div>
       </header>
 
+      <!-- Once, the first time cookieZ opens after an update. -->
+      <p id="whats-new" class="result whats-new" hidden>
+        <span id="whats-new-text"></span>
+        <button id="whats-new-close" class="link-button" type="button">OK</button>
+      </p>
       <p id="main-message" class="result" role="status" hidden></p>
       <p id="size-warning" class="result" role="status" hidden></p>
 
@@ -283,6 +288,10 @@
           <button id="export-button" type="button" disabled>
             Export&hellip;
           </button>
+          <!-- This site's cookies, plus everything else it has stored. -->
+          <button id="data-button" type="button" title="Delete this site's cookies and clear everything else it has stored">
+            Clear site data&hellip;
+          </button>
           <!-- Opens the list of every kept cookie, on any site. Only shown
                when there is one. -->
           <button id="kept-open" class="link-button kept-link" type="button" hidden></button>
@@ -293,6 +302,12 @@
               Yes, delete
             </button>
             <button id="confirm-no" type="button">Cancel</button>
+          </div>
+
+          <div id="data-confirm" class="confirm data-confirm" hidden>
+            <span id="data-confirm-text"></span>
+            <button id="data-yes" class="danger solid" type="button">Yes, clear it</button>
+            <button id="data-no" type="button">Cancel</button>
           </div>
         </div>
 
@@ -862,6 +877,15 @@
           subdomains, such as login.example.com.
           <strong>All sites</strong> deletes every cookie in this browser
           profile. The count and the sites are always shown first.
+        </dd>
+
+        <dt>Clearing cookies didn't let me log in</dt>
+        <dd>
+          Try <strong>Clear site data</strong> under the delete options. As
+          well as the site's cookies, it clears what else the site has
+          stored: local storage, databases, cache storage and offline files.
+          Kept cookies are left alone, and Undo can put the cookies back, but
+          not the rest.
         </dd>
 
         <dt>I deleted or changed the wrong cookies</dt>

@@ -181,6 +181,16 @@ let activeFilters = new Set();
 let rules = { everywhere: ALLOW, sites: {} };
 let rulesAllowed = false;
 
+// Whether the two other optional permissions have been given, found out
+// when the popup opens. Knowing in advance means a click can open Chrome's
+// prompt straight away, while Chrome still counts it as coming from the
+// click.
+let everywhereAllowed = false;
+let siteDataAllowed = false;
+
+// The cookies "Clear site data" will delete, counted when it asks.
+let siteDataCookies = [];
+
 // The cookies "Delete them" on the rules screen would remove. Counted when
 // the offer is made, so the number shown is the number deleted.
 let cleanupCookies = [];
@@ -301,6 +311,7 @@ async function loadCurrentPage() {
   showState("main");
   await loadSiteRules();
   await refresh();
+  await showWhatsNew();
   await offerStoredUndo();
 }
 
@@ -949,10 +960,14 @@ async function refreshScope() {
 
 // --- delete flow -----------------------------------------------------------
 
+// Also backs out of "Clear site data", whose count would be out of date too.
 function cancelConfirm() {
   el("confirm-row").hidden = true;
+  el("data-confirm").hidden = true;
+  siteDataCookies = [];
   el("delete-button").hidden = false;
   el("export-button").hidden = false;
+  el("data-button").hidden = false;
 }
 
 // " from example.com" for one site, " across 3 sites" for more.
@@ -967,6 +982,7 @@ function startConfirm() {
   el("main-message").hidden = true;
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
+  el("data-button").hidden = true;
   el("confirm-row").hidden = false;
   el("confirm-yes").focus();
 }
@@ -1535,6 +1551,8 @@ async function loadSiteRules() {
   const loaded = await loadRules();
   rules = loaded.rules;
   rulesAllowed = await hasRulesAccess();
+  everywhereAllowed = await hasPermission(EVERYWHERE_PERMISSION);
+  siteDataAllowed = await hasPermission(SITE_DATA_PERMISSION);
 
   if (loaded.error) {
     showMainMessage(loaded.error, true);
@@ -1858,8 +1876,9 @@ async function askEverywhere(choice) {
     el("rules-everywhere-no").focus();
     return;
   }
-  if (choice === OWN_ONLY && !(await hasPermission(EVERYWHERE_PERMISSION))) {
+  if (choice === OWN_ONLY && !everywhereAllowed) {
     const { granted, error } = await requestPermission(EVERYWHERE_PERMISSION);
+    everywhereAllowed = granted;
     if (!granted) {
       setRadio("everywhere-rule", rules.everywhere, false);
       showRulesMessage(
@@ -1896,6 +1915,132 @@ async function chooseEverywhere(choice) {
         : "Cookies are allowed again on every site without a rule of its own.",
     false
   );
+}
+
+// --- clearing a site's data -------------------------------------------------
+//
+// Cookies go through cookieZ's own delete, so Kept cookies stay and Undo can
+// put them back. Everything else the site stores is cleared by Chrome
+// (chrome.browsingData), which can't count it, list it, or put it back. The
+// question before it says so.
+
+// What Chrome clears for the site, besides cookies.
+const SITE_DATA_TYPES = {
+  localStorage: true,
+  indexedDB: true,
+  cacheStorage: true,
+  serviceWorkers: true,
+  fileSystems: true,
+};
+
+// The site's addresses: the exact one the tab is on, port included (a
+// site on localhost:3000 stores its data under that), then the site with
+// and without "www.", over HTTPS and HTTP.
+function siteDataOrigins() {
+  const base = baseHostOf(page.hostname);
+  const origins = new Set([page.origin]);
+  for (const host of [page.hostname, base, "www." + base]) {
+    origins.add("https://" + host);
+    origins.add("http://" + host);
+  }
+  return [...origins];
+}
+
+async function startSiteDataClear() {
+  if (!siteDataAllowed) {
+    const { granted, error } = await requestPermission(SITE_DATA_PERMISSION);
+    siteDataAllowed = granted;
+    if (!granted) {
+      showMainMessage(error || "Chrome didn't give permission, so nothing was cleared.", Boolean(error));
+      return;
+    }
+  }
+  if (!chrome.browsingData) {
+    showMainMessage("Permission given. Close cookieZ and open it again to finish.", false);
+    return;
+  }
+
+  let found;
+  try {
+    found = await getCookiesForScope("domain", page);
+  } catch (error) {
+    showMainMessage("Couldn't count this site's cookies: " + error.message, true);
+    return;
+  }
+  const { deletable, kept } = partitionByProtection(protectedKeys, found);
+  siteDataCookies = deletable;
+
+  const site = baseHostOf(page.hostname);
+  el("data-confirm-text").textContent =
+    (deletable.length > 0
+      ? "Delete " + pluralise(deletable.length, "cookie", "cookies") + " from " + site + " and clear"
+      : "Clear") +
+    " everything else " + site + " has stored: local storage, databases, cache storage and offline files?" +
+    (kept.length > 0 ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone." : "") +
+    " Undo can put the cookies back, but not the rest.";
+
+  el("main-message").hidden = true;
+  el("delete-button").hidden = true;
+  el("export-button").hidden = true;
+  el("data-button").hidden = true;
+  el("data-confirm").hidden = false;
+  el("data-no").focus();
+}
+
+function cancelSiteDataClear() {
+  cancelConfirm();
+}
+
+async function runSiteDataClear() {
+  const cookies = siteDataCookies;
+  const site = baseHostOf(page.hostname);
+  cancelSiteDataClear();
+
+  const { removed, removedCookies, failed } = await removeCookies(cookies);
+  let dataError = null;
+  try {
+    await chrome.browsingData.remove({ origins: siteDataOrigins() }, SITE_DATA_TYPES);
+  } catch (error) {
+    dataError = error && error.message ? error.message : String(error);
+  }
+
+  showMainMessage(
+    (cookies.length > 0 ? "Deleted " + pluralise(removed, "cookie", "cookies") + " and cleared " : "Cleared ") +
+      site + "'s other stored data." +
+      (failed.length > 0 ? " " + pluralise(failed.length, "cookie", "cookies") + " could not be deleted." : "") +
+      (dataError ? " Chrome couldn't clear the rest: " + dataError : "") +
+      " Reload the site's tab to start it afresh.",
+    failed.length > 0 || Boolean(dataError)
+  );
+  await offerUndo(el("main-message"), { kind: "delete", restore: removedCookies });
+  await refresh();
+}
+
+// --- what's new ---------------------------------------------------------------
+
+// One line, shown the first time cookieZ opens on a new version. Only the
+// version number last seen is saved.
+const WHATS_NEW = {
+  "1.7.0":
+    "New: the Block button at the top. You can now block other companies' cookies on every site, " +
+    "and clear a site's stored data as well as its cookies.",
+};
+
+async function showWhatsNew() {
+  const version = chrome.runtime.getManifest().version;
+  try {
+    const stored = await chrome.storage.local.get("seenVersion");
+    if (stored.seenVersion === version) {
+      return;
+    }
+    await chrome.storage.local.set({ seenVersion: version });
+  } catch (error) {
+    return; // Not worth troubling anyone about.
+  }
+  if (WHATS_NEW[version]) {
+    el("whats-new-text").textContent = WHATS_NEW[version];
+    el("whats-new").hidden = false;
+  }
 }
 
 // --- a copy of the rules ---------------------------------------------------
@@ -1939,7 +2084,7 @@ async function readRulesBackup() {
   // The every-site choice needs a permission that can only be asked for
   // from a click on that choice, so without it the copy loads without it.
   let note = "";
-  if (incoming.everywhere === OWN_ONLY && !(await hasPermission(EVERYWHERE_PERMISSION))) {
+  if (incoming.everywhere === OWN_ONLY && !everywhereAllowed) {
     incoming.everywhere = ALLOW;
     note = " It blocked other companies' cookies on every site; choose that again after loading.";
   }
@@ -2647,6 +2792,15 @@ el("rules-everywhere-no").addEventListener("click", () => {
 });
 el("rules-cleanup-yes").addEventListener("click", () => runCleanup());
 el("rules-delete-on-block").addEventListener("change", toggleDeleteOnBlock);
+el("data-button").addEventListener("click", startSiteDataClear);
+el("data-yes").addEventListener("click", runSiteDataClear);
+el("data-no").addEventListener("click", () => {
+  cancelSiteDataClear();
+  el("data-button").focus();
+});
+el("whats-new-close").addEventListener("click", () => {
+  el("whats-new").hidden = true;
+});
 el("rules-backup").addEventListener("click", saveRulesBackup);
 el("rules-load").addEventListener("change", readRulesBackup);
 el("rules-load-yes").addEventListener("click", loadRulesBackup);
@@ -2799,6 +2953,10 @@ document.addEventListener("keydown", (event) => {
       event.preventDefault();
       cancelConfirm();
       el("delete-button").focus();
+    } else if (currentState() === "main" && !el("data-confirm").hidden) {
+      event.preventDefault();
+      cancelConfirm();
+      el("data-button").focus();
     }
     return;
   }
