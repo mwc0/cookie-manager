@@ -143,6 +143,22 @@ def message(page):
     return line.text_content().strip() if line.is_visible() else ""
 
 
+def label(page):
+    return page.locator("#rules-open-label").text_content().strip()
+
+
+def lit(page):
+    return "on" in (page.locator("#rules-open").get_attribute("class") or "").split()
+
+
+def expiries(context, page):
+    """Each test-site cookie's expiry as DevTools reports it; -1 is a session cookie."""
+    cdp = context.new_cdp_session(page)
+    found = {c["name"]: c["expires"] for c in cdp.send("Storage.getCookies")["cookies"] if "site.test" in c["domain"]}
+    cdp.detach()
+    return found
+
+
 def open_rules(page):
     page.locator("#rules-open").click()
     page.wait_for_timeout(500)
@@ -191,8 +207,8 @@ def check_manifest(r):
     manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
     r.check("the real manifest still asks for only cookies and storage at install",
             manifest.get("permissions") == ["cookies", "storage"], str(manifest.get("permissions")))
-    r.check("the rules permission is optional, so it's only asked for on the rules screen",
-            manifest.get("optional_permissions") == ["contentSettings"],
+    r.check("the permissions for rules, every-site blocking and site data are optional",
+            manifest.get("optional_permissions") == ["contentSettings", "privacy", "browsingData"],
             str(manifest.get("optional_permissions")))
     r.check("there is still no background script", "background" not in manifest, str(sorted(manifest)))
 
@@ -244,9 +260,8 @@ def check_rules(r, context, ext_id, server):
     site = context.new_page()
     page = new_popup(context, ext_id, top)
 
-    r.check("with no rules, the link by the count just says 'Site rules'",
-            page.locator("#rules-open").text_content().strip() == "Site rules",
-            page.locator("#rules-open").text_content())
+    r.check("with no rules, the button in the header just says 'Block', and isn't lit",
+            label(page) == "Block" and not lit(page), label(page))
     r.check("and the site gets all five cookies", visit(context, site, top) == EVERYTHING,
             str(stored_names(context, site)))
 
@@ -264,7 +279,7 @@ def check_rules(r, context, ext_id, server):
     r.check("choosing 'Block other companies' cookies' says what it did",
             message(page) == "Other companies' cookies are now blocked on " + host + ".", message(page))
     r.check("only the site's name and the rule are saved",
-            saved(page) == {"everywhere": "allow", "sites": {host: "own-only"}}, json.dumps(saved(page)))
+            saved(page) == {"everywhere": "allow", "sites": {host: "own-only"}, "deleteOnBlock": False}, json.dumps(saved(page)))
     r.check("TRAP: the site keeps its own cookies and the other company's are gone, partitioned one included",
             visit(context, site, top) == OWN, str(stored_names(context, site)))
     r.check("the rule is for that site only: the other site still gets everything",
@@ -273,15 +288,14 @@ def check_rules(r, context, ext_id, server):
             listed(page) == [[host, "Block other companies' cookies"]], str(listed(page)))
 
     back(page)
-    r.check("back on the table, the link says what the rule is doing",
-            page.locator("#rules-open").text_content().strip() == "Blocking other companies' cookies",
-            page.locator("#rules-open").text_content())
+    r.check("back on the table, the button says what the rule is doing, and is lit",
+            label(page) == "Blocking others" and lit(page), label(page))
 
     # --- block all, with cookies already there ---
     open_rules(page)
     choose(page, "site-rule", "allow")
     r.check("choosing what every other site already gets removes the site's own rule",
-            saved(page) == {"everywhere": "allow", "sites": {}} and listed(page) == [],
+            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False} and listed(page) == [],
             json.dumps(saved(page)))
     visit(context, site, top)
     page.evaluate("async (key) => { await chrome.storage.local.set({ protectedCookies: [key] }); }",
@@ -315,9 +329,7 @@ def check_rules(r, context, ext_id, server):
             visit(context, site, embed) == ["embed_header", "embed_js"], str(stored_names(context, site)))
 
     back(page)
-    r.check("the link says 'Blocking all cookies'",
-            page.locator("#rules-open").text_content().strip() == "Blocking all cookies",
-            page.locator("#rules-open").text_content())
+    r.check("the button says 'Blocked'", label(page) == "Blocked" and lit(page), label(page))
     r.check("the empty table says the rules are why",
             page.locator("#empty-message").text_content().strip()
             == "No cookies are set for this site. Your site rules are blocking them.",
@@ -357,7 +369,7 @@ def check_rules(r, context, ext_id, server):
     page.locator("#rules-everywhere-yes").click()
     page.wait_for_timeout(800)
     r.check("after saying yes, it's saved and this site's own choice follows it",
-            saved(page) == {"everywhere": "block", "sites": {}} and checked(page, "site-rule") == "block",
+            saved(page) == {"everywhere": "block", "sites": {}, "deleteOnBlock": False} and checked(page, "site-rule") == "block",
             json.dumps(saved(page)))
     r.check("TRAP: every site is blocked",
             visit(context, site, top) == [] and visit(context, site, embed) == [],
@@ -417,7 +429,7 @@ def check_rules(r, context, ext_id, server):
     page.locator("#rules-confirm-yes").click()
     page.wait_for_timeout(800)
     r.check("then nothing is saved but an empty list, and the button goes",
-            saved(page) == {"everywhere": "allow", "sites": {}} and listed(page) == []
+            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False} and listed(page) == []
             and not page.locator("#rules-clear").is_visible(), json.dumps(saved(page)))
     r.check("TRAP: and Chrome is allowing everything again",
             visit(context, site, top) == EVERYTHING and len(visit(context, site, embed)) == 5,
@@ -429,6 +441,131 @@ def check_rules(r, context, ext_id, server):
 
     page.close()
     site.close()
+
+
+def check_new_choices(r, context, ext_id, server):
+    """1.7: clearing on close, other companies' cookies everywhere, deleting
+    when blocking, cookie counts, and a copy of the rules."""
+    top = server.url(server.TOP_HOST)
+    embed = server.url(server.EMBED_HOST)
+    host = server.TOP_HOST
+    site = context.new_page()
+    page = new_popup(context, ext_id, top)
+    open_rules(page)
+
+    # --- clear when Chrome closes ---
+    choose(page, "site-rule", "session")
+    r.check("'Clear when Chrome closes' says what it does",
+            message(page) == "Chrome will delete " + host + "'s cookies every time it closes.", message(page))
+    visit(context, site, top)
+    times = expiries(context, site)
+    r.check("TRAP: the site still gets its cookies, but every one is a session cookie",
+            sorted(times) == EVERYTHING and all(t == -1 for t in times.values()), str(times))
+    back(page)
+    r.check("the button says 'Clears on close'", label(page) == "Clears on close" and lit(page), label(page))
+    open_rules(page)
+    page.locator("#rules-rows .rules-remove").first.click()
+    page.wait_for_timeout(700)
+
+    # --- other companies' cookies, everywhere ---
+    choose(page, "everywhere-rule", "own-only")
+    r.check("'Block other companies' cookies' for every site is saved and says so",
+            saved(page)["everywhere"] == "own-only" and "every site" in message(page), message(page))
+    status = page.evaluate("() => new Promise(r => chrome.privacy.websites.thirdPartyCookiesAllowed.get({}, r))")
+    r.check("it turns on Chrome's own switch, and cookieZ is the one controlling it",
+            status["value"] is False and status["levelOfControl"] == "controlled_by_this_extension", str(status))
+    r.check("TRAP: on every site, other companies' cookies are gone and the site's own stay (partitioned ones are Chrome's exception)",
+            visit(context, site, top) == ["embed_chips", "top_header", "top_js"]
+            and visit(context, site, embed) == ["embed_header", "embed_js", "top_chips"],
+            str(stored_names(context, site)))
+    choose(page, "site-rule", "allow")
+    r.check("TRAP: a site set to 'Allow all cookies' still gets everything",
+            visit(context, site, top) == EVERYTHING, str(stored_names(context, site)))
+    back(page)
+    other = new_popup(context, ext_id, embed)
+    r.check("on a site without its own rule, the button says 'Blocking others'",
+            label(other) == "Blocking others" and lit(other), label(other))
+    other.close()
+
+    # --- delete when blocking, and the count column ---
+    open_rules(page)
+    visit(context, site, top)
+    page.locator("#rules-delete-on-block").check()
+    page.wait_for_timeout(500)
+    r.check("'delete without asking' is saved", saved(page)["deleteOnBlock"] is True, json.dumps(saved(page)))
+    r.check("the list shows how many cookies a listed site has now",
+            page.locator("#rules-rows td.rules-count").first.text_content() == "2",
+            page.locator("#rules-rows td.rules-count").first.text_content())
+    choose(page, "site-rule", "block")
+    page.wait_for_timeout(600)
+    left = stored_names(context, site)
+    r.check("TRAP: blocking now deletes the site's cookies straight away, and says so with Undo",
+            "top_header" not in left and "top_js" not in left
+            and "Deleted 2 cookies." in message(page)
+            and page.locator("#rules-message .undo-button").is_visible()
+            and not page.locator("#rules-cleanup").is_visible(), message(page) + " | " + str(left))
+
+    # --- a copy of the rules ---
+    backup = page.evaluate("""async () => {
+        const m = await import(chrome.runtime.getURL('lib/rules.js'));
+        return m.rulesToBackup((await m.loadRules()).rules);
+    }""")
+    data = json.loads(backup)
+    r.check("the copy holds the rules and nothing else",
+            data == {"kind": "cookieZ site rules", "version": 1, "everywhere": "own-only",
+                     "deleteOnBlock": True, "sites": {host: "block"}}, backup)
+    path = PROFILES / "rules-backup.json"
+    path.write_text(backup, encoding="utf-8")
+    page.evaluate("async () => { const m = await import(chrome.runtime.getURL('lib/rules.js')); await m.clearRules(); }")
+    page.reload()
+    page.wait_for_timeout(1100)
+    open_rules(page)
+    page.locator("#rules-load").set_input_files(str(path))
+    page.wait_for_timeout(600)
+    r.check("loading a copy asks before replacing anything",
+            page.locator("#rules-load-confirm").is_visible()
+            and page.locator("#rules-load-text").text_content() == "Replace your rules with the 1 site in this file?",
+            page.locator("#rules-load-text").text_content())
+    page.locator("#rules-load-yes").click()
+    page.wait_for_timeout(900)
+    r.check("then the rules are back, and Chrome is following them",
+            saved(page) == {"everywhere": "own-only", "sites": {host: "block"}, "deleteOnBlock": True}
+            and visit(context, site, top) == [], json.dumps(saved(page)))
+    path.write_text('{"something": "else"}', encoding="utf-8")
+    page.locator("#rules-load").set_input_files(str(path))
+    page.wait_for_timeout(500)
+    r.check("a file that isn't a cookieZ copy is refused, and nothing changes",
+            "isn't a cookieZ rules backup" in message(page) and not page.locator("#rules-load-confirm").is_visible()
+            and saved(page)["sites"] == {host: "block"}, message(page))
+
+    # --- back to how it was ---
+    page.locator("#rules-clear").click()
+    page.wait_for_timeout(300)
+    page.locator("#rules-confirm-yes").click()
+    page.wait_for_timeout(800)
+    status = page.evaluate("() => new Promise(r => chrome.privacy.websites.thirdPartyCookiesAllowed.get({}, r))")
+    r.check("TRAP: turning everything off hands Chrome's own switch back",
+            status["value"] is True and status["levelOfControl"] != "controlled_by_this_extension"
+            and visit(context, site, top) == EVERYTHING, str(status))
+    page.evaluate("async () => { await chrome.storage.local.remove('siteRules'); }")
+    page.close()
+    site.close()
+
+
+# Makes the popup believe the "privacy" permission hasn't been given, and
+# that the user says no when asked.
+NO_PRIVACY_PERMISSION = NO_RULES_PERMISSION.replace("'contentSettings'", "'privacy'")
+
+
+def check_privacy_declined(r, context, ext_id, server):
+    page = new_popup(context, ext_id, server.url(server.TOP_HOST), before=NO_PRIVACY_PERMISSION)
+    open_rules(page)
+    page.locator('input[name="everywhere-rule"][value="own-only"]').click()
+    page.wait_for_timeout(600)
+    r.check("saying no to the extra permission leaves 'every other site' as it was",
+            checked(page, "everywhere-rule") == "allow" and "didn't give permission" in message(page)
+            and (saved(page) or {}).get("everywhere", "allow") == "allow", message(page))
+    page.close()
 
 
 def check_without_permission(r, context, ext_id, server):
@@ -448,16 +585,15 @@ def check_without_permission(r, context, ext_id, server):
             "nothing has changed" in message(page) and saved(page) == before, message(page))
     back(page)
     r.check("and the table still works", visible_state(page) == "state-main"
-            and page.locator("#rules-open").text_content().strip() == "Site rules")
+            and label(page) == "Block")
 
     # Rules saved earlier, then the permission taken away.
     page.evaluate("async (host) => { await chrome.storage.local.set({ siteRules:"
                   " { everywhere: 'allow', sites: { [host]: 'block' } } }); }", host)
     page.reload()
     page.wait_for_timeout(1100)
-    r.check("TRAP: with saved rules but no permission, the link doesn't claim to be blocking",
-            page.locator("#rules-open").text_content().strip() == "Site rules",
-            page.locator("#rules-open").text_content())
+    r.check("TRAP: with saved rules but no permission, the button doesn't claim to be blocking",
+            label(page) == "Block" and not lit(page), label(page))
     open_rules(page)
     r.check("the saved rules are shown, greyed, with a line saying Chrome isn't following them",
             page.locator("#rules-gate-saved").is_visible() and listed(page) == [[host, "Block all cookies"]]
@@ -491,6 +627,8 @@ def main():
             first.close()
 
             check_rules(r, context, ext_id, server)
+            check_new_choices(r, context, ext_id, server)
+            check_privacy_declined(r, context, ext_id, server)
             check_without_permission(r, context, ext_id, server)
             r.check("no errors were logged", not errors, str(errors))
             context.close()

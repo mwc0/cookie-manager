@@ -6,9 +6,14 @@ import {
   requestHostAccess,
   hasRulesAccess,
   requestRulesAccess,
+  hasPermission,
+  requestPermission,
+  EVERYWHERE_PERMISSION,
+  SITE_DATA_PERMISSION,
 } from "../lib/permissions.js";
 import {
   ALLOW,
+  SESSION,
   OWN_ONLY,
   BLOCK,
   loadRules,
@@ -22,11 +27,18 @@ import {
   setSiteRule,
   removeSiteRule,
   setEverywhere,
+  setDeleteOnBlock,
   clearRules,
+  everywhereAvailable,
+  thirdPartyStatus,
+  rulesToBackup,
+  rulesFromBackup,
+  replaceRules,
 } from "../lib/rules.js";
 import {
   getCookiesForPage,
   getCookiesForScope,
+  getCookiesForDomain,
   removeCookie,
   removeCookies,
   writeCookie,
@@ -1502,9 +1514,13 @@ async function closeKept() {
 // What each choice is called, in the list and in the messages.
 const RULE_NAMES = {
   [ALLOW]: "Allow all cookies",
+  [SESSION]: "Clear when Chrome closes",
   [OWN_ONLY]: "Block other companies' cookies",
   [BLOCK]: "Block all cookies",
 };
+
+// The backup chosen with "Load a copy", waiting for "Replace my rules".
+let loadedBackup = null;
 
 // The rule this page is getting. Without the permission Chrome isn't
 // following any rule, whatever is saved.
@@ -1539,16 +1555,20 @@ async function loadSiteRules() {
   }
 }
 
-// The link next to the cookie count. It says what the rule is doing when
-// it's blocking something on this site.
+// The Block button in the header. It says what's being done to this site's
+// cookies, and lights up while anything is.
 function showRulesLink() {
   const rule = pageRule();
-  el("rules-open").textContent =
-    rule === BLOCK
-      ? "Blocking all cookies"
-      : rule === OWN_ONLY
-        ? "Blocking other companies' cookies"
-        : "Site rules";
+  const labels = {
+    [ALLOW]: ["Block", "Choose which cookies this site may set"],
+    [SESSION]: ["Clears on close", "Chrome deletes this site's cookies when it closes"],
+    [OWN_ONLY]: ["Blocking others", "Other companies' cookies are blocked on this site"],
+    [BLOCK]: ["Blocked", "Every cookie is blocked on this site"],
+  };
+  const [label, title] = labels[rule] || labels[ALLOW];
+  el("rules-open-label").textContent = label;
+  el("rules-open").title = title;
+  el("rules-open").classList.toggle("on", rule !== ALLOW);
 }
 
 async function openRules() {
@@ -1556,6 +1576,7 @@ async function openRules() {
   el("rules-message").hidden = true;
   el("rules-everywhere-confirm").hidden = true;
   cancelRulesConfirm();
+  cancelLoad();
   hideCleanup();
   showState("rules");
   await drawRules();
@@ -1610,6 +1631,9 @@ async function drawRules() {
 
   setRadio("site-rule", rules.sites[site] || rules.everywhere, !canChange);
   setRadio("everywhere-rule", rules.everywhere, !canChange);
+  el("rules-delete-on-block").checked = rules.deleteOnBlock;
+  el("rules-delete-on-block").disabled = !canChange;
+  await showThirdPartyNote(canChange);
 
   const entries = listRules(rules);
   const rows = el("rules-rows");
@@ -1628,6 +1652,12 @@ async function drawRules() {
     rule.textContent = RULE_NAMES[entry.rule];
     row.appendChild(rule);
 
+    // Filled in below, once counted.
+    const count = document.createElement("td");
+    count.className = "rules-count";
+    count.textContent = "…";
+    row.appendChild(count);
+
     const action = document.createElement("td");
     action.className = "rules-action";
     const button = document.createElement("button");
@@ -1645,8 +1675,49 @@ async function drawRules() {
 
   el("rules-table").hidden = entries.length === 0;
   el("rules-empty").hidden = entries.length > 0;
-  el("rules-clear").hidden = !hasAnyRule(rules);
+  el("rules-clear").hidden = !hasAnyRule(rules) || !el("rules-confirm").hidden;
   el("rules-clear").disabled = !canChange;
+  el("rules-backup").disabled = !hasAnyRule(rules);
+  el("rules-load").disabled = !canChange;
+
+  await countRuleCookies(entries);
+}
+
+// How many cookies each listed site has now. Only the sites on the list are
+// looked up, never any others.
+async function countRuleCookies(entries) {
+  const cells = el("rules-rows").querySelectorAll("td.rules-count");
+  await Promise.all(entries.map(async (entry, index) => {
+    let text = "?";
+    try {
+      const found = await getCookiesForDomain(entry.site);
+      text = formatCount(found.length);
+    } catch (error) {
+      console.warn("Couldn't count cookies for " + entry.site + ":", error);
+    }
+    if (cells[index]) {
+      cells[index].textContent = text;
+    }
+  }));
+}
+
+// The line under "On every other site". It says when Chrome's own setting,
+// another extension or an administrator is already deciding about other
+// companies' cookies, since cookieZ can't then change it.
+async function showThirdPartyNote(canChange) {
+  const note = el("rules-everywhere-note");
+  const option = document.querySelector('input[name="everywhere-rule"][value="own-only"]');
+  const status = await thirdPartyStatus();
+  let text = "";
+  if (status && !status.canChange) {
+    text = "Another extension or your administrator controls whether other companies' cookies are blocked, so cookieZ can't change it.";
+    option.disabled = true;
+  } else if (status && !status.allowed && !status.ours) {
+    text = "Chrome is already blocking other companies' cookies on every site, in its own settings.";
+  }
+  option.disabled = option.disabled || !canChange;
+  note.textContent = text;
+  note.hidden = text === "";
 }
 
 // The button on the rules screen that asks Chrome for the permission.
@@ -1695,7 +1766,9 @@ async function chooseSiteRule(choice) {
       ? "All cookies are now blocked on " + site + "."
       : choice === OWN_ONLY
         ? "Other companies' cookies are now blocked on " + site + "."
-        : site + " may set any cookie.",
+        : choice === SESSION
+          ? "Chrome will delete " + site + "'s cookies every time it closes."
+          : site + " may set any cookie.",
     false
   );
   if (choice === BLOCK) {
@@ -1721,6 +1794,13 @@ async function offerCleanup(site) {
   }
 
   cleanupCookies = deletable;
+
+  // "Delete without asking": straight through the usual delete, with Undo.
+  if (rules.deleteOnBlock) {
+    await runCleanup(el("rules-message").textContent + " ");
+    return;
+  }
+
   el("rules-cleanup-text").textContent =
     "It still has " +
     pluralise(deletable.length, "cookie", "cookies") +
@@ -1736,32 +1816,63 @@ function hideCleanup() {
   el("rules-cleanup").hidden = true;
 }
 
-async function runCleanup() {
+// `before` is put in front of the result, when deleting follows straight on
+// from blocking.
+async function runCleanup(before = "") {
   const cookies = cleanupCookies;
   hideCleanup();
 
   const { removed, removedCookies, failed } = await removeCookies(cookies);
   showRulesMessage(
-    failed.length === 0
+    (typeof before === "string" ? before : "") +
+    (failed.length === 0
       ? "Deleted " + pluralise(removed, "cookie", "cookies") + "."
       : "Deleted " +
           pluralise(removed, "cookie", "cookies") +
           ". " +
           pluralise(failed.length, "cookie", "cookies") +
-          " could not be deleted, and may be protected by the browser.",
+          " could not be deleted, and may be protected by the browser."),
     failed.length > 0
   );
   await offerUndo(el("rules-message"), { kind: "delete", restore: removedCookies });
 }
 
+async function toggleDeleteOnBlock() {
+  const result = await setDeleteOnBlock(el("rules-delete-on-block").checked);
+  rules = result.rules;
+  el("rules-delete-on-block").checked = rules.deleteOnBlock;
+  if (result.error) {
+    showRulesMessage(result.error, true);
+  }
+}
+
 // "Block all cookies" for every other site changes every site at once, so
 // it asks first. The choice is put back until the answer.
-function askEverywhere(choice) {
+//
+// "Block other companies' cookies" needs one more permission, asked for
+// here, from the click, the first time.
+async function askEverywhere(choice) {
   if (choice === BLOCK && rules.everywhere !== BLOCK) {
     setRadio("everywhere-rule", rules.everywhere, false);
     el("rules-everywhere-confirm").hidden = false;
     el("rules-everywhere-no").focus();
     return;
+  }
+  if (choice === OWN_ONLY && !(await hasPermission(EVERYWHERE_PERMISSION))) {
+    const { granted, error } = await requestPermission(EVERYWHERE_PERMISSION);
+    if (!granted) {
+      setRadio("everywhere-rule", rules.everywhere, false);
+      showRulesMessage(
+        error || "Chrome didn't give permission, so nothing has changed. Your other rules work as before.",
+        Boolean(error)
+      );
+      return;
+    }
+    if (!everywhereAvailable()) {
+      setRadio("everywhere-rule", rules.everywhere, false);
+      showRulesMessage("Permission given. Close cookieZ and open it again, then choose this again.", false);
+      return;
+    }
   }
   chooseEverywhere(choice);
 }
@@ -1780,8 +1891,84 @@ async function chooseEverywhere(choice) {
   showRulesMessage(
     choice === BLOCK
       ? "Cookies are now blocked on every site without a rule of its own."
-      : "Cookies are allowed again on every site without a rule of its own.",
+      : choice === OWN_ONLY
+        ? "Other companies' cookies are now blocked on every site without a rule of its own."
+        : "Cookies are allowed again on every site without a rule of its own.",
     false
+  );
+}
+
+// --- a copy of the rules ---------------------------------------------------
+
+// Saves the rules as a file, the same way Export saves cookies.
+function saveRulesBackup() {
+  const url = URL.createObjectURL(new Blob([rulesToBackup(rules)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "cookiez-site-rules.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  showRulesMessage("Saving your rules as cookiez-site-rules.json.", false);
+}
+
+// Reads a chosen file and asks before replacing anything.
+async function readRulesBackup() {
+  const input = el("rules-load");
+  const file = input.files && input.files[0];
+  input.value = "";
+  if (!file) {
+    return;
+  }
+
+  let text;
+  try {
+    text = await file.text();
+  } catch (error) {
+    showRulesMessage("Couldn't read that file: " + (error && error.message ? error.message : error), true);
+    return;
+  }
+
+  const { rules: incoming, error } = rulesFromBackup(text);
+  if (error) {
+    showRulesMessage(error, true);
+    return;
+  }
+
+  // The every-site choice needs a permission that can only be asked for
+  // from a click on that choice, so without it the copy loads without it.
+  let note = "";
+  if (incoming.everywhere === OWN_ONLY && !(await hasPermission(EVERYWHERE_PERMISSION))) {
+    incoming.everywhere = ALLOW;
+    note = " It blocked other companies' cookies on every site; choose that again after loading.";
+  }
+
+  loadedBackup = incoming;
+  const count = Object.keys(incoming.sites).length;
+  el("rules-load-text").textContent =
+    "Replace your rules with the " + pluralise(count, "site", "sites") + " in this file?" + note;
+  el("rules-load-confirm").hidden = false;
+  el("rules-load-no").focus();
+}
+
+function cancelLoad() {
+  loadedBackup = null;
+  el("rules-load-confirm").hidden = true;
+}
+
+async function loadRulesBackup() {
+  const incoming = loadedBackup;
+  cancelLoad();
+  if (!incoming) {
+    return;
+  }
+  const result = await replaceRules(incoming);
+  rules = result.rules;
+  await drawRules();
+  showRulesMessage(
+    result.error || "Loaded " + pluralise(Object.keys(incoming.sites).length, "site rule", "site rules") + ".",
+    Boolean(result.error)
   );
 }
 
@@ -2458,7 +2645,12 @@ el("rules-everywhere-no").addEventListener("click", () => {
   el("rules-everywhere-confirm").hidden = true;
   focusChecked("everywhere-rule");
 });
-el("rules-cleanup-yes").addEventListener("click", runCleanup);
+el("rules-cleanup-yes").addEventListener("click", () => runCleanup());
+el("rules-delete-on-block").addEventListener("change", toggleDeleteOnBlock);
+el("rules-backup").addEventListener("click", saveRulesBackup);
+el("rules-load").addEventListener("change", readRulesBackup);
+el("rules-load-yes").addEventListener("click", loadRulesBackup);
+el("rules-load-no").addEventListener("click", cancelLoad);
 el("rules-cleanup-no").addEventListener("click", hideCleanup);
 el("rules-clear").addEventListener("click", startRulesConfirm);
 el("rules-confirm-yes").addEventListener("click", clearAllRules);
