@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=1.6.0">
-  <script src="../theme.js?v=1.6.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=1.7.0">
+  <script src="../theme.js?v=1.7.0" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -108,15 +108,23 @@
         </details>
         <details>
           <summary>Can I stop a site setting cookies?</summary>
-          <p>Yes. Click <strong>Site rules</strong> next to the cookie count. For each site you can allow all cookies, block other companies' cookies, or block every cookie. You can also block cookies on every site except the ones you allow. cookieZ gives your choice to Chrome and Chrome does the blocking, so it works while cookieZ is closed. Removing cookieZ removes the rules.</p>
+          <p>Yes. Click <strong>Block</strong> at the top of cookieZ. For each site you can allow all cookies, clear them when Chrome closes, block other companies' cookies, or block every cookie. You can also block other companies' cookies on every site, or every cookie except on the sites you allow. cookieZ gives your choice to Chrome and Chrome does the blocking, so it works while cookieZ is closed. Removing cookieZ removes the rules.</p>
         </details>
         <details>
           <summary>Why does Chrome's prompt mention my camera and microphone?</summary>
-          <p>To set site rules, cookieZ needs Chrome's permission to change site settings. Chrome has one permission for every kind of site setting, so its prompt lists them all. cookieZ only ever changes the cookie setting, and you can check that in the code: it's in <code>src/lib/rules.js</code>. The prompt only appears if you click the button on the Site rules screen. You can say no, and everything else works as before.</p>
+          <p>To set site rules, cookieZ needs Chrome's permission to change site settings. Chrome has one permission for every kind of site setting, so its prompt lists them all. cookieZ only ever changes the cookie setting, and you can check that in the code: it's in <code>src/lib/rules.js</code>. The prompt only appears if you click the button on the Block cookies screen. You can say no, and everything else works as before.</p>
+        </details>
+        <details>
+          <summary>Why does it ask to change my privacy settings, or to clear browsing data?</summary>
+          <p>Only if you use the feature that needs it. Blocking other companies' cookies on every site turns on Chrome's own setting for that, which needs permission to change privacy settings; cookieZ changes nothing else there. <strong>Clear site data</strong> needs permission to clear browsing data; it only ever clears the site you have open, and never your history or passwords. Say no to either and the rest of cookieZ works as before.</p>
+        </details>
+        <details>
+          <summary>Clearing cookies didn't let me log in</summary>
+          <p>Some sites keep more than cookies. Click <strong>Clear site data</strong> under the delete options: it deletes the site's cookies and clears what else it has stored, such as local storage and cached files. Kept cookies are left alone, and Undo can put the cookies back, but not the rest. Then reload the site.</p>
         </details>
         <details>
           <summary>A site stopped working after I set a rule</summary>
-          <p>Open cookieZ on that site, click the rule next to the cookie count, and choose <strong>Allow all cookies</strong>, or remove the site from the list. Then reload the page. "Block other companies' cookies" can stop embedded videos, maps and "sign in with" buttons working, because those come from other companies.</p>
+          <p>Open cookieZ on that site, click the button at the top (it says what's blocked), and choose <strong>Allow all cookies</strong>, or remove the site from the list. Then reload the page. "Block other companies' cookies" can stop embedded videos, maps and "sign in with" buttons working, because those come from other companies.</p>
         </details>
         <details>
           <summary>Does it block only the cookies a site doesn't need?</summary>
@@ -152,7 +160,7 @@
         </details>
         <details>
           <summary>How do I remove it?</summary>
-          <p>Right-click the cookieZ icon and choose "Remove from Chrome", or remove it from <code>chrome://extensions</code>. This also deletes the three things it saved: your Kept list, your site rules and your theme choice. Chrome stops following the rules. Your cookies stay as they are.</p>
+          <p>Right-click the cookieZ icon and choose "Remove from Chrome", or remove it from <code>chrome://extensions</code>. This also deletes what it saved: your Kept list, your site rules, your theme choice and the version you last opened. Chrome stops following the rules, and if cookieZ was blocking other companies' cookies on every site, Chrome's own setting goes back to how you had it. Your cookies stay as they are.</p>
         </details>
       </div>
 

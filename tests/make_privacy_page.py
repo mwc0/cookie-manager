@@ -59,8 +59,8 @@ TEMPLATE = """<!DOCTYPE html>
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=1.6.0">
-  <script src="../theme.js?v=1.6.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=1.7.0">
+  <script src="../theme.js?v=1.7.0" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
