@@ -15,6 +15,7 @@ import {
   formatBytes,
 } from "../lib/format.js";
 import { cookieKey } from "../lib/cookies.js";
+import { knownCookie, describeKnownBy } from "../lib/known.js";
 import { copyWithFeedback } from "./clipboard.js";
 import { iconButton, setIconContent } from "./icons.js";
 
@@ -24,7 +25,9 @@ const VALUE_PREVIEW_LENGTH = 28;
 
 // `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
 // isProtected(cookie), onPick(cookie, ticked), isPicked(cookie),
-// isChanged(cookie), isExpanded(cookie), onExpand(cookie, expanded) }.
+// isChanged(cookie), isExpanded(cookie), onExpand(cookie, expanded),
+// isEmbedded(cookie) }. isEmbedded says a cookie was set by another site
+// and is kept for this one only (see setByOtherSite() in cookies.js).
 // Deleting one cookie takes two clicks (Delete, then "Sure?"), and onDelete
 // is only called after the second.
 //
@@ -129,7 +132,19 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   row.appendChild(valueCell(cookie, handlers));
   // Only shown when cookieZ is open in a tab. See .size in popup.css.
   row.appendChild(textCell(formatBytes(cookieBytes(cookie)), "nowrap size"));
-  row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
+  const domain = breakableCell(cookie.domain, ".", "mono domain");
+  // Another company's cookie, kept for this site only. Said in words under
+  // its domain, since otherwise it looks like a cookie set for that domain.
+  if (handlers.isEmbedded && handlers.isEmbedded(cookie)) {
+    const note = document.createElement("span");
+    note.className = "embedded-note";
+    note.textContent = "set in a frame, kept for this site only";
+    note.title =
+      "Set by " + String(cookie.domain || "").replace(/^\./, "") +
+      " in a frame on this site. It's partitioned, so it's kept for this site only.";
+    domain.appendChild(note);
+  }
+  row.appendChild(domain);
   row.appendChild(breakableCell(cookie.path, "/", "mono path"));
 
   const expires = textCell(formatExpiry(cookie), "nowrap expires");
@@ -142,7 +157,7 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   }
   row.appendChild(expires);
 
-  row.appendChild(flagsCell(cookie));
+  row.appendChild(flagsCell(cookie, handlers));
   row.appendChild(actionsCell(cookie, handlers, disarmers, disarmAll));
   return row;
 }
@@ -354,7 +369,7 @@ function valueCell(cookie, handlers) {
 // Only what's unusual about a cookie gets a badge, in words. Most cookies
 // are for one host and have no SameSite set, so those get nothing, rather
 // than the same badges on every row. The editor shows every setting.
-function flagsCell(cookie) {
+function flagsCell(cookie, handlers) {
   const cell = document.createElement("td");
   cell.className = "flags";
   const host = String(cookie.domain || "").replace(/^\./, "");
@@ -368,7 +383,13 @@ function flagsCell(cookie) {
   if (!cookie.hostOnly) {
     cell.appendChild(badge("Subdomains", "Also sent to every subdomain of " + host));
   }
-  if (cookie.partitionKey) {
+  // Set by another site in a frame on this one. Its row also says so in
+  // words, under the domain (see buildRow()).
+  if (handlers.isEmbedded && handlers.isEmbedded(cookie)) {
+    cell.appendChild(
+      badge("Partitioned", "Partitioned (CHIPS): set by " + host + " and kept for this site only")
+    );
+  } else if (cookie.partitionKey) {
     cell.appendChild(
       badge("Partitioned", "Partitioned (CHIPS): kept separately for each site it's used on")
     );
@@ -377,6 +398,21 @@ function flagsCell(cookie) {
     cell.appendChild(
       badge("SameSite " + formatSameSite(cookie.sameSite), SAME_SITE_MEANING[cookie.sameSite] || "")
     );
+  }
+
+  // A guess from the name, so it comes after the facts, and the word is
+  // "Known", never "tracker". Who it's known for is in the tip, and read
+  // out by screen readers.
+  const known = knownCookie(cookie.name);
+  if (known) {
+    const tip = "Known name, used by " + describeKnownBy(known) + ". A guess from the name only.";
+    const mark = badge("Known", tip);
+    mark.classList.add("known");
+    const detail = document.createElement("span");
+    detail.className = "visually-hidden";
+    detail.textContent = " name, used by " + describeKnownBy(known);
+    mark.appendChild(detail);
+    cell.appendChild(mark);
   }
 
   const bytes = cookieBytes(cookie);

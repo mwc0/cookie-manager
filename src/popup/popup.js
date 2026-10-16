@@ -38,7 +38,8 @@ import {
 } from "../lib/rules.js";
 import { TRACKER_DOMAINS } from "../lists/trackers.js";
 import {
-  getCookiesForPage,
+  getSiteCookies,
+  setByOtherSite,
   getCookiesForScope,
   getCookiesForDomain,
   removeCookie,
@@ -104,6 +105,7 @@ import {
   watchSystemTheme,
 } from "../lib/theme.js";
 import { renderCookieTable, DEFAULT_SORT } from "./render.js";
+import { loadKnownCookies, knownCookie, describeKnown } from "../lib/known.js";
 import {
   saveLastChange,
   loadLastChange,
@@ -316,6 +318,33 @@ async function loadCurrentPage() {
   await refresh();
   await showWhatsNew();
   await offerStoredUndo();
+  showKnownWhenLoaded();
+}
+
+// The list of known cookie names loads after the table is showing, so it
+// doesn't slow opening (see src/lib/known.js). Once it's in, the table is
+// drawn again with its Known badges. If now isn't a good moment, such as
+// while a row says "Sure?", that waits, as it does when the site changes a
+// cookie.
+let knownReady = false;
+
+async function showKnownWhenLoaded() {
+  if (knownReady) {
+    return;
+  }
+  knownReady = await loadKnownCookies();
+  if (!knownReady) {
+    return;
+  }
+  if (currentState() === "edit") {
+    showKnownName();
+  }
+  if (liveRedrawWaits()) {
+    livePending = true;
+    scheduleLiveRedraw();
+  } else {
+    drawTable();
+  }
 }
 
 // Reloads the table, then the delete count. These must run one after the
@@ -328,7 +357,7 @@ async function refresh() {
 
 async function refreshTable() {
   try {
-    pageCookies = await getCookiesForPage(page);
+    pageCookies = await getSiteCookies(page);
     noteChanges(pageCookies);
 
     const { keys, error } = await loadProtected();
@@ -339,7 +368,14 @@ async function refreshTable() {
     }
 
     // Forget Kept entries for cookies that are gone. See pruneProtected().
-    const domains = new Set(pageCookies.map((c) => String(c.domain || "").replace(/^\./, "")));
+    // Only this site's own domains: the table only has the cookies other
+    // companies keep for this site, not the rest of theirs, so their kept
+    // cookies elsewhere would look gone.
+    const domains = new Set(
+      pageCookies
+        .filter((c) => !setByOtherSite(c, page.hostname))
+        .map((c) => String(c.domain || "").replace(/^\./, ""))
+    );
     domains.add(page.hostname);
     const pruned = await pruneProtected(protectedKeys, pageCookies, domains);
     protectedKeys = pruned.keys;
@@ -410,6 +446,7 @@ function drawTable() {
     isPicked: (cookie) => picked.has(cookieKey(cookie)),
     isChanged: (cookie) => changed.has(cookieKey(cookie)),
     isExpanded: (cookie) => expanded.has(cookieKey(cookie)),
+    isEmbedded: (cookie) => setByOtherSite(cookie, page.hostname),
     onExpand: (cookie, open) => {
       if (open) {
         expanded.add(cookieKey(cookie));
@@ -440,8 +477,9 @@ function drawTable() {
   el("search-clear").hidden = !filtering;
 
   // "about", because this page's list also has cookies for other paths,
-  // which a browser only sends on those paths.
-  const bytes = headerBytes(pageCookies);
+  // which a browser only sends on those paths. Cookies other companies keep
+  // for this site are left out: they're only sent to those companies.
+  const bytes = headerBytes(pageCookies.filter((cookie) => !setByOtherSite(cookie, page.hostname)));
   el("cookie-count").textContent =
     (filtering
       ? pluralise(shownCookies.length, "cookie", "cookies") +
@@ -487,13 +525,18 @@ function drawTable() {
 }
 
 // The quick filters. One that no cookie on this site matches is hidden,
-// unless it's switched on, so it can always be switched off again.
+// unless it's switched on, so it can always be switched off again. "Not
+// Secure" is only offered on an HTTPS page: on a plain HTTP page no cookie
+// set there is Secure, so it would say nothing.
 function drawFilters(isKept) {
   let anyShown = false;
+  const https = page.origin.startsWith("https:");
   for (const chip of document.querySelectorAll("#filters .chip")) {
     const name = chip.dataset.filter;
     const on = activeFilters.has(name);
-    const matches = pageCookies.some((cookie) => passesFilter(cookie, name, isKept));
+    const matches =
+      (name !== "notsecure" || https) &&
+      pageCookies.some((cookie) => passesFilter(cookie, name, isKept));
     chip.hidden = !on && !matches;
     chip.setAttribute("aria-pressed", on ? "true" : "false");
     anyShown = anyShown || !chip.hidden;
@@ -658,15 +701,22 @@ let liveTimer = null;
 let livePending = false;
 let lastLiveDraw = 0;
 
-// The same cookies getCookiesForPage() reads: this host, its parent
-// domains and its subdomains.
+// The same cookies getSiteCookies() reads: this host, its parent domains
+// and its subdomains, and the partitioned cookies kept for this site by
+// others. A partition is named after a site (example.com), which is this
+// host or one of its parent domains.
 function concernsPage(cookie) {
   if (!page) {
     return false;
   }
   const domain = String(cookie.domain || "").replace(/^\./, "");
   const host = page.hostname;
-  return domain === host || host.endsWith("." + domain) || domain.endsWith("." + host);
+  if (domain === host || host.endsWith("." + domain) || domain.endsWith("." + host)) {
+    return true;
+  }
+  const site = cookie.partitionKey ? String(cookie.partitionKey.topLevelSite || "") : "";
+  const siteHost = site.replace(/^https?:\/\//, "").replace(/[:/].*$/, "");
+  return siteHost !== "" && (siteHost === host || host.endsWith("." + siteHost));
 }
 
 // Never pulls the rug: the table isn't redrawn while another screen is open,
@@ -907,7 +957,9 @@ async function refreshScope() {
     } else if (selectedScope() === "picked") {
       inScope = pickedCookies();
     } else {
-      inScope = await getCookiesForScope(selectedScope(), page);
+      // The cookies other companies keep for this site are in the table,
+      // so they're in this site's scopes too.
+      inScope = await getCookiesForScope(selectedScope(), page, { embedded: true });
     }
   } catch (error) {
     scopeCookies = [];
@@ -1087,7 +1139,12 @@ function openEditor(cookie) {
   // A partitioned cookie keeps its partition when saved. The partition can't
   // be edited here.
   const partition = el("edit-partition");
-  if (cookie && cookie.partitionKey) {
+  if (cookie && setByOtherSite(cookie, page.hostname)) {
+    partition.textContent =
+      "Set by " + String(cookie.domain || "").replace(/^\./, "") + " in a frame on this site, " +
+      "and kept for this site only (a partitioned, or CHIPS, cookie). Its partition is kept as it is when you save.";
+    partition.hidden = false;
+  } else if (cookie && cookie.partitionKey) {
     partition.textContent =
       "This is a partitioned (CHIPS) cookie. Its partition is kept as it is when you save.";
     partition.hidden = false;
@@ -1100,8 +1157,17 @@ function openEditor(cookie) {
 
   showDecoded();
   showValueSize();
+  showKnownName();
   showState("edit");
   el("field-name").focus();
+}
+
+// One line under the name when the Open Cookie Database knows it, kept up
+// to date as the name is typed.
+function showKnownName() {
+  const known = knownCookie(el("field-name").value);
+  el("name-known").hidden = !known;
+  el("name-known-text").textContent = known ? describeKnown(known) : "";
 }
 
 // Says how big the cookie is once it's close to Chrome's limit, and turns
@@ -2078,7 +2144,9 @@ async function startSiteDataClear() {
 
   let found;
   try {
-    found = await getCookiesForScope("domain", page);
+    // Including the cookies other companies keep for this site, which are
+    // as much this site's data as the rest.
+    found = await getCookiesForScope("domain", page, { embedded: true });
   } catch (error) {
     showMainMessage("Couldn't count this site's cookies: " + error.message, true);
     return;
@@ -2467,11 +2535,15 @@ function buildExport() {
   if (format === "netscape") {
     return { text: toNetscape(scopeAll), filename: base + ".txt", type: "text/plain" };
   }
+  // A Cookie header and curl are what the browser sends to this page, and
+  // a cookie another company keeps for this site is only sent to that
+  // company, so those two leave it out.
+  const sentHere = scopeAll.filter((cookie) => !setByOtherSite(cookie, page.hostname));
   if (format === "header") {
-    return { text: toHeader(scopeAll), filename: base + "-header.txt", type: "text/plain" };
+    return { text: toHeader(sentHere), filename: base + "-header.txt", type: "text/plain" };
   }
   if (format === "curl") {
-    return { text: toCurl(scopeAll, page.origin + "/"), filename: base + "-curl.sh", type: "text/plain" };
+    return { text: toCurl(sentHere, page.origin + "/"), filename: base + "-curl.sh", type: "text/plain" };
   }
   if (format === "playwright") {
     return { text: toPlaywright(scopeAll), filename: base + "-playwright.json", type: "application/json" };
@@ -3008,6 +3080,7 @@ el("value-copy").addEventListener("click", () =>
 el("field-value").addEventListener("input", showDecoded);
 el("field-value").addEventListener("input", showValueSize);
 el("field-name").addEventListener("input", showValueSize);
+el("field-name").addEventListener("input", showKnownName);
 el("edit-duplicate").addEventListener("click", duplicateCookie);
 el("edit-setcookie").addEventListener("click", copySetCookie);
 el("field-json").addEventListener("change", toggleJson);
