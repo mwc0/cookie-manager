@@ -1515,9 +1515,25 @@ button.row-button.keep.kept:hover:not(:disabled) {
 }
 
 #rules-cleanup,
-#rules-everywhere-confirm {
+#rules-everywhere-confirm,
+#rules-trackers-cleanup {
   flex-wrap: wrap;
   margin-top: 10px;
+}
+
+/* The choices sit in a fieldset only so they can all be switched off while
+   a change is saved. It draws nothing of its own. */
+#rules-body {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* While saving, the file picker's label looks switched off too. */
+#rules-body:disabled .button-like {
+  opacity: 0.5;
+  cursor: default;
 }
 
 #rules-wrap {

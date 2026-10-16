@@ -716,7 +716,9 @@
         too.
       </p>
 
-      <div id="rules-body" hidden>
+      <!-- A fieldset, so that while a change is being saved one switch
+           (its disabled attribute) turns off every control inside it. -->
+      <fieldset id="rules-body" hidden>
         <section id="rules-site" class="rules-group">
           <h2 id="rules-site-heading">On <span id="rules-site-name"></span></h2>
           <div class="rule-options" role="radiogroup" aria-labelledby="rules-site-heading">
@@ -763,7 +765,7 @@
           <p id="rules-site-note" class="field-note" hidden></p>
           <label class="check rules-always">
             <input id="rules-delete-on-block" type="checkbox" />
-            <span>When I block a site, delete the cookies it already has without asking</span>
+            <span>When I block cookies, delete the ones already saved without asking</span>
           </label>
 
           <!-- Blocking doesn't remove the cookies a site already has, so
@@ -817,6 +819,32 @@
           </div>
         </section>
 
+        <!-- Known trackers, from the list in src/lists/trackers.js. If that
+             list grows or shrinks a lot, change "about 130" below. -->
+        <section id="rules-trackers-group" class="rules-group" aria-label="Known trackers">
+          <label class="rule-option">
+            <input id="rules-trackers" type="checkbox" />
+            <span>
+              <strong>Block known trackers' cookies on every site</strong>
+              <span class="rule-note">
+                Cookies from about 130 advertising and analytics companies,
+                from a list inside cookieZ that updates when cookieZ does.
+                Sites you've set to allow all cookies still get them. This
+                blocks the trackers' cookies, not the trackers themselves.
+              </span>
+            </span>
+          </label>
+
+          <!-- Like the offer after blocking a site: these companies'
+               cookies already saved, deleted the usual way, so kept
+               cookies are left alone and Undo works. -->
+          <div id="rules-trackers-cleanup" class="confirm" hidden>
+            <span id="rules-trackers-cleanup-text"></span>
+            <button id="rules-trackers-cleanup-yes" class="danger solid" type="button">Delete them</button>
+            <button id="rules-trackers-cleanup-no" type="button">Leave them</button>
+          </div>
+        </section>
+
         <h2 id="rules-list-heading">Sites with a rule of their own</h2>
         <div id="rules-wrap">
           <table id="rules-table" aria-labelledby="rules-list-heading">
@@ -856,7 +884,7 @@
             <button id="rules-load-no" type="button">Cancel</button>
           </span>
         </div>
-      </div>
+      </fieldset>
     </section>
 
     <!-- Help that works offline. Nothing here is a link: the extension

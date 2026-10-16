@@ -28,6 +28,7 @@ import {
   removeSiteRule,
   setEverywhere,
   setDeleteOnBlock,
+  setTrackers,
   clearRules,
   everywhereAvailable,
   thirdPartyStatus,
@@ -35,6 +36,7 @@ import {
   rulesFromBackup,
   replaceRules,
 } from "../lib/rules.js";
+import { TRACKER_DOMAINS } from "../lists/trackers.js";
 import {
   getCookiesForPage,
   getCookiesForScope,
@@ -178,7 +180,7 @@ let activeFilters = new Set();
 
 // The site rules, and whether Chrome has given permission to set them. See
 // src/lib/rules.js.
-let rules = { everywhere: ALLOW, sites: {} };
+let rules = { everywhere: ALLOW, sites: {}, trackers: false };
 let rulesAllowed = false;
 
 // Whether the two other optional permissions have been given, found out
@@ -191,8 +193,9 @@ let siteDataAllowed = false;
 // The cookies "Clear site data" will delete, counted when it asks.
 let siteDataCookies = [];
 
-// The cookies "Delete them" on the rules screen would remove. Counted when
-// the offer is made, so the number shown is the number deleted.
+// The cookies "Delete them" on the rules screen would remove, after
+// blocking a site or the trackers. Counted when the offer is made, so the
+// number shown is the number deleted.
 let cleanupCookies = [];
 
 // An incognito window shows the rules but can't change them.
@@ -1583,10 +1586,21 @@ function showRulesLink() {
     [OWN_ONLY]: ["Blocking others", "Other companies' cookies are blocked on this site"],
     [BLOCK]: ["Blocked", "Every cookie is blocked on this site"],
   };
-  const [label, title] = labels[rule] || labels[ALLOW];
+  let [label, title] = labels[rule] || labels[ALLOW];
+
+  // Known trackers are blocked here too, unless the site has a rule of its
+  // own: "Allow all cookies" lets them through, and every other rule
+  // already has a name that says more.
+  const trackersHere =
+    rule === ALLOW && rulesAllowed && rules.trackers && !rules.sites[siteFor(rules, page.hostname)];
+  if (trackersHere) {
+    label = "Blocking trackers";
+    title = "Known trackers' cookies are blocked on this site";
+  }
+
   el("rules-open-label").textContent = label;
   el("rules-open").title = title;
-  el("rules-open").classList.toggle("on", rule !== ALLOW);
+  el("rules-open").classList.toggle("on", rule !== ALLOW || trackersHere);
 }
 
 async function openRules() {
@@ -1606,6 +1620,30 @@ function showRulesMessage(text, isError) {
   message.textContent = text;
   message.className = isError ? "result error" : "result";
   message.hidden = false;
+}
+
+const SAVING = "Saving…";
+
+// Every change to the rules goes through here. Chrome can take a few
+// seconds to take in every rule now there are trackers, so the screen says
+// "Saving…" and its controls are switched off until Chrome is done, error
+// or not. `change` is called with no arguments and its result handed back.
+async function savingRules(change) {
+  const focused = document.activeElement;
+  el("rules-body").disabled = true;
+  showRulesMessage(SAVING, false);
+  try {
+    return await change();
+  } finally {
+    el("rules-body").disabled = false;
+    if (el("rules-message").textContent === SAVING) {
+      el("rules-message").hidden = true;
+    }
+    // Switching a control off takes the focus away from it. Give it back.
+    if (focused && focused !== document.body && document.activeElement !== focused) {
+      focused.focus();
+    }
+  }
 }
 
 function setRadio(name, value, disabled) {
@@ -1647,10 +1685,16 @@ async function drawRules() {
   el("rules-site-note").textContent =
     site === own ? "" : "This rule was set for " + site + ", which covers " + own + " too.";
 
-  setRadio("site-rule", rules.sites[site] || rules.everywhere, !canChange);
+  // With trackers blocked, a site without a rule of its own isn't getting
+  // "Allow all cookies", so none of its choices is ticked. Choosing that
+  // one lets the trackers through here.
+  const unticked = rules.trackers && rules.everywhere === ALLOW && !rules.sites[site];
+  setRadio("site-rule", unticked ? null : rules.sites[site] || rules.everywhere, !canChange);
   setRadio("everywhere-rule", rules.everywhere, !canChange);
   el("rules-delete-on-block").checked = rules.deleteOnBlock;
   el("rules-delete-on-block").disabled = !canChange;
+  el("rules-trackers").checked = rules.trackers;
+  el("rules-trackers").disabled = !canChange;
   await showThirdPartyNote(canChange);
 
   const entries = listRules(rules);
@@ -1758,7 +1802,7 @@ async function grantRules() {
   }
 
   // Rules saved before the permission was taken away come back into force.
-  const applyError = hasAnyRule(rules) ? await applyRules(rules) : null;
+  const applyError = hasAnyRule(rules) ? await savingRules(() => applyRules(rules)) : null;
   el("rules-message").hidden = true;
   await drawRules();
   if (applyError) {
@@ -1769,7 +1813,7 @@ async function grantRules() {
 async function chooseSiteRule(choice) {
   hideCleanup();
   const site = siteFor(rules, page.hostname);
-  const result = await setSiteRule(site, choice);
+  const result = await savingRules(() => setSiteRule(site, choice));
   rules = result.rules;
   await drawRules();
   focusChecked("site-rule");
@@ -1786,7 +1830,7 @@ async function chooseSiteRule(choice) {
         ? "Other companies' cookies are now blocked on " + site + "."
         : choice === SESSION
           ? "Chrome will delete " + site + "'s cookies every time it closes."
-          : site + " may set any cookie.",
+          : site + " may set any cookie" + (rules.trackers ? ", known trackers' included." : "."),
     false
   );
   if (choice === BLOCK) {
@@ -1829,9 +1873,56 @@ async function offerCleanup(site) {
   el("rules-cleanup").hidden = false;
 }
 
+// The same, after turning on the trackers switch: their cookies already
+// saved, from every listed domain. It's a fixed list, never a search of
+// every site. Without access to sites' cookies there's nothing to count, so
+// it says nothing.
+async function offerTrackerCleanup() {
+  if (!(await hasHostAccess())) {
+    return;
+  }
+
+  let found;
+  try {
+    const lists = await Promise.all(TRACKER_DOMAINS.map((domain) => getCookiesForDomain(domain)));
+    // A cookie for a subdomain could come back under two listed domains.
+    const unique = new Map();
+    for (const cookie of lists.flat()) {
+      unique.set(cookieKey(cookie), cookie);
+    }
+    found = [...unique.values()];
+  } catch (error) {
+    return;
+  }
+
+  const { keys } = await loadProtected();
+  protectedKeys = keys;
+  const { deletable, kept } = partitionByProtection(protectedKeys, found);
+  if (deletable.length === 0) {
+    return;
+  }
+
+  cleanupCookies = deletable;
+
+  if (rules.deleteOnBlock) {
+    await runCleanup(el("rules-message").textContent + " ");
+    return;
+  }
+
+  el("rules-trackers-cleanup-text").textContent =
+    "These companies already have " +
+    pluralise(deletable.length, "cookie", "cookies") +
+    " saved." +
+    (kept.length > 0
+      ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
+      : "");
+  el("rules-trackers-cleanup").hidden = false;
+}
+
 function hideCleanup() {
   cleanupCookies = [];
   el("rules-cleanup").hidden = true;
+  el("rules-trackers-cleanup").hidden = true;
 }
 
 // `before` is put in front of the result, when deleting follows straight on
@@ -1856,11 +1947,36 @@ async function runCleanup(before = "") {
 }
 
 async function toggleDeleteOnBlock() {
-  const result = await setDeleteOnBlock(el("rules-delete-on-block").checked);
+  const result = await savingRules(() => setDeleteOnBlock(el("rules-delete-on-block").checked));
   rules = result.rules;
   el("rules-delete-on-block").checked = rules.deleteOnBlock;
   if (result.error) {
     showRulesMessage(result.error, true);
+  }
+}
+
+// The known trackers switch. Turning it on also offers to delete the
+// trackers' cookies already saved, since blocking only stops new ones.
+async function toggleTrackers() {
+  hideCleanup();
+  const on = el("rules-trackers").checked;
+  const result = await savingRules(() => setTrackers(on));
+  rules = result.rules;
+  await drawRules();
+  el("rules-trackers").focus();
+
+  if (result.error) {
+    showRulesMessage(result.error, true);
+    return;
+  }
+  showRulesMessage(
+    on
+      ? "Known trackers' cookies are now blocked on every site."
+      : "Known trackers' cookies are no longer blocked on every site.",
+    false
+  );
+  if (on) {
+    await offerTrackerCleanup();
   }
 }
 
@@ -1898,7 +2014,7 @@ async function askEverywhere(choice) {
 
 async function chooseEverywhere(choice) {
   el("rules-everywhere-confirm").hidden = true;
-  const result = await setEverywhere(choice);
+  const result = await savingRules(() => setEverywhere(choice));
   rules = result.rules;
   await drawRules();
   focusChecked("everywhere-rule");
@@ -2089,6 +2205,10 @@ async function readRulesBackup() {
     note = " It blocked other companies' cookies on every site; choose that again after loading.";
   }
 
+  if (incoming.trackers) {
+    note = " It also blocks known trackers' cookies." + note;
+  }
+
   loadedBackup = incoming;
   const count = Object.keys(incoming.sites).length;
   el("rules-load-text").textContent =
@@ -2108,7 +2228,7 @@ async function loadRulesBackup() {
   if (!incoming) {
     return;
   }
-  const result = await replaceRules(incoming);
+  const result = await savingRules(() => replaceRules(incoming));
   rules = result.rules;
   await drawRules();
   showRulesMessage(
@@ -2119,7 +2239,7 @@ async function loadRulesBackup() {
 
 async function removeRule(site) {
   hideCleanup();
-  const result = await removeSiteRule(site);
+  const result = await savingRules(() => removeSiteRule(site));
   rules = result.rules;
   await drawRules();
   showRulesMessage(result.error || "Removed the rule for " + site + ".", Boolean(result.error));
@@ -2139,7 +2259,7 @@ function cancelRulesConfirm() {
 
 async function clearAllRules() {
   hideCleanup();
-  const result = await clearRules();
+  const result = await savingRules(() => clearRules());
   rules = result.rules;
   cancelRulesConfirm();
   await drawRules();
@@ -2792,6 +2912,9 @@ el("rules-everywhere-no").addEventListener("click", () => {
 });
 el("rules-cleanup-yes").addEventListener("click", () => runCleanup());
 el("rules-delete-on-block").addEventListener("change", toggleDeleteOnBlock);
+el("rules-trackers").addEventListener("change", toggleTrackers);
+el("rules-trackers-cleanup-yes").addEventListener("click", () => runCleanup());
+el("rules-trackers-cleanup-no").addEventListener("click", hideCleanup);
 el("data-button").addEventListener("click", startSiteDataClear);
 el("data-yes").addEventListener("click", runSiteDataClear);
 el("data-no").addEventListener("click", () => {
