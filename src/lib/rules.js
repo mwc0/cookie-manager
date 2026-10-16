@@ -140,6 +140,12 @@ function isTrackerSite(site) {
   return TRACKER_DOMAINS.some((tracker) => covers(tracker, site));
 }
 
+// Whether a blocked tracker keeps its cookies on its own site. See
+// chromeRulesFor().
+function allowedOnOwnSite(rules, tracker) {
+  return rules.everywhere !== BLOCK && !Object.keys(rules.sites).some((site) => covers(site, tracker));
+}
+
 // Every site with a rule of its own, sorted by name.
 export function listRules(rules) {
   return Object.keys(rules.sites)
@@ -171,6 +177,13 @@ export function patternFor(site) {
 // allow", for every tracker. Only allowed sites need these: every other
 // choice blocks other companies' cookies anyway, or is happy for Chrome to
 // block these ones.
+//
+// The tracker block also stops a tracker's cookies on its own site, which
+// would break signing in to its own dashboard. So each tracker also gets
+// "cookies from the tracker, on its own pages: allow", which is more
+// specific again. Not when the tracker's site has a rule of the user's
+// own (theirs decides), and not when every other site blocks all cookies
+// (that would let the tracker's site through the allowed list).
 //
 // This is checked against a real browser in tests/test_rules.py and
 // tests/test_trackers.py.
@@ -206,6 +219,9 @@ export function chromeRulesFor(rules) {
   if (rules.trackers) {
     for (const tracker of TRACKER_DOMAINS) {
       out.push({ primaryPattern: patternFor(tracker), secondaryPattern: ALL_URLS, setting: "block" });
+      if (allowedOnOwnSite(rules, tracker)) {
+        out.push({ primaryPattern: patternFor(tracker), secondaryPattern: patternFor(tracker), setting: "allow" });
+      }
     }
     for (const { site, rule } of listRules(rules)) {
       if (rule === ALLOW) {
@@ -335,6 +351,9 @@ export async function rulesInForce(rules) {
   if (rules.trackers && TRACKER_DOMAINS.length > 0) {
     const tracker = "https://" + TRACKER_DOMAINS[0] + "/";
     checks.push([tracker, PROBE, "block"]);
+    if (allowedOnOwnSite(rules, TRACKER_DOMAINS[0])) {
+      checks.push([tracker, tracker, "allow"]);
+    }
     const allowed = listRules(rules).find((entry) => entry.rule === ALLOW);
     if (allowed) {
       checks.push([tracker, "https://" + allowed.site + "/", "allow"]);

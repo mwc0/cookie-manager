@@ -2211,8 +2211,9 @@ async function readRulesBackup() {
 
   loadedBackup = incoming;
   const count = Object.keys(incoming.sites).length;
-  el("rules-load-text").textContent =
-    "Replace your rules with the " + pluralise(count, "site", "sites") + " in this file?" + note;
+  el("rules-load-text").textContent = count > 0
+    ? "Replace your rules with the " + pluralise(count, "site", "sites") + " in this file?" + note
+    : "Replace your rules with the ones in this file? It has no sites in it." + note;
   el("rules-load-confirm").hidden = false;
   el("rules-load-no").focus();
 }

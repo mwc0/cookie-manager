@@ -93,16 +93,26 @@ def check_translation(r, page):
             off: show({ everywhere: 'allow', sites: {}, trackers: false }),
             on: show({ everywhere: 'allow', sites: {}, trackers: true }),
             mixed: show({ everywhere: 'allow', sites: { 'a.test': 'allow', 'b.test': 'block', 'c.test': 'session' }, trackers: true }),
+            walled: show({ everywhere: 'block', sites: {}, trackers: true }),
+            ruled: show({ everywhere: 'allow', sites: { [%s]: 'block' }, trackers: true }),
         };
-    }""")
-    blocks = ["*://*." + t + "/* | <all_urls> | block" for t in TEST_TRACKERS]
+    }""" % json.dumps(TEST_TRACKERS[0]))
+    blocks = []
+    for t in TEST_TRACKERS:
+        blocks += ["*://*." + t + "/* | <all_urls> | block", "*://*." + t + "/* | *://*." + t + "/* | allow"]
     r.check("with the switch off, no tracker rules are handed to Chrome", out["off"] == [], str(out["off"]))
-    r.check("with it on, one block rule per listed tracker, on every site's pages",
+    r.check("with it on, each listed tracker is blocked on every site's pages, but not on its own",
             out["on"] == blocks, str(out["on"]))
     pairs = ["*://*." + t + "/* | *://*.a.test/* | allow" for t in TEST_TRACKERS]
     r.check("a site set to 'Allow all cookies' gets an allow rule per tracker; other rules get none",
             out["mixed"][-len(pairs):] == pairs and len(out["mixed"]) == 4 + len(blocks) + len(pairs),
             str(out["mixed"]))
+    own = [x for x in out["walled"] if x.endswith("| allow")]
+    r.check("TRAP: when every other site blocks all cookies, a tracker's own site isn't let through",
+            own == [], str(out["walled"]))
+    first = "*://*." + TEST_TRACKERS[0] + "/* | *://*." + TEST_TRACKERS[0] + "/* | allow"
+    r.check("a tracker whose site has a rule of the user's own follows that rule",
+            first not in out["ruled"], str(out["ruled"]))
 
 
 def check_switch(r, context, ext_id, server):
@@ -154,8 +164,8 @@ def check_switch(r, context, ext_id, server):
     r.check("TRAP: the tracker's cookies are blocked on the site, and the site keeps its own",
             visit(context, site, top) == OWN, str(stored_names(context, site)))
     on_embed = visit(context, site, embed)
-    r.check("on the tracker's own site its cookies are blocked too, and other companies' aren't",
-            not any(name.startswith("embed_") for name in on_embed) and "top_3p" in on_embed, str(on_embed))
+    r.check("on the tracker's own site its cookies still work, so signing in to it isn't broken",
+            len(on_embed) == 5 and any(name.startswith("embed_") for name in on_embed), str(on_embed))
     r.check("Chrome is following what's saved",
             page.evaluate("""async () => {
                 const m = await import(chrome.runtime.getURL('lib/rules.js'));
