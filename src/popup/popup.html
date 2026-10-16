@@ -230,6 +230,16 @@
           <button type="button" class="chip" data-filter="soon" aria-pressed="false">Expiring soon</button>
           <button type="button" class="chip" data-filter="large" aria-pressed="false">Large</button>
           <button type="button" class="chip" data-filter="partitioned" aria-pressed="false">Partitioned</button>
+          <button type="button" class="chip" data-filter="known" aria-pressed="false"
+                  title="Cookies with a name in the Open Cookie Database. A guess from the name only.">Known</button>
+          <!-- Checks for developers. Facts about each cookie, nothing more.
+               "Not Secure" is only offered on an HTTPS page. -->
+          <button type="button" class="chip" data-filter="notsecure" aria-pressed="false"
+                  title="Cookies without Secure, so they're also sent over plain HTTP">Not Secure</button>
+          <button type="button" class="chip" data-filter="readable" aria-pressed="false"
+                  title="Cookies without HttpOnly, so the page's scripts can read them">Readable by scripts</button>
+          <button type="button" class="chip" data-filter="samesitenone" aria-pressed="false"
+                  title="Cookies with SameSite None, sent when another site loads something from this one">SameSite None</button>
         </div>
         <button id="search-clear" type="button" hidden title="Clear the search and the filters">
           Clear
@@ -389,6 +399,12 @@
         <div class="field">
           <label for="field-name">Name</label>
           <input id="field-name" name="name" type="text" class="mono" spellcheck="false" />
+          <!-- Only when the name is in the Open Cookie Database. A guess from
+               the name, and it says so. -->
+          <p id="name-known" class="field-note known-note" hidden>
+            <span id="name-known-text"></span>
+            <span class="muted">A guess from the name only. From the Open Cookie Database.</span>
+          </p>
         </div>
 
         <div class="field">

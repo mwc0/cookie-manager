@@ -842,6 +842,18 @@ td.path {
   overflow-wrap: anywhere;
 }
 
+/* Under the domain of a cookie another site keeps for this one. Words, not
+   a stored value, so not monospace. */
+.embedded-note {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--muted);
+  overflow-wrap: normal;
+}
+
 /* The tick boxes. Each sits in a label that fills its cell, so the target
    is the whole cell, not just the box. */
 th.pick,
@@ -1143,6 +1155,11 @@ button.danger.solid:hover:not(:disabled) {
 
 .field-note.error {
   color: var(--danger);
+}
+
+/* What the Open Cookie Database says about the name, and the credit. */
+.known-note {
+  color: var(--fg-soft);
 }
 
 /* The expiry shortcuts, under the date. */

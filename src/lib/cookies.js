@@ -2,6 +2,7 @@
 // awkward parts of that API are handled in one place.
 
 import { cookieBytes, expiresSoon, LARGE_COOKIE_BYTES } from "./format.js";
+import { knownCookie } from "./known.js";
 
 // Chrome won't store a cookie whose name and value together are bigger than
 // this many bytes.
@@ -87,22 +88,69 @@ export function baseHostOf(hostname) {
   return hostname.replace(/^www\./, "");
 }
 
+// Partitioned cookies that other companies keep for this site. A frame from
+// widget.example on news.example can set a partitioned (CHIPS) cookie that
+// is only ever used on news.example. Its domain is widget.example, so none
+// of the queries above find it.
+//
+// Checked in Chromium (tests/test_known.py): a query with only
+// partitionKey: { topLevelSite } returns every cookie in that site's
+// partition, whatever its domain, and no unpartitioned cookies. Chrome
+// works out the site from the address itself: the port is dropped, and
+// "https://www.news.example" finds the cookies kept for news.example. So
+// the page's own address can be passed as it is.
+export async function getEmbeddedCookies(page) {
+  try {
+    return await chrome.cookies.getAll({ partitionKey: { topLevelSite: page.origin } });
+  } catch (error) {
+    // A Chrome that doesn't take this query still shows the site's own.
+    console.warn("Couldn't read the cookies kept for this site by others:", error);
+    return [];
+  }
+}
+
+// Whether a cookie was set by another site, inside this one, and is kept
+// for this site only: partitioned, with a domain that isn't this site's.
+export function setByOtherSite(cookie, hostname) {
+  if (!cookie.partitionKey) {
+    return false;
+  }
+  const domain = String(cookie.domain || "").replace(/^\./, "");
+  const base = baseHostOf(hostname);
+  const own = domain === base || domain.endsWith("." + base) || base.endsWith("." + domain);
+  return !own;
+}
+
+// The site's table: its own cookies, and those other companies keep for it.
+export async function getSiteCookies(page) {
+  const [own, embedded] = await Promise.all([getCookiesForPage(page), getEmbeddedCookies(page)]);
+  return dedupe([...own, ...embedded]);
+}
+
 // The cookies a delete scope would remove. The popup deletes exactly this
 // list, so the number it shows and the number it deletes are always the same.
-export async function getCookiesForScope(scope, page) {
+//
+// With `embedded`, "page" and "domain" also include the cookies other
+// companies keep for this site (see getEmbeddedCookies()), as the table
+// shows them. The main screen asks for that.
+export async function getCookiesForScope(scope, page, { embedded = false } = {}) {
   if (scope === "all") {
     return await getAllCookies();
   }
 
-  if (scope === "domain") {
-    const [pageCookies, domainCookies] = await Promise.all([
-      getCookiesForPage(page),
-      getCookiesForDomain(baseHostOf(page.hostname)),
-    ]);
-    return dedupe([...pageCookies, ...domainCookies]);
-  }
+  const [own, others] = await Promise.all([
+    scope === "domain" ? getCookiesForDomainScope(page) : getCookiesForPage(page),
+    embedded ? getEmbeddedCookies(page) : [],
+  ]);
+  return dedupe([...own, ...others]);
+}
 
-  return await getCookiesForPage(page);
+async function getCookiesForDomainScope(page) {
+  const [pageCookies, domainCookies] = await Promise.all([
+    getCookiesForPage(page),
+    getCookiesForDomain(baseHostOf(page.hostname)),
+  ]);
+  return dedupe([...pageCookies, ...domainCookies]);
 }
 
 // Search box filter. Looks at name, value, domain and path all at once, and
@@ -124,6 +172,10 @@ export function filterCookies(cookies, query) {
 // The quick filters above the table. Each one is a yes-or-no question
 // about a single cookie. "kept" isn't here, because whether a cookie is kept
 // isn't part of the cookie: filterByFlags() is told that separately.
+//
+// The last three are checks for developers, and only state facts. "Not
+// Secure" only means something on an HTTPS page, so popup.js only offers
+// it there.
 export const FILTERS = {
   secure: (cookie) => Boolean(cookie.secure),
   httponly: (cookie) => Boolean(cookie.httpOnly),
@@ -131,6 +183,10 @@ export const FILTERS = {
   soon: (cookie) => expiresSoon(cookie),
   large: (cookie) => cookieBytes(cookie) >= LARGE_COOKIE_BYTES,
   partitioned: (cookie) => Boolean(cookie.partitionKey),
+  known: (cookie) => knownCookie(cookie.name) !== null,
+  notsecure: (cookie) => !cookie.secure,
+  readable: (cookie) => !cookie.httpOnly,
+  samesitenone: (cookie) => cookie.sameSite === "no_restriction",
 };
 
 // Whether one cookie passes one filter. `isKept` is a function that says
