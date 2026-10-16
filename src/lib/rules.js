@@ -18,7 +18,11 @@
 // (chrome.privacy.websites.thirdPartyCookiesAllowed). A site's own rule still
 // wins over it, which is what keeps the allowed list working.
 //
-// What's saved is site names, the rule for each, and two settings. Never
+// Known trackers' cookies can be blocked on every site too, from a list
+// inside cookieZ (src/lists/trackers.js). That's one rule per tracker, and
+// more for sites set to allow all cookies. See chromeRulesFor().
+//
+// What's saved is site names, the rule for each, and three settings. Never
 // cookies, never values. store/PRIVACY.md says so, so change it there too
 // if this changes.
 //
@@ -27,6 +31,7 @@
 // screen. See permissions.js.
 
 import { baseHostOf } from "./cookies.js";
+import { TRACKER_DOMAINS } from "../lists/trackers.js";
 
 const STORAGE_KEY = "siteRules";
 
@@ -45,7 +50,7 @@ const ALL_URLS = "<all_urls>";
 const PROBE = "https://cookiez-probe.invalid/";
 
 function emptyRules() {
-  return { everywhere: ALLOW, sites: {}, deleteOnBlock: false };
+  return { everywhere: ALLOW, sites: {}, deleteOnBlock: false, trackers: false };
 }
 
 function describe(error) {
@@ -70,6 +75,7 @@ function tidy(stored) {
     }
   }
   rules.deleteOnBlock = stored.deleteOnBlock === true;
+  rules.trackers = stored.trackers === true;
   return rules;
 }
 
@@ -126,7 +132,12 @@ export function ruleFor(rules, hostname) {
 }
 
 export function hasAnyRule(rules) {
-  return rules.everywhere !== ALLOW || Object.keys(rules.sites).length > 0;
+  return rules.everywhere !== ALLOW || rules.trackers || Object.keys(rules.sites).length > 0;
+}
+
+// True if `site` is one of the listed trackers, or a subdomain of one.
+function isTrackerSite(site) {
+  return TRACKER_DOMAINS.some((tracker) => covers(tracker, site));
 }
 
 // Every site with a rule of its own, sorted by name.
@@ -152,7 +163,17 @@ export function patternFor(site) {
 // rule wins, and that is what makes "own-only" work: a general "block
 // everyone on this site's pages" and a narrower "but allow the site itself".
 //
-// This is checked against a real browser in tests/test_rules.py.
+// Known trackers are blocked with "cookies from the tracker, on any site's
+// pages". That rule names who the cookie is from, so Chrome counts it as
+// more specific than a site's "anyone's cookies on my pages: allow", and
+// the site's rule loses. "Allow all cookies" has to mean all, so each
+// allowed site also gets "cookies from the tracker, on this site's pages:
+// allow", for every tracker. Only allowed sites need these: every other
+// choice blocks other companies' cookies anyway, or is happy for Chrome to
+// block these ones.
+//
+// This is checked against a real browser in tests/test_rules.py and
+// tests/test_trackers.py.
 export function chromeRulesFor(rules) {
   const out = [];
 
@@ -179,6 +200,19 @@ export function chromeRulesFor(rules) {
       // anywhere else either.
       out.push({ primaryPattern: ALL_URLS, secondaryPattern: pattern, setting: "block" });
       out.push({ primaryPattern: pattern, setting: "block" });
+    }
+  }
+
+  if (rules.trackers) {
+    for (const tracker of TRACKER_DOMAINS) {
+      out.push({ primaryPattern: patternFor(tracker), secondaryPattern: ALL_URLS, setting: "block" });
+    }
+    for (const { site, rule } of listRules(rules)) {
+      if (rule === ALLOW) {
+        for (const tracker of TRACKER_DOMAINS) {
+          out.push({ primaryPattern: patternFor(tracker), secondaryPattern: patternFor(site), setting: "allow" });
+        }
+      }
     }
   }
 
@@ -240,9 +274,17 @@ export async function applyRules(rules) {
       await thirdPartySetting().clear({});
     }
 
+    // Every rule at once, not one after another: with the trackers there
+    // can be hundreds, and Chrome takes them in about a third of the time
+    // this way. allSettled waits for all of them to finish, so a refused
+    // rule can't still be arriving while the old rules are put back.
     await chrome.contentSettings.cookies.clear({});
-    for (const rule of chromeRulesFor(rules)) {
-      await chrome.contentSettings.cookies.set(rule);
+    const results = await Promise.allSettled(
+      chromeRulesFor(rules).map((rule) => chrome.contentSettings.cookies.set(rule))
+    );
+    const refused = results.find((result) => result.status === "rejected");
+    if (refused) {
+      return "Chrome wouldn't accept the rules: " + describe(refused.reason);
     }
     return null;
   } catch (error) {
@@ -279,11 +321,24 @@ export async function rulesInForce(rules) {
   for (const { site, rule } of listRules(rules)) {
     const url = "https://" + site + "/";
     const expected = expectedFor(rule);
-    checks.push([url, url, expected.own]);
+    // A tracker's own site set to clear on close: the tracker block is the
+    // more specific rule, so Chrome blocks the tracker's cookies there.
+    const own = rules.trackers && rule === SESSION && isTrackerSite(site) ? "block" : expected.own;
+    checks.push([url, url, own]);
     checks.push([PROBE, url, expected.other]);
   }
   if (rules.everywhere === BLOCK) {
     checks.push([PROBE, PROBE, "block"]);
+  }
+  // One tracker is enough to tell whether Chrome still has the list, since
+  // the rules are all set together and lost together.
+  if (rules.trackers && TRACKER_DOMAINS.length > 0) {
+    const tracker = "https://" + TRACKER_DOMAINS[0] + "/";
+    checks.push([tracker, PROBE, "block"]);
+    const allowed = listRules(rules).find((entry) => entry.rule === ALLOW);
+    if (allowed) {
+      checks.push([tracker, "https://" + allowed.site + "/", "allow"]);
+    }
   }
 
   try {
@@ -334,7 +389,9 @@ async function changeRules(change) {
 }
 
 // Sets the rule for a site. Choosing the same thing as "every other site"
-// removes the site's own rule, since it no longer needs one.
+// removes the site's own rule, since it no longer needs one. The exception
+// is "Allow all cookies" while trackers are blocked: that rule is what lets
+// the trackers through on this site.
 //
 // Rules for its subdomains are removed too. Otherwise a rule for
 // example.com and another for shop.example.com could pull against each
@@ -346,7 +403,7 @@ export async function setSiteRule(site, choice) {
         delete rules.sites[other];
       }
     }
-    if (choice === rules.everywhere) {
+    if (choice === rules.everywhere && !(choice === ALLOW && rules.trackers)) {
       delete rules.sites[site];
     } else {
       rules.sites[site] = choice;
@@ -375,19 +432,30 @@ export async function setDeleteOnBlock(on) {
   });
 }
 
-// Turns everything off: no site rules, and cookies allowed everywhere.
-// "Always delete" is a preference rather than a rule, so it stays.
+// Whether known trackers' cookies are blocked on every site.
+export async function setTrackers(on) {
+  return await changeRules((rules) => {
+    rules.trackers = on === true;
+  });
+}
+
+// Turns everything off: no site rules, no trackers blocked, and cookies
+// allowed everywhere. "Always delete" is a preference rather than a rule,
+// so it stays.
 export async function clearRules() {
   return await changeRules((rules) => {
     rules.everywhere = ALLOW;
     rules.sites = {};
+    rules.trackers = false;
   });
 }
 
 // --- backing up the rules ---------------------------------------------------
 //
 // A small JSON file the user saves themselves, and can load on another
-// computer. It holds exactly what's saved here: site names and rules.
+// computer. It holds exactly what's saved here: site names and rules, and
+// the two settings. Copies saved before 1.8 have no "trackers", so they
+// load with it off.
 
 const BACKUP_KIND = "cookieZ site rules";
 
@@ -398,6 +466,7 @@ export function rulesToBackup(rules) {
       version: 1,
       everywhere: rules.everywhere,
       deleteOnBlock: rules.deleteOnBlock,
+      trackers: rules.trackers,
       sites: rules.sites,
     },
     null,
@@ -425,5 +494,6 @@ export async function replaceRules(incoming) {
     rules.everywhere = incoming.everywhere;
     rules.sites = { ...incoming.sites };
     rules.deleteOnBlock = incoming.deleteOnBlock;
+    rules.trackers = incoming.trackers;
   });
 }

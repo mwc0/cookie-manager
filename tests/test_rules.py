@@ -279,7 +279,7 @@ def check_rules(r, context, ext_id, server):
     r.check("choosing 'Block other companies' cookies' says what it did",
             message(page) == "Other companies' cookies are now blocked on " + host + ".", message(page))
     r.check("only the site's name and the rule are saved",
-            saved(page) == {"everywhere": "allow", "sites": {host: "own-only"}, "deleteOnBlock": False}, json.dumps(saved(page)))
+            saved(page) == {"everywhere": "allow", "sites": {host: "own-only"}, "deleteOnBlock": False, "trackers": False}, json.dumps(saved(page)))
     r.check("TRAP: the site keeps its own cookies and the other company's are gone, partitioned one included",
             visit(context, site, top) == OWN, str(stored_names(context, site)))
     r.check("the rule is for that site only: the other site still gets everything",
@@ -295,7 +295,7 @@ def check_rules(r, context, ext_id, server):
     open_rules(page)
     choose(page, "site-rule", "allow")
     r.check("choosing what every other site already gets removes the site's own rule",
-            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False} and listed(page) == [],
+            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False, "trackers": False} and listed(page) == [],
             json.dumps(saved(page)))
     visit(context, site, top)
     page.evaluate("async (key) => { await chrome.storage.local.set({ protectedCookies: [key] }); }",
@@ -369,7 +369,7 @@ def check_rules(r, context, ext_id, server):
     page.locator("#rules-everywhere-yes").click()
     page.wait_for_timeout(800)
     r.check("after saying yes, it's saved and this site's own choice follows it",
-            saved(page) == {"everywhere": "block", "sites": {}, "deleteOnBlock": False} and checked(page, "site-rule") == "block",
+            saved(page) == {"everywhere": "block", "sites": {}, "deleteOnBlock": False, "trackers": False} and checked(page, "site-rule") == "block",
             json.dumps(saved(page)))
     r.check("TRAP: every site is blocked",
             visit(context, site, top) == [] and visit(context, site, embed) == [],
@@ -429,7 +429,7 @@ def check_rules(r, context, ext_id, server):
     page.locator("#rules-confirm-yes").click()
     page.wait_for_timeout(800)
     r.check("then nothing is saved but an empty list, and the button goes",
-            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False} and listed(page) == []
+            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False, "trackers": False} and listed(page) == []
             and not page.locator("#rules-clear").is_visible(), json.dumps(saved(page)))
     r.check("TRAP: and Chrome is allowing everything again",
             visit(context, site, top) == EVERYTHING and len(visit(context, site, embed)) == 5,
@@ -513,7 +513,7 @@ def check_new_choices(r, context, ext_id, server):
     data = json.loads(backup)
     r.check("the copy holds the rules and nothing else",
             data == {"kind": "cookieZ site rules", "version": 1, "everywhere": "own-only",
-                     "deleteOnBlock": True, "sites": {host: "block"}}, backup)
+                     "deleteOnBlock": True, "trackers": False, "sites": {host: "block"}}, backup)
     path = PROFILES / "rules-backup.json"
     path.write_text(backup, encoding="utf-8")
     page.evaluate("async () => { const m = await import(chrome.runtime.getURL('lib/rules.js')); await m.clearRules(); }")
@@ -529,7 +529,7 @@ def check_new_choices(r, context, ext_id, server):
     page.locator("#rules-load-yes").click()
     page.wait_for_timeout(900)
     r.check("then the rules are back, and Chrome is following them",
-            saved(page) == {"everywhere": "own-only", "sites": {host: "block"}, "deleteOnBlock": True}
+            saved(page) == {"everywhere": "own-only", "sites": {host: "block"}, "deleteOnBlock": True, "trackers": False}
             and visit(context, site, top) == [], json.dumps(saved(page)))
     path.write_text('{"something": "else"}', encoding="utf-8")
     page.locator("#rules-load").set_input_files(str(path))
