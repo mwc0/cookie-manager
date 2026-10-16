@@ -41,6 +41,7 @@ a real window.
 | `test_scopes.py` | All three delete scopes, including that a lookalike domain (`notexample.test`) is *not* swept up with `example.test`. |
 | `test_partitioned.py` | That `partitionKey: {}` really means "any partition", so delete-all doesn't leave CHIPS cookies behind. |
 | `test_editor.py` | Every write trap: host-only, session, SameSite=None, remove-then-set, and Chrome's silent 400-day expiry cap. |
+| `test_rules.py` | Site rules: that each choice means what its label says, checked by loading a real two-site page and reading what Chrome stored. Also that the install permissions are unchanged. |
 | `test_no_network.py` | That the extension makes no outbound requests, via both a static scan of `src/` and a live capture of a whole session. |
 | `test_devtools_crosscheck.py` | The same claims again, but checked against Chrome's DevTools Protocol rather than the extension API. See below. |
 
@@ -98,6 +99,16 @@ Two things need a human, and no amount of scripting gets around them:
 
 Both were checked by hand before 1.0.0, and both need checking by hand again
 before any release that touches them.
+
+Site rules add a third:
+
+3. **Whether Chrome still follows the rules after it restarts.** It should:
+   Chrome saves an extension's rules with the extension. But the tests load
+   the extension from the command line, and Chrome treats that as a fresh
+   install on every launch and forgets its rules each time. Installing it
+   properly couldn't be automated either. So `test_rules.py` checks the
+   rules within one run of the browser, and that cookieZ puts them back if
+   Chrome loses them, and the restart is checked by hand.
 
 ## Two things worth knowing before editing these
 

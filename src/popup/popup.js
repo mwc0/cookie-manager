@@ -1,7 +1,29 @@
 // Runs the popup: picks which screen to show, loads the cookies, and handles
-// deleting, editing, keeping, exporting and importing.
+// deleting, editing, keeping, exporting, importing and the site rules.
 
-import { hasHostAccess, requestHostAccess } from "../lib/permissions.js";
+import {
+  hasHostAccess,
+  requestHostAccess,
+  hasRulesAccess,
+  requestRulesAccess,
+} from "../lib/permissions.js";
+import {
+  ALLOW,
+  OWN_ONLY,
+  BLOCK,
+  loadRules,
+  siteFor,
+  ruleFor,
+  hasAnyRule,
+  listRules,
+  rulesAvailable,
+  applyRules,
+  rulesInForce,
+  setSiteRule,
+  removeSiteRule,
+  setEverywhere,
+  clearRules,
+} from "../lib/rules.js";
 import {
   getCookiesForPage,
   getCookiesForScope,
@@ -134,6 +156,18 @@ let picked = new Set();
 // Kept in memory only, so every open starts with none.
 let activeFilters = new Set();
 
+// The site rules, and whether Chrome has given permission to set them. See
+// src/lib/rules.js.
+let rules = { everywhere: ALLOW, sites: {} };
+let rulesAllowed = false;
+
+// The cookies "Delete them" on the rules screen would remove. Counted when
+// the offer is made, so the number shown is the number deleted.
+let cleanupCookies = [];
+
+// An incognito window shows the rules but can't change them.
+const incognito = Boolean(chrome.extension && chrome.extension.inIncognitoContext);
+
 const el = (id) => document.getElementById(id);
 
 // Above this, the popup warns that the site's cookies are getting too big.
@@ -245,6 +279,7 @@ async function loadCurrentPage() {
   el("scope-target-domain").textContent = baseHostOf(url.hostname);
 
   showState("main");
+  await loadSiteRules();
   await refresh();
   await offerStoredUndo();
 }
@@ -354,6 +389,7 @@ function drawTable() {
   showPicked();
   showKeptLink();
   showChangesLink();
+  showRulesLink();
 
   if (changed.size > 0) {
     // Only the rows marked by this draw. Looking them up again when the
@@ -404,7 +440,9 @@ function drawTable() {
   const nothingMatched = !nothingAtAll && shownCookies.length === 0;
 
   el("empty-message").textContent = !nothingMatched
-    ? "No cookies are set for this site."
+    ? pageRule() === BLOCK
+      ? "No cookies are set for this site. Your site rules are blocking them."
+      : "No cookies are set for this site."
     : query.trim() === ""
       ? "No cookies here match those filters."
       : activeFilters.size > 0
@@ -969,6 +1007,7 @@ function openEditor(cookie) {
   el("edit-errors").hidden = true;
   el("edit-errors").textContent = "";
   el("edit-changed").hidden = true;
+  el("edit-rule-note").hidden = pageRule() !== BLOCK;
 
   const isNew = !cookie;
   const secure = isNew ? page.origin.startsWith("https:") : Boolean(cookie.secure);
@@ -1335,6 +1374,338 @@ async function closeKept() {
   if (!el("kept-open").hidden) {
     el("kept-open").focus();
   }
+}
+
+// --- site rules ------------------------------------------------------------
+//
+// Which sites may set cookies. cookieZ saves the list and hands it to Chrome,
+// and Chrome does the blocking. See src/lib/rules.js.
+
+// What each choice is called, in the list and in the messages.
+const RULE_NAMES = {
+  [ALLOW]: "Allow all cookies",
+  [OWN_ONLY]: "Block other companies' cookies",
+  [BLOCK]: "Block all cookies",
+};
+
+// The rule this page is getting. Without the permission Chrome isn't
+// following any rule, whatever is saved.
+function pageRule() {
+  return rulesAllowed ? ruleFor(rules, page.hostname) : ALLOW;
+}
+
+// Reads the saved rules when a page is loaded, and checks Chrome is still
+// following them. If it isn't, they're set again. This is a safety net:
+// nothing else would notice if Chrome lost them.
+async function loadSiteRules() {
+  const loaded = await loadRules();
+  rules = loaded.rules;
+  rulesAllowed = await hasRulesAccess();
+
+  if (loaded.error) {
+    showMainMessage(loaded.error, true);
+    return;
+  }
+  if (!rulesAllowed || incognito || !hasAnyRule(rules)) {
+    return;
+  }
+
+  if ((await rulesInForce(rules)) === false) {
+    const error = await applyRules(rules);
+    showMainMessage(
+      error
+        ? "Chrome has stopped following your site rules, and cookieZ couldn't set them again. " + error
+        : "Chrome had stopped following your site rules, so cookieZ has set them again.",
+      Boolean(error)
+    );
+  }
+}
+
+// The link next to the cookie count. It says what the rule is doing when
+// it's blocking something on this site.
+function showRulesLink() {
+  const rule = pageRule();
+  el("rules-open").textContent =
+    rule === BLOCK
+      ? "Blocking all cookies"
+      : rule === OWN_ONLY
+        ? "Blocking other companies' cookies"
+        : "Site rules";
+}
+
+async function openRules() {
+  el("main-message").hidden = true;
+  el("rules-message").hidden = true;
+  el("rules-everywhere-confirm").hidden = true;
+  cancelRulesConfirm();
+  hideCleanup();
+  showState("rules");
+  await drawRules();
+  el("rules-back").focus();
+}
+
+function showRulesMessage(text, isError) {
+  const message = el("rules-message");
+  message.textContent = text;
+  message.className = isError ? "result error" : "result";
+  message.hidden = false;
+}
+
+function setRadio(name, value, disabled) {
+  for (const radio of document.querySelectorAll('input[name="' + name + '"]')) {
+    radio.checked = radio.value === value;
+    radio.disabled = disabled;
+  }
+}
+
+function focusChecked(name) {
+  const checked = document.querySelector('input[name="' + name + '"]:checked');
+  if (checked) {
+    checked.focus();
+  }
+}
+
+// Draws the screen from the saved rules. Site names are put in with
+// textContent, like everything else that comes from a website.
+async function drawRules() {
+  const loaded = await loadRules();
+  rules = loaded.rules;
+  rulesAllowed = await hasRulesAccess();
+  if (loaded.error) {
+    showRulesMessage(loaded.error, true);
+  }
+
+  // Without the permission, the choices are only shown if there are saved
+  // rules to show. In incognito they're shown but can't be changed.
+  const canChange = rulesAllowed && !incognito;
+  el("rules-gate").hidden = rulesAllowed || incognito;
+  el("rules-gate-saved").hidden = !hasAnyRule(rules);
+  el("rules-incognito").hidden = !incognito;
+  el("rules-body").hidden = !rulesAllowed && !hasAnyRule(rules);
+
+  const site = siteFor(rules, page.hostname);
+  const own = baseHostOf(page.hostname);
+  el("rules-site-name").textContent = site;
+  el("rules-site-note").hidden = site === own;
+  el("rules-site-note").textContent =
+    site === own ? "" : "This rule was set for " + site + ", which covers " + own + " too.";
+
+  setRadio("site-rule", rules.sites[site] || rules.everywhere, !canChange);
+  setRadio("everywhere-rule", rules.everywhere, !canChange);
+
+  const entries = listRules(rules);
+  const rows = el("rules-rows");
+  rows.textContent = "";
+
+  for (const entry of entries) {
+    const row = document.createElement("tr");
+
+    const name = document.createElement("td");
+    name.className = "mono rules-site";
+    name.textContent = entry.site;
+    row.appendChild(name);
+
+    const rule = document.createElement("td");
+    rule.className = "rules-rule";
+    rule.textContent = RULE_NAMES[entry.rule];
+    row.appendChild(rule);
+
+    const action = document.createElement("td");
+    action.className = "rules-action";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "row-button rules-remove";
+    button.textContent = "Remove";
+    button.setAttribute("aria-label", "Remove the rule for " + entry.site);
+    button.disabled = !canChange;
+    button.addEventListener("click", () => removeRule(entry.site));
+    action.appendChild(button);
+    row.appendChild(action);
+
+    rows.appendChild(row);
+  }
+
+  el("rules-table").hidden = entries.length === 0;
+  el("rules-empty").hidden = entries.length > 0;
+  el("rules-clear").hidden = !hasAnyRule(rules);
+  el("rules-clear").disabled = !canChange;
+}
+
+// The button on the rules screen that asks Chrome for the permission.
+async function grantRules() {
+  const { granted, error } = await requestRulesAccess();
+  if (error) {
+    showRulesMessage(error, true);
+    return;
+  }
+  if (!granted) {
+    showRulesMessage(
+      "Chrome didn't give permission, so nothing has changed. The rest of cookieZ works as before.",
+      false
+    );
+    return;
+  }
+  if (!rulesAvailable()) {
+    showRulesMessage("Permission given. Close cookieZ and open it again to finish.", false);
+    return;
+  }
+
+  // Rules saved before the permission was taken away come back into force.
+  const applyError = hasAnyRule(rules) ? await applyRules(rules) : null;
+  el("rules-message").hidden = true;
+  await drawRules();
+  if (applyError) {
+    showRulesMessage(applyError, true);
+  }
+}
+
+async function chooseSiteRule(choice) {
+  hideCleanup();
+  const site = siteFor(rules, page.hostname);
+  const result = await setSiteRule(site, choice);
+  rules = result.rules;
+  await drawRules();
+  focusChecked("site-rule");
+
+  if (result.error) {
+    showRulesMessage(result.error, true);
+    return;
+  }
+
+  showRulesMessage(
+    choice === BLOCK
+      ? "All cookies are now blocked on " + site + "."
+      : choice === OWN_ONLY
+        ? "Other companies' cookies are now blocked on " + site + "."
+        : site + " may set any cookie.",
+    false
+  );
+  if (choice === BLOCK) {
+    await offerCleanup(site);
+  }
+}
+
+// Blocking a site leaves the cookies it already has. This counts them and
+// offers to delete them. Kept cookies are left out, as in every delete.
+async function offerCleanup(site) {
+  let found;
+  try {
+    found = await getCookiesForScope("domain", { origin: "https://" + site, hostname: site });
+  } catch (error) {
+    return;
+  }
+
+  const { keys } = await loadProtected();
+  protectedKeys = keys;
+  const { deletable, kept } = partitionByProtection(protectedKeys, found);
+  if (deletable.length === 0) {
+    return;
+  }
+
+  cleanupCookies = deletable;
+  el("rules-cleanup-text").textContent =
+    "It still has " +
+    pluralise(deletable.length, "cookie", "cookies") +
+    " saved." +
+    (kept.length > 0
+      ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
+      : "");
+  el("rules-cleanup").hidden = false;
+}
+
+function hideCleanup() {
+  cleanupCookies = [];
+  el("rules-cleanup").hidden = true;
+}
+
+async function runCleanup() {
+  const cookies = cleanupCookies;
+  hideCleanup();
+
+  const { removed, removedCookies, failed } = await removeCookies(cookies);
+  showRulesMessage(
+    failed.length === 0
+      ? "Deleted " + pluralise(removed, "cookie", "cookies") + "."
+      : "Deleted " +
+          pluralise(removed, "cookie", "cookies") +
+          ". " +
+          pluralise(failed.length, "cookie", "cookies") +
+          " could not be deleted, and may be protected by the browser.",
+    failed.length > 0
+  );
+  await offerUndo(el("rules-message"), { kind: "delete", restore: removedCookies });
+}
+
+// "Block all cookies" for every other site changes every site at once, so
+// it asks first. The choice is put back until the answer.
+function askEverywhere(choice) {
+  if (choice === BLOCK && rules.everywhere !== BLOCK) {
+    setRadio("everywhere-rule", rules.everywhere, false);
+    el("rules-everywhere-confirm").hidden = false;
+    el("rules-everywhere-no").focus();
+    return;
+  }
+  chooseEverywhere(choice);
+}
+
+async function chooseEverywhere(choice) {
+  el("rules-everywhere-confirm").hidden = true;
+  const result = await setEverywhere(choice);
+  rules = result.rules;
+  await drawRules();
+  focusChecked("everywhere-rule");
+
+  if (result.error) {
+    showRulesMessage(result.error, true);
+    return;
+  }
+  showRulesMessage(
+    choice === BLOCK
+      ? "Cookies are now blocked on every site without a rule of its own."
+      : "Cookies are allowed again on every site without a rule of its own.",
+    false
+  );
+}
+
+async function removeRule(site) {
+  hideCleanup();
+  const result = await removeSiteRule(site);
+  rules = result.rules;
+  await drawRules();
+  showRulesMessage(result.error || "Removed the rule for " + site + ".", Boolean(result.error));
+}
+
+// "Turn off all rules" asks first, like the delete panel.
+function startRulesConfirm() {
+  el("rules-clear").hidden = true;
+  el("rules-confirm").hidden = false;
+  el("rules-confirm-no").focus();
+}
+
+function cancelRulesConfirm() {
+  el("rules-confirm").hidden = true;
+  el("rules-clear").hidden = false;
+}
+
+async function clearAllRules() {
+  hideCleanup();
+  const result = await clearRules();
+  rules = result.rules;
+  cancelRulesConfirm();
+  await drawRules();
+  showRulesMessage(
+    result.error || "Every rule is off. Chrome is allowing cookies everywhere again.",
+    Boolean(result.error)
+  );
+}
+
+// Back to the table, loaded again, since cookies may have been deleted.
+async function closeRules() {
+  el("rules-rows").textContent = "";
+  hideCleanup();
+  showState("main");
+  await refresh();
+  el("rules-open").focus();
 }
 
 // Deletes one cookie from its row. The row already asked "Sure?".
@@ -1952,6 +2323,29 @@ el("kept-confirm-no").addEventListener("click", () => {
   el("kept-clear").focus();
 });
 
+el("rules-open").addEventListener("click", openRules);
+el("rules-back").addEventListener("click", closeRules);
+el("rules-grant").addEventListener("click", grantRules);
+for (const radio of document.querySelectorAll('input[name="site-rule"]')) {
+  radio.addEventListener("change", () => chooseSiteRule(radio.value));
+}
+for (const radio of document.querySelectorAll('input[name="everywhere-rule"]')) {
+  radio.addEventListener("change", () => askEverywhere(radio.value));
+}
+el("rules-everywhere-yes").addEventListener("click", () => chooseEverywhere(BLOCK));
+el("rules-everywhere-no").addEventListener("click", () => {
+  el("rules-everywhere-confirm").hidden = true;
+  focusChecked("everywhere-rule");
+});
+el("rules-cleanup-yes").addEventListener("click", runCleanup);
+el("rules-cleanup-no").addEventListener("click", hideCleanup);
+el("rules-clear").addEventListener("click", startRulesConfirm);
+el("rules-confirm-yes").addEventListener("click", clearAllRules);
+el("rules-confirm-no").addEventListener("click", () => {
+  cancelRulesConfirm();
+  el("rules-clear").focus();
+});
+
 el("pick-all").addEventListener("change", () => pickAllShown(el("pick-all").checked));
 el("cookie-rows").addEventListener("keydown", onTableKey);
 el("cookie-rows").addEventListener("focusin", (event) => {
@@ -2047,6 +2441,7 @@ function currentState() {
 
 // Each screen's way back, for Esc.
 const BACK_BUTTONS = {
+  rules: "rules-back",
   kept: "kept-back",
   changes: "changes-back",
   edit: "edit-cancel",

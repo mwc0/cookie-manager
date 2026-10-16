@@ -21,14 +21,17 @@ The store images are always exactly 1280x800 PNGs.
 The first store image is also copied to docs/images/01-overview.png, the
 preview image shown when someone shares a link to the website.
 
-The five captures are taken twice, once with the browser set to light and
+The six captures are taken twice, once with the browser set to light and
 once set to dark, which the popup follows. The website gets both:
 popup-NAME.webp and popup-NAME-dark.webp, each also at 2x. It shows the one
 that matches the page's theme.
 
-The store images lead with the dark look, like the website. One of the
-five, the editor, is the light one, to show both themes exist. STORE_LIGHT
-below says which.
+The store images lead with the dark look, like the website. One of them,
+the editor, is the light one, to show both themes exist. STORE_LIGHT below
+says which.
+
+The store takes five screenshots and this makes six, so one is left out when
+uploading. store/README.md says which.
 
 The captions use the typeface bundled with the extension. It's read from
 src/popup/fonts and put inside the page, so nothing is fetched.
@@ -76,6 +79,7 @@ SHOTS = [
     ("03-edit", "Create and edit any field of a cookie"),
     ("04-search", "Search or filter, then delete only what you're looking at"),
     ("05-keep", "Keep the cookies you don't want to lose"),
+    ("06-rules", "Choose which sites may set cookies"),
 ]
 
 # The store images are the dark captures, except these, which are light.
@@ -198,7 +202,7 @@ def compose(context, png_bytes, caption, out_path, theme, clipped=False):
 
 def shoot(p, dark=False):
     """
-    Takes the five screenshots once.
+    Takes the six screenshots once.
 
     Each pass writes the website's captures for its theme, and the store
     images that use that theme (see STORE_LIGHT). The dark pass (dark=True)
@@ -307,6 +311,22 @@ def shoot(p, dark=False):
     page.locator('input[name="scope"][value="page"]').check()
     page.wait_for_timeout(800)
     capture(*SHOTS[4])
+
+    # 6. the site rules, with a few sites on the list. The rules are set
+    # through the extension's own code, then the popup is reopened so the
+    # screen is shown as someone would find it, with no result message.
+    page.evaluate("""async () => {
+        const rules = await import(chrome.runtime.getURL('lib/rules.js'));
+        await rules.setSiteRule('example.com', 'own-only');
+        await rules.setSiteRule('example.org', 'block');
+        await rules.setSiteRule('docs.example.net', 'own-only');
+    }""")
+    page.reload()
+    page.wait_for_timeout(1400)
+    page.locator("#rules-open").click()
+    page.wait_for_timeout(600)
+    page.evaluate("() => document.activeElement && document.activeElement.blur()")
+    capture(*SHOTS[5])
 
     page.close()
     context.close()
