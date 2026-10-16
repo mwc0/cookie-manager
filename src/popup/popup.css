@@ -609,6 +609,18 @@ button.danger:hover:not(:disabled) {
   gap: 4px;
 }
 
+/* The developer checks (Not Secure, Readable by scripts, SameSite None).
+   One group, so when every filter is showing they wrap to the next line
+   together rather than one at a time. */
+.filters-checks {
+  display: flex;
+  gap: 4px;
+}
+
+.filters-checks:not(:has(.chip:not([hidden]))) {
+  display: none;
+}
+
 /* A quick filter. Lit when it's switched on. */
 .chip {
   padding: 0 10px;

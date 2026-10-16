@@ -71,7 +71,7 @@ def main():
         # --- which filters are offered ---
         shown = chips(page)
         r.check("only filters that match a cookie on this site are offered",
-                sorted(shown) == ["httponly", "large", "secure", "session", "soon"]
+                sorted(shown) == ["httponly", "large", "notsecure", "readable", "secure", "session", "soon"]
                 and not any(shown.values()),
                 json.dumps(shown))
 

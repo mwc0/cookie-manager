@@ -474,8 +474,9 @@ function drawTable() {
   el("search-clear").hidden = !filtering;
 
   // "about", because this page's list also has cookies for other paths,
-  // which a browser only sends on those paths.
-  const bytes = headerBytes(pageCookies);
+  // which a browser only sends on those paths. Cookies other companies keep
+  // for this site are left out: they're only sent to those companies.
+  const bytes = headerBytes(pageCookies.filter((cookie) => !setByOtherSite(cookie, page.hostname)));
   el("cookie-count").textContent =
     (filtering
       ? pluralise(shownCookies.length, "cookie", "cookies") +

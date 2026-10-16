@@ -374,20 +374,6 @@ function flagsCell(cookie, handlers) {
   cell.className = "flags";
   const host = String(cookie.domain || "").replace(/^\./, "");
 
-  // A guess from the name, so the word is "Known", never "tracker". Who it's
-  // known for is in the tip and read out by screen readers.
-  const known = knownCookie(cookie.name);
-  if (known) {
-    const tip = "Known name, used by " + describeKnownBy(known) + ". A guess from the name only.";
-    const mark = badge("Known", tip);
-    mark.classList.add("known");
-    const detail = document.createElement("span");
-    detail.className = "visually-hidden";
-    detail.textContent = " name, used by " + describeKnownBy(known);
-    mark.appendChild(detail);
-    cell.appendChild(mark);
-  }
-
   if (cookie.secure) {
     cell.appendChild(badge("Secure", "Only sent over HTTPS"));
   }
@@ -412,6 +398,21 @@ function flagsCell(cookie, handlers) {
     cell.appendChild(
       badge("SameSite " + formatSameSite(cookie.sameSite), SAME_SITE_MEANING[cookie.sameSite] || "")
     );
+  }
+
+  // A guess from the name, so it comes after the facts, and the word is
+  // "Known", never "tracker". Who it's known for is in the tip, and read
+  // out by screen readers.
+  const known = knownCookie(cookie.name);
+  if (known) {
+    const tip = "Known name, used by " + describeKnownBy(known) + ". A guess from the name only.";
+    const mark = badge("Known", tip);
+    mark.classList.add("known");
+    const detail = document.createElement("span");
+    detail.className = "visually-hidden";
+    detail.textContent = " name, used by " + describeKnownBy(known);
+    mark.appendChild(detail);
+    cell.appendChild(mark);
   }
 
   const bytes = cookieBytes(cookie);

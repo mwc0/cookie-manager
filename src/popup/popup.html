@@ -233,13 +233,17 @@
           <button type="button" class="chip" data-filter="known" aria-pressed="false"
                   title="Cookies with a name in the Open Cookie Database. A guess from the name only.">Known</button>
           <!-- Checks for developers. Facts about each cookie, nothing more.
-               "Not Secure" is only offered on an HTTPS page. -->
-          <button type="button" class="chip" data-filter="notsecure" aria-pressed="false"
-                  title="Cookies without Secure, so they're also sent over plain HTTP">Not Secure</button>
-          <button type="button" class="chip" data-filter="readable" aria-pressed="false"
-                  title="Cookies without HttpOnly, so the page's scripts can read them">Readable by scripts</button>
-          <button type="button" class="chip" data-filter="samesitenone" aria-pressed="false"
-                  title="Cookies with SameSite None, sent when another site loads something from this one">SameSite None</button>
+               "Not Secure" is only offered on an HTTPS page. They're kept
+               together, so if the row is too long they move to the next
+               line as a group. -->
+          <span class="filters-checks">
+            <button type="button" class="chip" data-filter="notsecure" aria-pressed="false"
+                    title="Cookies without Secure, so they're also sent over plain HTTP">Not Secure</button>
+            <button type="button" class="chip" data-filter="readable" aria-pressed="false"
+                    title="Cookies without HttpOnly, so the page's scripts can read them">Readable by scripts</button>
+            <button type="button" class="chip" data-filter="samesitenone" aria-pressed="false"
+                    title="Cookies with SameSite None, sent when another site loads something from this one">SameSite None</button>
+          </span>
         </div>
         <button id="search-clear" type="button" hidden title="Clear the search and the filters">
           Clear

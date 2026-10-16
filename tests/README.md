@@ -44,6 +44,7 @@ a real window.
 | `test_rules.py` | Site rules: that each choice means what its label says, checked by loading a real two-site page and reading what Chrome stored. Also that the install permissions are unchanged. |
 | `test_more_editing.py` | 1.7's editor and table additions: Base64 and dates decoded (and a random token left alone), JSON edited laid out but saved on one line, broken JSON never saved, Copy as Set-Cookie, and actions for ticked cookies with Undo. |
 | `test_site_data.py` | Clear site data on a real page: the site's cookies and local storage go, Kept cookies and the other site's data stay, Undo brings the cookies back. Also the one-time "What's new" line. |
+| `test_known.py` | 1.8's known cookie names (a badge, a filter and a line in the editor, and that a generic name like `id` never matches), the partitioned cookies another site keeps for this one (listed, counted, exported, deleted with the site's and put back by Undo), and the developer filters. Uses its own real two-site HTTPS server on port 8445. |
 | `test_no_network.py` | That the extension makes no outbound requests, via both a static scan of `src/` and a live capture of a whole session. |
 | `test_devtools_crosscheck.py` | The same claims again, but checked against Chrome's DevTools Protocol rather than the extension API. See below. |
 
