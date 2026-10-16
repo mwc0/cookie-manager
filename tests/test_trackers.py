@@ -156,9 +156,15 @@ def check_switch(r, context, ext_id, server):
             left == ["embed_3pjs", "top_header", "top_js"], str(left))
     r.check("it says so, with Undo", "Deleted 2 cookies." in message(page)
             and page.locator("#rules-message .undo-button").is_visible(), message(page))
+    stats = page.locator("#rules-stats").text_content()
+    r.check("the lifetime count goes up by the two, and says what's blocked",
+            stats == "cookieZ has cleared 2 cookies so far. Blocking cookies from %d known trackers." % len(TEST_TRACKERS),
+            stats)
     page.locator("#rules-message .undo-button").click()
     page.wait_for_timeout(900)
     r.check("Undo puts them back", stored_names(context, site) == EVERYTHING, str(stored_names(context, site)))
+    stats = page.locator("#rules-stats").text_content()
+    r.check("and takes them back off the count", stats.startswith("cookieZ hasn't cleared any cookies yet."), stats)
     page.evaluate("async () => { await chrome.storage.local.remove('protectedCookies'); }")
 
     r.check("TRAP: the tracker's cookies are blocked on the site, and the site keeps its own",

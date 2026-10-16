@@ -105,6 +105,7 @@ import {
   watchSystemTheme,
 } from "../lib/theme.js";
 import { renderCookieTable, DEFAULT_SORT } from "./render.js";
+import { loadCleared, changeCleared } from "../lib/stats.js";
 import { loadKnownCookies, knownCookie, describeKnown } from "../lib/known.js";
 import {
   saveLastChange,
@@ -1728,6 +1729,37 @@ function focusChecked(name) {
 
 // Draws the screen from the saved rules. Site names are put in with
 // textContent, like everything else that comes from a website.
+// The line at the top of the Block cookies screen: how many cookies cookieZ
+// has cleared, ever, and what it's blocking now. Only what cookieZ itself
+// did or set is counted, so every number is exact.
+async function showStats() {
+  const cleared = await loadCleared();
+  const sentences = [
+    cleared === 0
+      ? "cookieZ hasn't cleared any cookies yet."
+      : "cookieZ has cleared " + pluralise(cleared, "cookie", "cookies") + " so far.",
+  ];
+
+  // Only claimed while Chrome is actually following the rules.
+  if (rulesAllowed) {
+    const sites = listRules(rules).filter((entry) => entry.rule === OWN_ONLY || entry.rule === BLOCK).length;
+    const onSites = sites > 0 ? "on " + pluralise(sites, "site", "sites") : "";
+    const fromTrackers = rules.trackers ? "from " + pluralise(TRACKER_DOMAINS.length, "known tracker", "known trackers") : "";
+    const blocking = [onSites, fromTrackers].filter(Boolean).join(" and ");
+    if (blocking) {
+      sentences.push("Blocking cookies " + blocking + ".");
+    }
+  }
+  el("rules-stats").textContent = sentences.join(" ");
+}
+
+// After a delete or an Undo made from the Block cookies screen itself.
+async function refreshStats() {
+  if (!el("state-rules").hidden) {
+    await showStats();
+  }
+}
+
 async function drawRules() {
   const loaded = await loadRules();
   rules = loaded.rules;
@@ -1762,6 +1794,7 @@ async function drawRules() {
   el("rules-trackers").checked = rules.trackers;
   el("rules-trackers").disabled = !canChange;
   await showThirdPartyNote(canChange);
+  await showStats();
 
   const entries = listRules(rules);
   const rows = el("rules-rows");
@@ -2205,6 +2238,9 @@ async function runSiteDataClear() {
 // One line, shown the first time cookieZ opens on a new version. Only the
 // version number last seen is saved.
 const WHATS_NEW = {
+  "1.8.0":
+    "New: block known trackers' cookies on every site, from Block. Cookies with a well-known name " +
+    "now say who they're from.",
   "1.7.0":
     "New: the Block button at the top. You can now block other companies' cookies on every site, " +
     "and clear a site's stored data as well as its cookies.",
@@ -2380,6 +2416,12 @@ async function deleteOne(cookie) {
 // message's text later removes the button. That's fine: the change can
 // still be undone from the next open, for up to 10 minutes.
 async function offerUndo(message, change) {
+  // Every delete in the popup ends up here, so this is where the lifetime
+  // count of cleared cookies goes up.
+  if (change.kind === "delete") {
+    await changeCleared((change.restore || []).length);
+    await refreshStats();
+  }
   if ((change.restore || []).length + (change.remove || []).length === 0) {
     return;
   }
@@ -2480,6 +2522,11 @@ async function runUndo(message, button) {
   const { keys } = await loadProtected();
   const result = await undoChange(last, (cookie) => isProtected(keys, cookie));
   await clearLastChange();
+  // Cookies put back weren't cleared after all.
+  if (last.kind === "delete") {
+    await changeCleared(-result.restored);
+    await refreshStats();
+  }
 
   const parts = [describeUndone(last, result)];
   if (result.kept > 0) {

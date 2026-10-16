@@ -1502,6 +1502,11 @@ button.row-button.keep.kept:hover:not(:disabled) {
   color: var(--fg-soft);
 }
 
+#rules-stats {
+  max-width: 72ch;
+  font-variant-numeric: tabular-nums;
+}
+
 .rules-group {
   padding: 11px 14px 14px;
   margin-bottom: 12px;

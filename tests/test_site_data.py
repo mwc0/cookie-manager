@@ -116,7 +116,7 @@ def main():
             news.wait_for_timeout(1200)
             r.check("the first open on a new version shows what's new",
                     news.locator("#whats-new").is_visible()
-                    and "Block button" in news.locator("#whats-new-text").text_content(),
+                    and "known trackers" in news.locator("#whats-new-text").text_content(),
                     news.locator("#whats-new-text").text_content())
             saved = news.evaluate("async () => (await chrome.storage.local.get('seenVersion')).seenVersion")
             r.check("only the version number is saved", saved == news.evaluate("() => chrome.runtime.getManifest().version"),
