@@ -221,6 +221,16 @@ function showState(name) {
   for (const section of document.querySelectorAll(".state")) {
     section.hidden = section.id !== "state-" + name;
   }
+
+  // The status line under the header is a live region, so it has to be on
+  // the page before a message goes in, or screen readers may not read it.
+  // The editor, export and import still hide it when they open, so coming
+  // back it's emptied and put back.
+  const message = el("main-message");
+  if (name === "main" && message.hidden) {
+    message.textContent = "";
+    message.hidden = false;
+  }
 }
 
 function showError(error) {
@@ -302,11 +312,17 @@ async function loadCurrentPage() {
     overwritten = new Set();
   }
 
+  // A message about the last page goes. Not on the first load, though:
+  // initTheme() runs alongside this, and an error it has already shown
+  // would be wiped.
+  if (page) {
+    el("main-message").textContent = "";
+  }
+
   page = { origin: url.origin, hostname: url.hostname };
   seenCookies = null;
   expanded = new Set();
 
-  el("main-message").hidden = true;
   el("site-name").textContent = url.hostname;
   if (inTab) {
     document.title = "cookieZ - " + url.hostname;
@@ -315,8 +331,15 @@ async function loadCurrentPage() {
   el("scope-target-domain").textContent = baseHostOf(url.hostname);
 
   showState("main");
-  await loadSiteRules();
+  // The table first, so it shows as soon as it can. The rules only change
+  // the Block button, and what the table says when it's empty, so those are
+  // put right once the rules are in.
   await refresh();
+  await loadSiteRules();
+  showRulesLink();
+  if (pageCookies.length === 0) {
+    drawTable();
+  }
   await showWhatsNew();
   await offerStoredUndo();
   showKnownWhenLoaded();
@@ -490,14 +513,18 @@ function drawTable() {
 
   // Many servers refuse requests with more than 8 KB of headers, and a site
   // that has piled up cookies is a common reason someone can't log in.
+  // A live region, so it's emptied rather than hidden (see popup.html). The
+  // text is only set when it changes, so a redraw doesn't read it again.
   const warning = el("size-warning");
-  warning.hidden = bytes <= SIZE_WARNING_BYTES;
-  warning.textContent = warning.hidden
+  const warningText = bytes <= SIZE_WARNING_BYTES
     ? ""
     : "This site's cookies add up to about " +
       formatBytes(bytes) +
       ". Many servers refuse more than 8 KB, which can stop you logging in. " +
       "Deleting this site's cookies usually fixes it.";
+  if (warning.textContent !== warningText) {
+    warning.textContent = warningText;
+  }
 
   // "Just the cookies shown" only appears while searching or filtering.
   el("scope-matches-row").hidden = !filtering;
@@ -957,6 +984,12 @@ async function refreshScope() {
       inScope = shownCookies;
     } else if (selectedScope() === "picked") {
       inScope = pickedCookies();
+    } else if (selectedScope() === "page") {
+      // "This page" is the table's own list too: refreshTable() has just
+      // read it with the same query (getSiteCookies() is
+      // getCookiesForScope("page", page, { embedded: true })), so asking
+      // Chrome again would only slow opening.
+      inScope = pageCookies;
     } else {
       // The cookies other companies keep for this site are in the table,
       // so they're in this site's scopes too.
@@ -1035,7 +1068,7 @@ function startConfirm() {
   el("confirm-text").textContent =
     "Delete " + pluralise(scopeCookies.length, "cookie", "cookies") + describeSites(sitesOf(scopeCookies)) + "?";
 
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
   el("data-button").hidden = true;
@@ -1052,7 +1085,6 @@ async function runDelete() {
 
   yes.disabled = true;
   no.disabled = true;
-  result.hidden = false;
   result.className = "result";
   result.textContent = "Deleting…";
 
@@ -1079,6 +1111,12 @@ async function runDelete() {
     no.disabled = false;
     cancelConfirm();
     await refresh();
+    // "Yes, delete" has gone, which would leave the focus nowhere. Undo is
+    // the likeliest next step; without one, back to Delete, or to the
+    // search box if there's nothing left to delete.
+    const undo = result.querySelector(".undo-button");
+    const remove = el("delete-button");
+    (undo || (remove.disabled ? el("search-input") : remove)).focus();
   }
 }
 
@@ -1089,6 +1127,8 @@ function showMainMessage(text, isError) {
   const message = el("main-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
+  // It's a live region that stays on the page (see popup.html), but a few
+  // screens still hide it as they open. See showState().
   message.hidden = false;
 }
 
@@ -1479,7 +1519,7 @@ function showKeptLink() {
 }
 
 async function openKept() {
-  el("kept-message").hidden = true;
+  el("kept-message").textContent = "";
   cancelKeptConfirm();
   showState("kept");
   await drawKept();
@@ -1546,7 +1586,6 @@ function showKeptMessage(text, isError) {
   const message = el("kept-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
-  message.hidden = false;
 }
 
 async function stopKeeping(entries, described) {
@@ -1618,11 +1657,17 @@ function pageRule() {
 // following them. If it isn't, they're set again. This is a safety net:
 // nothing else would notice if Chrome lost them.
 async function loadSiteRules() {
-  const loaded = await loadRules();
+  // None of these depends on another, so they're asked all at once.
+  const [loaded, rulesAccess, everywhere, siteData] = await Promise.all([
+    loadRules(),
+    hasRulesAccess(),
+    hasPermission(EVERYWHERE_PERMISSION),
+    hasPermission(SITE_DATA_PERMISSION),
+  ]);
   rules = loaded.rules;
-  rulesAllowed = await hasRulesAccess();
-  everywhereAllowed = await hasPermission(EVERYWHERE_PERMISSION);
-  siteDataAllowed = await hasPermission(SITE_DATA_PERMISSION);
+  rulesAllowed = rulesAccess;
+  everywhereAllowed = everywhere;
+  siteDataAllowed = siteData;
 
   if (loaded.error) {
     showMainMessage(loaded.error, true);
@@ -1633,6 +1678,9 @@ async function loadSiteRules() {
   }
 
   if ((await rulesInForce(rules)) === false) {
+    // Setting them again can take a few seconds with the trackers list, as
+    // on the Block cookies screen, so the main screen says so meanwhile.
+    showMainMessage(SAVING, false);
     const error = await applyRules(rules);
     showMainMessage(
       error
@@ -1680,8 +1728,8 @@ function showRulesLink() {
 }
 
 async function openRules() {
-  el("main-message").hidden = true;
-  el("rules-message").hidden = true;
+  el("main-message").textContent = "";
+  el("rules-message").textContent = "";
   el("rules-everywhere-confirm").hidden = true;
   cancelRulesConfirm();
   cancelLoad();
@@ -1695,7 +1743,6 @@ function showRulesMessage(text, isError) {
   const message = el("rules-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
-  message.hidden = false;
 }
 
 const SAVING = "Saving…";
@@ -1713,7 +1760,7 @@ async function savingRules(change) {
   } finally {
     el("rules-body").disabled = false;
     if (el("rules-message").textContent === SAVING) {
-      el("rules-message").hidden = true;
+      el("rules-message").textContent = "";
     }
     // Switching a control off takes the focus away from it. Give it back.
     if (focused && focused !== document.body && document.activeElement !== focused) {
@@ -1727,6 +1774,70 @@ function setRadio(name, value, disabled) {
     radio.checked = radio.value === value;
     radio.disabled = disabled;
   }
+}
+
+// Calls `apply` with the value of a group of radio buttons once a choice is
+// made, but not on every arrow press.
+//
+// A browser moves the tick, and fires "change", on each arrow key, so
+// someone arrowing past "Block other companies' cookies" would get Chrome's
+// permission prompt, and arrowing onto "Block all cookies" would ask "are
+// you sure?". So a tick moved with the arrows only waits. It's applied on
+// Space or Enter, or when the focus leaves the group (Tab, or a click
+// elsewhere). A click, or Space on a choice not ticked yet, applies at once,
+// as before.
+function onRadioChoice(name, apply) {
+  const radios = [...document.querySelectorAll('input[name="' + name + '"]')];
+  let arrowing = false; // an arrow key is down, so a "change" now came from it
+  let waiting = false; // a choice made with the arrows, not yet applied
+
+  const applyChecked = () => {
+    waiting = false;
+    const checked = radios.find((radio) => radio.checked);
+    if (checked) {
+      apply(checked.value);
+    }
+  };
+
+  for (const radio of radios) {
+    radio.addEventListener("keydown", (event) => {
+      if (event.key.startsWith("Arrow")) {
+        arrowing = true;
+      } else if ((event.key === " " || event.key === "Enter") && waiting) {
+        event.preventDefault();
+        applyChecked();
+      }
+    });
+    radio.addEventListener("keyup", () => {
+      arrowing = false;
+    });
+    radio.addEventListener("change", () => {
+      if (arrowing) {
+        waiting = true;
+      } else {
+        applyChecked();
+      }
+    });
+    // Applied a moment later, once the focus has landed where it was going,
+    // so it can be kept there. Only while the screen is still showing:
+    // leaving it with Esc drops a choice that was never applied, and the
+    // screen is drawn from the saved rules next time.
+    radio.addEventListener("focusout", (event) => {
+      if (waiting && !radios.includes(event.relatedTarget)) {
+        setTimeout(() => {
+          if (waiting && currentState() === "rules") {
+            applyChecked();
+          }
+        }, 0);
+      }
+    });
+  }
+}
+
+// Whether the focus is on one of a group's radio buttons.
+function focusInGroup(name) {
+  const active = document.activeElement;
+  return Boolean(active && active.name === name && active.type === "radio");
 }
 
 function focusChecked(name) {
@@ -1911,7 +2022,7 @@ async function grantRules() {
 
   // Rules saved before the permission was taken away come back into force.
   const applyError = hasAnyRule(rules) ? await savingRules(() => applyRules(rules)) : null;
-  el("rules-message").hidden = true;
+  el("rules-message").textContent = "";
   await drawRules();
   if (applyError) {
     showRulesMessage(applyError, true);
@@ -1920,11 +2031,16 @@ async function grantRules() {
 
 async function chooseSiteRule(choice) {
   hideCleanup();
+  // A choice applied because the focus moved on (see onRadioChoice())
+  // leaves the focus where it went.
+  const refocus = focusInGroup("site-rule");
   const site = siteFor(rules, page.hostname);
   const result = await savingRules(() => setSiteRule(site, choice));
   rules = result.rules;
   await drawRules();
-  focusChecked("site-rule");
+  if (refocus) {
+    focusChecked("site-rule");
+  }
 
   if (result.error) {
     showRulesMessage(result.error, true);
@@ -2121,15 +2237,21 @@ async function askEverywhere(choice) {
       return;
     }
   }
-  chooseEverywhere(choice);
+  await chooseEverywhere(choice);
 }
 
 async function chooseEverywhere(choice) {
+  // From "Yes, block all" or a radio button the focus is still on, the
+  // focus goes back to the choice. From a choice applied because the focus
+  // moved on (see onRadioChoice()), it stays where it went.
+  const refocus = !el("rules-everywhere-confirm").hidden || focusInGroup("everywhere-rule");
   el("rules-everywhere-confirm").hidden = true;
   const result = await savingRules(() => setEverywhere(choice));
   rules = result.rules;
   await drawRules();
-  focusChecked("everywhere-rule");
+  if (refocus) {
+    focusChecked("everywhere-rule");
+  }
 
   if (result.error) {
     showRulesMessage(result.error, true);
@@ -2209,7 +2331,7 @@ async function startSiteDataClear() {
     (kept.length > 0 ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone." : "") +
     " Undo can put the cookies back, but not the rest.";
 
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
   el("data-button").hidden = true;
@@ -2491,7 +2613,7 @@ function describeChange(change) {
 // something more important is already showing.
 async function offerStoredUndo() {
   const last = await loadLastChange();
-  if (!last || !el("main-message").hidden) {
+  if (!last || el("main-message").textContent !== "") {
     return;
   }
   showMainMessage(
@@ -2979,21 +3101,19 @@ async function chooseTheme(theme) {
 
 el("grant-button").addEventListener("click", async () => {
   const message = el("gate-message");
-  message.hidden = true;
+  message.textContent = "";
 
   // Has to run straight from the click, or Chrome won't show the prompt.
   const { granted, error } = await requestHostAccess();
 
   if (error) {
     message.textContent = error;
-    message.hidden = false;
     return;
   }
 
   if (!granted) {
     message.textContent =
       "Access was declined, so cookies can't be listed. Click Grant access to try again.";
-    message.hidden = false;
     return;
   }
 
@@ -3044,12 +3164,8 @@ el("kept-confirm-no").addEventListener("click", () => {
 el("rules-open").addEventListener("click", openRules);
 el("rules-back").addEventListener("click", closeRules);
 el("rules-grant").addEventListener("click", grantRules);
-for (const radio of document.querySelectorAll('input[name="site-rule"]')) {
-  radio.addEventListener("change", () => chooseSiteRule(radio.value));
-}
-for (const radio of document.querySelectorAll('input[name="everywhere-rule"]')) {
-  radio.addEventListener("change", () => askEverywhere(radio.value));
-}
+onRadioChoice("site-rule", chooseSiteRule);
+onRadioChoice("everywhere-rule", askEverywhere);
 el("rules-everywhere-yes").addEventListener("click", () => chooseEverywhere(BLOCK));
 el("rules-everywhere-no").addEventListener("click", () => {
   el("rules-everywhere-confirm").hidden = true;
@@ -3200,7 +3316,7 @@ el("decoded-copy").addEventListener("click", () =>
 );
 
 el("help-button").addEventListener("click", () => {
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   showState("help");
   el("help-back").focus();
 });
@@ -3225,6 +3341,35 @@ const BACK_BUTTONS = {
   help: "help-back",
 };
 
+// Esc on the Block cookies screen first backs out of a question that's open,
+// as its Cancel button would, focus included. Returns whether there was one.
+function cancelRulesQuestion() {
+  const questions = [
+    ["rules-everywhere-confirm", "rules-everywhere-no"],
+    ["rules-confirm", "rules-confirm-no"],
+    ["rules-load-confirm", "rules-load-no"],
+    ["rules-cleanup", "rules-cleanup-no"],
+    ["rules-trackers-cleanup", "rules-trackers-cleanup-no"],
+  ];
+  for (const [question, cancel] of questions) {
+    if (!el(question).hidden) {
+      el(cancel).click();
+      return true;
+    }
+  }
+  return false;
+}
+
+// Whether the main screen is asking something ("Delete these cookies?",
+// Clear site data, or a row's "Sure?"), which "n" shouldn't walk away from.
+function waitingForAnswer() {
+  return (
+    !el("confirm-row").hidden ||
+    !el("data-confirm").hidden ||
+    el("cookie-rows").querySelector(".armed") !== null
+  );
+}
+
 document.addEventListener("keydown", (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey) {
     return;
@@ -3236,7 +3381,9 @@ document.addEventListener("keydown", (event) => {
   // repo). In a tab it always works.
   if (event.key === "Escape") {
     const back = BACK_BUTTONS[currentState()];
-    if (back) {
+    if (currentState() === "rules" && cancelRulesQuestion()) {
+      event.preventDefault();
+    } else if (back) {
       event.preventDefault();
       el(back).click();
     } else if (currentState() === "main" && !el("confirm-row").hidden) {
@@ -3251,16 +3398,24 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
-  // "/" jumps to the search box, unless you're typing somewhere already.
-  if (event.key === "/" && currentState() === "main") {
-    const typing = event.target.closest("input, textarea, select");
-    if (!typing) {
-      event.preventDefault();
-      el("search-input").focus();
-    }
+  // "/" jumps to the search box, and "n" opens a new cookie, unless you're
+  // typing somewhere already.
+  const typing = event.target.closest("input, textarea, select");
+  if (currentState() !== "main" || typing) {
+    return;
+  }
+  if (event.key === "/") {
+    event.preventDefault();
+    el("search-input").focus();
+  } else if ((event.key === "n" || event.key === "N") && !waitingForAnswer()) {
+    event.preventDefault();
+    openEditor(null);
   }
 });
-el("confirm-no").addEventListener("click", cancelConfirm);
+el("confirm-no").addEventListener("click", () => {
+  cancelConfirm();
+  el("delete-button").focus();
+});
 el("confirm-yes").addEventListener("click", runDelete);
 
 for (const radio of document.querySelectorAll('input[name="theme"]')) {

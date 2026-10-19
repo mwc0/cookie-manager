@@ -65,7 +65,7 @@
           Grant access
         </button>
       </p>
-      <p id="gate-message" class="error" role="status" hidden></p>
+      <p id="gate-message" class="error" role="status"></p>
     </section>
 
     <!-- Pages like chrome:// and the Web Store can't have their cookies read. -->
@@ -201,8 +201,12 @@
         <span id="whats-new-text"></span>
         <button id="whats-new-close" class="link-button" type="button">OK</button>
       </p>
-      <p id="main-message" class="result" role="status" hidden></p>
-      <p id="size-warning" class="result" role="status" hidden></p>
+      <!-- Status lines like these are always on the page and only their
+           text changes, so screen readers hear every message. A line
+           that appears from hidden isn't always read. Empty, it takes no
+           room (popup.css). -->
+      <p id="main-message" class="result" role="status"></p>
+      <p id="size-warning" class="result" role="status"></p>
 
       <!-- Filters the table. While searching or filtering, an extra delete
            option removes only the cookies shown. -->
@@ -671,7 +675,7 @@
         cookieZ leaves these out of every delete. This is the whole list it
         has saved, for every site: names, never values.
       </p>
-      <p id="kept-message" class="result" role="status" hidden></p>
+      <p id="kept-message" class="result" role="status"></p>
 
       <div id="kept-wrap">
         <table id="kept-table">
@@ -720,7 +724,7 @@
       <!-- The lifetime count. "Cleared", not "blocked": Chrome doesn't tell
            extensions when it blocks a cookie. -->
       <p id="rules-stats"></p>
-      <p id="rules-message" class="result" role="status" hidden></p>
+      <p id="rules-message" class="result" role="status"></p>
 
       <!-- Shown until the extra permission is given. -->
       <div id="rules-gate" hidden>
@@ -1016,6 +1020,8 @@
             <span>Open cookieZ. Change it at chrome://extensions/shortcuts.</span>
             <span><kbd>/</kbd></span>
             <span>Search the cookies.</span>
+            <span><kbd>N</kbd></span>
+            <span>Add a new cookie.</span>
             <span><kbd>↑</kbd> <kbd>↓</kbd></span>
             <span>Move between cookies. <kbd>Home</kbd> and <kbd>End</kbd> jump to the first and last.</span>
             <span><kbd>Enter</kbd></span>
@@ -1027,7 +1033,7 @@
             <span><kbd>Delete</kbd></span>
             <span>Delete it. It asks "Sure?" first: press <kbd>Enter</kbd> to delete.</span>
             <span><kbd>Esc</kbd></span>
-            <span>Go back from this screen, the editor, export, import or site rules, or cancel a delete.</span>
+            <span>Go back from this screen, the editor, export, import or site rules, or cancel a delete or other question.</span>
           </div>
         </dd>
 
