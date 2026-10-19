@@ -111,6 +111,16 @@
           <p>Yes. Click <strong>Block</strong> at the top of cookieZ. For each site you can allow all cookies, clear them when Chrome closes, block other companies' cookies, or block every cookie. You can also block other companies' cookies on every site, or every cookie except on the sites you allow. cookieZ gives your choice to Chrome and Chrome does the blocking, so it works while cookieZ is closed. Removing cookieZ removes the rules.</p>
         </details>
         <details>
+          <summary>What does "Block known trackers' cookies" do?</summary>
+          <p>It's a switch on the Block cookies screen. Turn it on and Chrome blocks cookies from about 130 advertising and analytics companies on every site. The list is a file inside cookieZ. It's never downloaded, so it only changes when cookieZ is updated. It uses the same permission as the rest of Block, so there's nothing new to allow.</p>
+          <p>What it doesn't do: it blocks those companies' cookies, not the companies themselves, so their scripts and images still load. It can't catch a tracking cookie that a site sets under its own name. A site you've set to <strong>Allow all cookies</strong> still gets them, and each company's own website keeps its cookies, so you can still sign in there.</p>
+          <p>When you turn it on, cookieZ offers to delete the cookies those companies have already saved. Kept cookies are left alone, and Undo can put the rest back. If a site stops working, open cookieZ on it, click the button at the top and choose <strong>Allow all cookies</strong> for that site.</p>
+        </details>
+        <details>
+          <summary>What does "cookieZ has cleared N cookies so far" mean?</summary>
+          <p>It's how many cookies cookieZ has deleted for you since you installed it, shown on the Block cookies screen. Undo takes them back off. It counts what cookieZ cleared, not what Chrome blocked, because Chrome doesn't tell extensions when it blocks a cookie. It's one number, kept on your computer and never sent anywhere.</p>
+        </details>
+        <details>
           <summary>Why does Chrome's prompt mention my camera and microphone?</summary>
           <p>To set site rules, cookieZ needs Chrome's permission to change site settings. Chrome has one permission for every kind of site setting, so its prompt lists them all. cookieZ only ever changes the cookie setting, and you can check that in the code: it's in <code>src/lib/rules.js</code>. The prompt only appears if you click the button on the Block cookies screen. You can say no, and everything else works as before.</p>
         </details>
@@ -124,15 +134,23 @@
         </details>
         <details>
           <summary>A site stopped working after I set a rule</summary>
-          <p>Open cookieZ on that site, click the button at the top (it says what's blocked), and choose <strong>Allow all cookies</strong>, or remove the site from the list. Then reload the page. "Block other companies' cookies" can stop embedded videos, maps and "sign in with" buttons working, because those come from other companies.</p>
+          <p>Open cookieZ on that site, click the button at the top (it says what's blocked), and choose <strong>Allow all cookies</strong>, or remove the site from the list. Then reload the page. "Block other companies' cookies" can stop embedded videos, maps and "sign in with" buttons working, because those come from other companies. <strong>Allow all cookies</strong> also lets known trackers' cookies through on that site, if you've blocked them.</p>
         </details>
         <details>
           <summary>Does it block only the cookies a site doesn't need?</summary>
-          <p>No, and nothing can do that reliably: sites don't label which of their cookies are essential. What cookieZ offers instead is blocking cookies from other companies on a site, which is where most advertising and tracking cookies come from, while the site keeps its own.</p>
+          <p>No, and nothing can do that reliably: sites don't label which of their cookies are essential. What cookieZ offers instead is blocking cookies from other companies on a site, which is where most advertising and tracking cookies come from, while the site keeps its own. Or, more narrowly, blocking known trackers' cookies on every site.</p>
         </details>
         <details>
           <summary>What are the buttons next to the search box?</summary>
-          <p>They're filters. Click one to show only the cookies it describes: Secure, HttpOnly, Session, Kept, Expiring soon, Large or Partitioned. Click two and you see cookies that are both. A filter only appears when at least one cookie on the site matches it. While a filter is on, the delete options include "Just the cookies shown", so you can delete exactly what you're looking at.</p>
+          <p>They're filters. Click one to show only the cookies it describes: Secure, HttpOnly, Session, Kept, Expiring soon, Large, Partitioned or Known. Three more are checks for developers: Not Secure (only on an HTTPS page), Readable by scripts (no HttpOnly) and SameSite None. Click two and you see cookies that are both. A filter only appears when at least one cookie on the site matches it. While a filter is on, the delete options include "Just the cookies shown", so you can delete exactly what you're looking at.</p>
+        </details>
+        <details>
+          <summary>What does "Known" mean?</summary>
+          <p>The cookie's name is in the Open Cookie Database, a public list of well-known cookies. Click the cookie and the editor says who usually sets a cookie with that name and what it's for. It's a guess from the name only: any site can give its own cookie the same name, and very common names like <code>id</code> or <code>session</code> are never marked. The list is a file inside cookieZ and is looked up on your computer. Nothing is sent anywhere to check it.</p>
+        </details>
+        <details>
+          <summary>Why are there cookies from other companies on this site?</summary>
+          <p>A company whose content is embedded on a site, such as a video or a chat box, can save a partitioned cookie that is only used on that site. cookieZ lists those with the site's own cookies, marked "set in a frame, kept for this site only". They're included when you delete this page's or this domain's cookies, in Clear site data and in exports, apart from a Cookie header or curl command, since the browser never sends them to this site.</p>
         </details>
         <details>
           <summary>What does "changes" next to the cookie count mean?</summary>
@@ -160,7 +178,7 @@
         </details>
         <details>
           <summary>How do I remove it?</summary>
-          <p>Right-click the cookieZ icon and choose "Remove from Chrome", or remove it from <code>chrome://extensions</code>. This also deletes what it saved: your Kept list, your site rules, your theme choice and the version you last opened. Chrome stops following the rules, and if cookieZ was blocking other companies' cookies on every site, Chrome's own setting goes back to how you had it. Your cookies stay as they are.</p>
+          <p>Right-click the cookieZ icon and choose "Remove from Chrome", or remove it from <code>chrome://extensions</code>. This also deletes what it saved: your Kept list, your site rules, your theme choice, the version you last opened and the count of cookies it has cleared. Chrome stops following the rules, and if cookieZ was blocking other companies' cookies on every site, Chrome's own setting goes back to how you had it. Your cookies stay as they are.</p>
         </details>
       </div>
 
