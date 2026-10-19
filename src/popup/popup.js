@@ -1098,6 +1098,12 @@ async function runDelete() {
     no.disabled = false;
     cancelConfirm();
     await refresh();
+    // "Yes, delete" has gone, which would leave the focus nowhere. Undo is
+    // the likeliest next step; without one, back to Delete, or to the
+    // search box if there's nothing left to delete.
+    const undo = result.querySelector(".undo-button");
+    const remove = el("delete-button");
+    (undo || (remove.disabled ? el("search-input") : remove)).focus();
   }
 }
 
@@ -1757,6 +1763,65 @@ function setRadio(name, value, disabled) {
   }
 }
 
+// Calls `apply` with the value of a group of radio buttons once a choice is
+// made, but not on every arrow press.
+//
+// A browser moves the tick, and fires "change", on each arrow key, so
+// someone arrowing past "Block other companies' cookies" would get Chrome's
+// permission prompt, and arrowing onto "Block all cookies" would ask "are
+// you sure?". So a tick moved with the arrows only waits. It's applied on
+// Space or Enter, or when the focus leaves the group (Tab, or a click
+// elsewhere). A click, or Space on a choice not ticked yet, applies at once,
+// as before.
+function onRadioChoice(name, apply) {
+  const radios = [...document.querySelectorAll('input[name="' + name + '"]')];
+  let arrowing = false; // an arrow key is down, so a "change" now came from it
+  let waiting = false; // a choice made with the arrows, not yet applied
+
+  const applyChecked = () => {
+    waiting = false;
+    const checked = radios.find((radio) => radio.checked);
+    if (checked) {
+      apply(checked.value);
+    }
+  };
+
+  for (const radio of radios) {
+    radio.addEventListener("keydown", (event) => {
+      if (event.key.startsWith("Arrow")) {
+        arrowing = true;
+      } else if ((event.key === " " || event.key === "Enter") && waiting) {
+        event.preventDefault();
+        applyChecked();
+      }
+    });
+    radio.addEventListener("keyup", () => {
+      arrowing = false;
+    });
+    radio.addEventListener("change", () => {
+      if (arrowing) {
+        waiting = true;
+      } else {
+        applyChecked();
+      }
+    });
+    // Only while the screen is still showing: leaving it with Esc drops a
+    // choice that was never applied, and the screen is drawn from the saved
+    // rules next time.
+    radio.addEventListener("focusout", (event) => {
+      if (waiting && !radios.includes(event.relatedTarget) && currentState() === "rules") {
+        applyChecked();
+      }
+    });
+  }
+}
+
+// Whether the focus is on one of a group's radio buttons.
+function focusInGroup(name) {
+  const active = document.activeElement;
+  return Boolean(active && active.name === name && active.type === "radio");
+}
+
 function focusChecked(name) {
   const checked = document.querySelector('input[name="' + name + '"]:checked');
   if (checked) {
@@ -1948,11 +2013,16 @@ async function grantRules() {
 
 async function chooseSiteRule(choice) {
   hideCleanup();
+  // A choice applied because the focus moved on (see onRadioChoice())
+  // leaves the focus where it went.
+  const refocus = focusInGroup("site-rule");
   const site = siteFor(rules, page.hostname);
   const result = await savingRules(() => setSiteRule(site, choice));
   rules = result.rules;
   await drawRules();
-  focusChecked("site-rule");
+  if (refocus) {
+    focusChecked("site-rule");
+  }
 
   if (result.error) {
     showRulesMessage(result.error, true);
@@ -2149,15 +2219,21 @@ async function askEverywhere(choice) {
       return;
     }
   }
-  chooseEverywhere(choice);
+  await chooseEverywhere(choice);
 }
 
 async function chooseEverywhere(choice) {
+  // From "Yes, block all" or a radio button the focus is still on, the
+  // focus goes back to the choice. From a choice applied because the focus
+  // moved on (see onRadioChoice()), it stays where it went.
+  const refocus = !el("rules-everywhere-confirm").hidden || focusInGroup("everywhere-rule");
   el("rules-everywhere-confirm").hidden = true;
   const result = await savingRules(() => setEverywhere(choice));
   rules = result.rules;
   await drawRules();
-  focusChecked("everywhere-rule");
+  if (refocus) {
+    focusChecked("everywhere-rule");
+  }
 
   if (result.error) {
     showRulesMessage(result.error, true);
@@ -3072,12 +3148,8 @@ el("kept-confirm-no").addEventListener("click", () => {
 el("rules-open").addEventListener("click", openRules);
 el("rules-back").addEventListener("click", closeRules);
 el("rules-grant").addEventListener("click", grantRules);
-for (const radio of document.querySelectorAll('input[name="site-rule"]')) {
-  radio.addEventListener("change", () => chooseSiteRule(radio.value));
-}
-for (const radio of document.querySelectorAll('input[name="everywhere-rule"]')) {
-  radio.addEventListener("change", () => askEverywhere(radio.value));
-}
+onRadioChoice("site-rule", chooseSiteRule);
+onRadioChoice("everywhere-rule", askEverywhere);
 el("rules-everywhere-yes").addEventListener("click", () => chooseEverywhere(BLOCK));
 el("rules-everywhere-no").addEventListener("click", () => {
   el("rules-everywhere-confirm").hidden = true;
@@ -3253,6 +3325,35 @@ const BACK_BUTTONS = {
   help: "help-back",
 };
 
+// Esc on the Block cookies screen first backs out of a question that's open,
+// as its Cancel button would, focus included. Returns whether there was one.
+function cancelRulesQuestion() {
+  const questions = [
+    ["rules-everywhere-confirm", "rules-everywhere-no"],
+    ["rules-confirm", "rules-confirm-no"],
+    ["rules-load-confirm", "rules-load-no"],
+    ["rules-cleanup", "rules-cleanup-no"],
+    ["rules-trackers-cleanup", "rules-trackers-cleanup-no"],
+  ];
+  for (const [question, cancel] of questions) {
+    if (!el(question).hidden) {
+      el(cancel).click();
+      return true;
+    }
+  }
+  return false;
+}
+
+// Whether the main screen is asking something ("Delete these cookies?",
+// Clear site data, or a row's "Sure?"), which "n" shouldn't walk away from.
+function waitingForAnswer() {
+  return (
+    !el("confirm-row").hidden ||
+    !el("data-confirm").hidden ||
+    el("cookie-rows").querySelector(".armed") !== null
+  );
+}
+
 document.addEventListener("keydown", (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey) {
     return;
@@ -3264,7 +3365,9 @@ document.addEventListener("keydown", (event) => {
   // repo). In a tab it always works.
   if (event.key === "Escape") {
     const back = BACK_BUTTONS[currentState()];
-    if (back) {
+    if (currentState() === "rules" && cancelRulesQuestion()) {
+      event.preventDefault();
+    } else if (back) {
       event.preventDefault();
       el(back).click();
     } else if (currentState() === "main" && !el("confirm-row").hidden) {
@@ -3279,16 +3382,24 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
-  // "/" jumps to the search box, unless you're typing somewhere already.
-  if (event.key === "/" && currentState() === "main") {
-    const typing = event.target.closest("input, textarea, select");
-    if (!typing) {
-      event.preventDefault();
-      el("search-input").focus();
-    }
+  // "/" jumps to the search box, and "n" opens a new cookie, unless you're
+  // typing somewhere already.
+  const typing = event.target.closest("input, textarea, select");
+  if (currentState() !== "main" || typing) {
+    return;
+  }
+  if (event.key === "/") {
+    event.preventDefault();
+    el("search-input").focus();
+  } else if ((event.key === "n" || event.key === "N") && !waitingForAnswer()) {
+    event.preventDefault();
+    openEditor(null);
   }
 });
-el("confirm-no").addEventListener("click", cancelConfirm);
+el("confirm-no").addEventListener("click", () => {
+  cancelConfirm();
+  el("delete-button").focus();
+});
 el("confirm-yes").addEventListener("click", runDelete);
 
 for (const radio of document.querySelectorAll('input[name="theme"]')) {
