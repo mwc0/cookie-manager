@@ -1818,12 +1818,17 @@ function onRadioChoice(name, apply) {
         applyChecked();
       }
     });
-    // Only while the screen is still showing: leaving it with Esc drops a
-    // choice that was never applied, and the screen is drawn from the saved
-    // rules next time.
+    // Applied a moment later, once the focus has landed where it was going,
+    // so it can be kept there. Only while the screen is still showing:
+    // leaving it with Esc drops a choice that was never applied, and the
+    // screen is drawn from the saved rules next time.
     radio.addEventListener("focusout", (event) => {
-      if (waiting && !radios.includes(event.relatedTarget) && currentState() === "rules") {
-        applyChecked();
+      if (waiting && !radios.includes(event.relatedTarget)) {
+        setTimeout(() => {
+          if (waiting && currentState() === "rules") {
+            applyChecked();
+          }
+        }, 0);
       }
     });
   }
