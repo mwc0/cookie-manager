@@ -9,9 +9,10 @@
 // in a test, so it isn't loaded with the popup. loadKnownCookies() loads it
 // once the table is showing, and until then knownCookie() finds nothing.
 
-// Too common to mean anything. Compared in lower case. Each of these is in
-// the database under one company, but plenty of sites use them for their
-// own cookies.
+// Too common to mean anything. Each of these is in the database under one
+// company, but plenty of sites use them for their own cookies. Compared in
+// lower case, so "Session" is skipped too, even though the match itself is
+// case-sensitive (see knownCookie()).
 const TOO_COMMON = new Set([
   "id", "sid", "ssid", "uid", "uuid", "uids", "auid", "user", "userid", "user_id",
   "session", "sess", "sessionid", "session_id", "token", "csrf", "_csrf", "xsrf-token",
@@ -21,6 +22,10 @@ const TOO_COMMON = new Set([
   "visitor", "visitor_id", "callback", "frontend", "europe", "audience", "audit",
   "presence", "viewer", "recs", "inst", "disco", "wires", "pluto", "lantern", "khaos",
   "cart", "device_id", "adid", "unique_id", "remember_me", "isfirstsession", ".auth",
+  // Plain words and consent names any site might use (found in 1.9's review).
+  "autocomplete", "localization", "lastlist", "childinfo", "oinfo", "criteo",
+  "cookies_accepted", "cookie_accepted", "accepted_cookies", "cookies_consent",
+  "cookie_consent", "cookies_policy", "cookie_policy",
   // Prefixes that would match far too much: "data-" matches data-anything.
   "data-", "partner-", "welcome-", "sharing_", "recs-", "put_", "_sid",
 ]);
@@ -45,8 +50,10 @@ function distinctive(name, isPrefix) {
   return true;
 }
 
-// Exact names: name -> the entries for it (one per company). Prefixes: the
-// same, longest first, so the longest prefix that fits wins.
+// Exact names: name -> the entries for it (one per company). Prefixes:
+// grouped by their first character, so a name is only checked against the
+// few that could fit, and longest first in each group, so the longest
+// prefix that fits wins.
 let exact = null;
 let prefixes = null;
 let loading = null;
@@ -66,9 +73,17 @@ function build(list) {
     map.get(entry.name).push(entry);
   }
   exact = byName;
-  prefixes = [...byPrefix.entries()]
+  prefixes = new Map();
+  const longestFirst = [...byPrefix.entries()]
     .map(([prefix, entries]) => ({ prefix, entries }))
     .sort((a, b) => b.prefix.length - a.prefix.length);
+  for (const entry of longestFirst) {
+    const first = entry.prefix[0];
+    if (!prefixes.has(first)) {
+      prefixes.set(first, []);
+    }
+    prefixes.get(first).push(entry);
+  }
 }
 
 // Loads the list, once. Resolves to true when it's ready, or false if it
@@ -102,7 +117,7 @@ export function knownCookie(name) {
   let found = exact.get(name) || null;
   let prefix = false;
   if (!found) {
-    const match = prefixes.find((entry) => name.startsWith(entry.prefix));
+    const match = (prefixes.get(name[0]) || []).find((entry) => name.startsWith(entry.prefix));
     found = match ? match.entries : null;
     prefix = Boolean(match);
   }

@@ -46,6 +46,21 @@ a real window.
 | `test_site_data.py` | Clear site data on a real page: the site's cookies and local storage go, Kept cookies and the other site's data stay, Undo brings the cookies back. Also the one-time "What's new" line. |
 | `test_known.py` | 1.8's known cookie names (a badge, a filter and a line in the editor, and that a generic name like `id` never matches), the partitioned cookies another site keeps for this one (listed, counted, exported, deleted with the site's and put back by Undo), and the developer filters. Uses its own real two-site HTTPS server on port 8445. |
 | `test_trackers.py` | 1.8's "Block known trackers' cookies": that Chrome blocks a listed tracker's cookies on another site, lets them through on a site set to "Allow all cookies" and on the tracker's own site, and that turning it on offers to delete the ones already saved. Uses its own small tracker list, not the real one. |
+| `test_search.py` | Search, and that Delete after a search removes only the cookies shown, never the rest of the scope. |
+| `test_filters.py` | The quick filters and sorting by size, with the same rule: "Just the cookies shown" deletes only what the filter shows. |
+| `test_pick.py` | Ticking cookies: "Just the ticked cookies" deletes exactly those, and Kept cookies stay even when ticked. |
+| `test_protect.py` | The Keep button: a kept cookie is skipped by everything cookieZ deletes. |
+| `test_kept_list.py` | The Kept cookies screen: the whole saved list, every site, and stopping keeping any of them. |
+| `test_table.py` | Sorting (display only: it never changes what a delete or export reaches) and how expiry dates read. |
+| `test_size.py` | Cookie sizes: the total, cookies close to Chrome's 4 KB limit, and the warning when a site's cookies get too big. |
+| `test_undo.py` | Undo after a delete, an import, a Save or a new cookie puts back exactly what was there, read from Chrome's store. |
+| `test_transfer.py` | Export, import, copying a value and opening in a tab. Round trips are read back from Chrome's store. |
+| `test_import_headers.py` | Importing a Cookie header, a curl command or Set-Cookie lines, and putting imported cookies on this site. |
+| `test_live.py` | The live table follows the site's cookie changes without Refresh. |
+| `test_changes.py` | The "What changed" list, and that nothing of it is kept once cookieZ closes. |
+| `test_keyboard.py` | The table from the keyboard: arrows, Enter, Space, K and Delete, and where focus lands after each. |
+| `test_ui.py` | Clicking a row to edit, the decoded value, Help, the "Sure?" step, the badges, target sizes and Esc. |
+| `test_theme.py` | The Light and Dark buttons: following the system, saving the other choice, and removing it again. |
 | `test_no_network.py` | That the extension makes no outbound requests, via both a static scan of `src/` and a live capture of a whole session. |
 | `test_devtools_crosscheck.py` | The same claims again, but checked against Chrome's DevTools Protocol rather than the extension API. See below. |
 
