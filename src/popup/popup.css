@@ -468,6 +468,18 @@ button.danger:hover:not(:disabled) {
   color: var(--danger);
 }
 
+/* These status lines are never hidden, so screen readers hear each new
+   message (see popup.html). With no message in them they take no room. */
+#gate-message:empty,
+#main-message:empty,
+#size-warning:empty,
+#kept-message:empty,
+#rules-message:empty {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 /* --- plates -----------------------------------------------------------------
 
    A plate is a framed box: the delete panel, the table, the import

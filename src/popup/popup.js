@@ -221,6 +221,16 @@ function showState(name) {
   for (const section of document.querySelectorAll(".state")) {
     section.hidden = section.id !== "state-" + name;
   }
+
+  // The status line under the header is a live region, so it has to be on
+  // the page before a message goes in, or screen readers may not read it.
+  // The editor, export and import still hide it when they open, so coming
+  // back it's emptied and put back.
+  const message = el("main-message");
+  if (name === "main" && message.hidden) {
+    message.textContent = "";
+    message.hidden = false;
+  }
 }
 
 function showError(error) {
@@ -503,14 +513,18 @@ function drawTable() {
 
   // Many servers refuse requests with more than 8 KB of headers, and a site
   // that has piled up cookies is a common reason someone can't log in.
+  // A live region, so it's emptied rather than hidden (see popup.html). The
+  // text is only set when it changes, so a redraw doesn't read it again.
   const warning = el("size-warning");
-  warning.hidden = bytes <= SIZE_WARNING_BYTES;
-  warning.textContent = warning.hidden
+  const warningText = bytes <= SIZE_WARNING_BYTES
     ? ""
     : "This site's cookies add up to about " +
       formatBytes(bytes) +
       ". Many servers refuse more than 8 KB, which can stop you logging in. " +
       "Deleting this site's cookies usually fixes it.";
+  if (warning.textContent !== warningText) {
+    warning.textContent = warningText;
+  }
 
   // "Just the cookies shown" only appears while searching or filtering.
   el("scope-matches-row").hidden = !filtering;
@@ -1054,7 +1068,7 @@ function startConfirm() {
   el("confirm-text").textContent =
     "Delete " + pluralise(scopeCookies.length, "cookie", "cookies") + describeSites(sitesOf(scopeCookies)) + "?";
 
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
   el("data-button").hidden = true;
@@ -1071,7 +1085,6 @@ async function runDelete() {
 
   yes.disabled = true;
   no.disabled = true;
-  result.hidden = false;
   result.className = "result";
   result.textContent = "Deleting…";
 
@@ -1114,6 +1127,8 @@ function showMainMessage(text, isError) {
   const message = el("main-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
+  // It's a live region that stays on the page (see popup.html), but a few
+  // screens still hide it as they open. See showState().
   message.hidden = false;
 }
 
@@ -1504,7 +1519,7 @@ function showKeptLink() {
 }
 
 async function openKept() {
-  el("kept-message").hidden = true;
+  el("kept-message").textContent = "";
   cancelKeptConfirm();
   showState("kept");
   await drawKept();
@@ -1571,7 +1586,6 @@ function showKeptMessage(text, isError) {
   const message = el("kept-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
-  message.hidden = false;
 }
 
 async function stopKeeping(entries, described) {
@@ -1714,8 +1728,8 @@ function showRulesLink() {
 }
 
 async function openRules() {
-  el("main-message").hidden = true;
-  el("rules-message").hidden = true;
+  el("main-message").textContent = "";
+  el("rules-message").textContent = "";
   el("rules-everywhere-confirm").hidden = true;
   cancelRulesConfirm();
   cancelLoad();
@@ -1729,7 +1743,6 @@ function showRulesMessage(text, isError) {
   const message = el("rules-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
-  message.hidden = false;
 }
 
 const SAVING = "Saving…";
@@ -1747,7 +1760,7 @@ async function savingRules(change) {
   } finally {
     el("rules-body").disabled = false;
     if (el("rules-message").textContent === SAVING) {
-      el("rules-message").hidden = true;
+      el("rules-message").textContent = "";
     }
     // Switching a control off takes the focus away from it. Give it back.
     if (focused && focused !== document.body && document.activeElement !== focused) {
@@ -2004,7 +2017,7 @@ async function grantRules() {
 
   // Rules saved before the permission was taken away come back into force.
   const applyError = hasAnyRule(rules) ? await savingRules(() => applyRules(rules)) : null;
-  el("rules-message").hidden = true;
+  el("rules-message").textContent = "";
   await drawRules();
   if (applyError) {
     showRulesMessage(applyError, true);
@@ -2313,7 +2326,7 @@ async function startSiteDataClear() {
     (kept.length > 0 ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone." : "") +
     " Undo can put the cookies back, but not the rest.";
 
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
   el("data-button").hidden = true;
@@ -2595,7 +2608,7 @@ function describeChange(change) {
 // something more important is already showing.
 async function offerStoredUndo() {
   const last = await loadLastChange();
-  if (!last || !el("main-message").hidden) {
+  if (!last || el("main-message").textContent !== "") {
     return;
   }
   showMainMessage(
@@ -3083,21 +3096,19 @@ async function chooseTheme(theme) {
 
 el("grant-button").addEventListener("click", async () => {
   const message = el("gate-message");
-  message.hidden = true;
+  message.textContent = "";
 
   // Has to run straight from the click, or Chrome won't show the prompt.
   const { granted, error } = await requestHostAccess();
 
   if (error) {
     message.textContent = error;
-    message.hidden = false;
     return;
   }
 
   if (!granted) {
     message.textContent =
       "Access was declined, so cookies can't be listed. Click Grant access to try again.";
-    message.hidden = false;
     return;
   }
 
@@ -3300,7 +3311,7 @@ el("decoded-copy").addEventListener("click", () =>
 );
 
 el("help-button").addEventListener("click", () => {
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   showState("help");
   el("help-back").focus();
 });
