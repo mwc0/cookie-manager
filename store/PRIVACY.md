@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 15 October 2026**
+**Last updated: 19 October 2026**
 
 ## The short version
 
@@ -32,9 +32,26 @@ That includes the things extensions commonly send without mentioning:
 Everything the extension needs is bundled inside it. It has no server
 component, so there is no place for your data to go even in principle.
 
+## Lists inside the extension
+
+cookieZ includes two lists, made from the Open Cookie Database, a public
+list of well-known cookies:
+
+- the websites of about 130 advertising and analytics companies, used
+  only if you turn on **Block known trackers' cookies**
+- well-known cookie names, with who usually sets each one and what for,
+  used to label cookies as **Known** in the table and the editor
+
+Both are files inside the extension package. They are never downloaded or
+updated over the network, so they only change when cookieZ itself is
+updated through the Chrome Web Store. They are read only on your device:
+when cookieZ labels a cookie as Known, it compares the cookie's name with
+its own copy of the list, and nothing about the cookie or the site is sent
+anywhere to check it.
+
 ## What this extension stores on your device
 
-Four things are saved on your own computer, and a fifth is held briefly in
+Five things are saved on your own computer, and a sixth is held briefly in
 memory so your last change can be undone. None of them is ever transmitted.
 
 ### Your colour theme
@@ -81,9 +98,10 @@ If you use **Block** to choose which sites may set cookies, cookieZ saves
 your choices so it can show them to you and hand them to Chrome. Each entry
 is a site's name and the rule you picked for it: allow all cookies, clear
 them when Chrome closes, block other companies' cookies, or block all
-cookies. Two more settings are saved with them: the rule for every site
-without one of its own, and whether blocking a site should also delete its
-cookies without asking.
+cookies. Three more settings are saved with them: the rule for every site
+without one of its own, whether blocking a site should also delete its
+cookies without asking, and whether **Block known trackers' cookies** is
+turned on.
 
 It never includes cookies or cookie values. It is a list of site names, so
 you should know it is there. It is stored using Chrome's `storage.local` API
@@ -95,14 +113,25 @@ Uninstalling the extension removes the list, and Chrome stops following the
 rules.
 
 You can also save a copy of your rules as a file, to load on another
-computer. That file holds exactly the list above. It is saved where you
-choose, like any download, and cookieZ keeps no copy of it.
+computer. That file holds exactly the list and settings above. It is
+saved where you choose, like any download, and cookieZ keeps no copy of it.
 
 ### The version you last opened
 
 cookieZ saves its own version number, such as 1.7.0, the first time you
 open a new version, so it can show one line about what's new just once.
 That is the whole record.
+
+### How many cookies cookieZ has cleared
+
+One number: how many cookies cookieZ has deleted for you, in total, shown
+on the **Block cookies** screen. It goes up when you delete cookies with
+cookieZ and down when you undo a delete. It doesn't record which cookies,
+which sites or when, only the total. It counts cookies cookieZ cleared,
+not cookies Chrome blocked, because Chrome doesn't tell extensions when it
+blocks a cookie. It is stored using Chrome's `storage.local` API on your
+own computer and is never transmitted. Uninstalling the extension removes
+it.
 
 ### Your last change, for Undo
 
@@ -160,6 +189,19 @@ Chrome, using the same site settings you can see in Chrome's own settings
 pages, and Chrome does the blocking from then on. cookieZ is not told which
 sites you visit or which cookies were blocked.
 
+If you turn on **Block known trackers' cookies on every site**, cookieZ
+gives Chrome a rule for each company on its built-in list (see "Lists
+inside the extension" above), and Chrome blocks those companies' cookies
+on every site. This uses the same site settings permission as the rest of
+Block, so nothing new is asked for. Sites you have set to allow all
+cookies still get them, and each company's own website keeps its cookies,
+so you can still sign in there. It blocks the companies' cookies, not the
+companies themselves: their scripts and images still load. When you turn
+it on, cookieZ offers to delete the cookies those companies have already
+saved (or deletes them straight away, if you have chosen to always delete
+when blocking), by looking up the domains on the list and nothing else.
+Kept cookies are left alone, and Undo can put the deleted ones back.
+
 If you choose to block other companies' cookies on every site, cookieZ
 turns on Chrome's own setting for that, the one in Chrome's privacy
 settings, instead of writing a rule. While cookieZ has it turned on, you
@@ -169,7 +211,8 @@ you as it was.
 
 When you next open cookieZ, it asks Chrome whether your saved rules are
 still in force, and sets them again if they are not. That check is made
-against the sites on your saved list only. The **Block cookies** screen also
+against the sites on your saved list only, plus one company from the
+trackers list if that switch is on. The **Block cookies** screen also
 shows how many cookies each listed site has at that moment, by looking up
 those sites only.
 
@@ -188,8 +231,9 @@ popup is open on is affected.
 the extension cannot do anything at all.
 
 **`storage`**: required to remember which cookies you marked as Kept, your
-site rules, your colour theme and the version you last opened, so they
-survive closing the popup, and to hold your last change in memory for Undo.
+site rules, your colour theme, the version you last opened and how many
+cookies cookieZ has cleared, so they survive closing the popup, and to hold
+your last change in memory for Undo.
 
 **Changing site settings** (`contentSettings`): required only for
 **Block**. This permission is **optional** too. It is not part of the install
