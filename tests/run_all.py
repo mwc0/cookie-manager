@@ -30,6 +30,7 @@ FILES = [
     "test_theme.py",
     "test_transfer.py",
     "test_import_headers.py",
+    "test_encrypted_export.py",
     "test_undo.py",
     "test_size.py",
     "test_pick.py",
