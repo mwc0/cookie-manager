@@ -148,6 +148,30 @@ export async function listProtected() {
   return { entries, error };
 }
 
+// Keeps all of these cookies. Returns { keys, error }, like setProtected().
+export async function protectCookies(cookies) {
+  const { keys, error } = await loadProtected();
+  if (error) {
+    return { keys, error };
+  }
+
+  for (const cookie of cookies) {
+    keys.add(protectionKeyOf(cookie));
+  }
+
+  try {
+    await chrome.storage.local.set({ [STORAGE_KEY]: Array.from(keys) });
+    return { keys, error: null };
+  } catch (storageError) {
+    return {
+      keys,
+      error:
+        "Couldn't save the protected list: " +
+        (storageError && storageError.message ? storageError.message : String(storageError)),
+    };
+  }
+}
+
 // Stops keeping the cookies with these saved keys. Returns { keys, error },
 // like setProtected().
 export async function unprotectKeys(keysToRemove) {

@@ -58,6 +58,34 @@ export async function requestRulesAccess() {
   }
 }
 
+// --- the other optional permissions ----------------------------------------
+//
+// Each is asked for the first time its feature is used, never at install:
+//   "privacy"       blocking other companies' cookies on every site (rules.js)
+//   "browsingData"  clearing a site's data, not just its cookies (popup.js)
+
+export const EVERYWHERE_PERMISSION = "privacy";
+export const SITE_DATA_PERMISSION = "browsingData";
+
+export async function hasPermission(name) {
+  try {
+    return await chrome.permissions.contains({ permissions: [name] });
+  } catch (error) {
+    console.warn("Permission check failed:", error);
+    return false;
+  }
+}
+
+// Must be called straight from a click. Returns { granted, error }.
+export async function requestPermission(name) {
+  try {
+    const granted = await chrome.permissions.request({ permissions: [name] });
+    return { granted, error: null };
+  } catch (error) {
+    return { granted: false, error: describeRequestFailure(error) };
+  }
+}
+
 function describeRequestFailure(error) {
   const message = error && error.message ? error.message : String(error);
 

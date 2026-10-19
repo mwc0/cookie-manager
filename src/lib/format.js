@@ -162,6 +162,127 @@ export function decodeValue(value) {
   return text === original ? null : text;
 }
 
+// --- reading a value: Base64 and dates -------------------------------------
+//
+// Two more kinds of value that are hard to read as they are. Each check is
+// strict, because showing a random token "decoded" into nonsense would be
+// worse than showing nothing. JWTs are left alone: decoding those is for
+// the paid tier, and their dots keep them out of the Base64 check anyway.
+
+// A plausible date, as seconds or milliseconds since 1970: 2001 to 2100.
+function asDate(text) {
+  if (!/^\d{10}$|^\d{13}$/.test(text)) {
+    return null;
+  }
+  const ms = text.length === 13 ? Number(text) : Number(text) * 1000;
+  if (ms < Date.UTC(2001, 0, 1) || ms > Date.UTC(2100, 0, 1)) {
+    return null;
+  }
+  return new Date(ms).toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }) + " (your time)";
+}
+
+// Base64 or its URL-safe form, decoded, if what comes out is readable text.
+function asBase64(text) {
+  if (text.length < 12 || !/^[A-Za-z0-9+/_-]+={0,2}$/.test(text)) {
+    return null;
+  }
+  const plain = text.replace(/=+$/, "").replace(/-/g, "+").replace(/_/g, "/");
+  if (plain.length % 4 === 1) {
+    return null;
+  }
+  let bytes;
+  try {
+    const binary = atob(plain + "===".slice((plain.length + 3) % 4));
+    bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+  } catch (error) {
+    return null;
+  }
+  let decoded;
+  try {
+    decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch (error) {
+    return null; // Not text, so most likely a random token.
+  }
+  // Readable means no control characters apart from tabs and new lines.
+  if (decoded.trim() === "" || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(decoded)) {
+    return null;
+  }
+  return decoded;
+}
+
+// How a value can be shown more readably: { label, text }, or null if it's
+// already as readable as it gets. The editor shows `text` under the value,
+// headed by `label`. It never changes the value itself.
+export function describeValue(value) {
+  const original = String(value == null ? "" : value);
+  const trimmed = original.trim();
+
+  const date = asDate(trimmed);
+  if (date) {
+    return { label: "As a date", text: date };
+  }
+
+  const base64 = asBase64(trimmed);
+  if (base64 !== null) {
+    return { label: "Decoded from Base64", text: decodeValue(base64) || base64 };
+  }
+
+  const decoded = decodeValue(original);
+  if (decoded === null) {
+    return null;
+  }
+  const wasUrl = /%[0-9a-f]{2}/i.test(original);
+  return { label: wasUrl ? "Decoded" : "Laid out", text: decoded };
+}
+
+// --- editing a value as JSON ----------------------------------------------
+
+// True for a value that is a JSON object or list. Plain numbers and quoted
+// strings are JSON too, but there's nothing to lay out in those.
+export function isJsonValue(value) {
+  const text = String(value == null ? "" : value).trim();
+  if (!text.startsWith("{") && !text.startsWith("[")) {
+    return false;
+  }
+  try {
+    JSON.parse(text);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+// True if the value is JSON written with no spaces, the way it would be
+// saved. Only then is editing it laid out safe by default, because saving
+// writes it back exactly as it was unless something was changed.
+export function isCompactJson(value) {
+  return isJsonValue(value) && JSON.stringify(JSON.parse(value)) === value;
+}
+
+export function prettyJson(value) {
+  return JSON.stringify(JSON.parse(value), null, 2);
+}
+
+// The laid-out text back as one line, for saving. Returns { value, error }.
+export function compactJson(text) {
+  try {
+    return { value: JSON.stringify(JSON.parse(text)), error: null };
+  } catch (error) {
+    return {
+      value: null,
+      error: "The value isn't valid JSON: " + (error && error.message ? error.message : String(error)) + ".",
+    };
+  }
+}
+
 export function truncate(text, max) {
   const value = String(text == null ? "" : text);
   if (value.length <= max) {

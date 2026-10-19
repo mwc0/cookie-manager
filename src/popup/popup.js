@@ -6,9 +6,14 @@ import {
   requestHostAccess,
   hasRulesAccess,
   requestRulesAccess,
+  hasPermission,
+  requestPermission,
+  EVERYWHERE_PERMISSION,
+  SITE_DATA_PERMISSION,
 } from "../lib/permissions.js";
 import {
   ALLOW,
+  SESSION,
   OWN_ONLY,
   BLOCK,
   loadRules,
@@ -22,11 +27,18 @@ import {
   setSiteRule,
   removeSiteRule,
   setEverywhere,
+  setDeleteOnBlock,
   clearRules,
+  everywhereAvailable,
+  thirdPartyStatus,
+  rulesToBackup,
+  rulesFromBackup,
+  replaceRules,
 } from "../lib/rules.js";
 import {
   getCookiesForPage,
   getCookiesForScope,
+  getCookiesForDomain,
   removeCookie,
   removeCookies,
   writeCookie,
@@ -46,6 +58,7 @@ import {
   toHeader,
   toPlaywright,
   toCurl,
+  toSetCookie,
   parseImport,
   planImport,
   matchSentCookies,
@@ -61,6 +74,8 @@ import {
   pruneProtected,
   listProtected,
   unprotectKeys,
+  protectCookies,
+  protectionKeyOf,
 } from "../lib/protect.js";
 import {
   pluralise,
@@ -72,7 +87,11 @@ import {
   formatExpiryFull,
   toLocalDateTimeValue,
   fromLocalDateTimeValue,
-  decodeValue,
+  describeValue,
+  isJsonValue,
+  isCompactJson,
+  prettyJson,
+  compactJson,
 } from "../lib/format.js";
 import {
   loadTheme,
@@ -89,6 +108,7 @@ import {
   clearLastChange,
   undoChange,
   describeAge,
+  valuesOf,
 } from "../lib/undo.js";
 
 // The site in the current tab, as { origin, hostname }.
@@ -160,6 +180,16 @@ let activeFilters = new Set();
 // src/lib/rules.js.
 let rules = { everywhere: ALLOW, sites: {} };
 let rulesAllowed = false;
+
+// Whether the two other optional permissions have been given, found out
+// when the popup opens. Knowing in advance means a click can open Chrome's
+// prompt straight away, while Chrome still counts it as coming from the
+// click.
+let everywhereAllowed = false;
+let siteDataAllowed = false;
+
+// The cookies "Clear site data" will delete, counted when it asks.
+let siteDataCookies = [];
 
 // The cookies "Delete them" on the rules screen would remove. Counted when
 // the offer is made, so the number shown is the number deleted.
@@ -281,6 +311,7 @@ async function loadCurrentPage() {
   showState("main");
   await loadSiteRules();
   await refresh();
+  await showWhatsNew();
   await offerStoredUndo();
 }
 
@@ -838,6 +869,8 @@ function showPicked() {
   all.disabled = shownCookies.length === 0;
 
   const count = pickedCookies().length;
+  el("picked-bar").hidden = count === 0;
+  el("picked-count").textContent = pluralise(count, "cookie", "cookies") + " ticked:";
   el("scope-picked-row").hidden = count === 0;
   el("scope-target-picked").textContent = count > 0 ? pluralise(count, "cookie", "cookies") : "";
   if (count === 0 && selectedScope() === "picked") {
@@ -927,10 +960,14 @@ async function refreshScope() {
 
 // --- delete flow -----------------------------------------------------------
 
+// Also backs out of "Clear site data", whose count would be out of date too.
 function cancelConfirm() {
   el("confirm-row").hidden = true;
+  el("data-confirm").hidden = true;
+  siteDataCookies = [];
   el("delete-button").hidden = false;
   el("export-button").hidden = false;
+  el("data-button").hidden = false;
 }
 
 // " from example.com" for one site, " across 3 sites" for more.
@@ -945,6 +982,7 @@ function startConfirm() {
   el("main-message").hidden = true;
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
+  el("data-button").hidden = true;
   el("confirm-row").hidden = false;
   el("confirm-yes").focus();
 }
@@ -1013,7 +1051,11 @@ function openEditor(cookie) {
   const secure = isNew ? page.origin.startsWith("https:") : Boolean(cookie.secure);
 
   el("field-name").value = isNew ? "" : cookie.name;
-  el("field-value").value = isNew ? "" : cookie.value;
+  const value = isNew ? "" : cookie.value;
+  const asJson = isCompactJson(value);
+  el("field-json").checked = asJson;
+  el("field-value").value = asJson ? prettyJson(value) : value;
+  showJsonChoice();
 
   // A domain-wide cookie is stored with a leading dot (".example.com"). The
   // dot is hidden here because the Host-only checkbox already shows that.
@@ -1062,7 +1104,7 @@ function openEditor(cookie) {
 // Says how big the cookie is once it's close to Chrome's limit, and turns
 // red once it's over. Updated as the name or value is typed.
 function showValueSize() {
-  const bytes = cookieBytes({ name: el("field-name").value, value: el("field-value").value });
+  const bytes = cookieBytes({ name: el("field-name").value, value: valueToSave().value || el("field-value").value });
   const note = el("value-size");
   note.hidden = bytes < LARGE_COOKIE_BYTES;
   note.textContent =
@@ -1095,12 +1137,58 @@ function duplicateCookie() {
   name.select();
 }
 
-// Shows the value URL-decoded or laid out as JSON, when that's easier to
-// read. Updated as the value is typed. See decodeValue() in format.js.
+// Shows the value decoded, laid out or as a date, when that's easier to
+// read. Updated as the value is typed. See describeValue() in format.js.
+// Not while editing as JSON: the box above already shows it laid out.
 function showDecoded() {
-  const decoded = decodeValue(el("field-value").value);
-  el("value-decoded").hidden = decoded === null;
-  el("value-decoded-text").textContent = decoded === null ? "" : decoded;
+  const shown = el("field-json").checked ? null : describeValue(el("field-value").value);
+  el("value-decoded").hidden = shown === null;
+  el("value-decoded-label").textContent = shown ? shown.label : "Decoded";
+  el("value-decoded-text").textContent = shown ? shown.text : "";
+}
+
+// --- editing a value as JSON ---------------------------------------------
+
+// The value as it will be saved: on one line again if it's being edited as
+// JSON. Returns { value, error }; error is set if that JSON doesn't parse.
+function valueToSave() {
+  const text = el("field-value").value;
+  return el("field-json").checked ? compactJson(text) : { value: text, error: null };
+}
+
+// "Edit as JSON" is offered while the value is JSON, and stays while it's
+// ticked, so a typing mistake doesn't make it vanish.
+function showJsonChoice() {
+  el("value-json-row").hidden = !el("field-json").checked && !isJsonValue(el("field-value").value);
+}
+
+// Ticking lays the value out. Unticking puts it back on one line, unless
+// it no longer parses, in which case it's left as typed.
+function toggleJson() {
+  const box = el("field-value");
+  if (el("field-json").checked) {
+    if (isJsonValue(box.value)) {
+      box.value = prettyJson(box.value.trim());
+    }
+  } else {
+    const compact = compactJson(box.value);
+    if (!compact.error) {
+      box.value = compact.value;
+    }
+  }
+  showJsonChoice();
+  showDecoded();
+  showValueSize();
+}
+
+// Copies the cookie in the editor as a Set-Cookie line, as it would be saved.
+function copySetCookie() {
+  const values = readForm();
+  copyWithFeedback(el("edit-setcookie"), toSetCookie({
+    ...values,
+    domain: values.domain,
+    expirationDate: values.session ? null : values.expirationDate,
+  }));
 }
 
 // Focus goes back to the cookie's row, for anyone using the keyboard.
@@ -1124,7 +1212,7 @@ function readForm() {
 
   return {
     name: el("field-name").value.trim(),
-    value: el("field-value").value,
+    value: valueToSave().value ?? el("field-value").value,
     domain: el("field-domain").value.trim(),
     path: el("field-path").value.trim() || "/",
     sameSite: el("field-samesite").value,
@@ -1176,6 +1264,12 @@ function describeExpiryChange(values, saved) {
 }
 
 async function saveEditor() {
+  // JSON that no longer parses would be saved as broken text, so stop.
+  const json = valueToSave();
+  if (json.error) {
+    showFormErrors([json.error + " Fix it, or untick \"Edit as JSON\" to save it as typed."]);
+    return;
+  }
   const values = readForm();
 
   // Check first, because Chrome's own error doesn't say what's wrong.
@@ -1250,6 +1344,58 @@ async function toggleProtected(cookie, shouldKeep) {
   // Redraw, and recount, since kept cookies aren't deleted.
   drawTable();
   await refreshScope();
+}
+
+// --- things to do to every ticked cookie ----------------------------------
+
+async function keepPicked(shouldKeep) {
+  const cookies = pickedCookies();
+  const { keys, error } = shouldKeep
+    ? await protectCookies(cookies)
+    : await unprotectKeys(cookies.map(protectionKeyOf));
+  protectedKeys = keys;
+  if (error) {
+    showMainMessage(error, true);
+    return;
+  }
+  showMainMessage(
+    (shouldKeep ? "Keeping " : "No longer keeping ") + pluralise(cookies.length, "cookie", "cookies") + ".",
+    false
+  );
+  drawTable();
+  await refreshScope();
+}
+
+// Sets every ticked cookie to expire `seconds` from now. Each is written the
+// usual way, and Undo puts the old dates back.
+async function expirePicked(seconds) {
+  const cookies = pickedCookies();
+  const expirationDate = Math.floor(Date.now() / 1000) + seconds;
+  const changed = [];
+  const failures = [];
+
+  saving = true;
+  try {
+    for (const cookie of cookies) {
+      const { ok, error } = await writeCookie(cookie, { ...valuesOf(cookie), session: false, expirationDate });
+      if (ok) {
+        changed.push(cookie);
+      } else {
+        failures.push(cookie.name + ": " + error);
+      }
+    }
+  } finally {
+    saving = false;
+  }
+
+  const when = { 3600: "1 hour", 86400: "1 day", 604800: "1 week", 31536000: "1 year" }[seconds];
+  showMainMessage(
+    pluralise(changed.length, "cookie now expires", "cookies now expire") + " in " + when + "." +
+      (failures.length > 0 ? " Chrome refused " + failures.join(" ") : ""),
+    failures.length > 0
+  );
+  await offerUndo(el("main-message"), { kind: "expiry", restore: changed });
+  await refresh();
 }
 
 // --- the list of kept cookies ----------------------------------------------
@@ -1384,9 +1530,13 @@ async function closeKept() {
 // What each choice is called, in the list and in the messages.
 const RULE_NAMES = {
   [ALLOW]: "Allow all cookies",
+  [SESSION]: "Clear when Chrome closes",
   [OWN_ONLY]: "Block other companies' cookies",
   [BLOCK]: "Block all cookies",
 };
+
+// The backup chosen with "Load a copy", waiting for "Replace my rules".
+let loadedBackup = null;
 
 // The rule this page is getting. Without the permission Chrome isn't
 // following any rule, whatever is saved.
@@ -1401,6 +1551,8 @@ async function loadSiteRules() {
   const loaded = await loadRules();
   rules = loaded.rules;
   rulesAllowed = await hasRulesAccess();
+  everywhereAllowed = await hasPermission(EVERYWHERE_PERMISSION);
+  siteDataAllowed = await hasPermission(SITE_DATA_PERMISSION);
 
   if (loaded.error) {
     showMainMessage(loaded.error, true);
@@ -1421,16 +1573,20 @@ async function loadSiteRules() {
   }
 }
 
-// The link next to the cookie count. It says what the rule is doing when
-// it's blocking something on this site.
+// The Block button in the header. It says what's being done to this site's
+// cookies, and lights up while anything is.
 function showRulesLink() {
   const rule = pageRule();
-  el("rules-open").textContent =
-    rule === BLOCK
-      ? "Blocking all cookies"
-      : rule === OWN_ONLY
-        ? "Blocking other companies' cookies"
-        : "Site rules";
+  const labels = {
+    [ALLOW]: ["Block", "Choose which cookies this site may set"],
+    [SESSION]: ["Clears on close", "Chrome deletes this site's cookies when it closes"],
+    [OWN_ONLY]: ["Blocking others", "Other companies' cookies are blocked on this site"],
+    [BLOCK]: ["Blocked", "Every cookie is blocked on this site"],
+  };
+  const [label, title] = labels[rule] || labels[ALLOW];
+  el("rules-open-label").textContent = label;
+  el("rules-open").title = title;
+  el("rules-open").classList.toggle("on", rule !== ALLOW);
 }
 
 async function openRules() {
@@ -1438,6 +1594,7 @@ async function openRules() {
   el("rules-message").hidden = true;
   el("rules-everywhere-confirm").hidden = true;
   cancelRulesConfirm();
+  cancelLoad();
   hideCleanup();
   showState("rules");
   await drawRules();
@@ -1492,6 +1649,9 @@ async function drawRules() {
 
   setRadio("site-rule", rules.sites[site] || rules.everywhere, !canChange);
   setRadio("everywhere-rule", rules.everywhere, !canChange);
+  el("rules-delete-on-block").checked = rules.deleteOnBlock;
+  el("rules-delete-on-block").disabled = !canChange;
+  await showThirdPartyNote(canChange);
 
   const entries = listRules(rules);
   const rows = el("rules-rows");
@@ -1510,6 +1670,12 @@ async function drawRules() {
     rule.textContent = RULE_NAMES[entry.rule];
     row.appendChild(rule);
 
+    // Filled in below, once counted.
+    const count = document.createElement("td");
+    count.className = "rules-count";
+    count.textContent = "…";
+    row.appendChild(count);
+
     const action = document.createElement("td");
     action.className = "rules-action";
     const button = document.createElement("button");
@@ -1527,8 +1693,49 @@ async function drawRules() {
 
   el("rules-table").hidden = entries.length === 0;
   el("rules-empty").hidden = entries.length > 0;
-  el("rules-clear").hidden = !hasAnyRule(rules);
+  el("rules-clear").hidden = !hasAnyRule(rules) || !el("rules-confirm").hidden;
   el("rules-clear").disabled = !canChange;
+  el("rules-backup").disabled = !hasAnyRule(rules);
+  el("rules-load").disabled = !canChange;
+
+  await countRuleCookies(entries);
+}
+
+// How many cookies each listed site has now. Only the sites on the list are
+// looked up, never any others.
+async function countRuleCookies(entries) {
+  const cells = el("rules-rows").querySelectorAll("td.rules-count");
+  await Promise.all(entries.map(async (entry, index) => {
+    let text = "?";
+    try {
+      const found = await getCookiesForDomain(entry.site);
+      text = formatCount(found.length);
+    } catch (error) {
+      console.warn("Couldn't count cookies for " + entry.site + ":", error);
+    }
+    if (cells[index]) {
+      cells[index].textContent = text;
+    }
+  }));
+}
+
+// The line under "On every other site". It says when Chrome's own setting,
+// another extension or an administrator is already deciding about other
+// companies' cookies, since cookieZ can't then change it.
+async function showThirdPartyNote(canChange) {
+  const note = el("rules-everywhere-note");
+  const option = document.querySelector('input[name="everywhere-rule"][value="own-only"]');
+  const status = await thirdPartyStatus();
+  let text = "";
+  if (status && !status.canChange) {
+    text = "Another extension or your administrator controls whether other companies' cookies are blocked, so cookieZ can't change it.";
+    option.disabled = true;
+  } else if (status && !status.allowed && !status.ours) {
+    text = "Chrome is already blocking other companies' cookies on every site, in its own settings.";
+  }
+  option.disabled = option.disabled || !canChange;
+  note.textContent = text;
+  note.hidden = text === "";
 }
 
 // The button on the rules screen that asks Chrome for the permission.
@@ -1577,7 +1784,9 @@ async function chooseSiteRule(choice) {
       ? "All cookies are now blocked on " + site + "."
       : choice === OWN_ONLY
         ? "Other companies' cookies are now blocked on " + site + "."
-        : site + " may set any cookie.",
+        : choice === SESSION
+          ? "Chrome will delete " + site + "'s cookies every time it closes."
+          : site + " may set any cookie.",
     false
   );
   if (choice === BLOCK) {
@@ -1603,6 +1812,13 @@ async function offerCleanup(site) {
   }
 
   cleanupCookies = deletable;
+
+  // "Delete without asking": straight through the usual delete, with Undo.
+  if (rules.deleteOnBlock) {
+    await runCleanup(el("rules-message").textContent + " ");
+    return;
+  }
+
   el("rules-cleanup-text").textContent =
     "It still has " +
     pluralise(deletable.length, "cookie", "cookies") +
@@ -1618,32 +1834,64 @@ function hideCleanup() {
   el("rules-cleanup").hidden = true;
 }
 
-async function runCleanup() {
+// `before` is put in front of the result, when deleting follows straight on
+// from blocking.
+async function runCleanup(before = "") {
   const cookies = cleanupCookies;
   hideCleanup();
 
   const { removed, removedCookies, failed } = await removeCookies(cookies);
   showRulesMessage(
-    failed.length === 0
+    (typeof before === "string" ? before : "") +
+    (failed.length === 0
       ? "Deleted " + pluralise(removed, "cookie", "cookies") + "."
       : "Deleted " +
           pluralise(removed, "cookie", "cookies") +
           ". " +
           pluralise(failed.length, "cookie", "cookies") +
-          " could not be deleted, and may be protected by the browser.",
+          " could not be deleted, and may be protected by the browser."),
     failed.length > 0
   );
   await offerUndo(el("rules-message"), { kind: "delete", restore: removedCookies });
 }
 
+async function toggleDeleteOnBlock() {
+  const result = await setDeleteOnBlock(el("rules-delete-on-block").checked);
+  rules = result.rules;
+  el("rules-delete-on-block").checked = rules.deleteOnBlock;
+  if (result.error) {
+    showRulesMessage(result.error, true);
+  }
+}
+
 // "Block all cookies" for every other site changes every site at once, so
 // it asks first. The choice is put back until the answer.
-function askEverywhere(choice) {
+//
+// "Block other companies' cookies" needs one more permission, asked for
+// here, from the click, the first time.
+async function askEverywhere(choice) {
   if (choice === BLOCK && rules.everywhere !== BLOCK) {
     setRadio("everywhere-rule", rules.everywhere, false);
     el("rules-everywhere-confirm").hidden = false;
     el("rules-everywhere-no").focus();
     return;
+  }
+  if (choice === OWN_ONLY && !everywhereAllowed) {
+    const { granted, error } = await requestPermission(EVERYWHERE_PERMISSION);
+    everywhereAllowed = granted;
+    if (!granted) {
+      setRadio("everywhere-rule", rules.everywhere, false);
+      showRulesMessage(
+        error || "Chrome didn't give permission, so nothing has changed. Your other rules work as before.",
+        Boolean(error)
+      );
+      return;
+    }
+    if (!everywhereAvailable()) {
+      setRadio("everywhere-rule", rules.everywhere, false);
+      showRulesMessage("Permission given. Close cookieZ and open it again, then choose this again.", false);
+      return;
+    }
   }
   chooseEverywhere(choice);
 }
@@ -1662,8 +1910,210 @@ async function chooseEverywhere(choice) {
   showRulesMessage(
     choice === BLOCK
       ? "Cookies are now blocked on every site without a rule of its own."
-      : "Cookies are allowed again on every site without a rule of its own.",
+      : choice === OWN_ONLY
+        ? "Other companies' cookies are now blocked on every site without a rule of its own."
+        : "Cookies are allowed again on every site without a rule of its own.",
     false
+  );
+}
+
+// --- clearing a site's data -------------------------------------------------
+//
+// Cookies go through cookieZ's own delete, so Kept cookies stay and Undo can
+// put them back. Everything else the site stores is cleared by Chrome
+// (chrome.browsingData), which can't count it, list it, or put it back. The
+// question before it says so.
+
+// What Chrome clears for the site, besides cookies.
+const SITE_DATA_TYPES = {
+  localStorage: true,
+  indexedDB: true,
+  cacheStorage: true,
+  serviceWorkers: true,
+  fileSystems: true,
+};
+
+// The site's addresses: the exact one the tab is on, port included (a
+// site on localhost:3000 stores its data under that), then the site with
+// and without "www.", over HTTPS and HTTP.
+function siteDataOrigins() {
+  const base = baseHostOf(page.hostname);
+  const origins = new Set([page.origin]);
+  for (const host of [page.hostname, base, "www." + base]) {
+    origins.add("https://" + host);
+    origins.add("http://" + host);
+  }
+  return [...origins];
+}
+
+async function startSiteDataClear() {
+  if (!siteDataAllowed) {
+    const { granted, error } = await requestPermission(SITE_DATA_PERMISSION);
+    siteDataAllowed = granted;
+    if (!granted) {
+      showMainMessage(error || "Chrome didn't give permission, so nothing was cleared.", Boolean(error));
+      return;
+    }
+  }
+  if (!chrome.browsingData) {
+    showMainMessage("Permission given. Close cookieZ and open it again to finish.", false);
+    return;
+  }
+
+  let found;
+  try {
+    found = await getCookiesForScope("domain", page);
+  } catch (error) {
+    showMainMessage("Couldn't count this site's cookies: " + error.message, true);
+    return;
+  }
+  const { deletable, kept } = partitionByProtection(protectedKeys, found);
+  siteDataCookies = deletable;
+
+  const site = baseHostOf(page.hostname);
+  el("data-confirm-text").textContent =
+    (deletable.length > 0
+      ? "Delete " + pluralise(deletable.length, "cookie", "cookies") + " from " + site + " and clear"
+      : "Clear") +
+    " everything else " + site + " has stored: local storage, databases, cache storage and offline files?" +
+    (kept.length > 0 ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone." : "") +
+    " Undo can put the cookies back, but not the rest.";
+
+  el("main-message").hidden = true;
+  el("delete-button").hidden = true;
+  el("export-button").hidden = true;
+  el("data-button").hidden = true;
+  el("data-confirm").hidden = false;
+  el("data-no").focus();
+}
+
+function cancelSiteDataClear() {
+  cancelConfirm();
+}
+
+async function runSiteDataClear() {
+  const cookies = siteDataCookies;
+  const site = baseHostOf(page.hostname);
+  cancelSiteDataClear();
+
+  const { removed, removedCookies, failed } = await removeCookies(cookies);
+  let dataError = null;
+  try {
+    await chrome.browsingData.remove({ origins: siteDataOrigins() }, SITE_DATA_TYPES);
+  } catch (error) {
+    dataError = error && error.message ? error.message : String(error);
+  }
+
+  showMainMessage(
+    (cookies.length > 0 ? "Deleted " + pluralise(removed, "cookie", "cookies") + " and cleared " : "Cleared ") +
+      site + "'s other stored data." +
+      (failed.length > 0 ? " " + pluralise(failed.length, "cookie", "cookies") + " could not be deleted." : "") +
+      (dataError ? " Chrome couldn't clear the rest: " + dataError : "") +
+      " Reload the site's tab to start it afresh.",
+    failed.length > 0 || Boolean(dataError)
+  );
+  await offerUndo(el("main-message"), { kind: "delete", restore: removedCookies });
+  await refresh();
+}
+
+// --- what's new ---------------------------------------------------------------
+
+// One line, shown the first time cookieZ opens on a new version. Only the
+// version number last seen is saved.
+const WHATS_NEW = {
+  "1.7.0":
+    "New: the Block button at the top. You can now block other companies' cookies on every site, " +
+    "and clear a site's stored data as well as its cookies.",
+};
+
+async function showWhatsNew() {
+  const version = chrome.runtime.getManifest().version;
+  try {
+    const stored = await chrome.storage.local.get("seenVersion");
+    if (stored.seenVersion === version) {
+      return;
+    }
+    await chrome.storage.local.set({ seenVersion: version });
+  } catch (error) {
+    return; // Not worth troubling anyone about.
+  }
+  if (WHATS_NEW[version]) {
+    el("whats-new-text").textContent = WHATS_NEW[version];
+    el("whats-new").hidden = false;
+  }
+}
+
+// --- a copy of the rules ---------------------------------------------------
+
+// Saves the rules as a file, the same way Export saves cookies.
+function saveRulesBackup() {
+  const url = URL.createObjectURL(new Blob([rulesToBackup(rules)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "cookiez-site-rules.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  showRulesMessage("Saving your rules as cookiez-site-rules.json.", false);
+}
+
+// Reads a chosen file and asks before replacing anything.
+async function readRulesBackup() {
+  const input = el("rules-load");
+  const file = input.files && input.files[0];
+  input.value = "";
+  if (!file) {
+    return;
+  }
+
+  let text;
+  try {
+    text = await file.text();
+  } catch (error) {
+    showRulesMessage("Couldn't read that file: " + (error && error.message ? error.message : error), true);
+    return;
+  }
+
+  const { rules: incoming, error } = rulesFromBackup(text);
+  if (error) {
+    showRulesMessage(error, true);
+    return;
+  }
+
+  // The every-site choice needs a permission that can only be asked for
+  // from a click on that choice, so without it the copy loads without it.
+  let note = "";
+  if (incoming.everywhere === OWN_ONLY && !everywhereAllowed) {
+    incoming.everywhere = ALLOW;
+    note = " It blocked other companies' cookies on every site; choose that again after loading.";
+  }
+
+  loadedBackup = incoming;
+  const count = Object.keys(incoming.sites).length;
+  el("rules-load-text").textContent =
+    "Replace your rules with the " + pluralise(count, "site", "sites") + " in this file?" + note;
+  el("rules-load-confirm").hidden = false;
+  el("rules-load-no").focus();
+}
+
+function cancelLoad() {
+  loadedBackup = null;
+  el("rules-load-confirm").hidden = true;
+}
+
+async function loadRulesBackup() {
+  const incoming = loadedBackup;
+  cancelLoad();
+  if (!incoming) {
+    return;
+  }
+  const result = await replaceRules(incoming);
+  rules = result.rules;
+  await drawRules();
+  showRulesMessage(
+    result.error || "Loaded " + pluralise(Object.keys(incoming.sites).length, "site rule", "site rules") + ".",
+    Boolean(result.error)
   );
 }
 
@@ -1769,6 +2219,9 @@ function describeChange(change) {
   }
   if (change.kind === "create") {
     return "Created " + change.remove[0].name;
+  }
+  if (change.kind === "expiry") {
+    return "Changed when " + pluralise(change.restore.length, "cookie expires", "cookies expire");
   }
 
   const affected = [...change.restore, ...change.remove];
@@ -2337,7 +2790,21 @@ el("rules-everywhere-no").addEventListener("click", () => {
   el("rules-everywhere-confirm").hidden = true;
   focusChecked("everywhere-rule");
 });
-el("rules-cleanup-yes").addEventListener("click", runCleanup);
+el("rules-cleanup-yes").addEventListener("click", () => runCleanup());
+el("rules-delete-on-block").addEventListener("change", toggleDeleteOnBlock);
+el("data-button").addEventListener("click", startSiteDataClear);
+el("data-yes").addEventListener("click", runSiteDataClear);
+el("data-no").addEventListener("click", () => {
+  cancelSiteDataClear();
+  el("data-button").focus();
+});
+el("whats-new-close").addEventListener("click", () => {
+  el("whats-new").hidden = true;
+});
+el("rules-backup").addEventListener("click", saveRulesBackup);
+el("rules-load").addEventListener("change", readRulesBackup);
+el("rules-load-yes").addEventListener("click", loadRulesBackup);
+el("rules-load-no").addEventListener("click", cancelLoad);
 el("rules-cleanup-no").addEventListener("click", hideCleanup);
 el("rules-clear").addEventListener("click", startRulesConfirm);
 el("rules-confirm-yes").addEventListener("click", clearAllRules);
@@ -2410,13 +2877,31 @@ el("import-move").addEventListener("change", async () => {
   el("import-move").focus();
 });
 
+// Copies the value as it would be saved: on one line, if edited as JSON.
 el("value-copy").addEventListener("click", () =>
-  copyWithFeedback(el("value-copy"), el("field-value").value)
+  copyWithFeedback(el("value-copy"), valueToSave().value ?? el("field-value").value)
 );
 el("field-value").addEventListener("input", showDecoded);
 el("field-value").addEventListener("input", showValueSize);
 el("field-name").addEventListener("input", showValueSize);
 el("edit-duplicate").addEventListener("click", duplicateCookie);
+el("edit-setcookie").addEventListener("click", copySetCookie);
+el("field-json").addEventListener("change", toggleJson);
+el("field-value").addEventListener("input", showJsonChoice);
+el("picked-keep").addEventListener("click", () => keepPicked(true));
+el("picked-unkeep").addEventListener("click", () => keepPicked(false));
+// Unticks every cookie, including any a search is hiding.
+el("picked-clear").addEventListener("click", () => {
+  const before = picked.size;
+  picked = new Set();
+  for (const box of document.querySelectorAll("#cookie-rows td.pick input")) {
+    box.checked = false;
+  }
+  scopeAfterPicking(before);
+});
+for (const button of document.querySelectorAll("[data-picked-expire]")) {
+  button.addEventListener("click", () => expirePicked(Number(button.dataset.pickedExpire)));
+}
 for (const button of document.querySelectorAll("[data-expire-in]")) {
   button.addEventListener("click", () => expireIn(Number(button.dataset.expireIn)));
 }
@@ -2468,6 +2953,10 @@ document.addEventListener("keydown", (event) => {
       event.preventDefault();
       cancelConfirm();
       el("delete-button").focus();
+    } else if (currentState() === "main" && !el("data-confirm").hidden) {
+      event.preventDefault();
+      cancelConfirm();
+      el("data-button").focus();
     }
     return;
   }

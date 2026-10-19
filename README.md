@@ -26,12 +26,16 @@ A Chrome cookie manager (Manifest V3)
   you delete. It's a guard on this extension's own delete button, not
   protection from the website: nothing here stops a site changing its own
   cookies.
-- Lets you choose which sites may set cookies: allow all, block other
-  companies' cookies, or block every cookie, for one site or for every site
-  except the ones you allow. The extension has no background script, so it
-  doesn't do the blocking. It gives your choice to Chrome, and Chrome
-  enforces it, which is why it works while the popup is closed and why
-  removing the extension removes the rules.
+- Lets you choose which sites may set cookies, from the Block button: allow
+  all, clear them when Chrome closes, block other companies' cookies, or
+  block every cookie, for one site; or block other companies' cookies on
+  every site, or everything except the sites you allow. The extension has
+  no background script, so it doesn't do the blocking. It gives your choice
+  to Chrome, and Chrome enforces it, which is why it works while the popup
+  is closed and why removing the extension removes the rules.
+- Clears a site's stored data (local storage, databases, cache storage,
+  offline files) along with its cookies, for the sites that need more than
+  their cookies cleared before you can log in again.
 
 ## Permissions
 
@@ -40,11 +44,16 @@ Access to websites is **optional** and requested at runtime, the first time you
 open the popup. Chrome will not release a single cookie to an extension without
 it.
 
-Setting site rules needs one more permission, `contentSettings`. It is
-**optional** too, and only requested if you click the button on the Site rules
-screen. Chrome's wording for it mentions the camera and microphone, because
-one permission covers every site setting. The code only touches the cookie
-setting: see `src/lib/rules.js`.
+Three more permissions are **optional** too, each requested only the first
+time you use the feature that needs it:
+
+- `contentSettings`, for blocking. Chrome's wording for it mentions the
+  camera and microphone, because one permission covers every site setting.
+  The code only touches the cookie setting: see `src/lib/rules.js`.
+- `privacy`, only for blocking other companies' cookies on every site. It
+  turns on Chrome's own switch for that, and nothing else.
+- `browsingData`, only for Clear site data, which clears one site's stored
+  data when you ask.
 
 ## What it will never do
 

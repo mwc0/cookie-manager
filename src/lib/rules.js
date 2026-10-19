@@ -11,22 +11,33 @@
 //   2. Chrome can't remove one rule, only all of them. So every change clears
 //      Chrome's copy and sets every rule again. See applyRules().
 //
-// What's saved is site names and the rule for each. Never cookies, never
-// values. store/PRIVACY.md says so, so change it there too if this changes.
+// "Block other companies' cookies" on every site can't be written as one of
+// those rules: a rule says "cookies from X, on pages of Y", and no pattern
+// means "from a different site than the page". So that one choice uses
+// Chrome's own switch for third-party cookies instead
+// (chrome.privacy.websites.thirdPartyCookiesAllowed). A site's own rule still
+// wins over it, which is what keeps the allowed list working.
 //
-// All of this needs the optional "contentSettings" permission, which is
-// asked for on the rules screen. See permissions.js.
+// What's saved is site names, the rule for each, and two settings. Never
+// cookies, never values. store/PRIVACY.md says so, so change it there too
+// if this changes.
+//
+// Site rules need the optional "contentSettings" permission, and the
+// every-site choice also needs "privacy". Both are asked for on the rules
+// screen. See permissions.js.
 
 import { baseHostOf } from "./cookies.js";
 
 const STORAGE_KEY = "siteRules";
 
-// The three choices for a site. "Every other site" is ALLOW or BLOCK.
+// The choices for a site. "Every other site" can be ALLOW, OWN_ONLY or BLOCK.
 export const ALLOW = "allow";
+export const SESSION = "session";
 export const OWN_ONLY = "own-only";
 export const BLOCK = "block";
 
-const SITE_CHOICES = [ALLOW, OWN_ONLY, BLOCK];
+const SITE_CHOICES = [ALLOW, SESSION, OWN_ONLY, BLOCK];
+const EVERYWHERE_CHOICES = [ALLOW, OWN_ONLY, BLOCK];
 const ALL_URLS = "<all_urls>";
 
 // A made-up address, for asking Chrome what it would do with a cookie from
@@ -34,31 +45,38 @@ const ALL_URLS = "<all_urls>";
 const PROBE = "https://cookiez-probe.invalid/";
 
 function emptyRules() {
-  return { everywhere: ALLOW, sites: {} };
+  return { everywhere: ALLOW, sites: {}, deleteOnBlock: false };
 }
 
 function describe(error) {
   return error && error.message ? error.message : String(error);
 }
 
-// Whatever was in storage, as { everywhere, sites } with nothing unexpected
-// in it. Anything this file didn't write is dropped.
+// Whatever was in storage (or in a backup file), with nothing unexpected in
+// it. Anything this file didn't write is dropped.
 function tidy(stored) {
   const rules = emptyRules();
   if (!stored || typeof stored !== "object") {
     return rules;
   }
-  if (stored.everywhere === BLOCK) {
-    rules.everywhere = BLOCK;
+  if (EVERYWHERE_CHOICES.includes(stored.everywhere)) {
+    rules.everywhere = stored.everywhere;
   }
   if (stored.sites && typeof stored.sites === "object") {
     for (const [site, rule] of Object.entries(stored.sites)) {
-      if (site && SITE_CHOICES.includes(rule)) {
+      if (isSiteName(site) && SITE_CHOICES.includes(rule)) {
         rules.sites[site] = rule;
       }
     }
   }
+  rules.deleteOnBlock = stored.deleteOnBlock === true;
   return rules;
+}
+
+// A host name or IP address, and nothing that could become part of a
+// pattern Chrome would read differently.
+function isSiteName(site) {
+  return typeof site === "string" && /^(\[[0-9a-f:.]+\]|[a-z0-9.-]+)$/i.test(site) && !site.startsWith(".");
 }
 
 // The saved rules. If storage can't be read, this returns no rules plus an
@@ -108,7 +126,7 @@ export function ruleFor(rules, hostname) {
 }
 
 export function hasAnyRule(rules) {
-  return rules.everywhere === BLOCK || Object.keys(rules.sites).length > 0;
+  return rules.everywhere !== ALLOW || Object.keys(rules.sites).length > 0;
 }
 
 // Every site with a rule of its own, sorted by name.
@@ -125,7 +143,9 @@ export function patternFor(site) {
   return isAddress ? "*://" + site + "/*" : "*://*." + site + "/*";
 }
 
-// Turns the saved rules into the rules Chrome understands.
+// Turns the saved rules into the content-setting rules Chrome understands.
+// "Block other companies' cookies" on every site isn't one of these; see
+// the note at the top and applyRules().
 //
 // Chrome's cookie rules have two patterns: who the cookie is from (primary),
 // and which site's pages it's being used on (secondary). The more specific
@@ -146,6 +166,10 @@ export function chromeRulesFor(rules) {
     if (rule === ALLOW) {
       // Anyone's cookies, on this site's pages.
       out.push({ primaryPattern: ALL_URLS, secondaryPattern: pattern, setting: "allow" });
+    } else if (rule === SESSION) {
+      // Anyone's cookies on this site's pages, but Chrome deletes them all
+      // when it closes.
+      out.push({ primaryPattern: ALL_URLS, secondaryPattern: pattern, setting: "session_only" });
     } else if (rule === OWN_ONLY) {
       // Nobody's cookies on this site's pages, except the site's own.
       out.push({ primaryPattern: ALL_URLS, secondaryPattern: pattern, setting: "block" });
@@ -167,12 +191,55 @@ export function rulesAvailable() {
   return Boolean(chrome.contentSettings && chrome.contentSettings.cookies);
 }
 
-// Makes Chrome's copy match `rules`. Returns an error message, or null.
+// The same for Chrome's third-party cookie switch.
+export function everywhereAvailable() {
+  return Boolean(chrome.privacy && chrome.privacy.websites && chrome.privacy.websites.thirdPartyCookiesAllowed);
+}
+
+function thirdPartySetting() {
+  return chrome.privacy.websites.thirdPartyCookiesAllowed;
+}
+
+// Who is in charge of Chrome's third-party cookie switch, and what it's set
+// to: { allowed, ours, canChange }, or null without the permission.
+// `ours` is true when cookieZ set it. `canChange` is false when another
+// extension or the computer's administrator controls it.
+export async function thirdPartyStatus() {
+  if (!everywhereAvailable()) {
+    return null;
+  }
+  try {
+    const details = await thirdPartySetting().get({});
+    return {
+      allowed: details.value !== false,
+      ours: details.levelOfControl === "controlled_by_this_extension",
+      canChange:
+        details.levelOfControl === "controlled_by_this_extension" ||
+        details.levelOfControl === "controllable_by_this_extension",
+    };
+  } catch (error) {
+    console.warn("Couldn't read Chrome's third-party cookie setting:", error);
+    return null;
+  }
+}
+
+// Makes Chrome match `rules`. Returns an error message, or null.
 export async function applyRules(rules) {
   if (!rulesAvailable()) {
     return "Chrome hasn't given cookieZ permission to set rules.";
   }
   try {
+    // Chrome's own third-party switch: set for "block other companies'
+    // cookies" on every site, and handed back to the user otherwise.
+    if (rules.everywhere === OWN_ONLY) {
+      if (!everywhereAvailable()) {
+        return "Chrome hasn't given cookieZ permission to block other companies' cookies on every site.";
+      }
+      await thirdPartySetting().set({ value: false });
+    } else if (everywhereAvailable()) {
+      await thirdPartySetting().clear({});
+    }
+
     await chrome.contentSettings.cookies.clear({});
     for (const rule of chromeRulesFor(rules)) {
       await chrome.contentSettings.cookies.set(rule);
@@ -181,6 +248,21 @@ export async function applyRules(rules) {
   } catch (error) {
     return "Chrome wouldn't accept the rules: " + describe(error);
   }
+}
+
+// What Chrome should answer for a cookie from `site`, and for one from
+// another company, on `site`'s pages.
+function expectedFor(rule) {
+  if (rule === ALLOW) {
+    return { own: "allow", other: "allow" };
+  }
+  if (rule === SESSION) {
+    return { own: "session_only", other: "session_only" };
+  }
+  if (rule === OWN_ONLY) {
+    return { own: "allow", other: "block" };
+  }
+  return { own: "block", other: "block" };
 }
 
 // Asks Chrome what it would do, and compares that with the saved rules.
@@ -196,8 +278,9 @@ export async function rulesInForce(rules) {
   const checks = [];
   for (const { site, rule } of listRules(rules)) {
     const url = "https://" + site + "/";
-    checks.push([url, url, rule === BLOCK ? "block" : "allow"]);
-    checks.push([PROBE, url, rule === ALLOW ? "allow" : "block"]);
+    const expected = expectedFor(rule);
+    checks.push([url, url, expected.own]);
+    checks.push([PROBE, url, expected.other]);
   }
   if (rules.everywhere === BLOCK) {
     checks.push([PROBE, PROBE, "block"]);
@@ -207,6 +290,12 @@ export async function rulesInForce(rules) {
     for (const [primaryUrl, secondaryUrl, expected] of checks) {
       const answer = await chrome.contentSettings.cookies.get({ primaryUrl, secondaryUrl });
       if (!answer || answer.setting !== expected) {
+        return false;
+      }
+    }
+    if (rules.everywhere === OWN_ONLY) {
+      const status = await thirdPartyStatus();
+      if (!status || status.allowed || !status.ours) {
         return false;
       }
     }
@@ -271,17 +360,70 @@ export async function removeSiteRule(site) {
   });
 }
 
-// The rule for every site without one of its own: ALLOW or BLOCK.
+// The rule for every site without one of its own.
 export async function setEverywhere(choice) {
   return await changeRules((rules) => {
-    rules.everywhere = choice === BLOCK ? BLOCK : ALLOW;
+    rules.everywhere = EVERYWHERE_CHOICES.includes(choice) ? choice : ALLOW;
+  });
+}
+
+// Whether blocking a site also deletes the cookies it already has, without
+// asking each time.
+export async function setDeleteOnBlock(on) {
+  return await changeRules((rules) => {
+    rules.deleteOnBlock = on === true;
   });
 }
 
 // Turns everything off: no site rules, and cookies allowed everywhere.
+// "Always delete" is a preference rather than a rule, so it stays.
 export async function clearRules() {
   return await changeRules((rules) => {
     rules.everywhere = ALLOW;
     rules.sites = {};
+  });
+}
+
+// --- backing up the rules ---------------------------------------------------
+//
+// A small JSON file the user saves themselves, and can load on another
+// computer. It holds exactly what's saved here: site names and rules.
+
+const BACKUP_KIND = "cookieZ site rules";
+
+export function rulesToBackup(rules) {
+  return JSON.stringify(
+    {
+      kind: BACKUP_KIND,
+      version: 1,
+      everywhere: rules.everywhere,
+      deleteOnBlock: rules.deleteOnBlock,
+      sites: rules.sites,
+    },
+    null,
+    2
+  );
+}
+
+// Reads a backup file's text. Returns { rules, error }.
+export function rulesFromBackup(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (error) {
+    return { rules: null, error: "That file isn't a cookieZ rules backup: it isn't JSON." };
+  }
+  if (!data || data.kind !== BACKUP_KIND) {
+    return { rules: null, error: "That file isn't a cookieZ rules backup." };
+  }
+  return { rules: tidy(data), error: null };
+}
+
+// Replaces every rule with the ones from a backup.
+export async function replaceRules(incoming) {
+  return await changeRules((rules) => {
+    rules.everywhere = incoming.everywhere;
+    rules.sites = { ...incoming.sites };
+    rules.deleteOnBlock = incoming.deleteOnBlock;
   });
 }

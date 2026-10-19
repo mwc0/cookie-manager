@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 12 October 2026**
+**Last updated: 15 October 2026**
 
 ## The short version
 
@@ -34,7 +34,7 @@ component, so there is no place for your data to go even in principle.
 
 ## What this extension stores on your device
 
-Three things are saved on your own computer, and a fourth is held briefly in
+Four things are saved on your own computer, and a fifth is held briefly in
 memory so your last change can be undone. None of them is ever transmitted.
 
 ### Your colour theme
@@ -77,20 +77,32 @@ the extension, and remove anything from it there.
 
 ### Your site rules
 
-If you use **Site rules** to choose which sites may set cookies, cookieZ
-saves your choices so it can show them to you and hand them to Chrome. Each
-entry is a site's name and the rule you picked for it: allow all cookies,
-block other companies' cookies, or block all cookies. There is one more
-setting, for every site without a rule of its own.
+If you use **Block** to choose which sites may set cookies, cookieZ saves
+your choices so it can show them to you and hand them to Chrome. Each entry
+is a site's name and the rule you picked for it: allow all cookies, clear
+them when Chrome closes, block other companies' cookies, or block all
+cookies. Two more settings are saved with them: the rule for every site
+without one of its own, and whether blocking a site should also delete its
+cookies without asking.
 
 It never includes cookies or cookie values. It is a list of site names, so
 you should know it is there. It is stored using Chrome's `storage.local` API
 on your own computer, is not synced to any account, and is never transmitted.
 
 Nothing is saved until you set a rule. You can see the whole list on the
-**Site rules** screen, remove any entry, or turn every rule off there.
+**Block cookies** screen, remove any entry, or turn every rule off there.
 Uninstalling the extension removes the list, and Chrome stops following the
 rules.
+
+You can also save a copy of your rules as a file, to load on another
+computer. That file holds exactly the list above. It is saved where you
+choose, like any download, and cookieZ keeps no copy of it.
+
+### The version you last opened
+
+cookieZ saves its own version number, such as 1.7.0, the first time you
+open a new version, so it can show one line about what's new just once.
+That is the whole record.
 
 ### Your last change, for Undo
 
@@ -131,8 +143,9 @@ only, and nothing about those changes is kept once the popup closes.
 Cookie values are shown in the popup's table. They are never transmitted, and
 never stored by the extension, except for the short-lived Undo copy described
 above. They only leave the popup if you choose: when
-you copy a value or an export, it goes to your clipboard, and when you
-download an export, it is saved as a file on your computer, where you choose.
+you copy a value, a Set-Cookie line or an export, it goes to your clipboard,
+and when you download an export, it is saved as a file on your computer,
+where you choose.
 cookieZ keeps no copy of either.
 
 Importing works the same way in reverse. The cookies you paste or choose are
@@ -147,27 +160,57 @@ Chrome, using the same site settings you can see in Chrome's own settings
 pages, and Chrome does the blocking from then on. cookieZ is not told which
 sites you visit or which cookies were blocked.
 
+If you choose to block other companies' cookies on every site, cookieZ
+turns on Chrome's own setting for that, the one in Chrome's privacy
+settings, instead of writing a rule. While cookieZ has it turned on, you
+can't change it in Chrome's settings. Choosing anything else, turning every
+rule off, switching cookieZ off or removing it hands the setting back to
+you as it was.
+
 When you next open cookieZ, it asks Chrome whether your saved rules are
 still in force, and sets them again if they are not. That check is made
-against the sites on your saved list only.
+against the sites on your saved list only. The **Block cookies** screen also
+shows how many cookies each listed site has at that moment, by looking up
+those sites only.
+
+## Clearing a site's data
+
+**Clear site data** deletes the site's cookies the usual way, so kept cookies
+are left alone and Undo can put the cookies back. It then asks Chrome to
+clear what else that site has stored on your computer: its local storage,
+databases, cache storage and offline files. cookieZ never reads that data;
+Chrome deletes it directly, and it can't be put back. Only the site the
+popup is open on is affected.
 
 ## Permissions, and why each one exists
 
 **`cookies`**: required to read, create, edit and delete cookies. Without it
 the extension cannot do anything at all.
 
-**`storage`**: required to remember which cookies you marked as Kept, and
-your colour theme, so both survive closing the popup, and to hold your last
-change in memory for Undo.
+**`storage`**: required to remember which cookies you marked as Kept, your
+site rules, your colour theme and the version you last opened, so they
+survive closing the popup, and to hold your last change in memory for Undo.
 
-**Changing site settings** (`contentSettings`): required only for **Site
-rules**. This permission is **optional** too. It is not part of the install
-prompt, and Chrome asks for it only if you click the button on the Site rules
-screen. Chrome's own wording for it is broad, and mentions the camera,
+**Changing site settings** (`contentSettings`): required only for
+**Block**. This permission is **optional** too. It is not part of the install
+prompt, and Chrome asks for it only if you click the button on the Block
+cookies screen. Chrome's own wording for it is broad, and mentions the camera,
 microphone and location, because one permission covers every kind of site
 setting. cookieZ uses it for one thing: the setting that says whether a site
 may use cookies. You can decline it and everything else works as before, and
 you can revoke it later from the extension's Details page.
+
+**Changing privacy settings** (`privacy`): required only to block other
+companies' cookies on every site, and **optional**. Chrome asks for it the
+first time you choose that, and its prompt reads "Change your
+privacy-related settings". cookieZ uses it for one setting: whether other
+companies' cookies are allowed. You can decline it and everything else works
+as before.
+
+**Clearing browsing data** (`browsingData`): required only for **Clear site
+data**, and **optional**. Chrome asks for it the first time you use that.
+cookieZ uses it to clear one site's stored data when you ask, and never
+anything else, never on its own, and never your history or passwords.
 
 **Access to websites** (`*://*/*`): Chrome will not release a single cookie
 to an extension without permission for the site that cookie belongs to. This

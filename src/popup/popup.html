@@ -90,18 +90,12 @@
           <div>
             <h1 id="site-name"></h1>
             <!-- The count, then "3 changes" once the site's cookies have
-                 changed since cookieZ was opened, then the way into the
-                 site rules. That last one says what the rule is doing when
-                 it's blocking something. -->
+                 changed since cookieZ was opened. -->
             <p class="count-line">
               <span id="cookie-count"></span>
               <span id="changes-link" hidden>
                 <span aria-hidden="true">&middot;</span>
                 <button id="changes-open" class="link-button" type="button" title="See what changed"></button>
-              </span>
-              <span id="rules-link">
-                <span aria-hidden="true">&middot;</span>
-                <button id="rules-open" class="link-button" type="button" title="Choose which cookies this site may set">Site rules</button>
               </span>
             </p>
             <!-- Says what the site just changed, for screen readers. The
@@ -157,6 +151,17 @@
             </label>
           </div>
 
+          <!-- Opens the blocking screen. Its label says what's being done to
+               this site's cookies, and it lights up while something is. -->
+          <button id="rules-open" class="block-button" type="button" title="Choose which cookies this site may set">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 2.5 4.5 5.4v6.1c0 4.6 3.1 8.6 7.5 10 4.4-1.4 7.5-5.4 7.5-10V5.4z"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              <path d="M8.6 15.4 15.4 8.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <span id="rules-open-label">Block</span>
+          </button>
+
           <button id="add-button" type="button" title="Create a new cookie">
             Add cookie
           </button>
@@ -191,6 +196,11 @@
         </div>
       </header>
 
+      <!-- Once, the first time cookieZ opens after an update. -->
+      <p id="whats-new" class="result whats-new" hidden>
+        <span id="whats-new-text"></span>
+        <button id="whats-new-close" class="link-button" type="button">OK</button>
+      </p>
       <p id="main-message" class="result" role="status" hidden></p>
       <p id="size-warning" class="result" role="status" hidden></p>
 
@@ -278,6 +288,10 @@
           <button id="export-button" type="button" disabled>
             Export&hellip;
           </button>
+          <!-- This site's cookies, plus everything else it has stored. -->
+          <button id="data-button" type="button" title="Delete this site's cookies and clear everything else it has stored">
+            Clear site data&hellip;
+          </button>
           <!-- Opens the list of every kept cookie, on any site. Only shown
                when there is one. -->
           <button id="kept-open" class="link-button kept-link" type="button" hidden></button>
@@ -289,9 +303,28 @@
             </button>
             <button id="confirm-no" type="button">Cancel</button>
           </div>
+
+          <div id="data-confirm" class="confirm data-confirm" hidden>
+            <span id="data-confirm-text"></span>
+            <button id="data-yes" class="danger solid" type="button">Yes, clear it</button>
+            <button id="data-no" type="button">Cancel</button>
+          </div>
         </div>
 
       </section>
+
+      <!-- Only while cookies are ticked: things to do to all of them. -->
+      <div id="picked-bar" class="picked-bar" role="group" aria-label="Ticked cookies" hidden>
+        <span id="picked-count"></span>
+        <button id="picked-keep" class="row-button" type="button">Keep</button>
+        <button id="picked-unkeep" class="row-button" type="button">Stop keeping</button>
+        <span class="picked-label">Expire in</span>
+        <button class="row-button" type="button" data-picked-expire="3600">1 hour</button>
+        <button class="row-button" type="button" data-picked-expire="86400">1 day</button>
+        <button class="row-button" type="button" data-picked-expire="604800">1 week</button>
+        <button class="row-button" type="button" data-picked-expire="31536000">1 year</button>
+        <button id="picked-clear" class="link-button" type="button">Untick all</button>
+      </div>
 
       <div id="table-wrap">
         <table id="cookie-table">
@@ -364,11 +397,17 @@
             <button id="value-copy" class="row-button" type="button" title="Copy the value">Copy</button>
           </div>
           <textarea id="field-value" name="value" class="mono" rows="4" spellcheck="false"></textarea>
+          <!-- Only for a value that is a JSON object or list. Ticked, the value
+               is laid out here and saved on one line again. -->
+          <label id="value-json-row" class="check" hidden>
+            <input id="field-json" type="checkbox" />
+            <span>Edit as JSON: laid out here, saved on one line</span>
+          </label>
           <!-- Shown once the cookie is getting close to Chrome's size limit. -->
           <p id="value-size" class="field-note muted" hidden></p>
 
-          <!-- Shown when the value is URL-encoded or JSON: the same value,
-               easier to read. It never changes the value. -->
+          <!-- Shown when the value is URL-encoded, JSON, Base64 or a date:
+               the same value, easier to read. It never changes the value. -->
           <div id="value-decoded" class="decoded" hidden>
             <div class="field-label-row">
               <span class="label" id="value-decoded-label">Decoded</span>
@@ -447,6 +486,7 @@
           <button id="edit-cancel-2" type="button">Cancel</button>
           <!-- Only when editing a cookie that already exists. -->
           <button id="edit-duplicate" type="button" title="Start a new cookie with these details" hidden>Duplicate</button>
+          <button id="edit-setcookie" type="button" title="Copy this cookie as the Set-Cookie line a server would send">Copy as Set-Cookie</button>
         </div>
       </form>
     </section>
@@ -644,7 +684,7 @@
          cookieZ is closed. See src/lib/rules.js. -->
     <section id="state-rules" class="state" hidden>
       <header class="bar">
-        <h1>Site rules</h1>
+        <h1>Block cookies</h1>
         <button id="rules-back" type="button">Back</button>
       </header>
 
@@ -688,6 +728,17 @@
               </span>
             </label>
             <label class="rule-option">
+              <input type="radio" name="site-rule" value="session" />
+              <span>
+                <strong>Clear when Chrome closes</strong>
+                <span class="rule-note">
+                  The site works as normal, but Chrome deletes its cookies,
+                  and other companies' cookies on its pages, every time it
+                  closes.
+                </span>
+              </span>
+            </label>
+            <label class="rule-option">
               <input type="radio" name="site-rule" value="own-only" />
               <span>
                 <strong>Block other companies' cookies</strong>
@@ -710,6 +761,10 @@
             </label>
           </div>
           <p id="rules-site-note" class="field-note" hidden></p>
+          <label class="check rules-always">
+            <input id="rules-delete-on-block" type="checkbox" />
+            <span>When I block a site, delete the cookies it already has without asking</span>
+          </label>
 
           <!-- Blocking doesn't remove the cookies a site already has, so
                this offers to. It goes through the usual delete: kept
@@ -732,6 +787,18 @@
               </span>
             </label>
             <label class="rule-option">
+              <input type="radio" name="everywhere-rule" value="own-only" />
+              <span>
+                <strong>Block other companies' cookies</strong>
+                <span class="rule-note">
+                  Every site keeps its own cookies, and other companies' are
+                  blocked, using Chrome's own switch. Partitioned cookies, which
+                  can't follow you between sites, still work, as do a few Chrome
+                  makes exceptions for.
+                </span>
+              </span>
+            </label>
+            <label class="rule-option">
               <input type="radio" name="everywhere-rule" value="block" />
               <span>
                 <strong>Block all cookies</strong>
@@ -742,6 +809,7 @@
               </span>
             </label>
           </div>
+          <p id="rules-everywhere-note" class="field-note" hidden></p>
           <div id="rules-everywhere-confirm" class="confirm" hidden>
             <span>Block cookies on every site without a rule of its own?</span>
             <button id="rules-everywhere-yes" class="danger solid" type="button">Yes, block them</button>
@@ -755,12 +823,14 @@
             <colgroup>
               <col />
               <col class="rules-rule-col" />
+              <col class="rules-count-col" />
               <col class="rules-action-col" />
             </colgroup>
             <thead>
               <tr>
                 <th scope="col">Site</th>
                 <th scope="col">Rule</th>
+                <th scope="col">Cookies now</th>
                 <th scope="col"><span class="visually-hidden">Remove</span></th>
               </tr>
             </thead>
@@ -775,6 +845,15 @@
             <span>Turn off every rule? Chrome goes back to allowing cookies everywhere.</span>
             <button id="rules-confirm-yes" class="danger solid" type="button">Yes, turn them off</button>
             <button id="rules-confirm-no" type="button">Cancel</button>
+          </span>
+          <!-- A copy of the rules, as a file you save yourself. -->
+          <button id="rules-backup" type="button">Save a copy</button>
+          <label id="rules-load-label" class="button-like" for="rules-load">Load a copy&hellip;</label>
+          <input id="rules-load" class="visually-hidden" type="file" accept=".json,application/json" />
+          <span id="rules-load-confirm" class="confirm" hidden>
+            <span id="rules-load-text"></span>
+            <button id="rules-load-yes" class="danger solid" type="button">Replace my rules</button>
+            <button id="rules-load-no" type="button">Cancel</button>
           </span>
         </div>
       </div>
@@ -797,6 +876,15 @@
           subdomains, such as login.example.com.
           <strong>All sites</strong> deletes every cookie in this browser
           profile. The count and the sites are always shown first.
+        </dd>
+
+        <dt>Clearing cookies didn't let me log in</dt>
+        <dd>
+          Try <strong>Clear site data</strong> under the delete options. As
+          well as the site's cookies, it clears what else the site has
+          stored: local storage, databases, cache storage and offline files.
+          Kept cookies are left alone, and Undo can put the cookies back, but
+          not the rest.
         </dd>
 
         <dt>I deleted or changed the wrong cookies</dt>
@@ -826,10 +914,11 @@
 
         <dt>Can I stop a site setting cookies?</dt>
         <dd>
-          Yes. Click <strong>Site rules</strong> next to the cookie count.
-          For each site you can allow all cookies, block other companies'
-          cookies, or block every cookie. You can also block cookies on
-          every site except the ones you allow. Chrome does the blocking,
+          Yes. Click <strong>Block</strong> at the top. For each site you
+          can allow all cookies, have them cleared when Chrome closes, block
+          other companies' cookies, or block every cookie. You can also block
+          other companies' cookies on every site, or every cookie on every
+          site except the ones you allow. Chrome does the blocking,
           so it works while cookieZ is closed, and removing cookieZ removes
           the rules. Chrome has its own switch for blocking other
           companies' cookies everywhere, in its settings; cookieZ doesn't
@@ -838,7 +927,7 @@
 
         <dt>A site stopped working after I set a rule</dt>
         <dd>
-          Open <strong>Site rules</strong> on that site and choose
+          Click <strong>Block</strong> on that site and choose
           <strong>Allow all cookies</strong>, or remove its rule from the
           list. Then reload the page.
         </dd>
