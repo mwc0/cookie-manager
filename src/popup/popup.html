@@ -851,8 +851,8 @@
           </div>
         </section>
 
-        <!-- Known trackers, from the list in src/lists/trackers.js. If that
-             list grows or shrinks a lot, change "about 130" below. -->
+        <!-- Known trackers, from the list in src/lists/trackers.js. The
+             number is filled in from the list by popup.js. -->
         <section id="rules-trackers-group" class="rules-group" aria-label="Known trackers">
           <label class="rule-option">
             <!-- Named by the bold line alone, with the note read after it,
@@ -863,7 +863,7 @@
             <span>
               <strong id="rules-trackers-name">Block known trackers' cookies on every site</strong>
               <span id="rules-trackers-note" class="rule-note">
-                Cookies from about 130 advertising and analytics companies,
+                Cookies from <span id="rules-trackers-count">about 130</span> advertising and analytics companies,
                 from a list inside cookieZ that updates when cookieZ does.
                 Sites you've set to allow all cookies still get them. This
                 blocks the trackers' cookies, not the trackers themselves.

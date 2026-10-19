@@ -1912,6 +1912,7 @@ async function drawRules() {
   el("rules-delete-on-block").checked = rules.deleteOnBlock;
   el("rules-delete-on-block").disabled = !canChange;
   el("rules-trackers").checked = rules.trackers;
+  el("rules-trackers-count").textContent = String(TRACKER_DOMAINS.length);
   el("rules-trackers").disabled = !canChange;
   await showThirdPartyNote(canChange);
   await showStats();
