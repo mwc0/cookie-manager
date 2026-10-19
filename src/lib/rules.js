@@ -361,9 +361,14 @@ export async function rulesInForce(rules) {
   }
 
   try {
-    for (const [primaryUrl, secondaryUrl, expected] of checks) {
-      const answer = await chrome.contentSettings.cookies.get({ primaryUrl, secondaryUrl });
-      if (!answer || answer.setting !== expected) {
+    // Asked all at once, since this runs each time the popup opens and the
+    // answers don't depend on each other.
+    const answers = await Promise.all(
+      checks.map(([primaryUrl, secondaryUrl]) => chrome.contentSettings.cookies.get({ primaryUrl, secondaryUrl }))
+    );
+    for (let i = 0; i < checks.length; i++) {
+      const expected = checks[i][2];
+      if (!answers[i] || answers[i].setting !== expected) {
         return false;
       }
     }

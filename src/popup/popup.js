@@ -302,11 +302,17 @@ async function loadCurrentPage() {
     overwritten = new Set();
   }
 
+  // A message about the last page goes. Not on the first load, though:
+  // initTheme() runs alongside this, and an error it has already shown
+  // would be wiped.
+  if (page) {
+    el("main-message").textContent = "";
+  }
+
   page = { origin: url.origin, hostname: url.hostname };
   seenCookies = null;
   expanded = new Set();
 
-  el("main-message").hidden = true;
   el("site-name").textContent = url.hostname;
   if (inTab) {
     document.title = "cookieZ - " + url.hostname;
@@ -315,8 +321,15 @@ async function loadCurrentPage() {
   el("scope-target-domain").textContent = baseHostOf(url.hostname);
 
   showState("main");
-  await loadSiteRules();
+  // The table first, so it shows as soon as it can. The rules only change
+  // the Block button, and what the table says when it's empty, so those are
+  // put right once the rules are in.
   await refresh();
+  await loadSiteRules();
+  showRulesLink();
+  if (pageCookies.length === 0) {
+    drawTable();
+  }
   await showWhatsNew();
   await offerStoredUndo();
   showKnownWhenLoaded();
@@ -957,6 +970,12 @@ async function refreshScope() {
       inScope = shownCookies;
     } else if (selectedScope() === "picked") {
       inScope = pickedCookies();
+    } else if (selectedScope() === "page") {
+      // "This page" is the table's own list too: refreshTable() has just
+      // read it with the same query (getSiteCookies() is
+      // getCookiesForScope("page", page, { embedded: true })), so asking
+      // Chrome again would only slow opening.
+      inScope = pageCookies;
     } else {
       // The cookies other companies keep for this site are in the table,
       // so they're in this site's scopes too.
@@ -1618,11 +1637,17 @@ function pageRule() {
 // following them. If it isn't, they're set again. This is a safety net:
 // nothing else would notice if Chrome lost them.
 async function loadSiteRules() {
-  const loaded = await loadRules();
+  // None of these depends on another, so they're asked all at once.
+  const [loaded, rulesAccess, everywhere, siteData] = await Promise.all([
+    loadRules(),
+    hasRulesAccess(),
+    hasPermission(EVERYWHERE_PERMISSION),
+    hasPermission(SITE_DATA_PERMISSION),
+  ]);
   rules = loaded.rules;
-  rulesAllowed = await hasRulesAccess();
-  everywhereAllowed = await hasPermission(EVERYWHERE_PERMISSION);
-  siteDataAllowed = await hasPermission(SITE_DATA_PERMISSION);
+  rulesAllowed = rulesAccess;
+  everywhereAllowed = everywhere;
+  siteDataAllowed = siteData;
 
   if (loaded.error) {
     showMainMessage(loaded.error, true);
@@ -1633,6 +1658,9 @@ async function loadSiteRules() {
   }
 
   if ((await rulesInForce(rules)) === false) {
+    // Setting them again can take a few seconds with the trackers list, as
+    // on the Block cookies screen, so the main screen says so meanwhile.
+    showMainMessage(SAVING, false);
     const error = await applyRules(rules);
     showMainMessage(
       error
