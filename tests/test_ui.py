@@ -168,6 +168,32 @@ def main():
         page.locator("#edit-cancel").click()
         page.wait_for_timeout(300)
 
+        # --- the focus after Untick all ---
+        # The bar the button sits on hides, so the focus has to go somewhere.
+        if page.locator("#picked-bar").is_hidden():
+            row_for(page, "plain").locator("td.pick .pick-target").click()
+            page.wait_for_timeout(200)
+        page.locator("#picked-clear").click()
+        page.wait_for_timeout(200)
+        focused = page.evaluate("() => document.activeElement.id")
+        r.check("Untick all leaves the focus on the header tick box", focused == "pick-all", repr(focused))
+
+        # --- Windows high contrast ---
+        # Backgrounds are dropped in forced colours, so a pressed filter is
+        # filled with the system's selection colour instead (popup.css).
+        page.emulate_media(forced_colors="active")
+        chip = page.locator("#filters .chip:not([hidden])").first
+        chip.click()
+        page.wait_for_timeout(200)
+        fills = page.evaluate("""() => [
+            '#filters .chip[aria-pressed="true"]', '#filters .chip[aria-pressed="false"]:not([hidden])'
+        ].map(s => getComputedStyle(document.querySelector(s)).backgroundColor)""")
+        r.check("in high contrast, a pressed filter is filled and an unpressed one isn't",
+                fills[0] != fills[1], str(fills))
+        chip.click()
+        page.emulate_media(forced_colors="none")
+        page.wait_for_timeout(200)
+
         # --- Help ---
         page.locator("#help-button").click()
         page.wait_for_timeout(300)

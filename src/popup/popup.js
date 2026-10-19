@@ -1665,9 +1665,18 @@ function showRulesLink() {
     title = "Known trackers' cookies are blocked on this site";
   }
 
+  const lit = rule !== ALLOW || trackersHere;
   el("rules-open-label").textContent = label;
   el("rules-open").title = title;
-  el("rules-open").classList.toggle("on", rule !== ALLOW || trackersHere);
+  el("rules-open").classList.toggle("on", lit);
+  // While lit, the label says what's happening ("Blocked"), not what the
+  // button does, so a screen reader is told both. Unlit, "Block" already
+  // says it, and the tip is read after it.
+  if (lit) {
+    el("rules-open").setAttribute("aria-label", label + ": choose which cookies this site may set");
+  } else {
+    el("rules-open").removeAttribute("aria-label");
+  }
 }
 
 async function openRules() {
@@ -1970,6 +1979,9 @@ async function offerCleanup(site) {
       ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
       : "");
   el("rules-cleanup").hidden = false;
+  // Like every other "are you sure?" in cookieZ, the focus goes to the
+  // safe answer, so a screen reader reads the question.
+  el("rules-cleanup-no").focus();
 }
 
 // The same, after turning on the trackers switch: their cookies already
@@ -2016,6 +2028,7 @@ async function offerTrackerCleanup() {
       ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
       : "");
   el("rules-trackers-cleanup").hidden = false;
+  el("rules-trackers-cleanup-no").focus();
 }
 
 function hideCleanup() {
@@ -2212,6 +2225,9 @@ async function runSiteDataClear() {
   const cookies = siteDataCookies;
   const site = baseHostOf(page.hostname);
   cancelSiteDataClear();
+  // "Yes, clear it" has just been hidden. Without this the focus would be
+  // lost.
+  el("data-button").focus();
 
   const { removed, removedCookies, failed } = await removeCookies(cookies);
   let dataError = null;
@@ -2336,6 +2352,8 @@ async function loadRulesBackup() {
   const result = await savingRules(() => replaceRules(incoming));
   rules = result.rules;
   await drawRules();
+  // The buttons that had the focus are gone, so it goes back to Load.
+  el("rules-load").focus();
   showRulesMessage(
     result.error || "Loaded " + pluralise(Object.keys(incoming.sites).length, "site rule", "site rules") + ".",
     Boolean(result.error)
@@ -2344,9 +2362,14 @@ async function loadRulesBackup() {
 
 async function removeRule(site) {
   hideCleanup();
+  const index = listRules(rules).findIndex((entry) => entry.site === site);
   const result = await savingRules(() => removeSiteRule(site));
   rules = result.rules;
   await drawRules();
+  // The row is gone, and its button with it. The focus goes to the Remove
+  // button that took its place, or the one above, or Load if none is left.
+  const buttons = el("rules-rows").querySelectorAll(".rules-remove");
+  (buttons[Math.min(index, buttons.length - 1)] || el("rules-load")).focus();
   showRulesMessage(result.error || "Removed the rule for " + site + ".", Boolean(result.error));
 }
 
@@ -2368,6 +2391,8 @@ async function clearAllRules() {
   rules = result.rules;
   cancelRulesConfirm();
   await drawRules();
+  // "Turn off all rules" is hidden once there are none to turn off.
+  (el("rules-clear").hidden ? el("rules-load") : el("rules-clear")).focus();
   showRulesMessage(
     result.error || "Every rule is off. Chrome is allowing cookies everywhere again.",
     Boolean(result.error)
@@ -3030,11 +3055,22 @@ el("rules-everywhere-no").addEventListener("click", () => {
   el("rules-everywhere-confirm").hidden = true;
   focusChecked("everywhere-rule");
 });
-el("rules-cleanup-yes").addEventListener("click", () => runCleanup());
+// The offer is hidden after either answer, so the focus goes back to the
+// choice that made it.
+el("rules-cleanup-yes").addEventListener("click", () => {
+  focusChecked("site-rule");
+  runCleanup();
+});
 el("rules-delete-on-block").addEventListener("change", toggleDeleteOnBlock);
 el("rules-trackers").addEventListener("change", toggleTrackers);
-el("rules-trackers-cleanup-yes").addEventListener("click", () => runCleanup());
-el("rules-trackers-cleanup-no").addEventListener("click", hideCleanup);
+el("rules-trackers-cleanup-yes").addEventListener("click", () => {
+  el("rules-trackers").focus();
+  runCleanup();
+});
+el("rules-trackers-cleanup-no").addEventListener("click", () => {
+  el("rules-trackers").focus();
+  hideCleanup();
+});
 el("data-button").addEventListener("click", startSiteDataClear);
 el("data-yes").addEventListener("click", runSiteDataClear);
 el("data-no").addEventListener("click", () => {
@@ -3043,12 +3079,19 @@ el("data-no").addEventListener("click", () => {
 });
 el("whats-new-close").addEventListener("click", () => {
   el("whats-new").hidden = true;
+  el("search-input").focus();
 });
 el("rules-backup").addEventListener("click", saveRulesBackup);
 el("rules-load").addEventListener("change", readRulesBackup);
 el("rules-load-yes").addEventListener("click", loadRulesBackup);
-el("rules-load-no").addEventListener("click", cancelLoad);
-el("rules-cleanup-no").addEventListener("click", hideCleanup);
+el("rules-load-no").addEventListener("click", () => {
+  cancelLoad();
+  el("rules-load").focus();
+});
+el("rules-cleanup-no").addEventListener("click", () => {
+  focusChecked("site-rule");
+  hideCleanup();
+});
 el("rules-clear").addEventListener("click", startRulesConfirm);
 el("rules-confirm-yes").addEventListener("click", clearAllRules);
 el("rules-confirm-no").addEventListener("click", () => {
@@ -3142,6 +3185,9 @@ el("picked-clear").addEventListener("click", () => {
     box.checked = false;
   }
   scopeAfterPicking(before);
+  // The bar this button was on is now hidden. The header tick box is the
+  // nearest thing that does the same job.
+  (el("pick-all").disabled ? el("search-input") : el("pick-all")).focus();
 });
 for (const button of document.querySelectorAll("[data-picked-expire]")) {
   button.addEventListener("click", () => expirePicked(Number(button.dataset.pickedExpire)));

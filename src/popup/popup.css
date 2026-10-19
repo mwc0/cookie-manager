@@ -1751,3 +1751,100 @@ textarea.output:focus {
   border-top: 1px solid var(--line);
   color: var(--muted);
 }
+
+/* --- Windows high contrast (forced colours) ----------------------------------
+
+   With high contrast on, Windows picks every colour. Backgrounds, washes and
+   shadows are dropped, and text and edges take the system's colours. That
+   lost anything said only by a fill or a glow: a lit button, a pressed
+   filter, a badge, a kept row, an error. These rules say the same things
+   with edges and the system's own colour names (Highlight and the rest), so
+   they follow whatever theme the person chose. Nothing here applies in
+   normal use.
+
+   forced-color-adjust: none tells Chrome to leave an element's colours as
+   written. It's only used where the rule sets every colour itself, from the
+   system's names, so the result is still the person's own colours. */
+
+@media (forced-colors: active) {
+  /* Something switched on or chosen: the lit Block button, a pressed filter,
+     the chosen theme. Filled with the selection colour, the way Windows
+     shows a selected item. Focus is still the outline, so the two can't be
+     confused. */
+  .block-button.on,
+  .chip[aria-pressed="true"],
+  button.chip[aria-pressed="true"]:hover:not(:disabled),
+  .theme input:checked + label {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  /* "Sure?" and "Yes, delete": the button colours swapped round, so the
+     second click looks different from the first, as the red fill does
+     normally. Not while switched off ("Saving…"), when Chrome's own grey
+     says that instead. */
+  .row-button.danger.armed:not(:disabled),
+  button.danger.solid:not(:disabled) {
+    forced-color-adjust: none;
+    border-color: ButtonText;
+    background: ButtonText;
+    color: ButtonFace;
+  }
+
+  /* Focus rings. Chrome draws an outline in the system's colour already;
+     this makes sure every ring is solid and in the same colour. */
+  button:focus-visible,
+  summary:focus-visible,
+  input:focus-visible,
+  #cookie-rows tr:focus-visible,
+  .theme input:focus-visible + label,
+  #rules-load:focus-visible + .button-like,
+  .button-like:has(+ #rules-load:focus-visible) {
+    outline: 2px solid Highlight;
+  }
+
+  /* The theme's chosen segment is filled with Highlight, so its ring is
+     drawn in the text colour instead, to stay visible on top. */
+  .theme input:checked:focus-visible + label {
+    outline-color: HighlightText;
+  }
+
+  /* Badges lose their grey box. An edge puts it back, so "Secure" and
+     "Known" still read as labels rather than loose words. Corners stay
+     small, so they don't look like the round buttons. */
+  .badge {
+    border: 1px solid CanvasText;
+    line-height: 16px;
+  }
+
+  /* Errors are red normally. Here a bar down the left marks them. */
+  .result.error,
+  .field-note.error,
+  #gate-message {
+    padding-left: 6px;
+    border-left: 3px solid CanvasText;
+  }
+
+  /* A kept row loses its tint and the blue line down its left edge. The
+     line comes back as a border. */
+  tr.kept-row td.pick {
+    border-left: 3px solid Highlight;
+  }
+
+  /* A row the site just changed keeps a dotted edge while it would be
+     tinted. */
+  #cookie-rows tr.changed td {
+    border-top: 1px dotted CanvasText;
+    border-bottom: 1px dotted CanvasText;
+  }
+
+  /* While "Saving…", every choice is switched off. The radios and boxes go
+     grey by themselves; their words go grey with them. */
+  .rule-option:has(input:disabled),
+  #rules-body:disabled label.check,
+  #rules-body:disabled .button-like {
+    color: GrayText;
+  }
+}
