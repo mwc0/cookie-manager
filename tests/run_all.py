@@ -24,6 +24,7 @@ FILES = [
     "test_kept_list.py",
     "test_rules.py",
     "test_trackers.py",
+    "test_known.py",
     "test_more_editing.py",
     "test_site_data.py",
     "test_theme.py",
