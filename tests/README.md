@@ -45,8 +45,20 @@ a real window.
 | `test_more_editing.py` | 1.7's editor and table additions: Base64 and dates decoded (and a random token left alone), JSON edited laid out but saved on one line, broken JSON never saved, Copy as Set-Cookie, and actions for ticked cookies with Undo. |
 | `test_site_data.py` | Clear site data on a real page: the site's cookies and local storage go, Kept cookies and the other site's data stay, Undo brings the cookies back. Also the one-time "What's new" line. |
 | `test_known.py` | 1.8's known cookie names (a badge, a filter and a line in the editor, and that a generic name like `id` never matches), the partitioned cookies another site keeps for this one (listed, counted, exported, deleted with the site's and put back by Undo), and the developer filters. Uses its own real two-site HTTPS server on port 8445. |
+| `test_trackers.py` | 1.8's "Block known trackers' cookies": that Chrome blocks a listed tracker's cookies on another site, lets them through on a site set to "Allow all cookies" and on the tracker's own site, and that turning it on offers to delete the ones already saved. Uses its own small tracker list, not the real one. |
 | `test_no_network.py` | That the extension makes no outbound requests, via both a static scan of `src/` and a live capture of a whole session. |
 | `test_devtools_crosscheck.py` | The same claims again, but checked against Chrome's DevTools Protocol rather than the extension API. See below. |
+
+`make_lists.py` is not a test either. It builds the two lists the extension
+ships in `src/lists/` (the tracker domains, and the known cookie names) plus
+their licence file, from a copy of the Open Cookie Database you have already
+downloaded. It never downloads anything, and neither does the extension, so
+the lists only change when this is run and a new version is released. Run it
+from this directory:
+
+```
+python make_lists.py <open-cookie-database.json> <its LICENSE> <commit>
+```
 
 `probe_chrome_api.py` is not a test. It asks Chrome how it actually behaves
 and prints the answers. Every workaround in `src/lib/cookies.js` exists
