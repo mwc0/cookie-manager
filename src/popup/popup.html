@@ -310,7 +310,10 @@
                when there is one. -->
           <button id="kept-open" class="link-button kept-link" type="button" hidden></button>
 
-          <div id="confirm-row" class="confirm" hidden>
+          <!-- Each "Are you sure?" line is a group named by its question,
+               so a screen reader reads the question when the focus moves
+               onto its buttons. -->
+          <div id="confirm-row" class="confirm" role="group" aria-labelledby="confirm-text" hidden>
             <span id="confirm-text"></span>
             <button id="confirm-yes" class="danger solid" type="button">
               Yes, delete
@@ -318,7 +321,7 @@
             <button id="confirm-no" type="button">Cancel</button>
           </div>
 
-          <div id="data-confirm" class="confirm data-confirm" hidden>
+          <div id="data-confirm" class="confirm data-confirm" role="group" aria-labelledby="data-confirm-text" hidden>
             <span id="data-confirm-text"></span>
             <button id="data-yes" class="danger solid" type="button">Yes, clear it</button>
             <button id="data-no" type="button">Cancel</button>
@@ -327,16 +330,18 @@
 
       </section>
 
-      <!-- Only while cookies are ticked: things to do to all of them. -->
+      <!-- Only while cookies are ticked: things to do to all of them. The
+           expiry buttons carry "Expire in" in their names, since a screen
+           reader moving from button to button skips the words before them. -->
       <div id="picked-bar" class="picked-bar" role="group" aria-label="Ticked cookies" hidden>
         <span id="picked-count"></span>
         <button id="picked-keep" class="row-button" type="button">Keep</button>
         <button id="picked-unkeep" class="row-button" type="button">Stop keeping</button>
         <span class="picked-label">Expire in</span>
-        <button class="row-button" type="button" data-picked-expire="3600">1 hour</button>
-        <button class="row-button" type="button" data-picked-expire="86400">1 day</button>
-        <button class="row-button" type="button" data-picked-expire="604800">1 week</button>
-        <button class="row-button" type="button" data-picked-expire="31536000">1 year</button>
+        <button class="row-button" type="button" data-picked-expire="3600" aria-label="Expire in 1 hour">1 hour</button>
+        <button class="row-button" type="button" data-picked-expire="86400" aria-label="Expire in 1 day">1 day</button>
+        <button class="row-button" type="button" data-picked-expire="604800" aria-label="Expire in 1 week">1 week</button>
+        <button class="row-button" type="button" data-picked-expire="31536000" aria-label="Expire in 1 year">1 year</button>
         <button id="picked-clear" class="link-button" type="button">Untick all</button>
       </div>
 
@@ -691,7 +696,7 @@
 
       <div class="actions">
         <button id="kept-clear" class="danger" type="button">Stop keeping all&hellip;</button>
-        <span id="kept-confirm" class="confirm" hidden>
+        <span id="kept-confirm" class="confirm" role="group" aria-labelledby="kept-confirm-text" hidden>
           <span id="kept-confirm-text"></span>
           <button id="kept-confirm-yes" class="danger solid" type="button">Yes, stop keeping</button>
           <button id="kept-confirm-no" type="button">Cancel</button>
@@ -794,7 +799,7 @@
           <!-- Blocking doesn't remove the cookies a site already has, so
                this offers to. It goes through the usual delete: kept
                cookies are left alone, and Undo works. -->
-          <div id="rules-cleanup" class="confirm" hidden>
+          <div id="rules-cleanup" class="confirm" role="group" aria-labelledby="rules-cleanup-text" hidden>
             <span id="rules-cleanup-text"></span>
             <button id="rules-cleanup-yes" class="danger solid" type="button">Delete them</button>
             <button id="rules-cleanup-no" type="button">Leave them</button>
@@ -835,8 +840,8 @@
             </label>
           </div>
           <p id="rules-everywhere-note" class="field-note" hidden></p>
-          <div id="rules-everywhere-confirm" class="confirm" hidden>
-            <span>Block cookies on every site without a rule of its own?</span>
+          <div id="rules-everywhere-confirm" class="confirm" role="group" aria-labelledby="rules-everywhere-confirm-text" hidden>
+            <span id="rules-everywhere-confirm-text">Block cookies on every site without a rule of its own?</span>
             <button id="rules-everywhere-yes" class="danger solid" type="button">Yes, block them</button>
             <button id="rules-everywhere-no" type="button">Cancel</button>
           </div>
@@ -846,10 +851,14 @@
              list grows or shrinks a lot, change "about 130" below. -->
         <section id="rules-trackers-group" class="rules-group" aria-label="Known trackers">
           <label class="rule-option">
-            <input id="rules-trackers" type="checkbox" />
+            <!-- Named by the bold line alone, with the note read after it,
+                 so a screen reader doesn't read the whole paragraph as the
+                 box's name. -->
+            <input id="rules-trackers" type="checkbox"
+                   aria-labelledby="rules-trackers-name" aria-describedby="rules-trackers-note" />
             <span>
-              <strong>Block known trackers' cookies on every site</strong>
-              <span class="rule-note">
+              <strong id="rules-trackers-name">Block known trackers' cookies on every site</strong>
+              <span id="rules-trackers-note" class="rule-note">
                 Cookies from about 130 advertising and analytics companies,
                 from a list inside cookieZ that updates when cookieZ does.
                 Sites you've set to allow all cookies still get them. This
@@ -861,7 +870,7 @@
           <!-- Like the offer after blocking a site: these companies'
                cookies already saved, deleted the usual way, so kept
                cookies are left alone and Undo works. -->
-          <div id="rules-trackers-cleanup" class="confirm" hidden>
+          <div id="rules-trackers-cleanup" class="confirm" role="group" aria-labelledby="rules-trackers-cleanup-text" hidden>
             <span id="rules-trackers-cleanup-text"></span>
             <button id="rules-trackers-cleanup-yes" class="danger solid" type="button">Delete them</button>
             <button id="rules-trackers-cleanup-no" type="button">Leave them</button>
@@ -892,8 +901,8 @@
 
         <div class="actions">
           <button id="rules-clear" class="danger" type="button">Turn off all rules&hellip;</button>
-          <span id="rules-confirm" class="confirm" hidden>
-            <span>Turn off every rule? Chrome goes back to allowing cookies everywhere.</span>
+          <span id="rules-confirm" class="confirm" role="group" aria-labelledby="rules-confirm-text" hidden>
+            <span id="rules-confirm-text">Turn off every rule? Chrome goes back to allowing cookies everywhere.</span>
             <button id="rules-confirm-yes" class="danger solid" type="button">Yes, turn them off</button>
             <button id="rules-confirm-no" type="button">Cancel</button>
           </span>
@@ -901,7 +910,7 @@
           <button id="rules-backup" type="button">Save a copy</button>
           <label id="rules-load-label" class="button-like" for="rules-load">Load a copy&hellip;</label>
           <input id="rules-load" class="visually-hidden" type="file" accept=".json,application/json" />
-          <span id="rules-load-confirm" class="confirm" hidden>
+          <span id="rules-load-confirm" class="confirm" role="group" aria-labelledby="rules-load-text" hidden>
             <span id="rules-load-text"></span>
             <button id="rules-load-yes" class="danger solid" type="button">Replace my rules</button>
             <button id="rules-load-no" type="button">Cancel</button>
