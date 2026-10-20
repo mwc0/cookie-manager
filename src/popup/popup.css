@@ -471,6 +471,7 @@ button.danger:hover:not(:disabled) {
 /* These status lines are never hidden, so screen readers hear each new
    message (see popup.html). With no message in them they take no room. */
 #gate-message:empty,
+#help-review-message:empty,
 #main-message:empty,
 #size-warning:empty,
 #kept-message:empty,
@@ -1384,7 +1385,8 @@ button.row-button.keep.kept:hover:not(:disabled) {
 
 /* "What's new", once after an update. OK sits at the end of the sentence
    rather than dropping to a line of its own. */
-#whats-new {
+#whats-new,
+#review-ask {
   margin: 0 0 10px;
   color: var(--fg-soft);
 }
@@ -1394,8 +1396,25 @@ button.row-button.keep.kept:hover:not(:disabled) {
   padding: 0 4px;
 }
 
+/* The review ask looks like What's new, with its buttons after the
+   sentence. */
+#review-open,
+#review-later,
+#help-review {
+  margin-left: 2px;
+  padding: 0 4px;
+}
+
+.help-review {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
 /* Small link-style buttons and the new tick boxes still get a 24 px target. */
 #whats-new-close,
+#review-open,
+#review-later,
+#help-review,
 #picked-clear {
   display: inline-flex;
   align-items: center;

@@ -61,6 +61,7 @@ a real window.
 | `test_changes.py` | The "What changed" list, and that nothing of it is kept once cookieZ closes. |
 | `test_keyboard.py` | The table from the keyboard: arrows, Enter, Space, K and Delete, and where focus lands after each. |
 | `test_ui.py` | Clicking a row to edit, the decoded value, Help, the "Sure?" step, the badges, target sizes and Esc. |
+| `test_review.py` | The review ask: no line before the 5th delete, import or Save, then once more at the 25th only after "Not now", never after "No thanks" or "Leave a review", and never on the same open as What's new. Both "Leave a review" buttons open exactly the store's review page. |
 | `test_theme.py` | The Light and Dark buttons: following the system, saving the other choice, and removing it again. |
 | `test_no_network.py` | That the extension makes no outbound requests, via both a static scan of `src/` and a live capture of a whole session. |
 | `test_devtools_crosscheck.py` | The same claims again, but checked against Chrome's DevTools Protocol rather than the extension API. See below. |
