@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "cookieZ - Cookie Editor",
+    "description": "The extension's name. The same in every language."
+  },
+  "appDesc": {
+    "message": "Cookie の表示、編集、削除、ブロックができます。広告はなく、操作した内容がパソコンの外に送られることはありません。",
+    "description": "The summary under the name in the Chrome Web Store and on chrome://extensions. 132 characters at most."
+  }
+}
