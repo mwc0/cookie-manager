@@ -227,7 +227,7 @@
           <input
             id="search-input"
             type="search"
-            placeholder="Search name, value, domain or path"
+            placeholder="Search, or name: value: domain: path:"
             autocomplete="off"
             spellcheck="false"
           />
@@ -681,12 +681,43 @@
         </p>
         <div id="import-confirm-row" class="actions">
           <button id="import-confirm" class="primary" type="button"></button>
+          <!-- Read only: shows how the file differs from now, writes nothing. -->
+          <button id="import-compare" type="button">Compare</button>
           <button id="import-cancel" type="button">Cancel</button>
         </div>
       </section>
 
       <p id="import-result" class="result" role="status" hidden></p>
       <ul id="import-failures" class="errors" hidden></ul>
+    </section>
+
+    <!-- How an export differs from the cookies those sites have now. Names
+         and sites only, never values, and nothing is written. -->
+    <section id="state-compare" class="state" hidden>
+      <header class="bar">
+        <h1>Compared with your file</h1>
+        <button id="compare-back" type="button">Back</button>
+      </header>
+
+      <p id="compare-summary" class="scope-summary" role="status"></p>
+
+      <div id="compare-wrap">
+        <table id="compare-table">
+          <colgroup>
+            <col />
+            <col />
+            <col class="changes-what-col" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Site</th>
+              <th scope="col">Since your file</th>
+            </tr>
+          </thead>
+          <tbody id="compare-rows"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- What has happened to this site's cookies while cookieZ has been
@@ -1082,7 +1113,7 @@
             <span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd></span>
             <span>Open cookieZ. Change it at chrome://extensions/shortcuts.</span>
             <span><kbd>/</kbd></span>
-            <span>Search the cookies.</span>
+            <span>Search the cookies. Start with name:, value:, domain: or path: to search that part only.</span>
             <span><kbd>N</kbd></span>
             <span>Add a new cookie.</span>
             <span><kbd>↑</kbd> <kbd>↓</kbd></span>

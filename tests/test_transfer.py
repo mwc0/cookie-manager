@@ -114,6 +114,133 @@ def export_text(page, fmt):
     return text, summary
 
 
+# compareCookies() on its own: one of each kind, a flags difference, and
+# expiry only counting when session and dated differ.
+COMPARE_UNIT = """async () => {
+    const { compareCookies } = await import(chrome.runtime.getURL('lib/transfer.js'));
+    const base = {value: 'v', domain: 'u.test', path: '/', secure: false, httpOnly: false,
+                  hostOnly: true, sameSite: 'unspecified'};
+    const entry = (name, extra = {}) => ({name, ...base, session: true, expirationDate: null, ...extra});
+    const cookie = (name, extra = {}) => ({name, ...base, storeId: '0', session: true, ...extra});
+    const file = [
+        entry('same'), entry('gone'), entry('val'), entry('flags'),
+        entry('dated', {session: false, expirationDate: 1000}),
+        entry('to_dated'), entry('dot', {hostOnly: false}),
+    ];
+    const now = [
+        cookie('same'), cookie('val', {value: 'w'}), cookie('flags', {secure: true, sameSite: 'lax'}),
+        cookie('dated', {session: false, expirationDate: 99999}),
+        cookie('to_dated', {session: false, expirationDate: 5000}),
+        cookie('dot', {domain: '.u.test', hostOnly: false}), cookie('new'),
+    ];
+    const result = compareCookies(file, now);
+    return {
+        gone: result.gone.map(c => c.name), added: result.added.map(c => c.name),
+        changed: Object.fromEntries(result.changed.map(c => [c.cookie.name, c.differences])),
+        same: result.same,
+    };
+}"""
+
+CMP_SITE = "https://cmp.test/"
+
+CMP_SNAPSHOT = """async () => (await chrome.cookies.getAll({domain: 'cmp.test'}))
+    .map(c => [c.name, c.value, c.secure, c.expirationDate || null].join('|')).sort()"""
+
+
+def cmp_entry(name, value):
+    return {"domain": "cmp.test", "hostOnly": True, "httpOnly": False, "name": name, "path": "/",
+            "sameSite": "unspecified", "secure": False, "session": True, "value": value}
+
+
+def open_compare(page, text, password=None):
+    """Pastes `text`, checks it (with `password` if it has one), and
+    presses Compare. Returns the summary and the rows as [name, site, what]."""
+    page.locator("#import-button").click()
+    page.wait_for_timeout(300)
+    page.fill("#import-text", text)
+    page.locator("#import-check").click()
+    page.wait_for_timeout(500)
+    if password is not None:
+        page.fill("#import-password", password)
+        page.locator("#import-check").click()
+        page.wait_for_function("() => !document.getElementById('import-check').disabled", timeout=15000)
+        page.wait_for_timeout(600)
+    page.locator("#import-compare").click()
+    page.wait_for_timeout(600)
+    rows = page.evaluate("""() => Array.from(document.querySelectorAll('#compare-rows tr'))
+        .map(tr => Array.from(tr.cells).map(td => td.textContent))""")
+    return text_of(page, "compare-summary"), rows
+
+
+def check_compare(r, page):
+    unit = page.evaluate(COMPARE_UNIT)
+    r.check("compareCookies: one cookie gone, one new since",
+            unit["gone"] == ["gone"] and unit["added"] == ["new"], json.dumps(unit))
+    r.check("compareCookies: value and flag changes are named",
+            unit["changed"].get("val") == ["value"]
+            and unit["changed"].get("flags") == ["Secure", "SameSite"], json.dumps(unit))
+    r.check("compareCookies: session to dated counts, a new date alone doesn't",
+            unit["changed"].get("to_dated") == ["expiry"] and "dated" not in unit["changed"],
+            json.dumps(unit))
+    r.check("compareCookies: a leading dot on the domain is the same cookie, and the rest count as same",
+            unit["same"] == 3 and "dot" not in unit["changed"], json.dumps(unit))
+
+    # The file: keep, change and remove. Then the site moves on.
+    file_text = json.dumps([cmp_entry("keep", "1"), cmp_entry("change", "2"), cmp_entry("remove", "3")])
+    page.evaluate("""async () => {
+        for (const [name, value] of [['keep', '1'], ['change', '2'], ['remove', '3']])
+            await chrome.cookies.set({url: 'https://cmp.test/', name, value});
+        await chrome.cookies.set({url: 'https://cmp.test/', name: 'change', value: 'secret-new-value'});
+        await chrome.cookies.remove({url: 'https://cmp.test/', name: 'remove'});
+        await chrome.cookies.set({url: 'https://cmp.test/', name: 'added', value: 'a'});
+    }""")
+    before = page.evaluate(CMP_SNAPSHOT)
+
+    summary, rows = open_compare(page, file_text)
+    r.check("Compare opens its own screen", visible_state(page) == "state-compare", visible_state(page))
+    r.check("the summary counts each kind",
+            summary == "1 new since, 1 gone, 1 changed, 1 the same.", summary)
+    r.check("one row for each difference, names and sites only",
+            rows == [["added", "cmp.test", "New since"], ["remove", "cmp.test", "Gone"],
+                     ["change", "cmp.test", "Changed: value"]], json.dumps(rows))
+    screen = page.locator("#state-compare").text_content()
+    r.check("no value is ever shown", "secret-new-value" not in screen and '"value"' not in screen)
+    r.check("Compare writes nothing", page.evaluate(CMP_SNAPSHOT) == before,
+            f"{before} -> {page.evaluate(CMP_SNAPSHOT)}")
+
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(300)
+    r.check("Esc goes back to the import screen, with the preview still there",
+            visible_state(page) == "state-import" and page.locator("#import-confirm").is_visible(),
+            visible_state(page))
+    back_to_main(page)
+
+    # The same as now: says there's no difference.
+    same_text = json.dumps([cmp_entry("keep", "1"), cmp_entry("change", "secret-new-value"),
+                            cmp_entry("added", "a")])
+    summary, rows = open_compare(page, same_text)
+    r.check("no differences is said plainly",
+            summary == "No differences. All 3 cookies in your file are the same now." and rows == [],
+            f"{summary!r} {rows}")
+    page.locator("#compare-back").click()
+    page.wait_for_timeout(300)
+    r.check("Back goes to the import screen", visible_state(page) == "state-import", visible_state(page))
+    back_to_main(page)
+
+    # A password-protected export, compared after the password is typed.
+    locked = page.evaluate("""async (text) => {
+        const { lockText } = await import(chrome.runtime.getURL('lib/crypto.js'));
+        return await lockText(text, 'compare pw');
+    }""", file_text)
+    summary, rows = open_compare(page, locked, password="compare pw")
+    r.check("a locked export compares once the password is typed",
+            summary == "1 new since, 1 gone, 1 changed, 1 the same." and len(rows) == 3, summary)
+    r.check("and that writes nothing either", page.evaluate(CMP_SNAPSHOT) == before)
+    page.locator("#compare-back").click()
+    page.wait_for_timeout(300)
+    back_to_main(page)
+
+
 def main():
     r = Results("Export / import / copy / tab")
 
@@ -412,6 +539,9 @@ def main():
                 mixed_page.locator('input[name="format"][value="curl"]').is_disabled())
         r.check("no console errors on the www site", not mixed_errors, str(mixed_errors))
         mixed_page.close()
+
+        # --- 2.0: compare with an export ---
+        check_compare(r, page)
 
         # --- open in a tab ---
         with context.expect_page() as info:

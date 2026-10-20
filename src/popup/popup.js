@@ -69,6 +69,7 @@ import {
   matchSentCookies,
   isForSite,
   moveToSite,
+  compareCookies,
 } from "../lib/transfer.js";
 import { lockText, unlockText, readLockedFile } from "../lib/crypto.js";
 import { copyWithFeedback } from "./clipboard.js";
@@ -3058,6 +3059,11 @@ async function downloadExport() {
 // What the preview said will be written. Import writes exactly this list.
 let importPlan = null;
 
+// Every cookie the preview read from the file, for Compare. Unlike
+// importPlan, this includes the ones that won't be written, such as
+// expired ones, so Compare can say they're gone.
+let importEntries = null;
+
 // What's inside a password-protected export, once opened, so ticking "Put
 // them on this site instead" doesn't ask for the password again. Only ever
 // in memory, and forgotten as soon as the pasted text changes.
@@ -3087,6 +3093,7 @@ function openImport() {
 
 function resetImportPreview() {
   importPlan = null;
+  importEntries = null;
   el("import-preview").hidden = true;
 }
 
@@ -3256,12 +3263,101 @@ async function checkImport() {
   // else's cookies is a known way to trick people.
   el("import-warning").hidden = count === 0;
   el("import-confirm").textContent = "Import " + pluralise(count, "cookie", "cookies");
-  el("import-confirm-row").hidden = count === 0;
+  // Compare works on anything that was read, even if nothing can be
+  // imported, so the row shows whenever there's a cookie in the file.
+  el("import-confirm").hidden = count === 0;
+  el("import-confirm-row").hidden = entries.length === 0;
   el("import-preview").hidden = false;
   importPlan = count > 0 ? plan : null;
+  importEntries = entries.length > 0 ? entries : null;
   if (importPlan) {
     el("import-confirm").focus();
   }
+}
+
+// --- compare with an export ---------------------------------------------------
+
+// Shows how the file read by the preview differs from the cookies the same
+// sites have now. Read only: nothing is written. It asks Chrome again,
+// rather than reusing what Check read, so it's up to date.
+async function compareImport() {
+  if (!importEntries) {
+    return;
+  }
+  const domains = Array.from(new Set(importEntries.map((entry) => bareDomain(entry.domain))));
+
+  let current;
+  try {
+    const lists = await Promise.all(domains.map((domain) => getCookiesForDomain(domain)));
+    // A file with example.com and www.example.com would find the
+    // www cookies twice.
+    const byKey = new Map();
+    for (const cookie of lists.flat()) {
+      byKey.set(cookieKey(cookie), cookie);
+    }
+    current = Array.from(byKey.values());
+  } catch (error) {
+    showImportResult("Couldn't read your current cookies to compare: " + describeError(error), true);
+    return;
+  }
+
+  const result = compareCookies(importEntries, current);
+  const differences = result.gone.length + result.added.length + result.changed.length;
+
+  if (differences === 0) {
+    el("compare-summary").textContent =
+      "No differences. " +
+      (result.same === 1
+        ? "The cookie in your file is the same now."
+        : "All " + formatCount(result.same) + " cookies in your file are the same now.");
+  } else {
+    const parts = [];
+    if (result.added.length > 0) {
+      parts.push(formatCount(result.added.length) + " new since");
+    }
+    if (result.gone.length > 0) {
+      parts.push(formatCount(result.gone.length) + " gone");
+    }
+    if (result.changed.length > 0) {
+      parts.push(formatCount(result.changed.length) + " changed");
+    }
+    parts.push(formatCount(result.same) + " the same");
+    el("compare-summary").textContent = parts.join(", ") + ".";
+  }
+
+  // Names and sites only, never values: the values may be sign-ins.
+  const rows = [
+    ...result.added.map((cookie) => [cookie, "New since"]),
+    ...result.gone.map((entry) => [entry, "Gone"]),
+    ...result.changed.map((item) => [item.cookie, "Changed: " + item.differences.join(", ")]),
+  ];
+  const body = el("compare-rows");
+  body.textContent = "";
+  for (const [cookie, what] of rows) {
+    const row = document.createElement("tr");
+    const cells = [
+      [cookie.name, "mono changes-name"],
+      [bareDomain(cookie.domain), "mono changes-site"],
+      [what, "changes-what"],
+    ];
+    for (const [text, className] of cells) {
+      const cell = document.createElement("td");
+      cell.className = className;
+      cell.textContent = text; // comes from a file, so never innerHTML
+      row.appendChild(cell);
+    }
+    body.appendChild(row);
+  }
+  el("compare-wrap").hidden = rows.length === 0;
+
+  showState("compare");
+  el("compare-back").focus();
+}
+
+function closeCompare() {
+  el("compare-rows").textContent = "";
+  showState("import");
+  el("import-compare").focus();
 }
 
 function showImportResult(text, isError) {
@@ -3603,6 +3699,8 @@ el("import-back").addEventListener("click", closeImport);
 el("import-check").addEventListener("click", checkImport);
 el("import-confirm").addEventListener("click", runImport);
 el("import-cancel").addEventListener("click", resetImportPreview);
+el("import-compare").addEventListener("click", compareImport);
+el("compare-back").addEventListener("click", closeCompare);
 el("import-file").addEventListener("change", readImportFile);
 // A changed paste has to be checked again before it can be imported.
 el("import-text").addEventListener("input", () => {
@@ -3685,6 +3783,7 @@ const BACK_BUTTONS = {
   edit: "edit-cancel",
   export: "export-back",
   import: "import-back",
+  compare: "compare-back",
   help: "help-back",
 };
 

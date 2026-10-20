@@ -491,6 +491,7 @@ button.danger:hover:not(:disabled) {
 #table-wrap,
 #kept-wrap,
 #changes-wrap,
+#compare-wrap,
 #rules-wrap,
 .rules-group,
 #import-preview {
@@ -507,6 +508,7 @@ button.danger:hover:not(:disabled) {
 #table-wrap::after,
 #kept-wrap::after,
 #changes-wrap::after,
+#compare-wrap::after,
 #rules-wrap::after,
 .rules-group::after,
 #import-preview::after {
@@ -1352,7 +1354,8 @@ button.row-button.keep.kept:hover:not(:disabled) {
   color: var(--fg-soft);
 }
 
-#changes-wrap {
+#changes-wrap,
+#compare-wrap {
   overflow: hidden;
 }
 
@@ -1360,16 +1363,19 @@ button.row-button.keep.kept:hover:not(:disabled) {
   width: 84px;
 }
 
-#changes-table .changes-what-col {
+#changes-table .changes-what-col,
+#compare-table .changes-what-col {
   width: 220px;
 }
 
-#changes-table td.changes-name {
+#changes-table td.changes-name,
+#compare-table td.changes-name {
   font-weight: 600;
   word-break: break-all;
 }
 
-#changes-table td.changes-site {
+#changes-table td.changes-site,
+#compare-table td.changes-site {
   overflow-wrap: anywhere;
 }
 
