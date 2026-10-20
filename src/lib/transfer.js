@@ -1004,3 +1004,81 @@ export function planImport(entries, existing, isKept, now) {
   const domains = Array.from(new Set(toWrite.map((item) => item.entry.domain))).sort();
   return { toWrite, expired, duplicates, invalid, domains };
 }
+
+// --- compare -----------------------------------------------------------------
+
+// Compares a file with the cookies those sites have now, without writing
+// anything. `fileEntries` are parsed entries, as for planImport(), and
+// `current` the cookies Chrome has now for the sites in the file.
+//
+// Cookies are matched with identityOf(), not cookieKey() from cookies.js.
+// A file has no storeId and keeps domains without their leading dot, so
+// cookieKey() would never match a file entry to a real cookie. identityOf()
+// is also how Import decides a cookie will be replaced, so the two screens
+// agree on what "the same cookie" means.
+//
+// Returns {
+//   gone: [entry, ...],                  in the file, not now
+//   added: [cookie, ...],                now, not in the file
+//   changed: [{ cookie, differences }],  both, but something differs;
+//                                        differences is a list of words,
+//                                        such as ["value", "Secure"]
+//   same: number                         both, and nothing differs
+// }
+export function compareCookies(fileEntries, current) {
+  const inFile = new Map();
+  for (const entry of fileEntries) {
+    inFile.set(identityOf(entry), entry);
+  }
+  const now = new Map();
+  for (const cookie of current) {
+    now.set(identityOf(cookie), cookie);
+  }
+
+  const gone = [];
+  const changed = [];
+  let same = 0;
+  for (const [key, entry] of inFile) {
+    const cookie = now.get(key);
+    if (!cookie) {
+      gone.push(entry);
+      continue;
+    }
+    const differences = differencesBetween(entry, cookie);
+    if (differences.length > 0) {
+      changed.push({ cookie, differences });
+    } else {
+      same += 1;
+    }
+  }
+
+  const added = Array.from(now.entries())
+    .filter(([key]) => !inFile.has(key))
+    .map(([, cookie]) => cookie);
+  return { gone, added, changed, same };
+}
+
+// What differs between a file entry and the cookie as it is now. The expiry
+// date only counts when one is a session cookie and the other isn't: sites
+// push the date on every visit, so a new date on its own isn't news.
+function differencesBetween(entry, cookie) {
+  const differences = [];
+  if (String(entry.value) !== String(cookie.value)) {
+    differences.push("value");
+  }
+  if (Boolean(entry.secure) !== Boolean(cookie.secure)) {
+    differences.push("Secure");
+  }
+  if (Boolean(entry.httpOnly) !== Boolean(cookie.httpOnly)) {
+    differences.push("HttpOnly");
+  }
+  if ((entry.sameSite || "unspecified") !== (cookie.sameSite || "unspecified")) {
+    differences.push("SameSite");
+  }
+  const entrySession = typeof entry.expirationDate !== "number";
+  const cookieSession = typeof cookie.expirationDate !== "number";
+  if (entrySession !== cookieSession) {
+    differences.push("expiry");
+  }
+  return differences;
+}
