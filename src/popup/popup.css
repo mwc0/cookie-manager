@@ -752,8 +752,8 @@ td.size {
 }
 
 .col-actions {
-  /* Three 26px buttons, or "Sure?" and its cancel button. */
-  width: 102px;
+  /* Four 26px buttons, or "Sure?" and its cancel button. */
+  width: 132px;
 }
 
 th {
@@ -1140,6 +1140,7 @@ button.danger.solid:hover:not(:disabled) {
 }
 
 .field input[type="text"],
+.field input[type="password"],
 .field input[type="datetime-local"],
 .field textarea,
 .field select {
@@ -1694,6 +1695,34 @@ textarea.output:focus {
 .warning {
   margin: 8px 0 0;
   font-size: 12px;
+}
+
+/* The optional password on the export and import screens: the box, with
+   "Show" beside it. */
+.export-password {
+  margin: 10px 0 0;
+}
+
+.password-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.field .password-row input[type="password"],
+.field .password-row input[type="text"] {
+  flex: 1 1 200px;
+  width: auto;
+  max-width: 320px;
+}
+
+.field .password-row label.check {
+  margin-bottom: 0;
+}
+
+#import-warning {
+  margin-top: 10px;
 }
 
 #import-preview {

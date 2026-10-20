@@ -61,13 +61,16 @@ import {
   toHeader,
   toPlaywright,
   toCurl,
+  toSelenium,
   toSetCookie,
+  looksLikeSignIn,
   parseImport,
   planImport,
   matchSentCookies,
   isForSite,
   moveToSite,
 } from "../lib/transfer.js";
+import { lockText, unlockText, readLockedFile } from "../lib/crypto.js";
 import { copyWithFeedback } from "./clipboard.js";
 import {
   loadProtected,
@@ -160,6 +163,10 @@ let scopeAll = [];
 // The cookie open in the editor, or null for a new one. Saving needs the
 // original cookie, in case the name or path changed. See writeCookie().
 let editing = null;
+
+// After Duplicate on a partitioned cookie, the partition the copy goes in.
+// Otherwise null.
+let duplicatePartition = null;
 
 // All of this page's cookies, and the ones the search is showing.
 // "Just the cookies shown" deletes shownCookies, the same list as the table.
@@ -1193,8 +1200,15 @@ function openEditor(cookie) {
     partition.hidden = true;
   }
 
-  // A partitioned cookie can't be made here, so it can't be duplicated.
-  el("edit-duplicate").hidden = isNew || Boolean(cookie.partitionKey);
+  // A new cookie can be partitioned (CHIPS): kept for this site only. An
+  // existing cookie's partition can't be changed, so the box is only for
+  // new ones.
+  duplicatePartition = null;
+  el("field-partitioned").checked = false;
+  el("partitioned-site").textContent = baseHostOf(page.hostname);
+  el("partitioned-row").hidden = !isNew;
+
+  el("edit-duplicate").hidden = isNew;
 
   showDecoded();
   showValueSize();
@@ -1233,7 +1247,17 @@ function expireIn(seconds) {
 // Turns the editor into a new cookie with the details already filled in,
 // including anything typed since it was opened. The cookie being edited is
 // left alone. Saving goes the usual way, so Undo works on it.
+//
+// A partitioned cookie's copy goes in the same partition, with the box
+// ticked. Unticking it makes an ordinary cookie instead.
 function duplicateCookie() {
+  if (editing && editing.partitionKey) {
+    duplicatePartition = editing.partitionKey;
+    el("field-partitioned").checked = true;
+    const site = String(editing.partitionKey.topLevelSite || "").replace(/^https?:\/\//, "");
+    el("partitioned-site").textContent = site || baseHostOf(page.hostname);
+  }
+  el("partitioned-row").hidden = false;
   editing = null;
   el("edit-title").textContent = "New cookie";
   el("edit-duplicate").hidden = true;
@@ -1332,8 +1356,46 @@ function readForm() {
     session,
     expirationDate: session ? null : fromLocalDateTimeValue(el("field-expiry").value),
     storeId: editing ? editing.storeId : undefined,
-    partitionKey: editing ? editing.partitionKey : undefined,
+    partitionKey: editing ? editing.partitionKey : newPartitionKey(),
   };
+}
+
+// The partition for a new cookie with "Partitioned" ticked: the copied
+// cookie's for a duplicate, otherwise this site's. See partitionSites().
+function newPartitionKey() {
+  if (!el("field-partitioned").checked) {
+    return undefined;
+  }
+  return duplicatePartition || { topLevelSite: partitionSites()[0] };
+}
+
+// Chrome only takes a partition named after a site, such as
+// https://example.com: not https://www.example.com, and with no port. It
+// refuses any other without saying why. Working out the site for certain
+// needs the list of public suffixes (example.co.uk is a site, co.uk isn't),
+// which cookieZ doesn't carry. So these are the page's host and each of its
+// parent domains, longest first, and saveEditor() keeps the first one Chrome
+// accepts. A wrong guess is refused, so nothing is written by mistake.
+function partitionSites() {
+  const scheme = page.origin.startsWith("https:") ? "https://" : "http://";
+  const labels = page.hostname.split(".");
+  return labels.map((label, index) => scheme + labels.slice(index).join("."));
+}
+
+// Saves the form. A new partitioned cookie tries each possible site in
+// turn (see partitionSites()); everything else is one write.
+async function writeFromEditor(values) {
+  if (editing || !values.partitionKey || duplicatePartition) {
+    return writeCookie(editing, values);
+  }
+  let result = null;
+  for (const topLevelSite of partitionSites()) {
+    result = await writeCookie(null, { ...values, partitionKey: { topLevelSite } });
+    if (result.ok) {
+      break;
+    }
+  }
+  return result;
 }
 
 function showFormErrors(errors) {
@@ -1395,7 +1457,7 @@ async function saveEditor() {
 
   try {
     saving = true;
-    const { ok, cookie, error } = await writeCookie(editing, values);
+    const { ok, cookie, error } = await writeFromEditor(values);
     saving = false;
 
     if (!ok) {
@@ -2743,7 +2805,97 @@ function buildExport() {
   if (format === "playwright") {
     return { text: toPlaywright(scopeAll), filename: base + "-playwright.json", type: "application/json" };
   }
+  if (format === "selenium") {
+    return { text: toSelenium(scopeAll), filename: base + "-selenium.py", type: "text/plain" };
+  }
   return { text: toJson(scopeAll), filename: base + ".json", type: "application/json" };
+}
+
+// Selenium code has to stay readable to run, and cookieZ can't import it,
+// so a password would only make it useless. Every other format can be
+// locked, because cookieZ can import each of them back.
+function formatCanBeLocked() {
+  return selectedFormat() !== "selenium";
+}
+
+// The password box is off for Selenium, and says why. The sign-in warning
+// shows while the export has cookies that look like sign-ins and nothing
+// will lock it.
+function showExportPassword() {
+  const box = el("export-password");
+  const lockable = formatCanBeLocked();
+  box.disabled = !lockable;
+  if (!lockable) {
+    box.value = "";
+  }
+  el("export-password-note").textContent = lockable
+    ? "Locks the file, so it can only be imported with this password. The password isn't saved anywhere, so don't lose it."
+    : "Selenium code can't have a password: it has to stay readable to run. Choose another format to lock the file.";
+
+  const signIns = scopeAll.some((cookie) => looksLikeSignIn(cookie, knownCookie(cookie.name)));
+  el("export-warning").hidden = !signIns || box.value !== "";
+}
+
+const LOCKED_NOTE =
+  "Locked with your password. You'll need the password to import it, and it isn't saved anywhere.";
+
+// The export as it will be copied or saved. With a password, it's locked
+// first, which takes a moment, so "Encrypting…" shows meanwhile. Then the
+// password box is emptied, so the password isn't kept.
+// Returns null if it couldn't be locked, having said why.
+async function finishExport() {
+  const built = buildExport();
+  const password = el("export-password").value;
+  if (password === "" || !formatCanBeLocked()) {
+    return built;
+  }
+
+  const buttons = [el("export-copy"), el("export-download")];
+  for (const button of buttons) {
+    button.disabled = true;
+  }
+  showExportResult("Encrypting…", false);
+  try {
+    const locked = await lockText(built.text, password);
+    el("export-password").value = "";
+    showExportPassword();
+    // Shows what was copied or saved.
+    el("export-output").value = locked;
+    showExportResult(LOCKED_NOTE, false);
+    return {
+      text: locked,
+      filename: built.filename.replace(/\.[a-z]+$/, "") + "-locked.json",
+      type: "application/json",
+      locked: true,
+    };
+  } catch (error) {
+    showExportResult("Couldn't lock the export: " + (error && error.message ? error.message : String(error)), true);
+    return null;
+  } finally {
+    for (const button of buttons) {
+      button.disabled = false;
+    }
+  }
+}
+
+function showExportResult(text, isError) {
+  const result = el("export-result");
+  result.className = isError ? "result error" : "result";
+  result.textContent = text;
+  result.hidden = false;
+}
+
+async function copyExport() {
+  const finished = await finishExport();
+  if (finished) {
+    await copyWithFeedback(el("export-copy"), finished.text);
+  }
+}
+
+// Leaving the screen forgets any password typed but not used.
+function closeExport() {
+  el("export-password").value = "";
+  showState("main");
 }
 
 function openExport() {
@@ -2776,6 +2928,9 @@ function openExport() {
 
   el("export-result").hidden = true;
   el("main-message").hidden = true;
+  el("export-password").value = "";
+  el("export-password-show").checked = false;
+  el("export-password").type = "password";
   showExportText();
   showState("export");
   el("export-copy").focus();
@@ -2796,10 +2951,15 @@ function exportIsOnePage(sites) {
 
 function showExportText() {
   el("export-output").value = buildExport().text;
+  showExportPassword();
 }
 
-function downloadExport() {
-  const { text, filename, type } = buildExport();
+async function downloadExport() {
+  const finished = await finishExport();
+  if (!finished) {
+    return;
+  }
+  const { text, filename, type, locked } = finished;
 
   // A download made from the page itself. No downloads permission needed.
   const url = URL.createObjectURL(new Blob([text], { type }));
@@ -2811,10 +2971,10 @@ function downloadExport() {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 30000);
 
-  const result = el("export-result");
-  result.className = "result";
-  result.textContent = "Saving as " + filename + ".";
-  result.hidden = false;
+  showExportResult(
+    "Saving as " + filename + "." + (locked ? " " + LOCKED_NOTE : ""),
+    false
+  );
 }
 
 // --- import ----------------------------------------------------------------
@@ -2822,8 +2982,23 @@ function downloadExport() {
 // What the preview said will be written. Import writes exactly this list.
 let importPlan = null;
 
+// What's inside a password-protected export, once opened, so ticking "Put
+// them on this site instead" doesn't ask for the password again. Only ever
+// in memory, and forgotten as soon as the pasted text changes.
+let unlockedText = null;
+
+// Forgets the password and anything opened with it.
+function forgetImportPassword() {
+  unlockedText = null;
+  el("import-password").value = "";
+  el("import-password-show").checked = false;
+  el("import-password").type = "password";
+  el("import-password-row").hidden = true;
+}
+
 function openImport() {
   el("main-message").hidden = true;
+  forgetImportPassword();
   el("import-move").checked = false;
   el("import-file-row").hidden = !inTab;
   el("import-file-hint").hidden = inTab;
@@ -2837,6 +3012,49 @@ function openImport() {
 function resetImportPreview() {
   importPlan = null;
   el("import-preview").hidden = true;
+}
+
+// A password-protected export: asks for the password, then opens it.
+// Returns what's inside, or null after saying why it can't be opened yet.
+// A damaged file is reported before any password is asked for.
+async function openLockedImport() {
+  if (unlockedText !== null) {
+    return unlockedText;
+  }
+  const text = el("import-text").value;
+  const { error } = readLockedFile(text);
+  if (error) {
+    el("import-password-row").hidden = true;
+    showImportResult(error, true);
+    return null;
+  }
+
+  const box = el("import-password");
+  el("import-password-row").hidden = false;
+  if (box.value === "") {
+    showImportResult("Type the file's password, then press Check.", false);
+    box.focus();
+    return null;
+  }
+
+  // Opening takes a moment: the password goes through 600,000 rounds.
+  const password = box.value;
+  box.value = "";
+  const check = el("import-check");
+  check.disabled = true;
+  showImportResult("Opening the file…", false);
+  const result = await unlockText(text, password);
+  check.disabled = false;
+
+  if (!result.ok) {
+    showImportResult(result.error, true);
+    box.focus();
+    return null;
+  }
+  el("import-result").hidden = true;
+  forgetImportPassword();
+  unlockedText = result.text;
+  return unlockedText;
 }
 
 function fillList(list, items) {
@@ -2855,7 +3073,14 @@ async function checkImport() {
   resetImportPreview();
 
   const pageUrl = page.origin + "/";
-  const parsed = parseImport(el("import-text").value, { pageUrl });
+  let parsed = parseImport(el("import-text").value, { pageUrl });
+  if (parsed.format === "locked") {
+    const text = await openLockedImport();
+    if (text === null) {
+      return;
+    }
+    parsed = parseImport(text, { pageUrl });
+  }
   let entries = parsed.entries;
   let problems = parsed.problems;
 
@@ -2951,6 +3176,9 @@ async function checkImport() {
   const skipped = [...problems, ...plan.invalid.map((text) => "Will be skipped: " + text)];
   fillList(el("import-problems"), skipped);
 
+  // Said every time, next to the button that writes: a file of someone
+  // else's cookies is a known way to trick people.
+  el("import-warning").hidden = count === 0;
   el("import-confirm").textContent = "Import " + pluralise(count, "cookie", "cookies");
   el("import-confirm-row").hidden = count === 0;
   el("import-preview").hidden = false;
@@ -3029,6 +3257,7 @@ async function readImportFile() {
   }
   try {
     el("import-text").value = await file.text();
+    forgetImportPassword();
     await checkImport();
   } catch (error) {
     showImportResult("Couldn't read " + file.name + ": " + error.message, true);
@@ -3038,6 +3267,7 @@ async function readImportFile() {
 // Back on the main screen, an import made just now can be undone from the
 // status line, like any other change.
 async function closeImport() {
+  forgetImportPassword();
   showState("main");
   await refresh();
   await offerStoredUndo();
@@ -3253,14 +3483,28 @@ for (const radio of document.querySelectorAll('input[name="scope"]')) {
 
 el("delete-button").addEventListener("click", startConfirm);
 el("export-button").addEventListener("click", openExport);
-el("export-back").addEventListener("click", () => showState("main"));
-el("export-copy").addEventListener("click", () =>
-  copyWithFeedback(el("export-copy"), el("export-output").value)
-);
+el("export-back").addEventListener("click", closeExport);
+el("export-copy").addEventListener("click", copyExport);
 el("export-download").addEventListener("click", downloadExport);
 for (const radio of document.querySelectorAll('input[name="format"]')) {
   radio.addEventListener("change", showExportText);
 }
+// Typing a password puts the unlocked text back in the box, in case it was
+// showing a locked copy, and hides the sign-in warning.
+el("export-password").addEventListener("input", showExportText);
+el("export-password-show").addEventListener("change", () => {
+  el("export-password").type = el("export-password-show").checked ? "text" : "password";
+});
+el("import-password-show").addEventListener("change", () => {
+  el("import-password").type = el("import-password-show").checked ? "text" : "password";
+});
+// Enter in the password box does the same as Check.
+el("import-password").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    checkImport();
+  }
+});
 
 el("import-button").addEventListener("click", openImport);
 el("import-back").addEventListener("click", closeImport);
@@ -3271,6 +3515,7 @@ el("import-file").addEventListener("change", readImportFile);
 // A changed paste has to be checked again before it can be imported.
 el("import-text").addEventListener("input", () => {
   el("import-move").checked = false;
+  forgetImportPassword();
   resetImportPreview();
 });
 // Ticking "Put them on this site instead" checks again with the cookies
@@ -3280,6 +3525,15 @@ el("import-move").addEventListener("change", async () => {
   el("import-move").focus();
 });
 
+// A partitioned cookie has to be Secure, so ticking one ticks the other.
+el("field-partitioned").addEventListener("change", () => {
+  if (el("field-partitioned").checked) {
+    el("field-secure").checked = true;
+  }
+});
+el("name-copy").addEventListener("click", () =>
+  copyWithFeedback(el("name-copy"), el("field-name").value.trim())
+);
 // Copies the value as it would be saved: on one line, if edited as JSON.
 el("value-copy").addEventListener("click", () =>
   copyWithFeedback(el("value-copy"), valueToSave().value ?? el("field-value").value)

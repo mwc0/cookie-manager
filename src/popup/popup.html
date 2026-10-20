@@ -410,7 +410,10 @@
 
       <form id="edit-form" autocomplete="off">
         <div class="field">
-          <label for="field-name">Name</label>
+          <div class="field-label-row">
+            <label for="field-name">Name</label>
+            <button id="name-copy" class="row-button" type="button" title="Copy the name">Copy</button>
+          </div>
           <input id="field-name" name="name" type="text" class="mono" spellcheck="false" />
           <!-- Only when the name is in the Open Cookie Database. A guess from
                the name, and it says so. -->
@@ -501,6 +504,11 @@
             <input id="field-hostonly" name="hostOnly" type="checkbox" />
             <span>Host-only: this exact host, not its subdomains</span>
           </label>
+          <!-- Only for a new cookie: a partition can't be changed later. -->
+          <label id="partitioned-row" class="check" hidden>
+            <input id="field-partitioned" type="checkbox" />
+            <span>Partitioned (CHIPS): kept for <span id="partitioned-site"></span> only. Needs Secure.</span>
+          </label>
         </div>
 
         <p id="edit-partition" class="muted" hidden></p>
@@ -542,6 +550,11 @@
           <span class="scope-note muted">A storageState file, for starting a test already logged in.</span>
         </label>
         <label class="scope">
+          <input type="radio" name="format" value="selenium" />
+          <span class="scope-label">Selenium</span>
+          <span class="scope-note muted">Python add_cookie() calls, for a test. Can't hold partitions.</span>
+        </label>
+        <label class="scope">
           <input type="radio" name="format" value="netscape" />
           <span class="scope-label">cookies.txt</span>
           <span class="scope-note muted">For curl, wget, yt-dlp and other tools. Can't hold SameSite or partitions.</span>
@@ -561,9 +574,30 @@
       <label for="export-output" class="visually-hidden">Exported cookies</label>
       <textarea id="export-output" class="mono output" rows="9" readonly spellcheck="false"></textarea>
 
-      <p class="warning">
-        This includes login cookies. Anyone who has it can sign in as you on
-        these sites, so keep it private.
+      <!-- Optional. With a password, Copy and Download give a locked file
+           that only cookieZ can open, with the password. The password is
+           never saved, and the box is emptied once it's been used. See
+           src/lib/crypto.js. -->
+      <div class="field export-password">
+        <label for="export-password">Password (optional)</label>
+        <div class="password-row">
+          <input id="export-password" type="password" autocomplete="new-password" spellcheck="false" />
+          <label class="check">
+            <input id="export-password-show" type="checkbox" />
+            <span>Show</span>
+          </label>
+        </div>
+        <p id="export-password-note" class="field-note muted">
+          Locks the file, so it can only be imported with this password. The
+          password isn't saved anywhere, so don't lose it.
+        </p>
+      </div>
+
+      <!-- Only while the export has cookies that look like sign-ins and no
+           password. -->
+      <p id="export-warning" class="warning" hidden>
+        Anyone with this file can be signed in as you. Add a password, or
+        keep it somewhere private.
       </p>
 
       <div class="actions">
@@ -584,7 +618,7 @@
         Paste cookies exported as JSON (from cookieZ or another cookie
         editor), a cookies.txt file, Set-Cookie lines, or a curl command
         (from “Copy as cURL” in DevTools). A Cookie header on its own goes
-        on this site.
+        on this site. A cookieZ export with a password asks for it.
       </p>
 
       <!-- Choosing a file can close the popup in Chrome, so it's only offered
@@ -599,6 +633,19 @@
 
       <label for="import-text" class="visually-hidden">Cookies to import</label>
       <textarea id="import-text" class="mono output" rows="9" spellcheck="false" autocomplete="off"></textarea>
+
+      <!-- Only for a password-protected export. The password is used once
+           to open it, then the box is emptied. It's never saved. -->
+      <div id="import-password-row" class="field" hidden>
+        <label for="import-password">This file has a password. Type it, then press Check.</label>
+        <div class="password-row">
+          <input id="import-password" type="password" autocomplete="off" spellcheck="false" />
+          <label class="check">
+            <input id="import-password-show" type="checkbox" />
+            <span>Show</span>
+          </label>
+        </div>
+      </div>
 
       <div class="actions">
         <button id="import-check" class="primary" type="button">Check</button>
@@ -617,6 +664,10 @@
           <ul id="import-domains-list"></ul>
         </details>
         <ul id="import-problems" class="errors" hidden></ul>
+        <p id="import-warning" class="warning" hidden>
+          Only import cookies you made yourself. Cookies from someone else
+          can sign you in to their account, or be used to trick you.
+        </p>
         <div id="import-confirm-row" class="actions">
           <button id="import-confirm" class="primary" type="button"></button>
           <button id="import-cancel" type="button">Cancel</button>

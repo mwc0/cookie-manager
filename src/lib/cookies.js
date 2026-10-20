@@ -376,6 +376,15 @@ export function validateCookieValues(values, { imported = false } = {}) {
     );
   }
 
+  // TRAP: Chrome refuses a partitioned (CHIPS) cookie that isn't Secure.
+  if (values.partitionKey && !values.secure) {
+    errors.push(
+      imported
+        ? "It's partitioned but isn't Secure, and Chrome won't accept that."
+        : "A partitioned cookie only works when it's Secure. Tick Secure."
+    );
+  }
+
   if (!values.session && typeof values.expirationDate !== "number") {
     errors.push(
       imported
@@ -432,10 +441,21 @@ export async function writeCookie(original, values) {
 
   // A null result should mean it failed, but set() has returned null on
   // success before (see the TRAP above), so check whether the cookie is there.
-  const landed = await chrome.cookies.getAll({
-    url: details.url,
-    name: details.name,
-  });
+  //
+  // A partitioned cookie is looked for in its own partition, and the site
+  // has to match exactly. Chrome refuses a partition named after a host
+  // rather than a site (https://www.example.com), without an error, but
+  // reads one in a query as the site's. So a refused write could otherwise
+  // pass for one that worked, or find an unpartitioned cookie of that name.
+  const query = { url: details.url, name: details.name };
+  if (details.partitionKey) {
+    query.partitionKey = details.partitionKey;
+  }
+  const landed = (await chrome.cookies.getAll(query)).filter(
+    (cookie) =>
+      !details.partitionKey ||
+      (cookie.partitionKey && cookie.partitionKey.topLevelSite === details.partitionKey.topLevelSite)
+  );
   if (landed.length > 0) {
     return { ok: true, cookie: landed[0], error: null };
   }

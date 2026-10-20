@@ -8,6 +8,10 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 const PATHS = {
+  // Two sheets, one over the other: copy.
+  copy: ["M9 9h11v11H9Z", "M15 9V4H4v11h5"],
+  // A tick: copied.
+  done: ["M5 12.5l4.5 4.5L19 7"],
   // A bookmark: kept.
   keep: ["M7 4h10v16l-5-3.6L7 20Z"],
   // A pencil.
