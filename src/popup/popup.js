@@ -2436,8 +2436,8 @@ async function runSiteDataClear() {
 // version number last seen is saved.
 const WHATS_NEW = {
   "1.9.0":
-    "New: lock an export with a password, reload the site after a change, and copy a cookie's name. " +
-    "cookieZ also opens faster.",
+    "New: block known trackers' cookies from Block, lock an export with a password, " +
+    "and reload the site after a change.",
   "1.8.0":
     "New: block known trackers' cookies on every site, from Block. Cookies with a well-known name " +
     "now say who they're from.",
