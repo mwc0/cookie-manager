@@ -75,6 +75,28 @@ def main():
         search(page, "other.")
         r.check("searching by domain works", row_names(page) == ["sub_cookie"], str(row_names(page)))
 
+        # --- searching one field with "name:", "value:", "domain:", "path:" ---
+        search(page, "name:session")
+        r.check("name: only looks at names, so a value match isn't found",
+                sorted(row_names(page)) == ["session_id", "session_token"], str(row_names(page)))
+        search(page, "VALUE:session")
+        r.check("value: only looks at values, and the prefix ignores case",
+                row_names(page) == ["sub_cookie"], str(row_names(page)))
+        search(page, "value:dark")
+        r.check("value: finds a value that isn't in any name", row_names(page) == ["theme"],
+                str(row_names(page)))
+        search(page, "domain:.other.search.test")
+        r.check("domain: ignores a leading dot", row_names(page) == ["sub_cookie"], str(row_names(page)))
+        search(page, "domain:session")
+        r.check("domain: doesn't look at names", rows(page) == 0, str(row_names(page)))
+        search(page, "path:/")
+        r.check("path: matches the path", rows(page) == 5, str(row_names(page)))
+        search(page, "name:")
+        r.check("a prefix with nothing after it shows everything", rows(page) == 5, str(row_names(page)))
+        search(page, "colour:dark")
+        r.check("any other word before a colon is searched for as it is", rows(page) == 0,
+                str(row_names(page)))
+
         # --- no matches ---
         search(page, "nothing-matches-this")
         no_match_message = page.locator("#empty-message").text_content()
@@ -116,6 +138,22 @@ def main():
                 f"{summary!r} -> {confirm!r} -> {result!r}")
         r.check("ONLY the matching cookies were deleted",
                 left == ["theme", "tracking_id"], str(left))
+
+        # --- the same with a field search: "Just the cookies shown" follows it ---
+        page.evaluate(
+            "async (seed) => { for (const s of seed) await chrome.cookies.set(s); }", SEED
+        )
+        page.wait_for_timeout(800)
+        search(page, "value:abc")
+        page.locator('input[name="scope"][value="matches"]').check()
+        page.wait_for_timeout(700)
+        page.locator("#delete-button").click()
+        page.wait_for_timeout(300)
+        page.locator("#confirm-yes").click()
+        page.wait_for_timeout(1200)
+        left = sorted(c["name"] for c in cookies_for(page, HOST))
+        r.check("a field search deletes only the cookie it shows",
+                left == ["session_token", "sub_cookie", "theme", "tracking_id"], str(left))
 
         # --- clearing the search switches away from that option ---
         page.fill("#search-input", "")
