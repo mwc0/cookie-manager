@@ -98,6 +98,8 @@ import {
   isCompactJson,
   prettyJson,
   compactJson,
+  describeError,
+  bareDomain,
 } from "../lib/format.js";
 import {
   loadTheme,
@@ -228,20 +230,10 @@ function showState(name) {
   for (const section of document.querySelectorAll(".state")) {
     section.hidden = section.id !== "state-" + name;
   }
-
-  // The status line under the header is a live region, so it has to be on
-  // the page before a message goes in, or screen readers may not read it.
-  // The editor, export and import still hide it when they open, so coming
-  // back it's emptied and put back.
-  const message = el("main-message");
-  if (name === "main" && message.hidden) {
-    message.textContent = "";
-    message.hidden = false;
-  }
 }
 
 function showError(error) {
-  const message = error && error.message ? error.message : String(error);
+  const message = describeError(error);
   el("error-message").textContent = message;
   showState("error");
 }
@@ -326,7 +318,7 @@ async function loadCurrentPage() {
     el("main-message").textContent = "";
   }
 
-  page = { origin: url.origin, hostname: url.hostname };
+  page = { origin: url.origin, hostname: url.hostname, tabId: tab.id };
   seenCookies = null;
   expanded = new Set();
 
@@ -405,7 +397,7 @@ async function refreshTable() {
     const domains = new Set(
       pageCookies
         .filter((c) => !setByOtherSite(c, page.hostname))
-        .map((c) => String(c.domain || "").replace(/^\./, ""))
+        .map((c) => bareDomain(c.domain))
     );
     domains.add(page.hostname);
     const pruned = await pruneProtected(protectedKeys, pageCookies, domains);
@@ -744,7 +736,7 @@ function concernsPage(cookie) {
   if (!page) {
     return false;
   }
-  const domain = String(cookie.domain || "").replace(/^\./, "");
+  const domain = bareDomain(cookie.domain);
   const host = page.hostname;
   if (domain === host || host.endsWith("." + domain) || domain.endsWith("." + host)) {
     return true;
@@ -838,7 +830,7 @@ function logChange(cookie, removed, cause) {
   changeLog.unshift({
     at: Date.now(),
     name: cookie.name,
-    domain: String(cookie.domain || "").replace(/^\./, ""),
+    domain: bareDomain(cookie.domain),
     what: describeCookieEvent(key, removed, cause),
   });
   changeLog.length = Math.min(changeLog.length, CHANGE_LOG_LIMIT);
@@ -1005,7 +997,7 @@ async function refreshScope() {
   } catch (error) {
     scopeCookies = [];
     scopeAll = [];
-    summaryLine.textContent = "Couldn't count the cookies in this scope: " + error.message;
+    summaryLine.textContent = "Couldn't count the cookies in this scope: " + describeError(error);
     return;
   }
 
@@ -1110,9 +1102,12 @@ async function runDelete() {
         " could not be deleted, and may be protected by the browser.";
     }
     await offerUndo(result, { kind: "delete", restore: removedCookies });
+    if (removedCookies.length > 0) {
+      appendReloadButton(result);
+    }
   } catch (error) {
     result.className = "result error";
-    result.textContent = "The delete failed: " + error.message;
+    result.textContent = "The delete failed: " + describeError(error);
   } finally {
     yes.disabled = false;
     no.disabled = false;
@@ -1143,7 +1138,7 @@ function showMainMessage(text, isError) {
 function openEditor(cookie) {
   editing = cookie || null;
 
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("edit-title").textContent = cookie ? "Edit cookie" : "New cookie";
   el("edit-errors").hidden = true;
   el("edit-errors").textContent = "";
@@ -1165,7 +1160,7 @@ function openEditor(cookie) {
   // buildSetDetails() puts it back when saving.
   el("field-domain").value = isNew
     ? page.hostname
-    : String(cookie.domain || "").replace(/^\./, "");
+    : bareDomain(cookie.domain);
   el("field-path").value = isNew ? "/" : cookie.path || "/";
 
   el("field-samesite").value = isNew ? "unspecified" : cookie.sameSite || "unspecified";
@@ -1189,7 +1184,7 @@ function openEditor(cookie) {
   const partition = el("edit-partition");
   if (cookie && setByOtherSite(cookie, page.hostname)) {
     partition.textContent =
-      "Set by " + String(cookie.domain || "").replace(/^\./, "") + " in a frame on this site, " +
+      "Set by " + bareDomain(cookie.domain) + " in a frame on this site, " +
       "and kept for this site only (a partitioned, or CHIPS, cookie). Its partition is kept as it is when you save.";
     partition.hidden = false;
   } else if (cookie && cookie.partitionKey) {
@@ -1488,7 +1483,7 @@ async function saveEditor() {
   } catch (error) {
     // Shouldn't happen, since writeCookie() catches its own errors. Show it
     // anyway so the form doesn't look stuck.
-    showFormErrors([error && error.message ? error.message : String(error)]);
+    showFormErrors([describeError(error)]);
   } finally {
     saving = false;
     save.disabled = false;
@@ -2379,7 +2374,7 @@ async function startSiteDataClear() {
     // as much this site's data as the rest.
     found = await getCookiesForScope("domain", page, { embedded: true });
   } catch (error) {
-    showMainMessage("Couldn't count this site's cookies: " + error.message, true);
+    showMainMessage("Couldn't count this site's cookies: " + describeError(error), true);
     return;
   }
   const { deletable, kept } = partitionByProtection(protectedKeys, found);
@@ -2419,18 +2414,19 @@ async function runSiteDataClear() {
   try {
     await chrome.browsingData.remove({ origins: siteDataOrigins() }, SITE_DATA_TYPES);
   } catch (error) {
-    dataError = error && error.message ? error.message : String(error);
+    dataError = describeError(error);
   }
 
   showMainMessage(
     (cookies.length > 0 ? "Deleted " + pluralise(removed, "cookie", "cookies") + " and cleared " : "Cleared ") +
       site + "'s other stored data." +
       (failed.length > 0 ? " " + pluralise(failed.length, "cookie", "cookies") + " could not be deleted." : "") +
-      (dataError ? " Chrome couldn't clear the rest: " + dataError : "") +
-      " Reload the site's tab to start it afresh.",
+      (dataError ? " Chrome couldn't clear the rest: " + dataError : ""),
     failed.length > 0 || Boolean(dataError)
   );
   await offerUndo(el("main-message"), { kind: "delete", restore: removedCookies });
+  // The page still has what it loaded. Reloading starts it afresh.
+  appendReloadButton(el("main-message"));
   await refresh();
 }
 
@@ -2439,6 +2435,9 @@ async function runSiteDataClear() {
 // One line, shown the first time cookieZ opens on a new version. Only the
 // version number last seen is saved.
 const WHATS_NEW = {
+  "1.9.0":
+    "New: lock an export with a password, reload the site after a change, and copy a cookie's name. " +
+    "cookieZ also opens faster.",
   "1.8.0":
     "New: block known trackers' cookies on every site, from Block. Cookies with a well-known name " +
     "now say who they're from.",
@@ -2492,7 +2491,7 @@ async function readRulesBackup() {
   try {
     text = await file.text();
   } catch (error) {
-    showRulesMessage("Couldn't read that file: " + (error && error.message ? error.message : error), true);
+    showRulesMessage("Couldn't read that file: " + describeError(error), true);
     return;
   }
 
@@ -2652,6 +2651,30 @@ function appendUndoButton(message) {
   message.append(" ", button);
 }
 
+// "Reload the site", after a change the open page won't notice until it
+// loads again: a delete, Clear site data, an import or an Undo. It only
+// ever reloads when clicked. Reloading a tab needs no permission.
+function appendReloadButton(message) {
+  if (!page || typeof page.tabId !== "number") {
+    return;
+  }
+  const tabId = page.tabId;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "row-button reload-button";
+  button.textContent = "Reload the site";
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      await chrome.tabs.reload(tabId);
+      button.textContent = "Reloaded";
+    } catch (error) {
+      button.textContent = "Couldn't reload it: " + describeError(error);
+    }
+  });
+  message.append(" ", button);
+}
+
 // "Deleted 5 cookies from example.com", "Imported 12 cookies across 3
 // sites", "Saved changes to sid", "Created theme".
 function describeChange(change) {
@@ -2765,6 +2788,9 @@ async function runUndo(message, button) {
   }
   message.className = result.failures.length > 0 ? "result error" : "result";
   message.textContent = parts.join(" ");
+  if (result.restored + result.removed > 0) {
+    appendReloadButton(message);
+  }
 
   await refresh();
 }
@@ -2869,7 +2895,7 @@ async function finishExport() {
       locked: true,
     };
   } catch (error) {
-    showExportResult("Couldn't lock the export: " + (error && error.message ? error.message : String(error)), true);
+    showExportResult("Couldn't lock the export: " + describeError(error), true);
     return null;
   } finally {
     for (const button of buttons) {
@@ -2927,7 +2953,7 @@ function openExport() {
   }
 
   el("export-result").hidden = true;
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("export-password").value = "";
   el("export-password-show").checked = false;
   el("export-password").type = "password";
@@ -2997,7 +3023,7 @@ function forgetImportPassword() {
 }
 
 function openImport() {
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   forgetImportPassword();
   el("import-move").checked = false;
   el("import-file-row").hidden = !inTab;
@@ -3099,7 +3125,7 @@ async function checkImport() {
   try {
     existing = await getAllCookies();
   } catch (error) {
-    showImportResult("Couldn't read your current cookies to compare: " + error.message, true);
+    showImportResult("Couldn't read your current cookies to compare: " + describeError(error), true);
     return;
   }
 
@@ -3247,6 +3273,9 @@ async function runImport() {
   }
   showImportResult(parts.join(" "), failures.length > 0);
   await offerUndo(el("import-result"), change);
+  if (change.remove.length + change.restore.length > 0) {
+    appendReloadButton(el("import-result"));
+  }
   fillList(el("import-failures"), failures);
 }
 
@@ -3260,7 +3289,7 @@ async function readImportFile() {
     forgetImportPassword();
     await checkImport();
   } catch (error) {
-    showImportResult("Couldn't read " + file.name + ": " + error.message, true);
+    showImportResult("Couldn't read " + file.name + ": " + describeError(error), true);
   }
 }
 

@@ -89,6 +89,9 @@ def main():
             r.check("it says what it did, with Undo",
                     message.startswith("Deleted 5 cookies and cleared " + host + "'s other stored data.")
                     and page.locator("#main-message .undo-button").is_visible(), message)
+            r.check("and offers to reload the site, without doing it by itself",
+                    page.locator("#main-message .reload-button").is_visible()
+                    and page.locator("#main-message .reload-button").text_content() == "Reload the site")
             r.check("TRAP: the site's local storage is cleared, and the other site's isn't",
                     stored_value(site, top) is None and stored_value(site, embed) == "embed",
                     "top={}, embed={}".format(stored_value(site, top), stored_value(site, embed)))
@@ -116,7 +119,7 @@ def main():
             news.wait_for_timeout(1200)
             r.check("the first open on a new version shows what's new",
                     news.locator("#whats-new").is_visible()
-                    and "known trackers" in news.locator("#whats-new-text").text_content(),
+                    and "password" in news.locator("#whats-new-text").text_content(),
                     news.locator("#whats-new-text").text_content())
             saved = news.evaluate("async () => (await chrome.storage.local.get('seenVersion')).seenVersion")
             r.check("only the version number is saved", saved == news.evaluate("() => chrome.runtime.getManifest().version"),

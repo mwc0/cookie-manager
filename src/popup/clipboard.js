@@ -1,3 +1,4 @@
+import { describeError } from "../lib/format.js";
 import { setIconContent } from "./icons.js";
 
 // Copies text and says so on the button that was clicked, then puts the
@@ -11,7 +12,7 @@ export async function copyWithFeedback(button, text) {
     button.textContent = "Copied";
   } catch (error) {
     button.textContent = "Couldn't copy";
-    button.title = error && error.message ? error.message : String(error);
+    button.title = describeError(error);
   }
 
   setTimeout(() => {
@@ -29,7 +30,7 @@ export async function copyWithIconFeedback(button, text, icon, label) {
     setIconContent(button, "done", "Copied");
   } catch (error) {
     setIconContent(button, "cancel", "Couldn't copy");
-    button.title = error && error.message ? error.message : String(error);
+    button.title = describeError(error);
   }
 
   setTimeout(() => {

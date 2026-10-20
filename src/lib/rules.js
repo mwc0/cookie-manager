@@ -30,6 +30,7 @@
 // every-site choice also needs "privacy". Both are asked for on the rules
 // screen. See permissions.js.
 
+import { describeError } from "./format.js";
 import { baseHostOf } from "./cookies.js";
 import { TRACKER_DOMAINS } from "../lists/trackers.js";
 
@@ -53,9 +54,6 @@ function emptyRules() {
   return { everywhere: ALLOW, sites: {}, deleteOnBlock: false, trackers: false };
 }
 
-function describe(error) {
-  return error && error.message ? error.message : String(error);
-}
 
 // Whatever was in storage (or in a backup file), with nothing unexpected in
 // it. Anything this file didn't write is dropped.
@@ -92,7 +90,7 @@ export async function loadRules() {
     const stored = await chrome.storage.local.get(STORAGE_KEY);
     return { rules: tidy(stored && stored[STORAGE_KEY]), error: null };
   } catch (error) {
-    return { rules: emptyRules(), error: "Couldn't read your site rules: " + describe(error) };
+    return { rules: emptyRules(), error: "Couldn't read your site rules: " + describeError(error) };
   }
 }
 
@@ -102,7 +100,7 @@ async function saveRules(rules) {
     await chrome.storage.local.set({ [STORAGE_KEY]: rules });
     return null;
   } catch (error) {
-    return "Couldn't save your site rules: " + describe(error);
+    return "Couldn't save your site rules: " + describeError(error);
   }
 }
 
@@ -300,11 +298,11 @@ export async function applyRules(rules) {
     );
     const refused = results.find((result) => result.status === "rejected");
     if (refused) {
-      return "Chrome wouldn't accept the rules: " + describe(refused.reason);
+      return "Chrome wouldn't accept the rules: " + describeError(refused.reason);
     }
     return null;
   } catch (error) {
-    return "Chrome wouldn't accept the rules: " + describe(error);
+    return "Chrome wouldn't accept the rules: " + describeError(error);
   }
 }
 

@@ -21,6 +21,7 @@
 // values, so matchSentCookies() fills in the rest from the cookies the site
 // already has.
 
+import { bareDomain } from "./format.js";
 import { validateCookieValues } from "./cookies.js";
 import { isLockedExport } from "./crypto.js";
 
@@ -86,7 +87,7 @@ export function toHeader(cookies) {
 export function toSetCookie(cookie) {
   const parts = [cookie.name + "=" + cookie.value];
   if (!cookie.hostOnly) {
-    parts.push("Domain=" + String(cookie.domain || "").replace(/^\./, ""));
+    parts.push("Domain=" + bareDomain(cookie.domain));
   }
   parts.push("Path=" + (cookie.path || "/"));
   if (typeof cookie.expirationDate === "number") {
@@ -114,7 +115,7 @@ export function toSetCookie(cookie) {
 // uses -1 for a session cookie, and only knows Strict, Lax and None.
 export function toPlaywright(cookies) {
   const list = cookies.map((cookie) => {
-    const host = String(cookie.domain || "").replace(/^\./, "");
+    const host = bareDomain(cookie.domain);
     const out = {
       name: cookie.name,
       value: cookie.value,
@@ -161,7 +162,7 @@ export function toSelenium(cookies) {
     "# the browser is on. Cookies can sign someone in as you, so keep this private.",
   ];
   for (const cookie of cookies) {
-    const host = String(cookie.domain || "").replace(/^\./, "");
+    const host = bareDomain(cookie.domain);
     const fields = [
       ["name", pythonString(cookie.name)],
       ["value", pythonString(cookie.value)],
@@ -317,7 +318,7 @@ function fromJsonItem(item) {
   const entry = {
     name: item.name,
     value: item.value == null ? "" : String(item.value),
-    domain: item.domain.replace(/^\./, ""),
+    domain: bareDomain(item.domain),
     path: typeof item.path === "string" && item.path !== "" ? item.path : "/",
     secure: Boolean(item.secure),
     httpOnly: Boolean(item.httpOnly),
@@ -387,7 +388,7 @@ function parseNetscape(text) {
       name,
       // A value can't contain a tab, but join any extra columns back just in case.
       value: rest.join("\t"),
-      domain: domain.replace(/^\./, ""),
+      domain: bareDomain(domain),
       path: path || "/",
       secure: secure.toUpperCase() === "TRUE",
       httpOnly,
@@ -514,7 +515,7 @@ function fromSetCookie(line, host, now) {
     const value = split === -1 ? "" : attribute.slice(split + 1).trim();
 
     if (key === "domain" && value !== "") {
-      entry.domain = value.replace(/^\./, "").toLowerCase();
+      entry.domain = bareDomain(value).toLowerCase();
       entry.hostOnly = false;
     } else if (key === "path" && value.startsWith("/")) {
       entry.path = value;
@@ -821,7 +822,7 @@ function isOnHost(cookie, host) {
   if (cookie.partitionKey) {
     return false;
   }
-  const domain = String(cookie.domain || "").replace(/^\./, "");
+  const domain = bareDomain(cookie.domain);
   return cookie.hostOnly ? host === domain : host === domain || host.endsWith("." + domain);
 }
 
@@ -877,7 +878,7 @@ export function matchSentCookies(entries, existing) {
       return {
         name: match.name,
         value: entry.value,
-        domain: String(match.domain || "").replace(/^\./, ""),
+        domain: bareDomain(match.domain),
         path: match.path || "/",
         secure: Boolean(match.secure),
         httpOnly: Boolean(match.httpOnly),
@@ -911,7 +912,7 @@ export function matchSentCookies(entries, existing) {
 export function isForSite(entry, hostname) {
   const domain = entry.sendTo
     ? hostOf(entry.sendTo)
-    : String(entry.domain || "").replace(/^\./, "");
+    : bareDomain(entry.domain);
   return domain === hostname || hostname.endsWith("." + domain) || domain.endsWith("." + hostname);
 }
 
@@ -943,7 +944,7 @@ export function moveToSite(entries, pageUrl) {
 function identityOf(cookie) {
   return [
     cookie.name,
-    String(cookie.domain || "").replace(/^\./, ""),
+    bareDomain(cookie.domain),
     Boolean(cookie.hostOnly),
     cookie.path || "/",
     cookie.partitionKey && cookie.partitionKey.topLevelSite ? cookie.partitionKey.topLevelSite : "",

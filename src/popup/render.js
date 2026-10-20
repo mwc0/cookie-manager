@@ -13,6 +13,7 @@ import {
   cookieBytes,
   LARGE_COOKIE_BYTES,
   formatBytes,
+  bareDomain,
 } from "../lib/format.js";
 import { cookieKey } from "../lib/cookies.js";
 import { knownCookie, describeKnownBy } from "../lib/known.js";
@@ -66,18 +67,20 @@ export const DEFAULT_SORT = { key: "domain", dir: "ascending" };
 // cookies at the top of it. `isKept(cookie)` says whether a cookie is
 // marked Kept (see src/lib/protect.js).
 export function sortCookies(cookies, sort = DEFAULT_SORT, isKept = () => false) {
-  const host = (cookie) => String(cookie.domain || "").replace(/^\./, "");
+  const host = (cookie) => bareDomain(cookie.domain);
   const keptFirst = (a, b) => (isKept(b) ? 1 : 0) - (isKept(a) ? 1 : 0);
   const byDomainThenName = (a, b) =>
     host(a).localeCompare(host(b)) || a.name.localeCompare(b.name);
   const flip = sort.dir === "descending" ? -1 : 1;
+  // Each cookie's size once, not once per comparison.
+  const sizes = sort.key === "size" ? new Map(cookies.map((cookie) => [cookie, cookieBytes(cookie)])) : null;
 
   return [...cookies].sort((a, b) => {
     if (sort.key === "name") {
       return flip * a.name.localeCompare(b.name) || keptFirst(a, b) || flip * byDomainThenName(a, b);
     }
     if (sort.key === "size") {
-      return flip * (cookieBytes(a) - cookieBytes(b)) || keptFirst(a, b) || byDomainThenName(a, b);
+      return flip * (sizes.get(a) - sizes.get(b)) || keptFirst(a, b) || byDomainThenName(a, b);
     }
     if (sort.key === "expires") {
       // Session cookies have no date, so they go last whichever way round.
@@ -134,21 +137,26 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
 
   row.appendChild(pickCell(cookie, handlers));
 
+  // Worked out once per row: the table is redrawn on every change the site
+  // makes, so this runs a lot.
+  const bytes = cookieBytes(cookie);
+  const embedded = Boolean(handlers.isEmbedded && handlers.isEmbedded(cookie));
+
   const name = textCell(cookie.name, "mono name");
-  name.title = cookie.name + " (" + formatBytes(cookieBytes(cookie)) + ")";
+  name.title = cookie.name + " (" + formatBytes(bytes) + ")";
   row.appendChild(name);
   row.appendChild(valueCell(cookie, handlers));
   // Only shown when cookieZ is open in a tab. See .size in popup.css.
-  row.appendChild(textCell(formatBytes(cookieBytes(cookie)), "nowrap size"));
+  row.appendChild(textCell(formatBytes(bytes), "nowrap size"));
   const domain = breakableCell(cookie.domain, ".", "mono domain");
   // Another company's cookie, kept for this site only. Said in words under
   // its domain, since otherwise it looks like a cookie set for that domain.
-  if (handlers.isEmbedded && handlers.isEmbedded(cookie)) {
+  if (embedded) {
     const note = document.createElement("span");
     note.className = "embedded-note";
     note.textContent = "set in a frame, kept for this site only";
     note.title =
-      "Set by " + String(cookie.domain || "").replace(/^\./, "") +
+      "Set by " + bareDomain(cookie.domain) +
       " in a frame on this site. It's partitioned, so it's kept for this site only.";
     domain.appendChild(note);
   }
@@ -165,7 +173,7 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   }
   row.appendChild(expires);
 
-  row.appendChild(flagsCell(cookie, handlers));
+  row.appendChild(flagsCell(cookie, bytes, embedded));
   row.appendChild(actionsCell(cookie, handlers, disarmers, disarmAll));
   return row;
 }
@@ -390,10 +398,12 @@ function valueCell(cookie, handlers) {
 // Only what's unusual about a cookie gets a badge, in words. Most cookies
 // are for one host and have no SameSite set, so those get nothing, rather
 // than the same badges on every row. The editor shows every setting.
-function flagsCell(cookie, handlers) {
+// `bytes` and `embedded` come from buildRow(), which has already worked
+// them out.
+function flagsCell(cookie, bytes, embedded) {
   const cell = document.createElement("td");
   cell.className = "flags";
-  const host = String(cookie.domain || "").replace(/^\./, "");
+  const host = bareDomain(cookie.domain);
 
   if (cookie.secure) {
     cell.appendChild(badge("Secure", "Only sent over HTTPS"));
@@ -406,7 +416,7 @@ function flagsCell(cookie, handlers) {
   }
   // Set by another site in a frame on this one. Its row also says so in
   // words, under the domain (see buildRow()).
-  if (handlers.isEmbedded && handlers.isEmbedded(cookie)) {
+  if (embedded) {
     cell.appendChild(
       badge("Partitioned", "Partitioned (CHIPS): set by " + host + " and kept for this site only")
     );
@@ -426,17 +436,17 @@ function flagsCell(cookie, handlers) {
   // out by screen readers.
   const known = knownCookie(cookie.name);
   if (known) {
-    const tip = "Known name, used by " + describeKnownBy(known) + ". A guess from the name only.";
+    const by = describeKnownBy(known);
+    const tip = "Known name, used by " + by + ". A guess from the name only.";
     const mark = badge("Known", tip);
     mark.classList.add("known");
     const detail = document.createElement("span");
     detail.className = "visually-hidden";
-    detail.textContent = " name, used by " + describeKnownBy(known);
+    detail.textContent = " name, used by " + by;
     mark.appendChild(detail);
     cell.appendChild(mark);
   }
 
-  const bytes = cookieBytes(cookie);
   if (bytes >= LARGE_COOKIE_BYTES) {
     const large = badge(
       "Large",

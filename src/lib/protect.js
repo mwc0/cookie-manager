@@ -4,6 +4,8 @@
 // script, which v1 doesn't have. It's why the popup says "kept" and never
 // "protected": it would be promising more than it does.
 
+import { describeError, bareDomain } from "./format.js";
+
 const STORAGE_KEY = "protectedCookies";
 
 // How a kept cookie is remembered. Unlike cookieKey() in cookies.js, this
@@ -12,7 +14,7 @@ const STORAGE_KEY = "protectedCookies";
 // wrong, it errs towards not deleting.
 export function protectionKeyOf(cookie) {
   return [
-    String(cookie.domain || "").replace(/^\./, ""),
+    bareDomain(cookie.domain),
     cookie.path || "/",
     cookie.name,
     cookie.partitionKey ? JSON.stringify(cookie.partitionKey) : "",
@@ -32,7 +34,7 @@ export async function loadProtected() {
       keys: new Set(),
       error:
         "Couldn't read the protected list, so nothing is being treated as " +
-        "protected right now: " + (error && error.message ? error.message : String(error)),
+        "protected right now: " + describeError(error),
     };
   }
 }

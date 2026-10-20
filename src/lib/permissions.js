@@ -6,6 +6,8 @@
 // It returns an empty list, which looks the same as "this site has no
 // cookies". So always check hasHostAccess() before reading cookies.
 
+import { describeError } from "./format.js";
+
 export const ALL_SITES = "*://*/*";
 
 export async function hasHostAccess() {
@@ -87,7 +89,7 @@ export async function requestPermission(name) {
 }
 
 function describeRequestFailure(error) {
-  const message = error && error.message ? error.message : String(error);
+  const message = describeError(error);
 
   if (message.includes("user gesture")) {
     return "Chrome only allows the permission prompt to open from a direct click. Please click the button again.";

@@ -1,7 +1,7 @@
 // Everything that talks to chrome.cookies goes through this file, so the
 // awkward parts of that API are handled in one place.
 
-import { cookieBytes, expiresSoon, LARGE_COOKIE_BYTES } from "./format.js";
+import { cookieBytes, describeError, expiresSoon, LARGE_COOKIE_BYTES, bareDomain } from "./format.js";
 import { knownCookie } from "./known.js";
 
 // Chrome won't store a cookie whose name and value together are bigger than
@@ -12,7 +12,7 @@ export const MAX_COOKIE_BYTES = 4096;
 // from the Secure flag, and a leading dot on the domain has to be removed.
 export function buildCookieUrl(cookie) {
   const scheme = cookie.secure ? "https://" : "http://";
-  const host = String(cookie.domain || "").replace(/^\./, "");
+  const host = bareDomain(cookie.domain);
   const path = cookie.path || "/";
   return scheme + host + path;
 }
@@ -115,7 +115,7 @@ export function setByOtherSite(cookie, hostname) {
   if (!cookie.partitionKey) {
     return false;
   }
-  const domain = String(cookie.domain || "").replace(/^\./, "");
+  const domain = bareDomain(cookie.domain);
   const base = baseHostOf(hostname);
   const own = domain === base || domain.endsWith("." + base) || base.endsWith("." + domain);
   return !own;
@@ -216,7 +216,7 @@ export function filterByFlags(cookies, active, isKept) {
 export function sitesOf(cookies) {
   const sites = new Set();
   for (const cookie of cookies) {
-    sites.add(String(cookie.domain || "").replace(/^\./, ""));
+    sites.add(bareDomain(cookie.domain));
   }
   return Array.from(sites).sort();
 }
@@ -245,7 +245,7 @@ export function summarise(cookies) {
 function identityOf(parts) {
   return [
     parts.name,
-    String(parts.domain || "").replace(/^\./, ""),
+    bareDomain(parts.domain),
     Boolean(parts.hostOnly),
     parts.path || "/",
     parts.storeId || "",
@@ -255,7 +255,7 @@ function identityOf(parts) {
 
 // Turns the editor form's values into what chrome.cookies.set expects.
 export function buildSetDetails(values) {
-  const host = String(values.domain || "").replace(/^\./, "");
+  const host = bareDomain(values.domain);
   const path = values.path || "/";
   const scheme = values.secure ? "https://" : "http://";
 
@@ -469,7 +469,7 @@ export async function writeCookie(original, values) {
 // Chrome's error names the cookie but not what was wrong with it, so we add
 // the likely reasons.
 function describeWriteFailure(error) {
-  const message = error && error.message ? error.message : String(error);
+  const message = describeError(error);
 
   if (message.includes("Failed to parse or set cookie")) {
     return (

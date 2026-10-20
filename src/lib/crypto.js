@@ -22,6 +22,8 @@
 //   }
 // "data" is the export's text (JSON, cookies.txt and so on), encrypted.
 
+import { describeError } from "./format.js";
+
 export const LOCKED_KIND = "cookieZ encrypted export";
 const VERSION = 1;
 const KDF = "PBKDF2-SHA-256";
@@ -121,7 +123,7 @@ export async function unlockText(text, password) {
   try {
     key = await deriveKey(password, file.salt, file.iterations);
   } catch (problem) {
-    return { ok: false, error: "The file couldn't be opened: " + describe(problem) };
+    return { ok: false, error: "The file couldn't be opened: " + describeError(problem) };
   }
 
   try {
@@ -184,6 +186,3 @@ function fromBase64(text) {
   }
 }
 
-function describe(error) {
-  return error && error.message ? error.message : String(error);
-}
