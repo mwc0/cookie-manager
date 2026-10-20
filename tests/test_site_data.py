@@ -114,12 +114,14 @@ def main():
 
             # What's new.
             news = new_popup(context, ext_id, top)
-            news.evaluate("async () => { await chrome.storage.local.remove('seenVersion'); }")
+            # An older version last opened. With none at all, it's a fresh install and
+            # gets the welcome line instead (test_states.py checks that).
+            news.evaluate("async () => { await chrome.storage.local.set({ seenVersion: '1.9.0' }); }")
             news.reload()
             news.wait_for_timeout(1200)
             r.check("the first open on a new version shows what's new",
                     news.locator("#whats-new").is_visible()
-                    and "password" in news.locator("#whats-new-text").text_content(),
+                    and news.locator("#whats-new-text").text_content().startswith("New:"),
                     news.locator("#whats-new-text").text_content())
             saved = news.evaluate("async () => (await chrome.storage.local.get('seenVersion')).seenVersion")
             r.check("only the version number is saved", saved == news.evaluate("() => chrome.runtime.getManifest().version"),
