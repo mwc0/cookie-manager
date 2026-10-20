@@ -178,6 +178,9 @@ def main():
         # --- 1.9: the sign-in warning ---
         page.locator("#export-button").click()
         page.wait_for_timeout(300)
+        # The format chosen last time is still chosen, and that was Selenium.
+        page.locator('input[name="format"][value="json"]').check()
+        page.wait_for_timeout(200)
         warning = page.locator("#export-warning")
         r.check("an export with sign-in cookies and no password warns, near the buttons",
                 warning.is_visible() and " ".join(warning.text_content().split()) ==
