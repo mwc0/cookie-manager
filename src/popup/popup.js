@@ -111,6 +111,7 @@ import {
 } from "../lib/theme.js";
 import { renderCookieTable, DEFAULT_SORT } from "./render.js";
 import { loadCleared, changeCleared } from "../lib/stats.js";
+import { noteJob, recordAnswer, STORE_REVIEWS_URL } from "../lib/review.js";
 import { loadKnownCookies, knownCookie, describeKnown } from "../lib/known.js";
 import {
   saveLastChange,
@@ -2433,8 +2434,12 @@ async function runSiteDataClear() {
 // --- what's new ---------------------------------------------------------------
 
 // One line, shown the first time cookieZ opens on a new version. Only the
-// version number last seen is saved.
+// version number last seen is saved. On a fresh install, when no version
+// has been saved yet, a welcome line shows instead.
 const WHATS_NEW = {
+  "2.0.0":
+    "New: search one field, such as name:session, and compare a site's cookies " +
+    "with an earlier export, from Import.",
   "1.9.0":
     "New: block known trackers' cookies from Block, lock an export with a password, " +
     "and reload the site after a change.",
@@ -2446,20 +2451,64 @@ const WHATS_NEW = {
     "and clear a site's stored data as well as its cookies.",
 };
 
+const WELCOME =
+  "Welcome. Click a cookie to edit it, or use the options below to delete or export. " +
+  "Help (?) explains the rest.";
+
+// Whether the What's new or welcome line showed on this open. The review
+// line waits for another open rather than appear alongside it.
+let whatsNewShown = false;
+
 async function showWhatsNew() {
   const version = chrome.runtime.getManifest().version;
+  let text;
   try {
     const stored = await chrome.storage.local.get("seenVersion");
     if (stored.seenVersion === version) {
       return;
     }
+    text = stored.seenVersion === undefined ? WELCOME : WHATS_NEW[version];
     await chrome.storage.local.set({ seenVersion: version });
   } catch (error) {
     return; // Not worth troubling anyone about.
   }
-  if (WHATS_NEW[version]) {
-    el("whats-new-text").textContent = WHATS_NEW[version];
+  if (text) {
+    el("whats-new-text").textContent = text;
     el("whats-new").hidden = false;
+    whatsNewShown = true;
+  }
+}
+
+// --- asking for a review ----------------------------------------------------
+
+// After a few deletes, imports or Saves have gone well, one quiet line asks
+// for a review. See src/lib/review.js for when, and how rarely.
+async function countJob(message) {
+  // A job that ended with an error doesn't count, and nor does one on an
+  // open that already showed What's new, so the ask never lands then.
+  if (whatsNewShown || message.classList.contains("error")) {
+    return;
+  }
+  const ask = await noteJob();
+  if (!ask) {
+    return;
+  }
+  el("review-later").textContent = ask === "first" ? "Not now" : "No thanks";
+  el("review-later").dataset.answer = ask === "first" ? "later" : "done";
+  el("review-ask").hidden = false;
+}
+
+// Opens the store's review page in a new tab, only when clicked. Returns
+// false, after saying why in `message`, if Chrome wouldn't open it.
+async function openReviewPage(message) {
+  try {
+    await chrome.tabs.create({ url: STORE_REVIEWS_URL });
+    return true;
+  } catch (error) {
+    message.className = "result error";
+    message.textContent = "Couldn't open the review page: " + describeError(error);
+    message.hidden = false;
+    return false;
   }
 }
 
@@ -2634,6 +2683,7 @@ async function offerUndo(message, change) {
   if ((change.restore || []).length + (change.remove || []).length === 0) {
     return;
   }
+  await countJob(message);
   const { error } = await saveLastChange(change);
   if (error) {
     message.append(" " + error);
@@ -3457,6 +3507,19 @@ el("whats-new-close").addEventListener("click", () => {
   el("whats-new").hidden = true;
   el("search-input").focus();
 });
+el("review-open").addEventListener("click", async () => {
+  el("review-ask").hidden = true;
+  el("search-input").focus();
+  if (await openReviewPage(el("main-message"))) {
+    await recordAnswer("done");
+  }
+});
+el("review-later").addEventListener("click", async () => {
+  el("review-ask").hidden = true;
+  el("search-input").focus();
+  await recordAnswer(el("review-later").dataset.answer);
+});
+el("help-review").addEventListener("click", () => openReviewPage(el("help-review-message")));
 el("rules-backup").addEventListener("click", saveRulesBackup);
 el("rules-load").addEventListener("change", readRulesBackup);
 el("rules-load-yes").addEventListener("click", loadRulesBackup);
