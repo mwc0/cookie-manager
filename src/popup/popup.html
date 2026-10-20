@@ -406,7 +406,10 @@
 
       <form id="edit-form" autocomplete="off">
         <div class="field">
-          <label for="field-name">Name</label>
+          <div class="field-label-row">
+            <label for="field-name">Name</label>
+            <button id="name-copy" class="row-button" type="button" title="Copy the name">Copy</button>
+          </div>
           <input id="field-name" name="name" type="text" class="mono" spellcheck="false" />
           <!-- Only when the name is in the Open Cookie Database. A guess from
                the name, and it says so. -->
@@ -496,6 +499,11 @@
           <label class="check">
             <input id="field-hostonly" name="hostOnly" type="checkbox" />
             <span>Host-only: this exact host, not its subdomains</span>
+          </label>
+          <!-- Only for a new cookie: a partition can't be changed later. -->
+          <label id="partitioned-row" class="check" hidden>
+            <input id="field-partitioned" type="checkbox" />
+            <span>Partitioned (CHIPS): kept for <span id="partitioned-site"></span> only. Needs Secure.</span>
           </label>
         </div>
 

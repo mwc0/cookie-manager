@@ -164,6 +164,10 @@ let scopeAll = [];
 // original cookie, in case the name or path changed. See writeCookie().
 let editing = null;
 
+// After Duplicate on a partitioned cookie, the partition the copy goes in.
+// Otherwise null.
+let duplicatePartition = null;
+
 // All of this page's cookies, and the ones the search is showing.
 // "Just the cookies shown" deletes shownCookies, the same list as the table.
 let pageCookies = [];
@@ -1156,8 +1160,15 @@ function openEditor(cookie) {
     partition.hidden = true;
   }
 
-  // A partitioned cookie can't be made here, so it can't be duplicated.
-  el("edit-duplicate").hidden = isNew || Boolean(cookie.partitionKey);
+  // A new cookie can be partitioned (CHIPS): kept for this site only. An
+  // existing cookie's partition can't be changed, so the box is only for
+  // new ones.
+  duplicatePartition = null;
+  el("field-partitioned").checked = false;
+  el("partitioned-site").textContent = baseHostOf(page.hostname);
+  el("partitioned-row").hidden = !isNew;
+
+  el("edit-duplicate").hidden = isNew;
 
   showDecoded();
   showValueSize();
@@ -1196,7 +1207,17 @@ function expireIn(seconds) {
 // Turns the editor into a new cookie with the details already filled in,
 // including anything typed since it was opened. The cookie being edited is
 // left alone. Saving goes the usual way, so Undo works on it.
+//
+// A partitioned cookie's copy goes in the same partition, with the box
+// ticked. Unticking it makes an ordinary cookie instead.
 function duplicateCookie() {
+  if (editing && editing.partitionKey) {
+    duplicatePartition = editing.partitionKey;
+    el("field-partitioned").checked = true;
+    const site = String(editing.partitionKey.topLevelSite || "").replace(/^https?:\/\//, "");
+    el("partitioned-site").textContent = site || baseHostOf(page.hostname);
+  }
+  el("partitioned-row").hidden = false;
   editing = null;
   el("edit-title").textContent = "New cookie";
   el("edit-duplicate").hidden = true;
@@ -1295,8 +1316,46 @@ function readForm() {
     session,
     expirationDate: session ? null : fromLocalDateTimeValue(el("field-expiry").value),
     storeId: editing ? editing.storeId : undefined,
-    partitionKey: editing ? editing.partitionKey : undefined,
+    partitionKey: editing ? editing.partitionKey : newPartitionKey(),
   };
+}
+
+// The partition for a new cookie with "Partitioned" ticked: the copied
+// cookie's for a duplicate, otherwise this site's. See partitionSites().
+function newPartitionKey() {
+  if (!el("field-partitioned").checked) {
+    return undefined;
+  }
+  return duplicatePartition || { topLevelSite: partitionSites()[0] };
+}
+
+// Chrome only takes a partition named after a site, such as
+// https://example.com: not https://www.example.com, and with no port. It
+// refuses any other without saying why. Working out the site for certain
+// needs the list of public suffixes (example.co.uk is a site, co.uk isn't),
+// which cookieZ doesn't carry. So these are the page's host and each of its
+// parent domains, longest first, and saveEditor() keeps the first one Chrome
+// accepts. A wrong guess is refused, so nothing is written by mistake.
+function partitionSites() {
+  const scheme = page.origin.startsWith("https:") ? "https://" : "http://";
+  const labels = page.hostname.split(".");
+  return labels.map((label, index) => scheme + labels.slice(index).join("."));
+}
+
+// Saves the form. A new partitioned cookie tries each possible site in
+// turn (see partitionSites()); everything else is one write.
+async function writeFromEditor(values) {
+  if (editing || !values.partitionKey || duplicatePartition) {
+    return writeCookie(editing, values);
+  }
+  let result = null;
+  for (const topLevelSite of partitionSites()) {
+    result = await writeCookie(null, { ...values, partitionKey: { topLevelSite } });
+    if (result.ok) {
+      break;
+    }
+  }
+  return result;
 }
 
 function showFormErrors(errors) {
@@ -1358,7 +1417,7 @@ async function saveEditor() {
 
   try {
     saving = true;
-    const { ok, cookie, error } = await writeCookie(editing, values);
+    const { ok, cookie, error } = await writeFromEditor(values);
     saving = false;
 
     if (!ok) {
@@ -3349,6 +3408,15 @@ el("import-move").addEventListener("change", async () => {
   el("import-move").focus();
 });
 
+// A partitioned cookie has to be Secure, so ticking one ticks the other.
+el("field-partitioned").addEventListener("change", () => {
+  if (el("field-partitioned").checked) {
+    el("field-secure").checked = true;
+  }
+});
+el("name-copy").addEventListener("click", () =>
+  copyWithFeedback(el("name-copy"), el("field-name").value.trim())
+);
 // Copies the value as it would be saved: on one line, if edited as JSON.
 el("value-copy").addEventListener("click", () =>
   copyWithFeedback(el("value-copy"), valueToSave().value ?? el("field-value").value)

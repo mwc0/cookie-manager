@@ -740,8 +740,8 @@ td.size {
 }
 
 .col-actions {
-  /* Three 26px buttons, or "Sure?" and its cancel button. */
-  width: 102px;
+  /* Four 26px buttons, or "Sure?" and its cancel button. */
+  width: 132px;
 }
 
 th {

@@ -6,6 +6,9 @@
   - Copy as Set-Cookie
   - Keep, stop keeping, or set an expiry for every ticked cookie at once
 
+and 1.9's: Copy name in the editor, a Partitioned box for a new cookie, and
+Duplicate for a partitioned one.
+
 The JSON part is the risky one. The value in the box isn't the value that
 gets saved, so the checks are on what Chrome stored, not on the screen: a
 laid-out value must never be saved laid out, and broken JSON must never be
@@ -61,6 +64,13 @@ def stored(page, name):
 def tick(page, name):
     row_for(page, name).locator("td.pick input").click()
     page.wait_for_timeout(400)
+
+
+def partitioned(page, host):
+    """name -> partition site, for every partitioned cookie on `host`."""
+    return page.evaluate("""async (host) => Object.fromEntries(
+        (await chrome.cookies.getAll({domain: host, partitionKey: {}}))
+            .filter(c => c.partitionKey).map(c => [c.name, c.partitionKey.topLevelSite]))""", host)
 
 
 def kept_keys(page):
@@ -203,6 +213,68 @@ def main():
         page.wait_for_timeout(400)
         r.check("'Untick all' clears the ticks and the bar goes",
                 not page.locator("#picked-bar").is_visible(), str(page.locator("#picked-count").text_content()))
+
+        # --- 1.9: Copy name, in the editor ---
+        page.evaluate("() => { navigator.clipboard.writeText = async (t) => { window.__copied = t; }; }")
+        open_editor(page, "joined_at")
+        page.locator("#name-copy").click()
+        page.wait_for_timeout(300)
+        r.check("the editor's Copy beside the name copies the name",
+                page.evaluate("() => window.__copied") == "joined_at"
+                and page.locator("#name-copy").text_content() == "Copied")
+        r.check("an existing cookie has no Partitioned box: its partition can't change",
+                not page.locator("#partitioned-row").is_visible())
+        back(page)
+
+        # --- 1.9: a new partitioned cookie ---
+        page.locator("#add-button").click()
+        page.wait_for_timeout(400)
+        r.check("a new cookie offers a Partitioned box, unticked, naming the site",
+                page.locator("#partitioned-row").is_visible() and not page.locator("#field-partitioned").is_checked()
+                and page.locator("#partitioned-site").text_content() == HOST,
+                page.locator("#partitioned-row").text_content().strip())
+        page.fill("#field-name", "chips_new")
+        page.fill("#field-value", "p1")
+        page.locator("#field-partitioned").check()
+        r.check("ticking it ticks Secure, which Chrome needs", page.locator("#field-secure").is_checked())
+        page.locator("#edit-save").click()
+        page.wait_for_timeout(900)
+        made = partitioned(page, HOST)
+        r.check("saving makes a partitioned cookie for this site",
+                made.get("chips_new") == "https://editing.test", json.dumps(made))
+
+        # On a www page, Chrome refuses https://www.editing.test as a
+        # partition, so the site has to be found.
+        www_page, www_errors = open_popup(context, ext_id, "https://www.editing.test/")
+        www_page.locator("#add-button").click()
+        www_page.wait_for_timeout(400)
+        www_page.fill("#field-name", "chips_www")
+        www_page.fill("#field-value", "w1")
+        www_page.locator("#field-partitioned").check()
+        www_page.locator("#edit-save").click()
+        www_page.wait_for_timeout(900)
+        made = partitioned(www_page, "www.editing.test")
+        r.check("on a www page it goes in the site's partition, not the host's",
+                made.get("chips_www") == "https://editing.test" and www_page.locator("#edit-errors").is_hidden(),
+                json.dumps(made) + " / " + (www_page.locator("#edit-errors").text_content() or ""))
+        r.check("no errors on the www page", not www_errors, str(www_errors))
+        www_page.close()
+
+        # --- 1.9: Duplicate works for a partitioned cookie ---
+        page.reload()
+        page.wait_for_timeout(1200)
+        open_editor(page, "chips_new")
+        r.check("Duplicate is offered for a partitioned cookie", page.locator("#edit-duplicate").is_visible())
+        page.locator("#edit-duplicate").click()
+        page.wait_for_timeout(300)
+        r.check("the copy is ticked Partitioned",
+                page.locator("#partitioned-row").is_visible() and page.locator("#field-partitioned").is_checked()
+                and page.locator("#field-name").input_value() == "chips_new_copy")
+        page.locator("#edit-save").click()
+        page.wait_for_timeout(900)
+        made = partitioned(page, HOST)
+        r.check("saving the copy puts it in the same partition, and leaves the original",
+                made.get("chips_new_copy") == "https://editing.test" and "chips_new" in made, json.dumps(made))
 
         r.check("no errors were logged", not errors, str(errors))
         context.close()

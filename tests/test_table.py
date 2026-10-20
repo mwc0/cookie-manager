@@ -16,6 +16,7 @@ from helpers import (
     launch,
     open_popup,
     row_for,
+    keep_button,
 )
 
 SITE = "https://table.test/"
@@ -108,6 +109,25 @@ def main():
         title = days.get_attribute("title")
         r.check("the tooltip gives the full date and how soon",
                 title.startswith("Expires ") and title.endswith("(in 3 days)"), repr(title))
+
+        # --- 1.9: Kept cookies first, as a tie-break ---
+        # Back to the default sort, by domain: all four share table.test, so
+        # a Kept one goes to the top of them.
+        sort_by(page, "domain")
+        if aria_sort(page, "domain") != "ascending":
+            sort_by(page, "domain")
+        keep_button(row_for(page, "zulu")).click()
+        page.wait_for_timeout(700)
+        r.check("a Kept cookie comes first among cookies of the same site",
+                order(page) == ["zulu", "alpha", "bravo", "mike"], str(order(page)))
+        sort_by(page, "name")
+        r.check("it's only a tie-break: sorting by name still sorts by name",
+                order(page) == ["alpha", "bravo", "mike", "zulu"], str(order(page)))
+        sort_by(page, "domain")
+        if aria_sort(page, "domain") != "descending":
+            sort_by(page, "domain")
+        r.check("Kept stays first whichever way round the sort is",
+                order(page)[0] == "zulu", str(order(page)))
 
         r.check("no console errors throughout", not errors, str(errors[:3]))
         context.close()

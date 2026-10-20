@@ -16,7 +16,7 @@ import {
 } from "../lib/format.js";
 import { cookieKey } from "../lib/cookies.js";
 import { knownCookie, describeKnownBy } from "../lib/known.js";
-import { copyWithFeedback } from "./clipboard.js";
+import { copyWithFeedback, copyWithIconFeedback } from "./clipboard.js";
 import { iconButton, setIconContent } from "./icons.js";
 
 // Short enough that a row fits the popup's width. Long values can be clicked
@@ -40,7 +40,7 @@ const VALUE_PREVIEW_LENGTH = 28;
 export function renderCookieTable(tbody, cookies, handlers = {}, sort = DEFAULT_SORT) {
   tbody.textContent = "";
 
-  const sorted = sortCookies(cookies, sort);
+  const sorted = sortCookies(cookies, sort, handlers.isProtected);
 
   // Only one row can show "Sure?" at a time. Clicking another row's button
   // resets the rest.
@@ -60,18 +60,24 @@ export const DEFAULT_SORT = { key: "domain", dir: "ascending" };
 
 // Ties are broken by domain and then name, so the order never jumps about.
 // "example.com" and ".example.com" sort together.
-export function sortCookies(cookies, sort = DEFAULT_SORT) {
+//
+// Before that, a Kept cookie comes first among its ties, whichever way
+// round the sort is. In the usual sort, by domain, that puts a site's Kept
+// cookies at the top of it. `isKept(cookie)` says whether a cookie is
+// marked Kept (see src/lib/protect.js).
+export function sortCookies(cookies, sort = DEFAULT_SORT, isKept = () => false) {
   const host = (cookie) => String(cookie.domain || "").replace(/^\./, "");
+  const keptFirst = (a, b) => (isKept(b) ? 1 : 0) - (isKept(a) ? 1 : 0);
   const byDomainThenName = (a, b) =>
     host(a).localeCompare(host(b)) || a.name.localeCompare(b.name);
   const flip = sort.dir === "descending" ? -1 : 1;
 
   return [...cookies].sort((a, b) => {
     if (sort.key === "name") {
-      return flip * (a.name.localeCompare(b.name) || byDomainThenName(a, b));
+      return flip * a.name.localeCompare(b.name) || keptFirst(a, b) || flip * byDomainThenName(a, b);
     }
     if (sort.key === "size") {
-      return flip * (cookieBytes(a) - cookieBytes(b)) || byDomainThenName(a, b);
+      return flip * (cookieBytes(a) - cookieBytes(b)) || keptFirst(a, b) || byDomainThenName(a, b);
     }
     if (sort.key === "expires") {
       // Session cookies have no date, so they go last whichever way round.
@@ -81,11 +87,13 @@ export function sortCookies(cookies, sort = DEFAULT_SORT) {
         return aSession ? 1 : -1;
       }
       if (aSession) {
-        return byDomainThenName(a, b);
+        return keptFirst(a, b) || byDomainThenName(a, b);
       }
-      return flip * (a.expirationDate - b.expirationDate) || byDomainThenName(a, b);
+      return flip * (a.expirationDate - b.expirationDate) || keptFirst(a, b) || byDomainThenName(a, b);
     }
-    return flip * byDomainThenName(a, b);
+    return (
+      flip * host(a).localeCompare(host(b)) || keptFirst(a, b) || flip * a.name.localeCompare(b.name)
+    );
   });
 }
 
@@ -186,17 +194,27 @@ function pickCell(cookie, handlers) {
   return cell;
 }
 
-// Keep, Edit and Delete, as icon buttons. Each has its name in a hidden
-// span, so screen readers read "Keep", "Edit", "Delete".
+// Copy name, Keep, Edit and Delete, as icon buttons. Each has its name in a
+// hidden span, so screen readers read "Copy name", "Keep", "Edit", "Delete".
 //
 // The first click on Delete turns it into a filled "Sure?" (in words) with a
-// cancel button next to it, and hides Keep and Edit so they can't be hit by
+// cancel button next to it, and hides the others so they can't be hit by
 // mistake. The second click deletes.
 function actionsCell(cookie, handlers, disarmers, disarmAll) {
   const cell = document.createElement("td");
   cell.className = "row-actions";
 
   const protectedNow = handlers.isProtected ? handlers.isProtected(cookie) : false;
+
+  // For pasting a name into code or a test. The icon turns into a tick for
+  // a moment once it's copied.
+  const copy = iconButton("copy", "Copy name");
+  copy.classList.add("copy-name");
+  copy.title = "Copy the name, " + cookie.name;
+  copy.addEventListener("click", () => {
+    disarmAll();
+    copyWithIconFeedback(copy, cookie.name, "copy", "Copy name");
+  });
 
   // Called "Keep", not "Protect", because it only stops this extension
   // deleting the cookie. See src/lib/protect.js. A kept cookie's bookmark is
@@ -249,6 +267,7 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     setIconContent(remove, "delete", "Delete");
     remove.classList.remove("armed");
     remove.classList.add("icon-only");
+    copy.hidden = false;
     keep.hidden = false;
     edit.hidden = false;
     cancel.hidden = true;
@@ -262,6 +281,7 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
       remove.textContent = "Sure?";
       remove.classList.remove("icon-only");
       remove.classList.add("armed");
+      copy.hidden = true;
       keep.hidden = true;
       edit.hidden = true;
       cancel.hidden = false;
@@ -278,6 +298,7 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     remove.focus();
   });
 
+  cell.appendChild(copy);
   cell.appendChild(keep);
   cell.appendChild(edit);
   cell.appendChild(remove);
