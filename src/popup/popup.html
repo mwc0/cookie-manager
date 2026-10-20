@@ -55,8 +55,7 @@
         to that site. cookieZ needs access to the websites you visit.
       </p>
       <p>
-        Then you can see, edit, delete, block and export the cookies of the
-        site you're on.
+        Then you can see, edit, delete, block and export any site's cookies.
       </p>
       <p class="muted">
         Access is used only while cookieZ is open. Nothing is sent anywhere:
@@ -204,7 +203,14 @@
         <span id="whats-new-text"></span>
         <button id="whats-new-close" class="link-button" type="button">OK</button>
       </p>
-      <!-- At most twice, ever: after a few things have gone well. See
+      <!-- Status lines like these are always on the page and only their
+           text changes, so screen readers hear every message. A line
+           that appears from hidden isn't always read. Empty, it takes no
+           room (popup.css). -->
+      <p id="main-message" class="result" role="status"></p>
+      <p id="size-warning" class="result" role="status"></p>
+      <!-- Under the result of what was just done, so that comes first. At most
+           twice, ever: after a few things have gone well. See
            src/lib/review.js. "Leave a review" opens the store's page in a
            new tab, only when clicked. -->
       <p id="review-ask" class="result whats-new" hidden>
@@ -212,12 +218,6 @@
         <button id="review-open" class="link-button" type="button">Leave a review</button>
         <button id="review-later" class="link-button" type="button">Not now</button>
       </p>
-      <!-- Status lines like these are always on the page and only their
-           text changes, so screen readers hear every message. A line
-           that appears from hidden isn't always read. Empty, it takes no
-           room (popup.css). -->
-      <p id="main-message" class="result" role="status"></p>
-      <p id="size-warning" class="result" role="status"></p>
 
       <!-- Filters the table. While searching or filtering, an extra delete
            option removes only the cookies shown. -->

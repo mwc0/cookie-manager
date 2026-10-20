@@ -1359,6 +1359,10 @@ button.row-button.keep.kept:hover:not(:disabled) {
   overflow: hidden;
 }
 
+#compare-summary {
+  margin-bottom: 12px;
+}
+
 #changes-table .changes-time-col {
   width: 84px;
 }
