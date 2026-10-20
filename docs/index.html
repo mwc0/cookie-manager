@@ -211,6 +211,7 @@
             <li><strong>Locks an export with a password</strong> <span>Add a password and the file is locked on your computer, using the browser's own encryption. Import asks for the password. It's never saved, so don't lose it. If an export holds sign-in cookies and has no password, cookieZ says so.</span></li>
             <li><strong>Reloads the site when you're ready</strong> <span>After a delete, Clear site data, an import or an Undo, a button reloads the page you're on, so it starts afresh. Nothing reloads until you click it.</span></li>
             <li><strong>Copies cookies between sites</strong> <span>Import cookies from one site onto another, such as from a staging site to localhost.</span></li>
+            <li><strong>Compares with an earlier export</strong> <span>Load an export from before and see which cookies are new since, which have gone and which have changed. Names and sites only, never values, and nothing is written.</span></li>
             <li><strong>Keeps up with the site</strong> <span>When a site sets or changes a cookie, the table updates by itself and marks what changed. A list shows what was added, changed, removed or expired while cookieZ was open.</span></li>
             <li><strong>Shows how big they are</strong> <span>Each site's total, with a warning when there are enough cookies to stop you logging in. Sort by size to find the biggest.</span></li>
             <li><strong>Searches and filters</strong> <span>By name, value, domain or path, or in one click: Secure, Session, Expiring soon and more. Checks for developers find cookies that aren't Secure, that scripts can read, or that are SameSite None. Then you can delete just the cookies you can see.</span></li>
@@ -294,7 +295,7 @@
         <div class="split flip tour">
           <div>
             <h3>Search or filter, then delete what you see</h3>
-            <p>Search by name, value, domain or path, or switch on a filter such as Secure or Session. An extra delete option appears that removes only the cookies left on screen.</p>
+            <p>Search by name, value, domain or path, or just one of them, such as <code>domain:example.com</code>. Or switch on a filter such as Secure or Session. An extra delete option appears that removes only the cookies left on screen.</p>
           </div>
           <div class="plate ticks reveal">
             <img class="shot for-light" src="images/popup-04-search.webp?v=1.9.0" srcset="images/popup-04-search@2x.webp?v=1.9.0 2x" width="780" height="454" loading="lazy"
@@ -335,6 +336,7 @@
         <h2>Free, and open source</h2>
         <p>cookieZ is free to use, with no ads. The code is published under the MIT licence, so you can read it, check that the version in the Chrome Web Store matches it, and build it yourself if you'd rather.</p>
         <p>Its lists of known cookies and trackers are made from the <a href="https://github.com/jkwakman/Open-Cookie-Database">Open Cookie Database</a>, under the Apache 2.0 licence.</p>
+        <p>If cookieZ helps you, a <a href="https://chromewebstore.google.com/detail/ceonoigjmjpfhkiokodcnhneecfhfokb/reviews">review in the Chrome Web Store</a> helps other people find it.</p>
         <div class="actions">
           <a class="button" href="https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb">Add to Chrome</a>
           <a class="button secondary" href="https://github.com/mwc0/cookie-manager/releases">Releases</a>
