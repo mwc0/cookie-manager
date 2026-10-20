@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=1.8.0">
-  <script src="../theme.js?v=1.8.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=1.9.0">
+  <script src="../theme.js?v=1.9.0" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -96,7 +96,7 @@
         </details>
         <details>
           <summary>Is there a keyboard shortcut?</summary>
-          <p>Yes. Press Alt+Shift+K to open cookieZ, / to jump to the search box, and Esc to go back from the editor, export, import or help. In the table, the arrow keys move between cookies, Enter edits one, Space ticks it, K keeps it and Delete deletes it, after asking. To change the first one, go to <code>chrome://extensions/shortcuts</code>. If another extension already uses Alt+Shift+K, Chrome leaves cookieZ without one, and you can pick your own there.</p>
+          <p>Yes. Press Alt+Shift+K to open cookieZ, / to jump to the search box, N to add a new cookie, and Esc to go back from the editor, export, import or help. In the table, the arrow keys move between cookies, Enter edits one, Space ticks it, K keeps it and Delete deletes it, after asking. To change the first one, go to <code>chrome://extensions/shortcuts</code>. If another extension already uses Alt+Shift+K, Chrome leaves cookieZ without one, and you can pick your own there.</p>
         </details>
         <details>
           <summary>What does Keep do?</summary>
@@ -130,7 +130,7 @@
         </details>
         <details>
           <summary>Clearing cookies didn't let me log in</summary>
-          <p>Some sites keep more than cookies. Click <strong>Clear site data</strong> under the delete options: it deletes the site's cookies and clears what else it has stored, such as local storage and cached files. Kept cookies are left alone, and Undo can put the cookies back, but not the rest. Then reload the site.</p>
+          <p>Some sites keep more than cookies. Click <strong>Clear site data</strong> under the delete options: it deletes the site's cookies and clears what else it has stored, such as local storage and cached files. Kept cookies are left alone, and Undo can put the cookies back, but not the rest. Then click <strong>Reload the site</strong> next to the message.</p>
         </details>
         <details>
           <summary>A site stopped working after I set a rule</summary>
@@ -170,7 +170,15 @@
         </details>
         <details>
           <summary>How do I move cookies to another browser or tool?</summary>
-          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. The Playwright option makes a storageState file for starting automated tests already logged in. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. Import also takes Set-Cookie lines, a Cookie header (which goes on the site you're on) or a curl command from "Copy as cURL" in DevTools. To copy cookies from one site to another, such as from staging to localhost, open cookieZ on the site they should go to, and tick "Put them on this site instead". You'll see how many cookies will be added, and for which sites, before anything changes. An export includes login cookies, so treat it like a password.</p>
+          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. The Playwright option makes a storageState file for starting automated tests already logged in. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. Import also takes Set-Cookie lines, a Cookie header (which goes on the site you're on) or a curl command from "Copy as cURL" in DevTools. To copy cookies from one site to another, such as from staging to localhost, open cookieZ on the site they should go to, and tick "Put them on this site instead". You'll see how many cookies will be added, and for which sites, before anything changes. There's also an option that writes Python code, to add the cookies in your own test scripts. An export includes login cookies, so treat it like a password, or lock it with one (below).</p>
+        </details>
+        <details>
+          <summary>How do I lock an export with a password?</summary>
+          <p>On the Export screen, type a password in the box before you click Copy or Download. cookieZ locks the file on your computer, using the browser's own encryption, and nothing is sent anywhere. To use it, click Import and paste it or choose the file: cookieZ sees it's locked and asks for the password, then shows what's in it as usual. The password is never saved, by cookieZ or anywhere else, so if you forget it, the file can't be opened and there's no way to get it back. Export the cookies again instead. The Python code option can't be locked, because it has to stay readable to run.</p>
+        </details>
+        <details>
+          <summary>Why does cookieZ warn me when I export or import?</summary>
+          <p>Some cookies keep you signed in. If an export holds cookies that look like that and has no password, cookieZ says anyone with the file could be signed in as you, so add a password or keep the file somewhere private. When you import, it reminds you to only import cookies you made yourself, because cookies from someone else can sign you in to their account or be used to trick you. Both are a single line of text. Neither stops you.</p>
         </details>
         <details>
           <summary>What does the size next to the cookie count mean?</summary>

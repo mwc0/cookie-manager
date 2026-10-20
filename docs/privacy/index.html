@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=1.8.0">
-  <script src="../theme.js?v=1.8.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=1.9.0">
+  <script src="../theme.js?v=1.9.0" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
@@ -80,7 +80,7 @@
   <main id="main" class="page">
     <div class="wrap prose">
       <h1>Privacy policy</h1>
-      <p class="updated">For the cookieZ browser extension. Last updated: 19 October 2026.</p>
+      <p class="updated">For the cookieZ browser extension. Last updated: 20 October 2026.</p>
       <p class="aside">This covers the extension. For this website, see the <a href="../website-privacy/">website privacy policy</a>.</p>
 
       <h2>The short version</h2>
@@ -197,6 +197,14 @@
       <p>Cookie values are shown in the popup's table. They are never transmitted, and never stored by the extension, except for the short-lived Undo copy described above. They only leave the popup if you choose: when you copy a value, a Set-Cookie line or an export, it goes to your clipboard, and when you download an export, it is saved as a file on your computer, where you choose. cookieZ keeps no copy of either.</p>
 
       <p>Importing works the same way in reverse. The cookies you paste or choose are written to Chrome's cookie store and nowhere else.</p>
+
+      <h2>Password-protected exports</h2>
+
+      <p>You can give an export a password. cookieZ uses it on your computer, with Chrome's own encryption, to lock that one file, and again to open it when you import it. The password is never saved and never sent anywhere: once the file is locked or opened, cookieZ forgets it. This also means a forgotten password can't be recovered. The locked file is one you copy or save yourself, like any other export, and cookieZ keeps no copy of it.</p>
+
+      <h2>Reloading the site</h2>
+
+      <p>After a delete, Clear site data, an import or an Undo, cookieZ offers a <strong>Reload the site</strong> button. It reloads only the tab you're on, and only when you click it. Reloading a tab needs no permission, so nothing new is asked for.</p>
 
       <h2>Blocking cookies</h2>
 
