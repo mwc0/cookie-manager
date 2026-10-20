@@ -51,7 +51,7 @@ anywhere to check it.
 
 ## What this extension stores on your device
 
-Five things are saved on your own computer, and a sixth is held briefly in
+Six things are saved on your own computer, and a seventh is held briefly in
 memory so your last change can be undone. None of them is ever transmitted.
 
 ### Your colour theme
@@ -133,6 +133,18 @@ blocks a cookie. It is stored using Chrome's `storage.local` API on your
 own computer and is never transmitted. Uninstalling the extension removes
 it.
 
+### Whether to ask for a review
+
+cookieZ counts how many times a delete, an import or a save has worked,
+so that after the fifth it can ask, once, whether you'd leave a review. If
+you click **Not now**, it asks once more after the twenty-fifth, and never
+again after that. If you click **Leave a review** or **No thanks**, it
+never asks again. The record is that count and which of those you
+clicked, nothing else: not what was deleted, imported or saved, not which
+sites, not when. It is stored using Chrome's `storage.local` API on your
+own computer and is never transmitted. Uninstalling the extension removes
+it.
+
 ### Your last change, for Undo
 
 When you delete cookies, import cookies or save a cookie in the editor,
@@ -188,6 +200,16 @@ you import it. The password is never saved and never sent anywhere: once
 the file is locked or opened, cookieZ forgets it. This also means a
 forgotten password can't be recovered. The locked file is one you copy or
 save yourself, like any other export, and cookieZ keeps no copy of it.
+
+## The one web page cookieZ can open
+
+**Leave a review**, in that one-time question and at the end of Help,
+opens cookieZ's review page in the Chrome Web Store in a new tab. It only
+happens when you click it. Like any page you open, the store page is
+loaded by Chrome, not by cookieZ, and cookieZ sends it nothing: no
+identifier, no count, nothing about you. It is the only web page cookieZ
+can open, and its address is written in one place in the source,
+`src/lib/review.js`.
 
 ## Reloading the site
 
@@ -247,8 +269,8 @@ popup is open on is affected.
 the extension cannot do anything at all.
 
 **`storage`**: required to remember which cookies you marked as Kept, your
-site rules, your colour theme, the version you last opened and how many
-cookies cookieZ has cleared, so they survive closing the popup, and to hold
+site rules, your colour theme, the version you last opened, how many
+cookies cookieZ has cleared and whether to ask for a review, so they survive closing the popup, and to hold
 your last change in memory for Undo.
 
 **Changing site settings** (`contentSettings`): required only for
