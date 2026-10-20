@@ -103,6 +103,25 @@ def main():
             return open ? open.shortcut : null;
         }""")
         r.check("Alt+Shift+K is registered to open the popup", shortcut == "Alt+Shift+K", repr(shortcut))
+
+        # --- the welcome line and What's new ---
+        # A fresh install has no version saved. It gets a welcome line, not
+        # a list of what's new in a version it never had.
+        empty.evaluate("async () => { await chrome.storage.local.remove('seenVersion'); }")
+        empty.reload()
+        empty.wait_for_timeout(1200)
+        line = empty.locator("#whats-new-text").text_content()
+        r.check("a fresh install shows the welcome line, not What's new",
+                empty.locator("#whats-new").is_visible()
+                and line.startswith("Welcome.") and "New:" not in line, repr(line))
+
+        # Someone updating from an older version gets What's new instead.
+        empty.evaluate("async () => { await chrome.storage.local.set({seenVersion: '1.9.0'}); }")
+        empty.reload()
+        empty.wait_for_timeout(1200)
+        line = empty.locator("#whats-new-text").text_content()
+        r.check("an update from an older version shows What's new",
+                empty.locator("#whats-new").is_visible() and line.startswith("New:"), repr(line))
         empty.close()
 
         # --- the table has to fit ---
