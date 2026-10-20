@@ -55,6 +55,7 @@ a real window.
 | `test_size.py` | Cookie sizes: the total, cookies close to Chrome's 4 KB limit, and the warning when a site's cookies get too big. |
 | `test_undo.py` | Undo after a delete, an import, a Save or a new cookie puts back exactly what was there, read from Chrome's store. |
 | `test_transfer.py` | Export, import, copying a value and opening in a tab. Round trips are read back from Chrome's store. |
+| `test_encrypted_export.py` | 1.9's password-protected export: lock an export, clear the site, open it with the password and every cookie comes back exactly. A wrong password and a damaged file each get a plain message and write nothing, and the password is never saved anywhere or left in the box. |
 | `test_import_headers.py` | Importing a Cookie header, a curl command or Set-Cookie lines, and putting imported cookies on this site. |
 | `test_live.py` | The live table follows the site's cookie changes without Refresh. |
 | `test_changes.py` | The "What changed" list, and that nothing of it is kept once cookieZ closes. |

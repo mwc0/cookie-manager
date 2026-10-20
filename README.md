@@ -15,6 +15,9 @@ A Chrome cookie manager (Manifest V3)
 - Creates and edits cookies, including the awkward parts other editors get
   wrong: a host-only cookie stays host-only, a session cookie doesn't quietly
   become permanent, and renaming one moves it instead of leaving two behind.
+  It can also make a partitioned cookie for the site you're on, and
+  Duplicate works for one.
+- Copies a cookie's name or value, from its row or from the editor.
 - Deletes a single cookie from its row, on a second click rather than a dialog.
 - Tells you when Chrome silently changes what you asked for. It caps cookie
   expiry at about 400 days, so asking for a date beyond that says so instead
@@ -31,7 +34,8 @@ A Chrome cookie manager (Manifest V3)
   `_ga`.
 - Lets you mark a cookie as **kept**, which excludes it from every delete this
   extension makes, including "All sites", and says so in the count before
-  you delete. It's a guard on this extension's own delete button, not
+  you delete, and lists kept cookies first among cookies that sort the
+  same. It's a guard on this extension's own delete button, not
   protection from the website: nothing here stops a site changing its own
   cookies.
 - Lets you choose which sites may set cookies, from the Block button: allow
@@ -57,6 +61,19 @@ A Chrome cookie manager (Manifest V3)
 - Clears a site's stored data (local storage, databases, cache storage,
   offline files) along with its cookies, for the sites that need more than
   their cookies cleared before you can log in again.
+- Offers a "Reload the site" button after a delete, Clear site data, an
+  import or an Undo, since the open page still has what it loaded. It only
+  reloads when you click it, and needs no permission.
+- Exports and imports cookies in several formats, including Python code
+  for your own test scripts. An export can be locked with a password, using
+  the browser's own encryption (AES-GCM, with the key made from the
+  password by PBKDF2-SHA-256 and 600,000 rounds), all on your computer.
+  Import spots a locked file and asks for the password. The password is
+  never saved, so a forgotten one can't be recovered. See
+  `src/lib/crypto.js`.
+- Warns, in one line, when an export holds cookies that look like sign-ins
+  and has no password, and on import, that you should only import cookies
+  you made yourself. Neither stops you.
 
 ## Permissions
 

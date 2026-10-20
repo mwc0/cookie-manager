@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 19 October 2026**
+**Last updated: 20 October 2026**
 
 ## The short version
 
@@ -179,6 +179,22 @@ cookieZ keeps no copy of either.
 
 Importing works the same way in reverse. The cookies you paste or choose are
 written to Chrome's cookie store and nowhere else.
+
+## Password-protected exports
+
+You can give an export a password. cookieZ uses it on your computer, with
+Chrome's own encryption, to lock that one file, and again to open it when
+you import it. The password is never saved and never sent anywhere: once
+the file is locked or opened, cookieZ forgets it. This also means a
+forgotten password can't be recovered. The locked file is one you copy or
+save yourself, like any other export, and cookieZ keeps no copy of it.
+
+## Reloading the site
+
+After a delete, Clear site data, an import or an Undo, cookieZ offers a
+**Reload the site** button. It reloads only the tab you're on, and only when
+you click it. Reloading a tab needs no permission, so nothing new is asked
+for.
 
 ## Blocking cookies
 
