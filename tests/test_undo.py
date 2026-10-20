@@ -206,7 +206,7 @@ def main():
         page.locator("#main-message .undo-button").click()
         page.wait_for_timeout(1200)
         r.check("Undo says it removed one and put one back",
-                message(page) == "Removed 1 cookie and put back 1 cookie.", message(page))
+                message(page) == "Removed 1 cookie and put back 1 cookie. Reload the site", message(page))
         r.check("and the cookies are exactly as before the import",
                 snapshot(page) == before, json.dumps([a for a in snapshot(page) if a not in before]))
 
@@ -226,7 +226,7 @@ def main():
         page.locator("#main-message .undo-button").click()
         page.wait_for_timeout(1000)
         r.check("Undo puts the old value back",
-                message(page) == "Put lax_one back as it was." and snapshot(page) == before,
+                message(page) == "Put lax_one back as it was. Reload the site" and snapshot(page) == before,
                 message(page))
 
         # A new name makes a second cookie, so Undo has to take that away too.
@@ -250,7 +250,7 @@ def main():
         page.locator("#main-message .undo-button").click()
         page.wait_for_timeout(1000)
         r.check("Undo removes it again",
-                message(page) == "Removed made_here." and snapshot(page) == before, message(page))
+                message(page) == "Removed made_here. Reload the site" and snapshot(page) == before, message(page))
 
         # --- Undo never removes a kept cookie ---
         page.locator("#add-button").click()
