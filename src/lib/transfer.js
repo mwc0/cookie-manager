@@ -1,6 +1,6 @@
 // Export and import: turns cookies into text and back. Nothing here touches
-// Chrome or the page, so every part can be tested on its own. popup.js does
-// the reading and writing.
+// Chrome or the page, so every part can be tested on its own. The popup's
+// export-screen.js and import-screen.js do the reading and writing.
 //
 // Six export formats:
 //   - JSON, with the same field names EditThisCookie and Cookie-Editor use,
@@ -232,8 +232,9 @@ export function parseImport(text, { pageUrl = null } = {}) {
     return { format: null, entries: [], problems: ["There's nothing to import. Paste some cookies first."] };
   }
 
-  // A password-protected export. popup.js asks for the password, opens it
-  // with unlockText() in crypto.js, and reads what's inside with this again.
+  // A password-protected export. import-screen.js asks for the password,
+  // opens it with unlockText() in crypto.js, and reads what's inside with
+  // this again.
   if (isLockedExport(trimmed)) {
     return {
       format: "locked",

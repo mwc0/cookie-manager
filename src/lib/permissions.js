@@ -64,7 +64,7 @@ export async function requestRulesAccess() {
 //
 // Each is asked for the first time its feature is used, never at install:
 //   "privacy"       blocking other companies' cookies on every site (rules.js)
-//   "browsingData"  clearing a site's data, not just its cookies (popup.js)
+//   "browsingData"  clearing a site's data, not just its cookies (rules-screen.js)
 
 export const EVERYWHERE_PERMISSION = "privacy";
 export const SITE_DATA_PERMISSION = "browsingData";
