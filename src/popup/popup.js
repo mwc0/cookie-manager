@@ -49,6 +49,7 @@ import {
 import { renderCookieTable, DEFAULT_SORT } from "./render.js";
 import { recordAnswer } from "../lib/review.js";
 import { loadKnownCookies } from "../lib/known.js";
+import { valuesOf } from "../lib/undo.js";
 import { state } from "./state.js";
 import {
   el,
