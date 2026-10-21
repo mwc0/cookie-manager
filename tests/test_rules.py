@@ -279,7 +279,7 @@ def check_rules(r, context, ext_id, server):
     r.check("choosing 'Block other companies' cookies' says what it did",
             message(page) == "Other companies' cookies are now blocked on " + host + ".", message(page))
     r.check("only the site's name and the rule are saved",
-            saved(page) == {"everywhere": "allow", "sites": {host: "own-only"}, "deleteOnBlock": False}, json.dumps(saved(page)))
+            saved(page) == {"everywhere": "allow", "sites": {host: "own-only"}, "deleteOnBlock": False, "trackers": False}, json.dumps(saved(page)))
     r.check("TRAP: the site keeps its own cookies and the other company's are gone, partitioned one included",
             visit(context, site, top) == OWN, str(stored_names(context, site)))
     r.check("the rule is for that site only: the other site still gets everything",
@@ -295,7 +295,7 @@ def check_rules(r, context, ext_id, server):
     open_rules(page)
     choose(page, "site-rule", "allow")
     r.check("choosing what every other site already gets removes the site's own rule",
-            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False} and listed(page) == [],
+            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False, "trackers": False} and listed(page) == [],
             json.dumps(saved(page)))
     visit(context, site, top)
     page.evaluate("async (key) => { await chrome.storage.local.set({ protectedCookies: [key] }); }",
@@ -369,7 +369,7 @@ def check_rules(r, context, ext_id, server):
     page.locator("#rules-everywhere-yes").click()
     page.wait_for_timeout(800)
     r.check("after saying yes, it's saved and this site's own choice follows it",
-            saved(page) == {"everywhere": "block", "sites": {}, "deleteOnBlock": False} and checked(page, "site-rule") == "block",
+            saved(page) == {"everywhere": "block", "sites": {}, "deleteOnBlock": False, "trackers": False} and checked(page, "site-rule") == "block",
             json.dumps(saved(page)))
     r.check("TRAP: every site is blocked",
             visit(context, site, top) == [] and visit(context, site, embed) == [],
@@ -429,7 +429,7 @@ def check_rules(r, context, ext_id, server):
     page.locator("#rules-confirm-yes").click()
     page.wait_for_timeout(800)
     r.check("then nothing is saved but an empty list, and the button goes",
-            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False} and listed(page) == []
+            saved(page) == {"everywhere": "allow", "sites": {}, "deleteOnBlock": False, "trackers": False} and listed(page) == []
             and not page.locator("#rules-clear").is_visible(), json.dumps(saved(page)))
     r.check("TRAP: and Chrome is allowing everything again",
             visit(context, site, top) == EVERYTHING and len(visit(context, site, embed)) == 5,
@@ -513,7 +513,7 @@ def check_new_choices(r, context, ext_id, server):
     data = json.loads(backup)
     r.check("the copy holds the rules and nothing else",
             data == {"kind": "cookieZ site rules", "version": 1, "everywhere": "own-only",
-                     "deleteOnBlock": True, "sites": {host: "block"}}, backup)
+                     "deleteOnBlock": True, "trackers": False, "sites": {host: "block"}}, backup)
     path = PROFILES / "rules-backup.json"
     path.write_text(backup, encoding="utf-8")
     page.evaluate("async () => { const m = await import(chrome.runtime.getURL('lib/rules.js')); await m.clearRules(); }")
@@ -529,7 +529,7 @@ def check_new_choices(r, context, ext_id, server):
     page.locator("#rules-load-yes").click()
     page.wait_for_timeout(900)
     r.check("then the rules are back, and Chrome is following them",
-            saved(page) == {"everywhere": "own-only", "sites": {host: "block"}, "deleteOnBlock": True}
+            saved(page) == {"everywhere": "own-only", "sites": {host: "block"}, "deleteOnBlock": True, "trackers": False}
             and visit(context, site, top) == [], json.dumps(saved(page)))
     path.write_text('{"something": "else"}', encoding="utf-8")
     page.locator("#rules-load").set_input_files(str(path))
@@ -550,6 +550,93 @@ def check_new_choices(r, context, ext_id, server):
     page.evaluate("async () => { await chrome.storage.local.remove('siteRules'); }")
     page.close()
     site.close()
+
+
+def check_keys(r, context, ext_id, server):
+    """1.9: arrowing through the choices doesn't act on each one, and Esc
+    closes a question before it leaves the screen."""
+    host = server.TOP_HOST
+    page = new_popup(context, ext_id, server.url(host))
+    open_rules(page)
+
+    def focused():
+        return page.evaluate("() => [document.activeElement.name || document.activeElement.id,"
+                             " document.activeElement.value]")
+
+    def third_party_ours():
+        status = page.evaluate("() => new Promise(r => chrome.privacy.websites.thirdPartyCookiesAllowed.get({}, r))")
+        return status["levelOfControl"] == "controlled_by_this_extension"
+
+    # --- this site's choices ---
+    page.locator('input[name="site-rule"][value="allow"]').focus()
+    page.keyboard.press("ArrowDown")
+    page.wait_for_timeout(300)
+    page.keyboard.press("ArrowDown")
+    page.wait_for_timeout(500)
+    r.check("arrowing through this site's choices moves the tick but saves nothing",
+            checked(page, "site-rule") == "own-only" and saved(page) is None and message(page) == "",
+            json.dumps(saved(page)) + " | " + message(page))
+    page.keyboard.press("Enter")
+    page.wait_for_timeout(700)
+    r.check("Enter applies the choice the arrows landed on, and the focus stays on it",
+            (saved(page) or {}).get("sites") == {host: "own-only"}
+            and focused() == ["site-rule", "own-only"], json.dumps(saved(page)) + " " + str(focused()))
+
+    page.keyboard.press("ArrowUp")
+    page.wait_for_timeout(300)
+    r.check("arrowing again waits again", saved(page)["sites"] == {host: "own-only"}, json.dumps(saved(page)))
+    page.keyboard.press("Tab")
+    page.wait_for_timeout(700)
+    r.check("leaving the group with Tab applies it, and the focus carries on where it went",
+            saved(page)["sites"] == {host: "session"} and focused()[0] == "rules-delete-on-block",
+            json.dumps(saved(page)) + " " + str(focused()))
+
+    page.locator('input[name="site-rule"][value="session"]').focus()
+    page.keyboard.press("ArrowDown")
+    page.wait_for_timeout(300)
+    page.keyboard.press(" ")
+    page.wait_for_timeout(700)
+    r.check("Space applies it too", saved(page)["sites"] == {host: "own-only"}, json.dumps(saved(page)))
+
+    # --- every other site: a permission prompt and a question are behind these ---
+    page.locator('input[name="everywhere-rule"][value="allow"]').focus()
+    page.keyboard.press("ArrowDown")
+    page.wait_for_timeout(500)
+    r.check("TRAP: arrowing past 'Block other companies' cookies' doesn't apply it (or ask for its permission)",
+            checked(page, "everywhere-rule") == "own-only" and saved(page)["everywhere"] == "allow"
+            and not third_party_ours(), json.dumps(saved(page)))
+    page.keyboard.press("ArrowDown")
+    page.wait_for_timeout(500)
+    r.check("TRAP: arrowing onto 'Block all cookies' doesn't ask 'are you sure?'",
+            not page.locator("#rules-everywhere-confirm").is_visible() and saved(page)["everywhere"] == "allow")
+    page.keyboard.press("Shift+Tab")
+    page.wait_for_timeout(500)
+    r.check("leaving the group asks, as a click would",
+            page.locator("#rules-everywhere-confirm").is_visible() and saved(page)["everywhere"] == "allow")
+
+    # --- Esc ---
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(400)
+    r.check("Esc closes the question first, and stays on the screen, with nothing changed",
+            visible_state(page) == "state-rules" and not page.locator("#rules-everywhere-confirm").is_visible()
+            and saved(page)["everywhere"] == "allow" and focused() == ["everywhere-rule", "allow"],
+            str(visible_state(page)) + " " + str(focused()))
+
+    page.locator("#rules-clear").click()
+    page.wait_for_timeout(300)
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(400)
+    r.check("Esc closes 'Turn off all rules?' too, and the focus goes back to its button",
+            visible_state(page) == "state-rules" and not page.locator("#rules-confirm").is_visible()
+            and saved(page)["sites"] == {host: "own-only"} and focused()[0] == "rules-clear",
+            str(focused()))
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(700)
+    r.check("then Esc leaves the screen", visible_state(page) == "state-main", str(visible_state(page)))
+
+    page.evaluate("async () => { const m = await import(chrome.runtime.getURL('lib/rules.js')); await m.clearRules(); }")
+    page.evaluate("async () => { await chrome.storage.local.remove('siteRules'); }")
+    page.close()
 
 
 # Makes the popup believe the "privacy" permission hasn't been given, and
@@ -628,6 +715,7 @@ def main():
 
             check_rules(r, context, ext_id, server)
             check_new_choices(r, context, ext_id, server)
+            check_keys(r, context, ext_id, server)
             check_privacy_declined(r, context, ext_id, server)
             check_without_permission(r, context, ext_id, server)
             r.check("no errors were logged", not errors, str(errors))

@@ -67,6 +67,8 @@ COOKIES = [
     {"url": SITE, "name": "csrf_token", "value": "example-csrf-000000", "secure": True},
     {"url": SITE, "name": "locale", "value": "en-GB"},
     {"url": SITE, "name": "cart_id", "value": "example-cart-42", "domain": ".example.com"},
+    # A well-known name, so the "Known" badge shows.
+    {"url": SITE, "name": "_ga", "value": "GA1.1.000000000.0000000000", "domain": ".example.com"},
     # A few other sites, so the "All sites" scope has something to show.
     {"url": "https://example.org/", "name": "prefs", "value": "example-only"},
     {"url": "https://example.net/", "name": "visits", "value": "3"},

@@ -2,7 +2,7 @@
 // Chrome or the page, so every part can be tested on its own. popup.js does
 // the reading and writing.
 //
-// Five export formats:
+// Six export formats:
 //   - JSON, with the same field names EditThisCookie and Cookie-Editor use,
 //     so files move between the three.
 //   - Netscape cookies.txt, used by curl, wget, yt-dlp and many other tools.
@@ -11,13 +11,19 @@
 //     already logged in.
 //   - A Cookie header ("name=value; name2=value2"), names and values only.
 //   - A curl command that sends that header.
+//   - Python for Selenium: one driver.add_cookie() call per cookie.
+//
+// Any of them except the Selenium code can be locked with a password. See
+// src/lib/crypto.js.
 //
 // Import reads JSON (Playwright's included), cookies.txt, Set-Cookie lines,
 // a Cookie header and a curl command. The last two only carry names and
 // values, so matchSentCookies() fills in the rest from the cookies the site
 // already has.
 
+import { bareDomain } from "./format.js";
 import { validateCookieValues } from "./cookies.js";
+import { isLockedExport } from "./crypto.js";
 
 // --- export ------------------------------------------------------------------
 
@@ -81,7 +87,7 @@ export function toHeader(cookies) {
 export function toSetCookie(cookie) {
   const parts = [cookie.name + "=" + cookie.value];
   if (!cookie.hostOnly) {
-    parts.push("Domain=" + String(cookie.domain || "").replace(/^\./, ""));
+    parts.push("Domain=" + bareDomain(cookie.domain));
   }
   parts.push("Path=" + (cookie.path || "/"));
   if (typeof cookie.expirationDate === "number") {
@@ -109,7 +115,7 @@ export function toSetCookie(cookie) {
 // uses -1 for a session cookie, and only knows Strict, Lax and None.
 export function toPlaywright(cookies) {
   const list = cookies.map((cookie) => {
-    const host = String(cookie.domain || "").replace(/^\./, "");
+    const host = bareDomain(cookie.domain);
     const out = {
       name: cookie.name,
       value: cookie.value,
@@ -144,6 +150,71 @@ export function toCurl(cookies, url) {
   return "curl -b " + quote(toHeader(cookies)) + " " + quote(url);
 }
 
+// Selenium's add_cookie(), as Python. Selenium only adds a cookie to the
+// site of the page the browser is on, so the code says to open one first.
+// A host-only cookie has no domain, which is how WebDriver makes one; a
+// domain-wide one gets the leading dot. The expiry is whole seconds, and a
+// session cookie has none. Selenium has no field for a partition, so that
+// is left out.
+export function toSelenium(cookies) {
+  const lines = [
+    "# Open a page on the site first: Selenium only adds cookies for the site",
+    "# the browser is on. Cookies can sign someone in as you, so keep this private.",
+  ];
+  for (const cookie of cookies) {
+    const host = bareDomain(cookie.domain);
+    const fields = [
+      ["name", pythonString(cookie.name)],
+      ["value", pythonString(cookie.value)],
+      ["path", pythonString(cookie.path || "/")],
+    ];
+    if (!cookie.hostOnly) {
+      fields.push(["domain", pythonString("." + host)]);
+    }
+    fields.push(["secure", cookie.secure ? "True" : "False"]);
+    fields.push(["httpOnly", cookie.httpOnly ? "True" : "False"]);
+    const sameSite = PLAYWRIGHT_SAME_SITE[cookie.sameSite];
+    if (sameSite) {
+      fields.push(["sameSite", pythonString(sameSite)]);
+    }
+    if (typeof cookie.expirationDate === "number") {
+      fields.push(["expiry", String(Math.floor(cookie.expirationDate))]);
+    }
+    const dict = fields.map(([key, value]) => '"' + key + '": ' + value).join(", ");
+    lines.push("driver.add_cookie({" + dict + "})");
+  }
+  return lines.join("\n") + "\n";
+}
+
+// A Python string literal. JSON's escapes (\" \\ \n \uXXXX) mean the same
+// in Python, so JSON.stringify writes one safely.
+function pythonString(text) {
+  return JSON.stringify(String(text == null ? "" : text));
+}
+
+// --- the stolen-session warning ----------------------------------------------
+
+// Names that usually mean a sign-in: session, sess, auth, token, login, jwt,
+// and "sid" as a word or at the end (PHPSESSID, connect.sid, SSID).
+const SIGN_IN_NAME = /sess|auth|token|login|jwt|(^|[^a-z])sid|sid$/i;
+
+// What a known cookie's description says when it keeps someone signed in.
+const SIGN_IN_PURPOSE = /log(ged)?[\s-]?in|sign(ed)?[\s-]?in|authenticat/i;
+
+// Whether a cookie looks like it keeps someone signed in: HttpOnly (sites
+// hide sign-in cookies from the page's scripts), a name like the ones above,
+// or a known name whose description says so. `known` is what knownCookie()
+// returned for it, or null. A guess, used only to decide whether to warn.
+export function looksLikeSignIn(cookie, known = null) {
+  if (cookie.httpOnly) {
+    return true;
+  }
+  if (SIGN_IN_NAME.test(String(cookie.name || ""))) {
+    return true;
+  }
+  return Boolean(known && SIGN_IN_PURPOSE.test(String(known.what || "")));
+}
+
 // --- import: reading the text ------------------------------------------------
 
 // Returns { format, entries, problems }. Each entry is in the same shape as
@@ -159,6 +230,16 @@ export function parseImport(text, { pageUrl = null } = {}) {
   const trimmed = String(text || "").trim();
   if (trimmed === "") {
     return { format: null, entries: [], problems: ["There's nothing to import. Paste some cookies first."] };
+  }
+
+  // A password-protected export. popup.js asks for the password, opens it
+  // with unlockText() in crypto.js, and reads what's inside with this again.
+  if (isLockedExport(trimmed)) {
+    return {
+      format: "locked",
+      entries: [],
+      problems: ["This file has a password. Type it to see what's in it."],
+    };
   }
 
   if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
@@ -237,7 +318,7 @@ function fromJsonItem(item) {
   const entry = {
     name: item.name,
     value: item.value == null ? "" : String(item.value),
-    domain: item.domain.replace(/^\./, ""),
+    domain: bareDomain(item.domain),
     path: typeof item.path === "string" && item.path !== "" ? item.path : "/",
     secure: Boolean(item.secure),
     httpOnly: Boolean(item.httpOnly),
@@ -307,7 +388,7 @@ function parseNetscape(text) {
       name,
       // A value can't contain a tab, but join any extra columns back just in case.
       value: rest.join("\t"),
-      domain: domain.replace(/^\./, ""),
+      domain: bareDomain(domain),
       path: path || "/",
       secure: secure.toUpperCase() === "TRUE",
       httpOnly,
@@ -434,7 +515,7 @@ function fromSetCookie(line, host, now) {
     const value = split === -1 ? "" : attribute.slice(split + 1).trim();
 
     if (key === "domain" && value !== "") {
-      entry.domain = value.replace(/^\./, "").toLowerCase();
+      entry.domain = bareDomain(value).toLowerCase();
       entry.hostOnly = false;
     } else if (key === "path" && value.startsWith("/")) {
       entry.path = value;
@@ -741,7 +822,7 @@ function isOnHost(cookie, host) {
   if (cookie.partitionKey) {
     return false;
   }
-  const domain = String(cookie.domain || "").replace(/^\./, "");
+  const domain = bareDomain(cookie.domain);
   return cookie.hostOnly ? host === domain : host === domain || host.endsWith("." + domain);
 }
 
@@ -797,7 +878,7 @@ export function matchSentCookies(entries, existing) {
       return {
         name: match.name,
         value: entry.value,
-        domain: String(match.domain || "").replace(/^\./, ""),
+        domain: bareDomain(match.domain),
         path: match.path || "/",
         secure: Boolean(match.secure),
         httpOnly: Boolean(match.httpOnly),
@@ -831,7 +912,7 @@ export function matchSentCookies(entries, existing) {
 export function isForSite(entry, hostname) {
   const domain = entry.sendTo
     ? hostOf(entry.sendTo)
-    : String(entry.domain || "").replace(/^\./, "");
+    : bareDomain(entry.domain);
   return domain === hostname || hostname.endsWith("." + domain) || domain.endsWith("." + hostname);
 }
 
@@ -863,7 +944,7 @@ export function moveToSite(entries, pageUrl) {
 function identityOf(cookie) {
   return [
     cookie.name,
-    String(cookie.domain || "").replace(/^\./, ""),
+    bareDomain(cookie.domain),
     Boolean(cookie.hostOnly),
     cookie.path || "/",
     cookie.partitionKey && cookie.partitionKey.topLevelSite ? cookie.partitionKey.topLevelSite : "",

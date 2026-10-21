@@ -278,7 +278,7 @@ export function compactJson(text) {
   } catch (error) {
     return {
       value: null,
-      error: "The value isn't valid JSON: " + (error && error.message ? error.message : String(error)) + ".",
+      error: "The value isn't valid JSON: " + describeError(error) + ".",
     };
   }
 }
@@ -331,6 +331,19 @@ export function formatBytes(bytes) {
 
 export function formatCount(number) {
   return number.toLocaleString();
+}
+
+// A cookie's domain without the leading dot Chrome uses for "this site and
+// its subdomains": ".example.com" becomes "example.com".
+export function bareDomain(domain) {
+  return String(domain || "").replace(/^\./, "");
+}
+
+// The words of an error, for a message. Chrome's errors are Error objects,
+// but a rejected promise can hand back anything, so a plain value is turned
+// into text rather than showing "undefined".
+export function describeError(error) {
+  return error && error.message ? error.message : String(error);
 }
 
 // "1 cookie", "14 cookies"

@@ -1,7 +1,8 @@
 // Everything that talks to chrome.cookies goes through this file, so the
 // awkward parts of that API are handled in one place.
 
-import { cookieBytes, expiresSoon, LARGE_COOKIE_BYTES } from "./format.js";
+import { cookieBytes, describeError, expiresSoon, LARGE_COOKIE_BYTES, bareDomain } from "./format.js";
+import { knownCookie } from "./known.js";
 
 // Chrome won't store a cookie whose name and value together are bigger than
 // this many bytes.
@@ -11,7 +12,7 @@ export const MAX_COOKIE_BYTES = 4096;
 // from the Secure flag, and a leading dot on the domain has to be removed.
 export function buildCookieUrl(cookie) {
   const scheme = cookie.secure ? "https://" : "http://";
-  const host = String(cookie.domain || "").replace(/^\./, "");
+  const host = bareDomain(cookie.domain);
   const path = cookie.path || "/";
   return scheme + host + path;
 }
@@ -87,22 +88,69 @@ export function baseHostOf(hostname) {
   return hostname.replace(/^www\./, "");
 }
 
+// Partitioned cookies that other companies keep for this site. A frame from
+// widget.example on news.example can set a partitioned (CHIPS) cookie that
+// is only ever used on news.example. Its domain is widget.example, so none
+// of the queries above find it.
+//
+// Checked in Chromium (tests/test_known.py): a query with only
+// partitionKey: { topLevelSite } returns every cookie in that site's
+// partition, whatever its domain, and no unpartitioned cookies. Chrome
+// works out the site from the address itself: the port is dropped, and
+// "https://www.news.example" finds the cookies kept for news.example. So
+// the page's own address can be passed as it is.
+export async function getEmbeddedCookies(page) {
+  try {
+    return await chrome.cookies.getAll({ partitionKey: { topLevelSite: page.origin } });
+  } catch (error) {
+    // A Chrome that doesn't take this query still shows the site's own.
+    console.warn("Couldn't read the cookies kept for this site by others:", error);
+    return [];
+  }
+}
+
+// Whether a cookie was set by another site, inside this one, and is kept
+// for this site only: partitioned, with a domain that isn't this site's.
+export function setByOtherSite(cookie, hostname) {
+  if (!cookie.partitionKey) {
+    return false;
+  }
+  const domain = bareDomain(cookie.domain);
+  const base = baseHostOf(hostname);
+  const own = domain === base || domain.endsWith("." + base) || base.endsWith("." + domain);
+  return !own;
+}
+
+// The site's table: its own cookies, and those other companies keep for it.
+export async function getSiteCookies(page) {
+  const [own, embedded] = await Promise.all([getCookiesForPage(page), getEmbeddedCookies(page)]);
+  return dedupe([...own, ...embedded]);
+}
+
 // The cookies a delete scope would remove. The popup deletes exactly this
 // list, so the number it shows and the number it deletes are always the same.
-export async function getCookiesForScope(scope, page) {
+//
+// With `embedded`, "page" and "domain" also include the cookies other
+// companies keep for this site (see getEmbeddedCookies()), as the table
+// shows them. The main screen asks for that.
+export async function getCookiesForScope(scope, page, { embedded = false } = {}) {
   if (scope === "all") {
     return await getAllCookies();
   }
 
-  if (scope === "domain") {
-    const [pageCookies, domainCookies] = await Promise.all([
-      getCookiesForPage(page),
-      getCookiesForDomain(baseHostOf(page.hostname)),
-    ]);
-    return dedupe([...pageCookies, ...domainCookies]);
-  }
+  const [own, others] = await Promise.all([
+    scope === "domain" ? getCookiesForDomainScope(page) : getCookiesForPage(page),
+    embedded ? getEmbeddedCookies(page) : [],
+  ]);
+  return dedupe([...own, ...others]);
+}
 
-  return await getCookiesForPage(page);
+async function getCookiesForDomainScope(page) {
+  const [pageCookies, domainCookies] = await Promise.all([
+    getCookiesForPage(page),
+    getCookiesForDomain(baseHostOf(page.hostname)),
+  ]);
+  return dedupe([...pageCookies, ...domainCookies]);
 }
 
 // Search box filter. Looks at name, value, domain and path all at once, and
@@ -124,6 +172,10 @@ export function filterCookies(cookies, query) {
 // The quick filters above the table. Each one is a yes-or-no question
 // about a single cookie. "kept" isn't here, because whether a cookie is kept
 // isn't part of the cookie: filterByFlags() is told that separately.
+//
+// The last three are checks for developers, and only state facts. "Not
+// Secure" only means something on an HTTPS page, so popup.js only offers
+// it there.
 export const FILTERS = {
   secure: (cookie) => Boolean(cookie.secure),
   httponly: (cookie) => Boolean(cookie.httpOnly),
@@ -131,6 +183,10 @@ export const FILTERS = {
   soon: (cookie) => expiresSoon(cookie),
   large: (cookie) => cookieBytes(cookie) >= LARGE_COOKIE_BYTES,
   partitioned: (cookie) => Boolean(cookie.partitionKey),
+  known: (cookie) => knownCookie(cookie.name) !== null,
+  notsecure: (cookie) => !cookie.secure,
+  readable: (cookie) => !cookie.httpOnly,
+  samesitenone: (cookie) => cookie.sameSite === "no_restriction",
 };
 
 // Whether one cookie passes one filter. `isKept` is a function that says
@@ -160,7 +216,7 @@ export function filterByFlags(cookies, active, isKept) {
 export function sitesOf(cookies) {
   const sites = new Set();
   for (const cookie of cookies) {
-    sites.add(String(cookie.domain || "").replace(/^\./, ""));
+    sites.add(bareDomain(cookie.domain));
   }
   return Array.from(sites).sort();
 }
@@ -189,7 +245,7 @@ export function summarise(cookies) {
 function identityOf(parts) {
   return [
     parts.name,
-    String(parts.domain || "").replace(/^\./, ""),
+    bareDomain(parts.domain),
     Boolean(parts.hostOnly),
     parts.path || "/",
     parts.storeId || "",
@@ -199,7 +255,7 @@ function identityOf(parts) {
 
 // Turns the editor form's values into what chrome.cookies.set expects.
 export function buildSetDetails(values) {
-  const host = String(values.domain || "").replace(/^\./, "");
+  const host = bareDomain(values.domain);
   const path = values.path || "/";
   const scheme = values.secure ? "https://" : "http://";
 
@@ -320,6 +376,15 @@ export function validateCookieValues(values, { imported = false } = {}) {
     );
   }
 
+  // TRAP: Chrome refuses a partitioned (CHIPS) cookie that isn't Secure.
+  if (values.partitionKey && !values.secure) {
+    errors.push(
+      imported
+        ? "It's partitioned but isn't Secure, and Chrome won't accept that."
+        : "A partitioned cookie only works when it's Secure. Tick Secure."
+    );
+  }
+
   if (!values.session && typeof values.expirationDate !== "number") {
     errors.push(
       imported
@@ -376,10 +441,21 @@ export async function writeCookie(original, values) {
 
   // A null result should mean it failed, but set() has returned null on
   // success before (see the TRAP above), so check whether the cookie is there.
-  const landed = await chrome.cookies.getAll({
-    url: details.url,
-    name: details.name,
-  });
+  //
+  // A partitioned cookie is looked for in its own partition, and the site
+  // has to match exactly. Chrome refuses a partition named after a host
+  // rather than a site (https://www.example.com), without an error, but
+  // reads one in a query as the site's. So a refused write could otherwise
+  // pass for one that worked, or find an unpartitioned cookie of that name.
+  const query = { url: details.url, name: details.name };
+  if (details.partitionKey) {
+    query.partitionKey = details.partitionKey;
+  }
+  const landed = (await chrome.cookies.getAll(query)).filter(
+    (cookie) =>
+      !details.partitionKey ||
+      (cookie.partitionKey && cookie.partitionKey.topLevelSite === details.partitionKey.topLevelSite)
+  );
   if (landed.length > 0) {
     return { ok: true, cookie: landed[0], error: null };
   }
@@ -393,7 +469,7 @@ export async function writeCookie(original, values) {
 // Chrome's error names the cookie but not what was wrong with it, so we add
 // the likely reasons.
 function describeWriteFailure(error) {
-  const message = error && error.message ? error.message : String(error);
+  const message = describeError(error);
 
   if (message.includes("Failed to parse or set cookie")) {
     return (

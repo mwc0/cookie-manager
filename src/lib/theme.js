@@ -7,6 +7,8 @@
 // and that's all the CSS looks at. Following the system is worked out here
 // rather than in CSS, so popup.css only needs the dark colours once.
 
+import { describeError } from "./format.js";
+
 export const THEME_KEY = "theme";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
@@ -69,7 +71,7 @@ export async function loadTheme() {
       choice: null,
       error:
         "Couldn't read your saved theme, so the system theme is being used: " +
-        (error && error.message ? error.message : String(error)),
+        describeError(error),
     };
   }
 }
@@ -94,7 +96,7 @@ export async function saveTheme(theme) {
     return {
       error:
         "The theme changed, but couldn't be saved, so it will reset when you " +
-        "reopen the popup: " + (error && error.message ? error.message : String(error)),
+        "reopen the popup: " + describeError(error),
     };
   }
 }

@@ -18,6 +18,7 @@
 // A delete only has `restore`. A new cookie only has `remove`. An import
 // has both: the cookies it replaced, and the ones it added.
 
+import { describeError, bareDomain } from "./format.js";
 import { writeCookie, removeCookie } from "./cookies.js";
 
 const MAX_AGE_SECONDS = 10 * 60;
@@ -29,9 +30,6 @@ function storageKey() {
   return chrome.extension.inIncognitoContext ? "lastChange-incognito" : "lastChange-normal";
 }
 
-function messageOf(error) {
-  return error && error.message ? error.message : String(error);
-}
 
 // Remembers `change` as the last change, replacing any earlier one.
 // Returns { error }. A failure only means Undo won't be offered.
@@ -47,7 +45,7 @@ export async function saveLastChange(change, now = Date.now() / 1000) {
     });
     return { error: null };
   } catch (error) {
-    return { error: "Undo isn't available for this change: " + messageOf(error) };
+    return { error: "Undo isn't available for this change: " + describeError(error) };
   }
 }
 
@@ -93,7 +91,7 @@ export function valuesOf(cookie) {
   return {
     name: cookie.name,
     value: cookie.value,
-    domain: String(cookie.domain || "").replace(/^\./, ""),
+    domain: bareDomain(cookie.domain),
     path: cookie.path || "/",
     sameSite: cookie.sameSite || "unspecified",
     secure: Boolean(cookie.secure),
@@ -107,7 +105,7 @@ export function valuesOf(cookie) {
 }
 
 function describe(cookie) {
-  return cookie.name + " (" + String(cookie.domain || "").replace(/^\./, "") + ")";
+  return cookie.name + " (" + bareDomain(cookie.domain) + ")";
 }
 
 // Writes the cookies back. Each goes through writeCookie(), so every write

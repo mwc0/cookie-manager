@@ -46,7 +46,9 @@ def main():
 
             # Both sites get cookies and something in local storage. Loading
             # the other site also gives this one four cookies it set there as
-            # "another company", which count as this site's: 4 to delete.
+            # "another company", which count as this site's. And embed_chips,
+            # which the other site set in a frame here and is kept for this
+            # site only, counts too (1.8): 5 to delete.
             visit(context, site, top)
             site.evaluate("() => localStorage.setItem('k', 'top')")
             visit(context, site, embed, clear=False)
@@ -63,7 +65,7 @@ def main():
             question = page.locator("#data-confirm-text").text_content()
             r.check("it asks first, with the count, the kept cookie, and that Undo can't bring the rest back",
                     page.locator("#data-confirm").is_visible()
-                    and question.startswith("Delete 4 cookies from " + host + " and clear everything else")
+                    and question.startswith("Delete 5 cookies from " + host + " and clear everything else")
                     and "1 kept cookie will be left alone." in question
                     and "Undo can put the cookies back, but not the rest." in question, question)
             r.check("the other delete buttons step aside while it asks",
@@ -80,12 +82,16 @@ def main():
             page.wait_for_timeout(1500)
             left = stored_names(context, site)
             r.check("TRAP: the site's cookies are gone, the kept one stays, and the other site's are untouched",
-                    not {"top_header", "top_3p", "top_3pjs", "top_chips"} & set(left) and "top_js" in left
+                    not {"top_header", "top_3p", "top_3pjs", "top_chips", "embed_chips"} & set(left)
+                    and "top_js" in left
                     and {"embed_header", "embed_js"} <= set(left), str(left))
             message = page.locator("#main-message").text_content()
             r.check("it says what it did, with Undo",
-                    message.startswith("Deleted 4 cookies and cleared " + host + "'s other stored data.")
+                    message.startswith("Deleted 5 cookies and cleared " + host + "'s other stored data.")
                     and page.locator("#main-message .undo-button").is_visible(), message)
+            r.check("and offers to reload the site, without doing it by itself",
+                    page.locator("#main-message .reload-button").is_visible()
+                    and page.locator("#main-message .reload-button").text_content() == "Reload the site")
             r.check("TRAP: the site's local storage is cleared, and the other site's isn't",
                     stored_value(site, top) is None and stored_value(site, embed) == "embed",
                     "top={}, embed={}".format(stored_value(site, top), stored_value(site, embed)))
@@ -113,7 +119,7 @@ def main():
             news.wait_for_timeout(1200)
             r.check("the first open on a new version shows what's new",
                     news.locator("#whats-new").is_visible()
-                    and "Block button" in news.locator("#whats-new-text").text_content(),
+                    and "password" in news.locator("#whats-new-text").text_content(),
                     news.locator("#whats-new-text").text_content())
             saved = news.evaluate("async () => (await chrome.storage.local.get('seenVersion')).seenVersion")
             r.check("only the version number is saved", saved == news.evaluate("() => chrome.runtime.getManifest().version"),

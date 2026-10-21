@@ -7,6 +7,7 @@ what the popup says, and they include the kinds of cookie that are easy to
 get wrong: host-only, session, SameSite, a path, and a partitioned cookie.
 """
 
+import ast
 import json
 import sys
 
@@ -150,6 +151,50 @@ def main():
         curl, _ = export_text(page, "curl")
         r.check("the curl command sends that header to the page",
                 curl == f"curl -b '{header}' '{SITE}'", curl)
+
+        # --- 1.9: Selenium ---
+        selenium, _ = export_text(page, "selenium")
+        calls = [line for line in selenium.splitlines() if line.startswith("driver.add_cookie(")]
+        dicts = {}
+        for line in calls:
+            try:
+                item = ast.literal_eval(line[len("driver.add_cookie("):-1])
+                dicts[item["name"]] = item
+            except (ValueError, SyntaxError, KeyError):
+                pass
+        r.check("Selenium: one add_cookie() call per cookie, each a Python dict",
+                len(calls) == 6 and len(dicts) == 6, selenium[:300])
+        wide = dicts.get("wide", {})
+        r.check("Selenium: WebDriver's field names, with expiry as a whole number",
+                wide.get("domain") == ".transfer.test" and wide.get("secure") is True
+                and wide.get("httpOnly") is True and wide.get("sameSite") == "Strict"
+                and isinstance(wide.get("expiry"), int) and wide.get("path") == "/",
+                json.dumps(wide))
+        plain = dicts.get("plain", {})
+        r.check("Selenium: a host-only session cookie has no domain and no expiry",
+                plain == {"name": "plain", "value": "simple", "path": "/", "secure": False, "httpOnly": False},
+                json.dumps(plain))
+
+        # --- 1.9: the sign-in warning ---
+        page.locator("#export-button").click()
+        page.wait_for_timeout(300)
+        # The format chosen last time is still chosen, and that was Selenium.
+        page.locator('input[name="format"][value="json"]').check()
+        page.wait_for_timeout(200)
+        warning = page.locator("#export-warning")
+        r.check("an export with sign-in cookies and no password warns, near the buttons",
+                warning.is_visible() and " ".join(warning.text_content().split()) ==
+                "Anyone with this file can be signed in as you. Add a password, or keep it somewhere private.",
+                warning.text_content().strip())
+        page.fill("#export-password", "a password")
+        r.check("a password takes the warning away", not warning.is_visible())
+        page.locator('input[name="format"][value="selenium"]').check()
+        page.wait_for_timeout(200)
+        r.check("Selenium can't have a password, so it warns again", warning.is_visible())
+        page.locator('input[name="format"][value="json"]').check()
+        page.locator("#export-back").click()
+        page.wait_for_timeout(300)
+        r.check("leaving the screen forgets the password", page.locator("#export-password").input_value() == "")
 
         # --- copy and download ---
         page.locator("#export-button").click()
@@ -317,6 +362,17 @@ def main():
                 page.evaluate("() => window.__copied")
                 == "a-long-value-that-is-cut-short-in-the-table-0123456789")
 
+        # --- 1.9: Copy name, in the row's actions ---
+        copy_name = row.locator(".row-button.copy-name")
+        copy_name.click()
+        page.wait_for_timeout(200)
+        r.check("each row has a Copy name button that copies the name, and says Copied",
+                page.evaluate("() => window.__copied") == "long_value"
+                and copy_name.locator(".visually-hidden").text_content() == "Copied")
+        page.wait_for_timeout(1700)
+        r.check("and goes back to Copy name afterwards",
+                copy_name.locator(".visually-hidden").text_content() == "Copy name")
+
         # --- a Cookie header for a www site ---
         # A page on www.mixed.test gets cookies set for both www.mixed.test
         # and mixed.test. That's still one page's cookies, so the header
@@ -341,6 +397,8 @@ def main():
         header = mixed_page.locator("#export-output").input_value()
         r.check("the Cookie header works for This page on a www site",
                 enabled and "on_www=a" in header and "on_base=b" in header, header)
+        r.check("no sign-in warning when no cookie looks like a sign-in",
+                not mixed_page.locator("#export-warning").is_visible())
         mixed_page.locator("#export-back").click()
         mixed_page.wait_for_timeout(300)
 

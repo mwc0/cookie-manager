@@ -65,7 +65,7 @@
           Grant access
         </button>
       </p>
-      <p id="gate-message" class="error" role="status" hidden></p>
+      <p id="gate-message" class="error" role="status"></p>
     </section>
 
     <!-- Pages like chrome:// and the Web Store can't have their cookies read. -->
@@ -201,8 +201,12 @@
         <span id="whats-new-text"></span>
         <button id="whats-new-close" class="link-button" type="button">OK</button>
       </p>
-      <p id="main-message" class="result" role="status" hidden></p>
-      <p id="size-warning" class="result" role="status" hidden></p>
+      <!-- Status lines like these are always on the page and only their
+           text changes, so screen readers hear every message. A line
+           that appears from hidden isn't always read. Empty, it takes no
+           room (popup.css). -->
+      <p id="main-message" class="result" role="status"></p>
+      <p id="size-warning" class="result" role="status"></p>
 
       <!-- Filters the table. While searching or filtering, an extra delete
            option removes only the cookies shown. -->
@@ -230,6 +234,20 @@
           <button type="button" class="chip" data-filter="soon" aria-pressed="false">Expiring soon</button>
           <button type="button" class="chip" data-filter="large" aria-pressed="false">Large</button>
           <button type="button" class="chip" data-filter="partitioned" aria-pressed="false">Partitioned</button>
+          <button type="button" class="chip" data-filter="known" aria-pressed="false"
+                  title="Cookies with a name in the Open Cookie Database. A guess from the name only.">Known</button>
+          <!-- Checks for developers. Facts about each cookie, nothing more.
+               "Not Secure" is only offered on an HTTPS page. They're kept
+               together, so if the row is too long they move to the next
+               line as a group. -->
+          <span class="filters-checks">
+            <button type="button" class="chip" data-filter="notsecure" aria-pressed="false"
+                    title="Cookies without Secure, so they're also sent over plain HTTP">Not Secure</button>
+            <button type="button" class="chip" data-filter="readable" aria-pressed="false"
+                    title="Cookies without HttpOnly, so the page's scripts can read them">Readable by scripts</button>
+            <button type="button" class="chip" data-filter="samesitenone" aria-pressed="false"
+                    title="Cookies with SameSite None, sent when another site loads something from this one">SameSite None</button>
+          </span>
         </div>
         <button id="search-clear" type="button" hidden title="Clear the search and the filters">
           Clear
@@ -296,7 +314,10 @@
                when there is one. -->
           <button id="kept-open" class="link-button kept-link" type="button" hidden></button>
 
-          <div id="confirm-row" class="confirm" hidden>
+          <!-- Each "Are you sure?" line is a group named by its question,
+               so a screen reader reads the question when the focus moves
+               onto its buttons. -->
+          <div id="confirm-row" class="confirm" role="group" aria-labelledby="confirm-text" hidden>
             <span id="confirm-text"></span>
             <button id="confirm-yes" class="danger solid" type="button">
               Yes, delete
@@ -304,7 +325,7 @@
             <button id="confirm-no" type="button">Cancel</button>
           </div>
 
-          <div id="data-confirm" class="confirm data-confirm" hidden>
+          <div id="data-confirm" class="confirm data-confirm" role="group" aria-labelledby="data-confirm-text" hidden>
             <span id="data-confirm-text"></span>
             <button id="data-yes" class="danger solid" type="button">Yes, clear it</button>
             <button id="data-no" type="button">Cancel</button>
@@ -313,16 +334,18 @@
 
       </section>
 
-      <!-- Only while cookies are ticked: things to do to all of them. -->
+      <!-- Only while cookies are ticked: things to do to all of them. The
+           expiry buttons carry "Expire in" in their names, since a screen
+           reader moving from button to button skips the words before them. -->
       <div id="picked-bar" class="picked-bar" role="group" aria-label="Ticked cookies" hidden>
         <span id="picked-count"></span>
         <button id="picked-keep" class="row-button" type="button">Keep</button>
         <button id="picked-unkeep" class="row-button" type="button">Stop keeping</button>
         <span class="picked-label">Expire in</span>
-        <button class="row-button" type="button" data-picked-expire="3600">1 hour</button>
-        <button class="row-button" type="button" data-picked-expire="86400">1 day</button>
-        <button class="row-button" type="button" data-picked-expire="604800">1 week</button>
-        <button class="row-button" type="button" data-picked-expire="31536000">1 year</button>
+        <button class="row-button" type="button" data-picked-expire="3600" aria-label="Expire in 1 hour">1 hour</button>
+        <button class="row-button" type="button" data-picked-expire="86400" aria-label="Expire in 1 day">1 day</button>
+        <button class="row-button" type="button" data-picked-expire="604800" aria-label="Expire in 1 week">1 week</button>
+        <button class="row-button" type="button" data-picked-expire="31536000" aria-label="Expire in 1 year">1 year</button>
         <button id="picked-clear" class="link-button" type="button">Untick all</button>
       </div>
 
@@ -387,8 +410,17 @@
 
       <form id="edit-form" autocomplete="off">
         <div class="field">
-          <label for="field-name">Name</label>
+          <div class="field-label-row">
+            <label for="field-name">Name</label>
+            <button id="name-copy" class="row-button" type="button" title="Copy the name">Copy</button>
+          </div>
           <input id="field-name" name="name" type="text" class="mono" spellcheck="false" />
+          <!-- Only when the name is in the Open Cookie Database. A guess from
+               the name, and it says so. -->
+          <p id="name-known" class="field-note known-note" hidden>
+            <span id="name-known-text"></span>
+            <span class="muted">A guess from the name only. From the Open Cookie Database.</span>
+          </p>
         </div>
 
         <div class="field">
@@ -472,6 +504,11 @@
             <input id="field-hostonly" name="hostOnly" type="checkbox" />
             <span>Host-only: this exact host, not its subdomains</span>
           </label>
+          <!-- Only for a new cookie: a partition can't be changed later. -->
+          <label id="partitioned-row" class="check" hidden>
+            <input id="field-partitioned" type="checkbox" />
+            <span>Partitioned (CHIPS): kept for <span id="partitioned-site"></span> only. Needs Secure.</span>
+          </label>
         </div>
 
         <p id="edit-partition" class="muted" hidden></p>
@@ -513,6 +550,11 @@
           <span class="scope-note muted">A storageState file, for starting a test already logged in.</span>
         </label>
         <label class="scope">
+          <input type="radio" name="format" value="selenium" />
+          <span class="scope-label">Selenium</span>
+          <span class="scope-note muted">Python add_cookie() calls, for a test. Can't hold partitions.</span>
+        </label>
+        <label class="scope">
           <input type="radio" name="format" value="netscape" />
           <span class="scope-label">cookies.txt</span>
           <span class="scope-note muted">For curl, wget, yt-dlp and other tools. Can't hold SameSite or partitions.</span>
@@ -532,9 +574,30 @@
       <label for="export-output" class="visually-hidden">Exported cookies</label>
       <textarea id="export-output" class="mono output" rows="9" readonly spellcheck="false"></textarea>
 
-      <p class="warning">
-        This includes login cookies. Anyone who has it can sign in as you on
-        these sites, so keep it private.
+      <!-- Optional. With a password, Copy and Download give a locked file
+           that only cookieZ can open, with the password. The password is
+           never saved, and the box is emptied once it's been used. See
+           src/lib/crypto.js. -->
+      <div class="field export-password">
+        <label for="export-password">Password (optional)</label>
+        <div class="password-row">
+          <input id="export-password" type="password" autocomplete="new-password" spellcheck="false" />
+          <label class="check">
+            <input id="export-password-show" type="checkbox" />
+            <span>Show</span>
+          </label>
+        </div>
+        <p id="export-password-note" class="field-note muted">
+          Locks the file, so it can only be imported with this password. The
+          password isn't saved anywhere, so don't lose it.
+        </p>
+      </div>
+
+      <!-- Only while the export has cookies that look like sign-ins and no
+           password. -->
+      <p id="export-warning" class="warning" hidden>
+        Anyone with this file can be signed in as you. Add a password, or
+        keep it somewhere private.
       </p>
 
       <div class="actions">
@@ -555,7 +618,7 @@
         Paste cookies exported as JSON (from cookieZ or another cookie
         editor), a cookies.txt file, Set-Cookie lines, or a curl command
         (from “Copy as cURL” in DevTools). A Cookie header on its own goes
-        on this site.
+        on this site. A cookieZ export with a password asks for it.
       </p>
 
       <!-- Choosing a file can close the popup in Chrome, so it's only offered
@@ -570,6 +633,19 @@
 
       <label for="import-text" class="visually-hidden">Cookies to import</label>
       <textarea id="import-text" class="mono output" rows="9" spellcheck="false" autocomplete="off"></textarea>
+
+      <!-- Only for a password-protected export. The password is used once
+           to open it, then the box is emptied. It's never saved. -->
+      <div id="import-password-row" class="field" hidden>
+        <label for="import-password">This file has a password. Type it, then press Check.</label>
+        <div class="password-row">
+          <input id="import-password" type="password" autocomplete="off" spellcheck="false" />
+          <label class="check">
+            <input id="import-password-show" type="checkbox" />
+            <span>Show</span>
+          </label>
+        </div>
+      </div>
 
       <div class="actions">
         <button id="import-check" class="primary" type="button">Check</button>
@@ -588,6 +664,10 @@
           <ul id="import-domains-list"></ul>
         </details>
         <ul id="import-problems" class="errors" hidden></ul>
+        <p id="import-warning" class="warning" hidden>
+          Only import cookies you made yourself. Cookies from someone else
+          can sign you in to their account, or be used to trick you.
+        </p>
         <div id="import-confirm-row" class="actions">
           <button id="import-confirm" class="primary" type="button"></button>
           <button id="import-cancel" type="button">Cancel</button>
@@ -646,7 +726,7 @@
         cookieZ leaves these out of every delete. This is the whole list it
         has saved, for every site: names, never values.
       </p>
-      <p id="kept-message" class="result" role="status" hidden></p>
+      <p id="kept-message" class="result" role="status"></p>
 
       <div id="kept-wrap">
         <table id="kept-table">
@@ -671,7 +751,7 @@
 
       <div class="actions">
         <button id="kept-clear" class="danger" type="button">Stop keeping all&hellip;</button>
-        <span id="kept-confirm" class="confirm" hidden>
+        <span id="kept-confirm" class="confirm" role="group" aria-labelledby="kept-confirm-text" hidden>
           <span id="kept-confirm-text"></span>
           <button id="kept-confirm-yes" class="danger solid" type="button">Yes, stop keeping</button>
           <button id="kept-confirm-no" type="button">Cancel</button>
@@ -692,7 +772,10 @@
         Choose which sites may set cookies. Chrome follows these rules all
         the time, even when cookieZ is closed. Nothing is sent anywhere.
       </p>
-      <p id="rules-message" class="result" role="status" hidden></p>
+      <!-- The lifetime count. "Cleared", not "blocked": Chrome doesn't tell
+           extensions when it blocks a cookie. -->
+      <p id="rules-stats"></p>
+      <p id="rules-message" class="result" role="status"></p>
 
       <!-- Shown until the extra permission is given. -->
       <div id="rules-gate" hidden>
@@ -716,7 +799,9 @@
         too.
       </p>
 
-      <div id="rules-body" hidden>
+      <!-- A fieldset, so that while a change is being saved one switch
+           (its disabled attribute) turns off every control inside it. -->
+      <fieldset id="rules-body" hidden>
         <section id="rules-site" class="rules-group">
           <h2 id="rules-site-heading">On <span id="rules-site-name"></span></h2>
           <div class="rule-options" role="radiogroup" aria-labelledby="rules-site-heading">
@@ -763,13 +848,13 @@
           <p id="rules-site-note" class="field-note" hidden></p>
           <label class="check rules-always">
             <input id="rules-delete-on-block" type="checkbox" />
-            <span>When I block a site, delete the cookies it already has without asking</span>
+            <span>When I block cookies, delete the ones already saved without asking</span>
           </label>
 
           <!-- Blocking doesn't remove the cookies a site already has, so
                this offers to. It goes through the usual delete: kept
                cookies are left alone, and Undo works. -->
-          <div id="rules-cleanup" class="confirm" hidden>
+          <div id="rules-cleanup" class="confirm" role="group" aria-labelledby="rules-cleanup-text" hidden>
             <span id="rules-cleanup-text"></span>
             <button id="rules-cleanup-yes" class="danger solid" type="button">Delete them</button>
             <button id="rules-cleanup-no" type="button">Leave them</button>
@@ -810,10 +895,40 @@
             </label>
           </div>
           <p id="rules-everywhere-note" class="field-note" hidden></p>
-          <div id="rules-everywhere-confirm" class="confirm" hidden>
-            <span>Block cookies on every site without a rule of its own?</span>
+          <div id="rules-everywhere-confirm" class="confirm" role="group" aria-labelledby="rules-everywhere-confirm-text" hidden>
+            <span id="rules-everywhere-confirm-text">Block cookies on every site without a rule of its own?</span>
             <button id="rules-everywhere-yes" class="danger solid" type="button">Yes, block them</button>
             <button id="rules-everywhere-no" type="button">Cancel</button>
+          </div>
+        </section>
+
+        <!-- Known trackers, from the list in src/lists/trackers.js. The
+             number is filled in from the list by popup.js. -->
+        <section id="rules-trackers-group" class="rules-group" aria-label="Known trackers">
+          <label class="rule-option">
+            <!-- Named by the bold line alone, with the note read after it,
+                 so a screen reader doesn't read the whole paragraph as the
+                 box's name. -->
+            <input id="rules-trackers" type="checkbox"
+                   aria-labelledby="rules-trackers-name" aria-describedby="rules-trackers-note" />
+            <span>
+              <strong id="rules-trackers-name">Block known trackers' cookies on every site</strong>
+              <span id="rules-trackers-note" class="rule-note">
+                Cookies from <span id="rules-trackers-count">about 130</span> advertising and analytics companies,
+                from a list inside cookieZ that updates when cookieZ does.
+                Sites you've set to allow all cookies still get them. This
+                blocks the trackers' cookies, not the trackers themselves.
+              </span>
+            </span>
+          </label>
+
+          <!-- Like the offer after blocking a site: these companies'
+               cookies already saved, deleted the usual way, so kept
+               cookies are left alone and Undo works. -->
+          <div id="rules-trackers-cleanup" class="confirm" role="group" aria-labelledby="rules-trackers-cleanup-text" hidden>
+            <span id="rules-trackers-cleanup-text"></span>
+            <button id="rules-trackers-cleanup-yes" class="danger solid" type="button">Delete them</button>
+            <button id="rules-trackers-cleanup-no" type="button">Leave them</button>
           </div>
         </section>
 
@@ -841,8 +956,8 @@
 
         <div class="actions">
           <button id="rules-clear" class="danger" type="button">Turn off all rules&hellip;</button>
-          <span id="rules-confirm" class="confirm" hidden>
-            <span>Turn off every rule? Chrome goes back to allowing cookies everywhere.</span>
+          <span id="rules-confirm" class="confirm" role="group" aria-labelledby="rules-confirm-text" hidden>
+            <span id="rules-confirm-text">Turn off every rule? Chrome goes back to allowing cookies everywhere.</span>
             <button id="rules-confirm-yes" class="danger solid" type="button">Yes, turn them off</button>
             <button id="rules-confirm-no" type="button">Cancel</button>
           </span>
@@ -850,13 +965,13 @@
           <button id="rules-backup" type="button">Save a copy</button>
           <label id="rules-load-label" class="button-like" for="rules-load">Load a copy&hellip;</label>
           <input id="rules-load" class="visually-hidden" type="file" accept=".json,application/json" />
-          <span id="rules-load-confirm" class="confirm" hidden>
+          <span id="rules-load-confirm" class="confirm" role="group" aria-labelledby="rules-load-text" hidden>
             <span id="rules-load-text"></span>
             <button id="rules-load-yes" class="danger solid" type="button">Replace my rules</button>
             <button id="rules-load-no" type="button">Cancel</button>
           </span>
         </div>
-      </div>
+      </fieldset>
     </section>
 
     <!-- Help that works offline. Nothing here is a link: the extension
@@ -956,6 +1071,8 @@
             <span>Open cookieZ. Change it at chrome://extensions/shortcuts.</span>
             <span><kbd>/</kbd></span>
             <span>Search the cookies.</span>
+            <span><kbd>N</kbd></span>
+            <span>Add a new cookie.</span>
             <span><kbd>↑</kbd> <kbd>↓</kbd></span>
             <span>Move between cookies. <kbd>Home</kbd> and <kbd>End</kbd> jump to the first and last.</span>
             <span><kbd>Enter</kbd></span>
@@ -967,7 +1084,7 @@
             <span><kbd>Delete</kbd></span>
             <span>Delete it. It asks "Sure?" first: press <kbd>Enter</kbd> to delete.</span>
             <span><kbd>Esc</kbd></span>
-            <span>Go back from this screen, the editor, export, import or site rules, or cancel a delete.</span>
+            <span>Go back from this screen, the editor, export, import or site rules, or cancel a delete or other question.</span>
           </div>
         </dd>
 

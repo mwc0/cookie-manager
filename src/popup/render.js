@@ -13,9 +13,11 @@ import {
   cookieBytes,
   LARGE_COOKIE_BYTES,
   formatBytes,
+  bareDomain,
 } from "../lib/format.js";
 import { cookieKey } from "../lib/cookies.js";
-import { copyWithFeedback } from "./clipboard.js";
+import { knownCookie, describeKnownBy } from "../lib/known.js";
+import { copyWithFeedback, copyWithIconFeedback } from "./clipboard.js";
 import { iconButton, setIconContent } from "./icons.js";
 
 // Short enough that a row fits the popup's width. Long values can be clicked
@@ -24,7 +26,9 @@ const VALUE_PREVIEW_LENGTH = 28;
 
 // `handlers` is { onEdit(cookie), onDelete(cookie), onProtect(cookie, on),
 // isProtected(cookie), onPick(cookie, ticked), isPicked(cookie),
-// isChanged(cookie), isExpanded(cookie), onExpand(cookie, expanded) }.
+// isChanged(cookie), isExpanded(cookie), onExpand(cookie, expanded),
+// isEmbedded(cookie) }. isEmbedded says a cookie was set by another site
+// and is kept for this one only (see setByOtherSite() in cookies.js).
 // Deleting one cookie takes two clicks (Delete, then "Sure?"), and onDelete
 // is only called after the second.
 //
@@ -37,7 +41,7 @@ const VALUE_PREVIEW_LENGTH = 28;
 export function renderCookieTable(tbody, cookies, handlers = {}, sort = DEFAULT_SORT) {
   tbody.textContent = "";
 
-  const sorted = sortCookies(cookies, sort);
+  const sorted = sortCookies(cookies, sort, handlers.isProtected);
 
   // Only one row can show "Sure?" at a time. Clicking another row's button
   // resets the rest.
@@ -57,18 +61,26 @@ export const DEFAULT_SORT = { key: "domain", dir: "ascending" };
 
 // Ties are broken by domain and then name, so the order never jumps about.
 // "example.com" and ".example.com" sort together.
-export function sortCookies(cookies, sort = DEFAULT_SORT) {
-  const host = (cookie) => String(cookie.domain || "").replace(/^\./, "");
+//
+// Before that, a Kept cookie comes first among its ties, whichever way
+// round the sort is. In the usual sort, by domain, that puts a site's Kept
+// cookies at the top of it. `isKept(cookie)` says whether a cookie is
+// marked Kept (see src/lib/protect.js).
+export function sortCookies(cookies, sort = DEFAULT_SORT, isKept = () => false) {
+  const host = (cookie) => bareDomain(cookie.domain);
+  const keptFirst = (a, b) => (isKept(b) ? 1 : 0) - (isKept(a) ? 1 : 0);
   const byDomainThenName = (a, b) =>
     host(a).localeCompare(host(b)) || a.name.localeCompare(b.name);
   const flip = sort.dir === "descending" ? -1 : 1;
+  // Each cookie's size once, not once per comparison.
+  const sizes = sort.key === "size" ? new Map(cookies.map((cookie) => [cookie, cookieBytes(cookie)])) : null;
 
   return [...cookies].sort((a, b) => {
     if (sort.key === "name") {
-      return flip * (a.name.localeCompare(b.name) || byDomainThenName(a, b));
+      return flip * a.name.localeCompare(b.name) || keptFirst(a, b) || flip * byDomainThenName(a, b);
     }
     if (sort.key === "size") {
-      return flip * (cookieBytes(a) - cookieBytes(b)) || byDomainThenName(a, b);
+      return flip * (sizes.get(a) - sizes.get(b)) || keptFirst(a, b) || byDomainThenName(a, b);
     }
     if (sort.key === "expires") {
       // Session cookies have no date, so they go last whichever way round.
@@ -78,11 +90,13 @@ export function sortCookies(cookies, sort = DEFAULT_SORT) {
         return aSession ? 1 : -1;
       }
       if (aSession) {
-        return byDomainThenName(a, b);
+        return keptFirst(a, b) || byDomainThenName(a, b);
       }
-      return flip * (a.expirationDate - b.expirationDate) || byDomainThenName(a, b);
+      return flip * (a.expirationDate - b.expirationDate) || keptFirst(a, b) || byDomainThenName(a, b);
     }
-    return flip * byDomainThenName(a, b);
+    return (
+      flip * host(a).localeCompare(host(b)) || keptFirst(a, b) || flip * a.name.localeCompare(b.name)
+    );
   });
 }
 
@@ -123,13 +137,30 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
 
   row.appendChild(pickCell(cookie, handlers));
 
+  // Worked out once per row: the table is redrawn on every change the site
+  // makes, so this runs a lot.
+  const bytes = cookieBytes(cookie);
+  const embedded = Boolean(handlers.isEmbedded && handlers.isEmbedded(cookie));
+
   const name = textCell(cookie.name, "mono name");
-  name.title = cookie.name + " (" + formatBytes(cookieBytes(cookie)) + ")";
+  name.title = cookie.name + " (" + formatBytes(bytes) + ")";
   row.appendChild(name);
   row.appendChild(valueCell(cookie, handlers));
   // Only shown when cookieZ is open in a tab. See .size in popup.css.
-  row.appendChild(textCell(formatBytes(cookieBytes(cookie)), "nowrap size"));
-  row.appendChild(breakableCell(cookie.domain, ".", "mono domain"));
+  row.appendChild(textCell(formatBytes(bytes), "nowrap size"));
+  const domain = breakableCell(cookie.domain, ".", "mono domain");
+  // Another company's cookie, kept for this site only. Said in words under
+  // its domain, since otherwise it looks like a cookie set for that domain.
+  if (embedded) {
+    const note = document.createElement("span");
+    note.className = "embedded-note";
+    note.textContent = "set in a frame, kept for this site only";
+    note.title =
+      "Set by " + bareDomain(cookie.domain) +
+      " in a frame on this site. It's partitioned, so it's kept for this site only.";
+    domain.appendChild(note);
+  }
+  row.appendChild(domain);
   row.appendChild(breakableCell(cookie.path, "/", "mono path"));
 
   const expires = textCell(formatExpiry(cookie), "nowrap expires");
@@ -142,7 +173,7 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   }
   row.appendChild(expires);
 
-  row.appendChild(flagsCell(cookie));
+  row.appendChild(flagsCell(cookie, bytes, embedded));
   row.appendChild(actionsCell(cookie, handlers, disarmers, disarmAll));
   return row;
 }
@@ -171,17 +202,27 @@ function pickCell(cookie, handlers) {
   return cell;
 }
 
-// Keep, Edit and Delete, as icon buttons. Each has its name in a hidden
-// span, so screen readers read "Keep", "Edit", "Delete".
+// Copy name, Keep, Edit and Delete, as icon buttons. Each has its name in a
+// hidden span, so screen readers read "Copy name", "Keep", "Edit", "Delete".
 //
 // The first click on Delete turns it into a filled "Sure?" (in words) with a
-// cancel button next to it, and hides Keep and Edit so they can't be hit by
+// cancel button next to it, and hides the others so they can't be hit by
 // mistake. The second click deletes.
 function actionsCell(cookie, handlers, disarmers, disarmAll) {
   const cell = document.createElement("td");
   cell.className = "row-actions";
 
   const protectedNow = handlers.isProtected ? handlers.isProtected(cookie) : false;
+
+  // For pasting a name into code or a test. The icon turns into a tick for
+  // a moment once it's copied.
+  const copy = iconButton("copy", "Copy name");
+  copy.classList.add("copy-name");
+  copy.title = "Copy the name, " + cookie.name;
+  copy.addEventListener("click", () => {
+    disarmAll();
+    copyWithIconFeedback(copy, cookie.name, "copy", "Copy name");
+  });
 
   // Called "Keep", not "Protect", because it only stops this extension
   // deleting the cookie. See src/lib/protect.js. A kept cookie's bookmark is
@@ -234,6 +275,7 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     setIconContent(remove, "delete", "Delete");
     remove.classList.remove("armed");
     remove.classList.add("icon-only");
+    copy.hidden = false;
     keep.hidden = false;
     edit.hidden = false;
     cancel.hidden = true;
@@ -247,6 +289,7 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
       remove.textContent = "Sure?";
       remove.classList.remove("icon-only");
       remove.classList.add("armed");
+      copy.hidden = true;
       keep.hidden = true;
       edit.hidden = true;
       cancel.hidden = false;
@@ -263,6 +306,7 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     remove.focus();
   });
 
+  cell.appendChild(copy);
   cell.appendChild(keep);
   cell.appendChild(edit);
   cell.appendChild(remove);
@@ -354,10 +398,12 @@ function valueCell(cookie, handlers) {
 // Only what's unusual about a cookie gets a badge, in words. Most cookies
 // are for one host and have no SameSite set, so those get nothing, rather
 // than the same badges on every row. The editor shows every setting.
-function flagsCell(cookie) {
+// `bytes` and `embedded` come from buildRow(), which has already worked
+// them out.
+function flagsCell(cookie, bytes, embedded) {
   const cell = document.createElement("td");
   cell.className = "flags";
-  const host = String(cookie.domain || "").replace(/^\./, "");
+  const host = bareDomain(cookie.domain);
 
   if (cookie.secure) {
     cell.appendChild(badge("Secure", "Only sent over HTTPS"));
@@ -368,7 +414,13 @@ function flagsCell(cookie) {
   if (!cookie.hostOnly) {
     cell.appendChild(badge("Subdomains", "Also sent to every subdomain of " + host));
   }
-  if (cookie.partitionKey) {
+  // Set by another site in a frame on this one. Its row also says so in
+  // words, under the domain (see buildRow()).
+  if (embedded) {
+    cell.appendChild(
+      badge("Partitioned", "Partitioned (CHIPS): set by " + host + " and kept for this site only")
+    );
+  } else if (cookie.partitionKey) {
     cell.appendChild(
       badge("Partitioned", "Partitioned (CHIPS): kept separately for each site it's used on")
     );
@@ -379,7 +431,22 @@ function flagsCell(cookie) {
     );
   }
 
-  const bytes = cookieBytes(cookie);
+  // A guess from the name, so it comes after the facts, and the word is
+  // "Known", never "tracker". Who it's known for is in the tip, and read
+  // out by screen readers.
+  const known = knownCookie(cookie.name);
+  if (known) {
+    const by = describeKnownBy(known);
+    const tip = "Known name, used by " + by + ". A guess from the name only.";
+    const mark = badge("Known", tip);
+    mark.classList.add("known");
+    const detail = document.createElement("span");
+    detail.className = "visually-hidden";
+    detail.textContent = " name, used by " + by;
+    mark.appendChild(detail);
+    cell.appendChild(mark);
+  }
+
   if (bytes >= LARGE_COOKIE_BYTES) {
     const large = badge(
       "Large",

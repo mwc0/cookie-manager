@@ -28,6 +28,7 @@ import {
   removeSiteRule,
   setEverywhere,
   setDeleteOnBlock,
+  setTrackers,
   clearRules,
   everywhereAvailable,
   thirdPartyStatus,
@@ -35,8 +36,10 @@ import {
   rulesFromBackup,
   replaceRules,
 } from "../lib/rules.js";
+import { TRACKER_DOMAINS } from "../lists/trackers.js";
 import {
-  getCookiesForPage,
+  getSiteCookies,
+  setByOtherSite,
   getCookiesForScope,
   getCookiesForDomain,
   removeCookie,
@@ -58,13 +61,16 @@ import {
   toHeader,
   toPlaywright,
   toCurl,
+  toSelenium,
   toSetCookie,
+  looksLikeSignIn,
   parseImport,
   planImport,
   matchSentCookies,
   isForSite,
   moveToSite,
 } from "../lib/transfer.js";
+import { lockText, unlockText, readLockedFile } from "../lib/crypto.js";
 import { copyWithFeedback } from "./clipboard.js";
 import {
   loadProtected,
@@ -92,6 +98,8 @@ import {
   isCompactJson,
   prettyJson,
   compactJson,
+  describeError,
+  bareDomain,
 } from "../lib/format.js";
 import {
   loadTheme,
@@ -102,6 +110,8 @@ import {
   watchSystemTheme,
 } from "../lib/theme.js";
 import { renderCookieTable, DEFAULT_SORT } from "./render.js";
+import { loadCleared, changeCleared } from "../lib/stats.js";
+import { loadKnownCookies, knownCookie, describeKnown } from "../lib/known.js";
 import {
   saveLastChange,
   loadLastChange,
@@ -156,6 +166,10 @@ let scopeAll = [];
 // original cookie, in case the name or path changed. See writeCookie().
 let editing = null;
 
+// After Duplicate on a partitioned cookie, the partition the copy goes in.
+// Otherwise null.
+let duplicatePartition = null;
+
 // All of this page's cookies, and the ones the search is showing.
 // "Just the cookies shown" deletes shownCookies, the same list as the table.
 let pageCookies = [];
@@ -178,7 +192,7 @@ let activeFilters = new Set();
 
 // The site rules, and whether Chrome has given permission to set them. See
 // src/lib/rules.js.
-let rules = { everywhere: ALLOW, sites: {} };
+let rules = { everywhere: ALLOW, sites: {}, trackers: false };
 let rulesAllowed = false;
 
 // Whether the two other optional permissions have been given, found out
@@ -191,8 +205,9 @@ let siteDataAllowed = false;
 // The cookies "Clear site data" will delete, counted when it asks.
 let siteDataCookies = [];
 
-// The cookies "Delete them" on the rules screen would remove. Counted when
-// the offer is made, so the number shown is the number deleted.
+// The cookies "Delete them" on the rules screen would remove, after
+// blocking a site or the trackers. Counted when the offer is made, so the
+// number shown is the number deleted.
 let cleanupCookies = [];
 
 // An incognito window shows the rules but can't change them.
@@ -218,7 +233,7 @@ function showState(name) {
 }
 
 function showError(error) {
-  const message = error && error.message ? error.message : String(error);
+  const message = describeError(error);
   el("error-message").textContent = message;
   showState("error");
 }
@@ -296,11 +311,17 @@ async function loadCurrentPage() {
     overwritten = new Set();
   }
 
-  page = { origin: url.origin, hostname: url.hostname };
+  // A message about the last page goes. Not on the first load, though:
+  // initTheme() runs alongside this, and an error it has already shown
+  // would be wiped.
+  if (page) {
+    el("main-message").textContent = "";
+  }
+
+  page = { origin: url.origin, hostname: url.hostname, tabId: tab.id };
   seenCookies = null;
   expanded = new Set();
 
-  el("main-message").hidden = true;
   el("site-name").textContent = url.hostname;
   if (inTab) {
     document.title = "cookieZ - " + url.hostname;
@@ -309,10 +330,44 @@ async function loadCurrentPage() {
   el("scope-target-domain").textContent = baseHostOf(url.hostname);
 
   showState("main");
-  await loadSiteRules();
+  // The table first, so it shows as soon as it can. The rules only change
+  // the Block button, and what the table says when it's empty, so those are
+  // put right once the rules are in.
   await refresh();
+  await loadSiteRules();
+  showRulesLink();
+  if (pageCookies.length === 0) {
+    drawTable();
+  }
   await showWhatsNew();
   await offerStoredUndo();
+  showKnownWhenLoaded();
+}
+
+// The list of known cookie names loads after the table is showing, so it
+// doesn't slow opening (see src/lib/known.js). Once it's in, the table is
+// drawn again with its Known badges. If now isn't a good moment, such as
+// while a row says "Sure?", that waits, as it does when the site changes a
+// cookie.
+let knownReady = false;
+
+async function showKnownWhenLoaded() {
+  if (knownReady) {
+    return;
+  }
+  knownReady = await loadKnownCookies();
+  if (!knownReady) {
+    return;
+  }
+  if (currentState() === "edit") {
+    showKnownName();
+  }
+  if (liveRedrawWaits()) {
+    livePending = true;
+    scheduleLiveRedraw();
+  } else {
+    drawTable();
+  }
 }
 
 // Reloads the table, then the delete count. These must run one after the
@@ -325,7 +380,7 @@ async function refresh() {
 
 async function refreshTable() {
   try {
-    pageCookies = await getCookiesForPage(page);
+    pageCookies = await getSiteCookies(page);
     noteChanges(pageCookies);
 
     const { keys, error } = await loadProtected();
@@ -336,7 +391,14 @@ async function refreshTable() {
     }
 
     // Forget Kept entries for cookies that are gone. See pruneProtected().
-    const domains = new Set(pageCookies.map((c) => String(c.domain || "").replace(/^\./, "")));
+    // Only this site's own domains: the table only has the cookies other
+    // companies keep for this site, not the rest of theirs, so their kept
+    // cookies elsewhere would look gone.
+    const domains = new Set(
+      pageCookies
+        .filter((c) => !setByOtherSite(c, page.hostname))
+        .map((c) => bareDomain(c.domain))
+    );
     domains.add(page.hostname);
     const pruned = await pruneProtected(protectedKeys, pageCookies, domains);
     protectedKeys = pruned.keys;
@@ -407,6 +469,7 @@ function drawTable() {
     isPicked: (cookie) => picked.has(cookieKey(cookie)),
     isChanged: (cookie) => changed.has(cookieKey(cookie)),
     isExpanded: (cookie) => expanded.has(cookieKey(cookie)),
+    isEmbedded: (cookie) => setByOtherSite(cookie, page.hostname),
     onExpand: (cookie, open) => {
       if (open) {
         expanded.add(cookieKey(cookie));
@@ -437,8 +500,9 @@ function drawTable() {
   el("search-clear").hidden = !filtering;
 
   // "about", because this page's list also has cookies for other paths,
-  // which a browser only sends on those paths.
-  const bytes = headerBytes(pageCookies);
+  // which a browser only sends on those paths. Cookies other companies keep
+  // for this site are left out: they're only sent to those companies.
+  const bytes = headerBytes(pageCookies.filter((cookie) => !setByOtherSite(cookie, page.hostname)));
   el("cookie-count").textContent =
     (filtering
       ? pluralise(shownCookies.length, "cookie", "cookies") +
@@ -448,14 +512,18 @@ function drawTable() {
 
   // Many servers refuse requests with more than 8 KB of headers, and a site
   // that has piled up cookies is a common reason someone can't log in.
+  // A live region, so it's emptied rather than hidden (see popup.html). The
+  // text is only set when it changes, so a redraw doesn't read it again.
   const warning = el("size-warning");
-  warning.hidden = bytes <= SIZE_WARNING_BYTES;
-  warning.textContent = warning.hidden
+  const warningText = bytes <= SIZE_WARNING_BYTES
     ? ""
     : "This site's cookies add up to about " +
       formatBytes(bytes) +
       ". Many servers refuse more than 8 KB, which can stop you logging in. " +
       "Deleting this site's cookies usually fixes it.";
+  if (warning.textContent !== warningText) {
+    warning.textContent = warningText;
+  }
 
   // "Just the cookies shown" only appears while searching or filtering.
   el("scope-matches-row").hidden = !filtering;
@@ -484,13 +552,18 @@ function drawTable() {
 }
 
 // The quick filters. One that no cookie on this site matches is hidden,
-// unless it's switched on, so it can always be switched off again.
+// unless it's switched on, so it can always be switched off again. "Not
+// Secure" is only offered on an HTTPS page: on a plain HTTP page no cookie
+// set there is Secure, so it would say nothing.
 function drawFilters(isKept) {
   let anyShown = false;
+  const https = page.origin.startsWith("https:");
   for (const chip of document.querySelectorAll("#filters .chip")) {
     const name = chip.dataset.filter;
     const on = activeFilters.has(name);
-    const matches = pageCookies.some((cookie) => passesFilter(cookie, name, isKept));
+    const matches =
+      (name !== "notsecure" || https) &&
+      pageCookies.some((cookie) => passesFilter(cookie, name, isKept));
     chip.hidden = !on && !matches;
     chip.setAttribute("aria-pressed", on ? "true" : "false");
     anyShown = anyShown || !chip.hidden;
@@ -655,15 +728,22 @@ let liveTimer = null;
 let livePending = false;
 let lastLiveDraw = 0;
 
-// The same cookies getCookiesForPage() reads: this host, its parent
-// domains and its subdomains.
+// The same cookies getSiteCookies() reads: this host, its parent domains
+// and its subdomains, and the partitioned cookies kept for this site by
+// others. A partition is named after a site (example.com), which is this
+// host or one of its parent domains.
 function concernsPage(cookie) {
   if (!page) {
     return false;
   }
-  const domain = String(cookie.domain || "").replace(/^\./, "");
+  const domain = bareDomain(cookie.domain);
   const host = page.hostname;
-  return domain === host || host.endsWith("." + domain) || domain.endsWith("." + host);
+  if (domain === host || host.endsWith("." + domain) || domain.endsWith("." + host)) {
+    return true;
+  }
+  const site = cookie.partitionKey ? String(cookie.partitionKey.topLevelSite || "") : "";
+  const siteHost = site.replace(/^https?:\/\//, "").replace(/[:/].*$/, "");
+  return siteHost !== "" && (siteHost === host || host.endsWith("." + siteHost));
 }
 
 // Never pulls the rug: the table isn't redrawn while another screen is open,
@@ -750,7 +830,7 @@ function logChange(cookie, removed, cause) {
   changeLog.unshift({
     at: Date.now(),
     name: cookie.name,
-    domain: String(cookie.domain || "").replace(/^\./, ""),
+    domain: bareDomain(cookie.domain),
     what: describeCookieEvent(key, removed, cause),
   });
   changeLog.length = Math.min(changeLog.length, CHANGE_LOG_LIMIT);
@@ -903,13 +983,21 @@ async function refreshScope() {
       inScope = shownCookies;
     } else if (selectedScope() === "picked") {
       inScope = pickedCookies();
+    } else if (selectedScope() === "page") {
+      // "This page" is the table's own list too: refreshTable() has just
+      // read it with the same query (getSiteCookies() is
+      // getCookiesForScope("page", page, { embedded: true })), so asking
+      // Chrome again would only slow opening.
+      inScope = pageCookies;
     } else {
-      inScope = await getCookiesForScope(selectedScope(), page);
+      // The cookies other companies keep for this site are in the table,
+      // so they're in this site's scopes too.
+      inScope = await getCookiesForScope(selectedScope(), page, { embedded: true });
     }
   } catch (error) {
     scopeCookies = [];
     scopeAll = [];
-    summaryLine.textContent = "Couldn't count the cookies in this scope: " + error.message;
+    summaryLine.textContent = "Couldn't count the cookies in this scope: " + describeError(error);
     return;
   }
 
@@ -979,7 +1067,7 @@ function startConfirm() {
   el("confirm-text").textContent =
     "Delete " + pluralise(scopeCookies.length, "cookie", "cookies") + describeSites(sitesOf(scopeCookies)) + "?";
 
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
   el("data-button").hidden = true;
@@ -996,7 +1084,6 @@ async function runDelete() {
 
   yes.disabled = true;
   no.disabled = true;
-  result.hidden = false;
   result.className = "result";
   result.textContent = "Deleting…";
 
@@ -1015,14 +1102,23 @@ async function runDelete() {
         " could not be deleted, and may be protected by the browser.";
     }
     await offerUndo(result, { kind: "delete", restore: removedCookies });
+    if (removedCookies.length > 0) {
+      appendReloadButton(result);
+    }
   } catch (error) {
     result.className = "result error";
-    result.textContent = "The delete failed: " + error.message;
+    result.textContent = "The delete failed: " + describeError(error);
   } finally {
     yes.disabled = false;
     no.disabled = false;
     cancelConfirm();
     await refresh();
+    // "Yes, delete" has gone, which would leave the focus nowhere. Undo is
+    // the likeliest next step; without one, back to Delete, or to the
+    // search box if there's nothing left to delete.
+    const undo = result.querySelector(".undo-button");
+    const remove = el("delete-button");
+    (undo || (remove.disabled ? el("search-input") : remove)).focus();
   }
 }
 
@@ -1033,6 +1129,8 @@ function showMainMessage(text, isError) {
   const message = el("main-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
+  // It's a live region that stays on the page (see popup.html), but a few
+  // screens still hide it as they open. See showState().
   message.hidden = false;
 }
 
@@ -1040,7 +1138,7 @@ function showMainMessage(text, isError) {
 function openEditor(cookie) {
   editing = cookie || null;
 
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("edit-title").textContent = cookie ? "Edit cookie" : "New cookie";
   el("edit-errors").hidden = true;
   el("edit-errors").textContent = "";
@@ -1062,7 +1160,7 @@ function openEditor(cookie) {
   // buildSetDetails() puts it back when saving.
   el("field-domain").value = isNew
     ? page.hostname
-    : String(cookie.domain || "").replace(/^\./, "");
+    : bareDomain(cookie.domain);
   el("field-path").value = isNew ? "/" : cookie.path || "/";
 
   el("field-samesite").value = isNew ? "unspecified" : cookie.sameSite || "unspecified";
@@ -1084,7 +1182,12 @@ function openEditor(cookie) {
   // A partitioned cookie keeps its partition when saved. The partition can't
   // be edited here.
   const partition = el("edit-partition");
-  if (cookie && cookie.partitionKey) {
+  if (cookie && setByOtherSite(cookie, page.hostname)) {
+    partition.textContent =
+      "Set by " + bareDomain(cookie.domain) + " in a frame on this site, " +
+      "and kept for this site only (a partitioned, or CHIPS, cookie). Its partition is kept as it is when you save.";
+    partition.hidden = false;
+  } else if (cookie && cookie.partitionKey) {
     partition.textContent =
       "This is a partitioned (CHIPS) cookie. Its partition is kept as it is when you save.";
     partition.hidden = false;
@@ -1092,13 +1195,29 @@ function openEditor(cookie) {
     partition.hidden = true;
   }
 
-  // A partitioned cookie can't be made here, so it can't be duplicated.
-  el("edit-duplicate").hidden = isNew || Boolean(cookie.partitionKey);
+  // A new cookie can be partitioned (CHIPS): kept for this site only. An
+  // existing cookie's partition can't be changed, so the box is only for
+  // new ones.
+  duplicatePartition = null;
+  el("field-partitioned").checked = false;
+  el("partitioned-site").textContent = baseHostOf(page.hostname);
+  el("partitioned-row").hidden = !isNew;
+
+  el("edit-duplicate").hidden = isNew;
 
   showDecoded();
   showValueSize();
+  showKnownName();
   showState("edit");
   el("field-name").focus();
+}
+
+// One line under the name when the Open Cookie Database knows it, kept up
+// to date as the name is typed.
+function showKnownName() {
+  const known = knownCookie(el("field-name").value);
+  el("name-known").hidden = !known;
+  el("name-known-text").textContent = known ? describeKnown(known) : "";
 }
 
 // Says how big the cookie is once it's close to Chrome's limit, and turns
@@ -1123,7 +1242,17 @@ function expireIn(seconds) {
 // Turns the editor into a new cookie with the details already filled in,
 // including anything typed since it was opened. The cookie being edited is
 // left alone. Saving goes the usual way, so Undo works on it.
+//
+// A partitioned cookie's copy goes in the same partition, with the box
+// ticked. Unticking it makes an ordinary cookie instead.
 function duplicateCookie() {
+  if (editing && editing.partitionKey) {
+    duplicatePartition = editing.partitionKey;
+    el("field-partitioned").checked = true;
+    const site = String(editing.partitionKey.topLevelSite || "").replace(/^https?:\/\//, "");
+    el("partitioned-site").textContent = site || baseHostOf(page.hostname);
+  }
+  el("partitioned-row").hidden = false;
   editing = null;
   el("edit-title").textContent = "New cookie";
   el("edit-duplicate").hidden = true;
@@ -1222,8 +1351,46 @@ function readForm() {
     session,
     expirationDate: session ? null : fromLocalDateTimeValue(el("field-expiry").value),
     storeId: editing ? editing.storeId : undefined,
-    partitionKey: editing ? editing.partitionKey : undefined,
+    partitionKey: editing ? editing.partitionKey : newPartitionKey(),
   };
+}
+
+// The partition for a new cookie with "Partitioned" ticked: the copied
+// cookie's for a duplicate, otherwise this site's. See partitionSites().
+function newPartitionKey() {
+  if (!el("field-partitioned").checked) {
+    return undefined;
+  }
+  return duplicatePartition || { topLevelSite: partitionSites()[0] };
+}
+
+// Chrome only takes a partition named after a site, such as
+// https://example.com: not https://www.example.com, and with no port. It
+// refuses any other without saying why. Working out the site for certain
+// needs the list of public suffixes (example.co.uk is a site, co.uk isn't),
+// which cookieZ doesn't carry. So these are the page's host and each of its
+// parent domains, longest first, and saveEditor() keeps the first one Chrome
+// accepts. A wrong guess is refused, so nothing is written by mistake.
+function partitionSites() {
+  const scheme = page.origin.startsWith("https:") ? "https://" : "http://";
+  const labels = page.hostname.split(".");
+  return labels.map((label, index) => scheme + labels.slice(index).join("."));
+}
+
+// Saves the form. A new partitioned cookie tries each possible site in
+// turn (see partitionSites()); everything else is one write.
+async function writeFromEditor(values) {
+  if (editing || !values.partitionKey || duplicatePartition) {
+    return writeCookie(editing, values);
+  }
+  let result = null;
+  for (const topLevelSite of partitionSites()) {
+    result = await writeCookie(null, { ...values, partitionKey: { topLevelSite } });
+    if (result.ok) {
+      break;
+    }
+  }
+  return result;
 }
 
 function showFormErrors(errors) {
@@ -1285,7 +1452,7 @@ async function saveEditor() {
 
   try {
     saving = true;
-    const { ok, cookie, error } = await writeCookie(editing, values);
+    const { ok, cookie, error } = await writeFromEditor(values);
     saving = false;
 
     if (!ok) {
@@ -1316,7 +1483,7 @@ async function saveEditor() {
   } catch (error) {
     // Shouldn't happen, since writeCookie() catches its own errors. Show it
     // anyway so the form doesn't look stuck.
-    showFormErrors([error && error.message ? error.message : String(error)]);
+    showFormErrors([describeError(error)]);
   } finally {
     saving = false;
     save.disabled = false;
@@ -1409,7 +1576,7 @@ function showKeptLink() {
 }
 
 async function openKept() {
-  el("kept-message").hidden = true;
+  el("kept-message").textContent = "";
   cancelKeptConfirm();
   showState("kept");
   await drawKept();
@@ -1476,7 +1643,6 @@ function showKeptMessage(text, isError) {
   const message = el("kept-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
-  message.hidden = false;
 }
 
 async function stopKeeping(entries, described) {
@@ -1548,11 +1714,17 @@ function pageRule() {
 // following them. If it isn't, they're set again. This is a safety net:
 // nothing else would notice if Chrome lost them.
 async function loadSiteRules() {
-  const loaded = await loadRules();
+  // None of these depends on another, so they're asked all at once.
+  const [loaded, rulesAccess, everywhere, siteData] = await Promise.all([
+    loadRules(),
+    hasRulesAccess(),
+    hasPermission(EVERYWHERE_PERMISSION),
+    hasPermission(SITE_DATA_PERMISSION),
+  ]);
   rules = loaded.rules;
-  rulesAllowed = await hasRulesAccess();
-  everywhereAllowed = await hasPermission(EVERYWHERE_PERMISSION);
-  siteDataAllowed = await hasPermission(SITE_DATA_PERMISSION);
+  rulesAllowed = rulesAccess;
+  everywhereAllowed = everywhere;
+  siteDataAllowed = siteData;
 
   if (loaded.error) {
     showMainMessage(loaded.error, true);
@@ -1563,6 +1735,9 @@ async function loadSiteRules() {
   }
 
   if ((await rulesInForce(rules)) === false) {
+    // Setting them again can take a few seconds with the trackers list, as
+    // on the Block cookies screen, so the main screen says so meanwhile.
+    showMainMessage(SAVING, false);
     const error = await applyRules(rules);
     showMainMessage(
       error
@@ -1583,15 +1758,35 @@ function showRulesLink() {
     [OWN_ONLY]: ["Blocking others", "Other companies' cookies are blocked on this site"],
     [BLOCK]: ["Blocked", "Every cookie is blocked on this site"],
   };
-  const [label, title] = labels[rule] || labels[ALLOW];
+  let [label, title] = labels[rule] || labels[ALLOW];
+
+  // Known trackers are blocked here too, unless the site has a rule of its
+  // own: "Allow all cookies" lets them through, and every other rule
+  // already has a name that says more.
+  const trackersHere =
+    rule === ALLOW && rulesAllowed && rules.trackers && !rules.sites[siteFor(rules, page.hostname)];
+  if (trackersHere) {
+    label = "Blocking trackers";
+    title = "Known trackers' cookies are blocked on this site";
+  }
+
+  const lit = rule !== ALLOW || trackersHere;
   el("rules-open-label").textContent = label;
   el("rules-open").title = title;
-  el("rules-open").classList.toggle("on", rule !== ALLOW);
+  el("rules-open").classList.toggle("on", lit);
+  // While lit, the label says what's happening ("Blocked"), not what the
+  // button does, so a screen reader is told both. Unlit, "Block" already
+  // says it, and the tip is read after it.
+  if (lit) {
+    el("rules-open").setAttribute("aria-label", label + ": choose which cookies this site may set");
+  } else {
+    el("rules-open").removeAttribute("aria-label");
+  }
 }
 
 async function openRules() {
-  el("main-message").hidden = true;
-  el("rules-message").hidden = true;
+  el("main-message").textContent = "";
+  el("rules-message").textContent = "";
   el("rules-everywhere-confirm").hidden = true;
   cancelRulesConfirm();
   cancelLoad();
@@ -1605,7 +1800,30 @@ function showRulesMessage(text, isError) {
   const message = el("rules-message");
   message.textContent = text;
   message.className = isError ? "result error" : "result";
-  message.hidden = false;
+}
+
+const SAVING = "Saving…";
+
+// Every change to the rules goes through here. Chrome can take a few
+// seconds to take in every rule now there are trackers, so the screen says
+// "Saving…" and its controls are switched off until Chrome is done, error
+// or not. `change` is called with no arguments and its result handed back.
+async function savingRules(change) {
+  const focused = document.activeElement;
+  el("rules-body").disabled = true;
+  showRulesMessage(SAVING, false);
+  try {
+    return await change();
+  } finally {
+    el("rules-body").disabled = false;
+    if (el("rules-message").textContent === SAVING) {
+      el("rules-message").textContent = "";
+    }
+    // Switching a control off takes the focus away from it. Give it back.
+    if (focused && focused !== document.body && document.activeElement !== focused) {
+      focused.focus();
+    }
+  }
 }
 
 function setRadio(name, value, disabled) {
@@ -1613,6 +1831,70 @@ function setRadio(name, value, disabled) {
     radio.checked = radio.value === value;
     radio.disabled = disabled;
   }
+}
+
+// Calls `apply` with the value of a group of radio buttons once a choice is
+// made, but not on every arrow press.
+//
+// A browser moves the tick, and fires "change", on each arrow key, so
+// someone arrowing past "Block other companies' cookies" would get Chrome's
+// permission prompt, and arrowing onto "Block all cookies" would ask "are
+// you sure?". So a tick moved with the arrows only waits. It's applied on
+// Space or Enter, or when the focus leaves the group (Tab, or a click
+// elsewhere). A click, or Space on a choice not ticked yet, applies at once,
+// as before.
+function onRadioChoice(name, apply) {
+  const radios = [...document.querySelectorAll('input[name="' + name + '"]')];
+  let arrowing = false; // an arrow key is down, so a "change" now came from it
+  let waiting = false; // a choice made with the arrows, not yet applied
+
+  const applyChecked = () => {
+    waiting = false;
+    const checked = radios.find((radio) => radio.checked);
+    if (checked) {
+      apply(checked.value);
+    }
+  };
+
+  for (const radio of radios) {
+    radio.addEventListener("keydown", (event) => {
+      if (event.key.startsWith("Arrow")) {
+        arrowing = true;
+      } else if ((event.key === " " || event.key === "Enter") && waiting) {
+        event.preventDefault();
+        applyChecked();
+      }
+    });
+    radio.addEventListener("keyup", () => {
+      arrowing = false;
+    });
+    radio.addEventListener("change", () => {
+      if (arrowing) {
+        waiting = true;
+      } else {
+        applyChecked();
+      }
+    });
+    // Applied a moment later, once the focus has landed where it was going,
+    // so it can be kept there. Only while the screen is still showing:
+    // leaving it with Esc drops a choice that was never applied, and the
+    // screen is drawn from the saved rules next time.
+    radio.addEventListener("focusout", (event) => {
+      if (waiting && !radios.includes(event.relatedTarget)) {
+        setTimeout(() => {
+          if (waiting && currentState() === "rules") {
+            applyChecked();
+          }
+        }, 0);
+      }
+    });
+  }
+}
+
+// Whether the focus is on one of a group's radio buttons.
+function focusInGroup(name) {
+  const active = document.activeElement;
+  return Boolean(active && active.name === name && active.type === "radio");
 }
 
 function focusChecked(name) {
@@ -1624,6 +1906,37 @@ function focusChecked(name) {
 
 // Draws the screen from the saved rules. Site names are put in with
 // textContent, like everything else that comes from a website.
+// The line at the top of the Block cookies screen: how many cookies cookieZ
+// has cleared, ever, and what it's blocking now. Only what cookieZ itself
+// did or set is counted, so every number is exact.
+async function showStats() {
+  const cleared = await loadCleared();
+  const sentences = [
+    cleared === 0
+      ? "cookieZ hasn't cleared any cookies yet."
+      : "cookieZ has cleared " + pluralise(cleared, "cookie", "cookies") + " so far.",
+  ];
+
+  // Only claimed while Chrome is actually following the rules.
+  if (rulesAllowed) {
+    const sites = listRules(rules).filter((entry) => entry.rule === OWN_ONLY || entry.rule === BLOCK).length;
+    const onSites = sites > 0 ? "on " + pluralise(sites, "site", "sites") : "";
+    const fromTrackers = rules.trackers ? "from " + pluralise(TRACKER_DOMAINS.length, "known tracker", "known trackers") : "";
+    const blocking = [onSites, fromTrackers].filter(Boolean).join(" and ");
+    if (blocking) {
+      sentences.push("Blocking cookies " + blocking + ".");
+    }
+  }
+  el("rules-stats").textContent = sentences.join(" ");
+}
+
+// After a delete or an Undo made from the Block cookies screen itself.
+async function refreshStats() {
+  if (!el("state-rules").hidden) {
+    await showStats();
+  }
+}
+
 async function drawRules() {
   const loaded = await loadRules();
   rules = loaded.rules;
@@ -1647,11 +1960,19 @@ async function drawRules() {
   el("rules-site-note").textContent =
     site === own ? "" : "This rule was set for " + site + ", which covers " + own + " too.";
 
-  setRadio("site-rule", rules.sites[site] || rules.everywhere, !canChange);
+  // With trackers blocked, a site without a rule of its own isn't getting
+  // "Allow all cookies", so none of its choices is ticked. Choosing that
+  // one lets the trackers through here.
+  const unticked = rules.trackers && rules.everywhere === ALLOW && !rules.sites[site];
+  setRadio("site-rule", unticked ? null : rules.sites[site] || rules.everywhere, !canChange);
   setRadio("everywhere-rule", rules.everywhere, !canChange);
   el("rules-delete-on-block").checked = rules.deleteOnBlock;
   el("rules-delete-on-block").disabled = !canChange;
+  el("rules-trackers").checked = rules.trackers;
+  el("rules-trackers-count").textContent = String(TRACKER_DOMAINS.length);
+  el("rules-trackers").disabled = !canChange;
   await showThirdPartyNote(canChange);
+  await showStats();
 
   const entries = listRules(rules);
   const rows = el("rules-rows");
@@ -1758,8 +2079,8 @@ async function grantRules() {
   }
 
   // Rules saved before the permission was taken away come back into force.
-  const applyError = hasAnyRule(rules) ? await applyRules(rules) : null;
-  el("rules-message").hidden = true;
+  const applyError = hasAnyRule(rules) ? await savingRules(() => applyRules(rules)) : null;
+  el("rules-message").textContent = "";
   await drawRules();
   if (applyError) {
     showRulesMessage(applyError, true);
@@ -1768,11 +2089,16 @@ async function grantRules() {
 
 async function chooseSiteRule(choice) {
   hideCleanup();
+  // A choice applied because the focus moved on (see onRadioChoice())
+  // leaves the focus where it went.
+  const refocus = focusInGroup("site-rule");
   const site = siteFor(rules, page.hostname);
-  const result = await setSiteRule(site, choice);
+  const result = await savingRules(() => setSiteRule(site, choice));
   rules = result.rules;
   await drawRules();
-  focusChecked("site-rule");
+  if (refocus) {
+    focusChecked("site-rule");
+  }
 
   if (result.error) {
     showRulesMessage(result.error, true);
@@ -1786,7 +2112,7 @@ async function chooseSiteRule(choice) {
         ? "Other companies' cookies are now blocked on " + site + "."
         : choice === SESSION
           ? "Chrome will delete " + site + "'s cookies every time it closes."
-          : site + " may set any cookie.",
+          : site + " may set any cookie" + (rules.trackers ? ", known trackers' included." : "."),
     false
   );
   if (choice === BLOCK) {
@@ -1827,11 +2153,62 @@ async function offerCleanup(site) {
       ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
       : "");
   el("rules-cleanup").hidden = false;
+  // Like every other "are you sure?" in cookieZ, the focus goes to the
+  // safe answer, so a screen reader reads the question.
+  el("rules-cleanup-no").focus();
+}
+
+// The same, after turning on the trackers switch: their cookies already
+// saved, from every listed domain. It's a fixed list, never a search of
+// every site. Without access to sites' cookies there's nothing to count, so
+// it says nothing.
+async function offerTrackerCleanup() {
+  if (!(await hasHostAccess())) {
+    return;
+  }
+
+  let found;
+  try {
+    const lists = await Promise.all(TRACKER_DOMAINS.map((domain) => getCookiesForDomain(domain)));
+    // A cookie for a subdomain could come back under two listed domains.
+    const unique = new Map();
+    for (const cookie of lists.flat()) {
+      unique.set(cookieKey(cookie), cookie);
+    }
+    found = [...unique.values()];
+  } catch (error) {
+    return;
+  }
+
+  const { keys } = await loadProtected();
+  protectedKeys = keys;
+  const { deletable, kept } = partitionByProtection(protectedKeys, found);
+  if (deletable.length === 0) {
+    return;
+  }
+
+  cleanupCookies = deletable;
+
+  if (rules.deleteOnBlock) {
+    await runCleanup(el("rules-message").textContent + " ");
+    return;
+  }
+
+  el("rules-trackers-cleanup-text").textContent =
+    "These companies already have " +
+    pluralise(deletable.length, "cookie", "cookies") +
+    " saved." +
+    (kept.length > 0
+      ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
+      : "");
+  el("rules-trackers-cleanup").hidden = false;
+  el("rules-trackers-cleanup-no").focus();
 }
 
 function hideCleanup() {
   cleanupCookies = [];
   el("rules-cleanup").hidden = true;
+  el("rules-trackers-cleanup").hidden = true;
 }
 
 // `before` is put in front of the result, when deleting follows straight on
@@ -1856,11 +2233,36 @@ async function runCleanup(before = "") {
 }
 
 async function toggleDeleteOnBlock() {
-  const result = await setDeleteOnBlock(el("rules-delete-on-block").checked);
+  const result = await savingRules(() => setDeleteOnBlock(el("rules-delete-on-block").checked));
   rules = result.rules;
   el("rules-delete-on-block").checked = rules.deleteOnBlock;
   if (result.error) {
     showRulesMessage(result.error, true);
+  }
+}
+
+// The known trackers switch. Turning it on also offers to delete the
+// trackers' cookies already saved, since blocking only stops new ones.
+async function toggleTrackers() {
+  hideCleanup();
+  const on = el("rules-trackers").checked;
+  const result = await savingRules(() => setTrackers(on));
+  rules = result.rules;
+  await drawRules();
+  el("rules-trackers").focus();
+
+  if (result.error) {
+    showRulesMessage(result.error, true);
+    return;
+  }
+  showRulesMessage(
+    on
+      ? "Known trackers' cookies are now blocked on every site."
+      : "Known trackers' cookies are no longer blocked on every site.",
+    false
+  );
+  if (on) {
+    await offerTrackerCleanup();
   }
 }
 
@@ -1893,15 +2295,21 @@ async function askEverywhere(choice) {
       return;
     }
   }
-  chooseEverywhere(choice);
+  await chooseEverywhere(choice);
 }
 
 async function chooseEverywhere(choice) {
+  // From "Yes, block all" or a radio button the focus is still on, the
+  // focus goes back to the choice. From a choice applied because the focus
+  // moved on (see onRadioChoice()), it stays where it went.
+  const refocus = !el("rules-everywhere-confirm").hidden || focusInGroup("everywhere-rule");
   el("rules-everywhere-confirm").hidden = true;
-  const result = await setEverywhere(choice);
+  const result = await savingRules(() => setEverywhere(choice));
   rules = result.rules;
   await drawRules();
-  focusChecked("everywhere-rule");
+  if (refocus) {
+    focusChecked("everywhere-rule");
+  }
 
   if (result.error) {
     showRulesMessage(result.error, true);
@@ -1962,9 +2370,11 @@ async function startSiteDataClear() {
 
   let found;
   try {
-    found = await getCookiesForScope("domain", page);
+    // Including the cookies other companies keep for this site, which are
+    // as much this site's data as the rest.
+    found = await getCookiesForScope("domain", page, { embedded: true });
   } catch (error) {
-    showMainMessage("Couldn't count this site's cookies: " + error.message, true);
+    showMainMessage("Couldn't count this site's cookies: " + describeError(error), true);
     return;
   }
   const { deletable, kept } = partitionByProtection(protectedKeys, found);
@@ -1979,7 +2389,7 @@ async function startSiteDataClear() {
     (kept.length > 0 ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone." : "") +
     " Undo can put the cookies back, but not the rest.";
 
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   el("delete-button").hidden = true;
   el("export-button").hidden = true;
   el("data-button").hidden = true;
@@ -1995,24 +2405,28 @@ async function runSiteDataClear() {
   const cookies = siteDataCookies;
   const site = baseHostOf(page.hostname);
   cancelSiteDataClear();
+  // "Yes, clear it" has just been hidden. Without this the focus would be
+  // lost.
+  el("data-button").focus();
 
   const { removed, removedCookies, failed } = await removeCookies(cookies);
   let dataError = null;
   try {
     await chrome.browsingData.remove({ origins: siteDataOrigins() }, SITE_DATA_TYPES);
   } catch (error) {
-    dataError = error && error.message ? error.message : String(error);
+    dataError = describeError(error);
   }
 
   showMainMessage(
     (cookies.length > 0 ? "Deleted " + pluralise(removed, "cookie", "cookies") + " and cleared " : "Cleared ") +
       site + "'s other stored data." +
       (failed.length > 0 ? " " + pluralise(failed.length, "cookie", "cookies") + " could not be deleted." : "") +
-      (dataError ? " Chrome couldn't clear the rest: " + dataError : "") +
-      " Reload the site's tab to start it afresh.",
+      (dataError ? " Chrome couldn't clear the rest: " + dataError : ""),
     failed.length > 0 || Boolean(dataError)
   );
   await offerUndo(el("main-message"), { kind: "delete", restore: removedCookies });
+  // The page still has what it loaded. Reloading starts it afresh.
+  appendReloadButton(el("main-message"));
   await refresh();
 }
 
@@ -2021,6 +2435,12 @@ async function runSiteDataClear() {
 // One line, shown the first time cookieZ opens on a new version. Only the
 // version number last seen is saved.
 const WHATS_NEW = {
+  "1.9.0":
+    "New: block known trackers' cookies from Block, lock an export with a password, " +
+    "and reload the site after a change.",
+  "1.8.0":
+    "New: block known trackers' cookies on every site, from Block. Cookies with a well-known name " +
+    "now say who they're from.",
   "1.7.0":
     "New: the Block button at the top. You can now block other companies' cookies on every site, " +
     "and clear a site's stored data as well as its cookies.",
@@ -2071,7 +2491,7 @@ async function readRulesBackup() {
   try {
     text = await file.text();
   } catch (error) {
-    showRulesMessage("Couldn't read that file: " + (error && error.message ? error.message : error), true);
+    showRulesMessage("Couldn't read that file: " + describeError(error), true);
     return;
   }
 
@@ -2089,10 +2509,15 @@ async function readRulesBackup() {
     note = " It blocked other companies' cookies on every site; choose that again after loading.";
   }
 
+  if (incoming.trackers) {
+    note = " It also blocks known trackers' cookies." + note;
+  }
+
   loadedBackup = incoming;
   const count = Object.keys(incoming.sites).length;
-  el("rules-load-text").textContent =
-    "Replace your rules with the " + pluralise(count, "site", "sites") + " in this file?" + note;
+  el("rules-load-text").textContent = count > 0
+    ? "Replace your rules with the " + pluralise(count, "site", "sites") + " in this file?" + note
+    : "Replace your rules with the ones in this file? It has no sites in it." + note;
   el("rules-load-confirm").hidden = false;
   el("rules-load-no").focus();
 }
@@ -2108,9 +2533,11 @@ async function loadRulesBackup() {
   if (!incoming) {
     return;
   }
-  const result = await replaceRules(incoming);
+  const result = await savingRules(() => replaceRules(incoming));
   rules = result.rules;
   await drawRules();
+  // The buttons that had the focus are gone, so it goes back to Load.
+  el("rules-load").focus();
   showRulesMessage(
     result.error || "Loaded " + pluralise(Object.keys(incoming.sites).length, "site rule", "site rules") + ".",
     Boolean(result.error)
@@ -2119,9 +2546,14 @@ async function loadRulesBackup() {
 
 async function removeRule(site) {
   hideCleanup();
-  const result = await removeSiteRule(site);
+  const index = listRules(rules).findIndex((entry) => entry.site === site);
+  const result = await savingRules(() => removeSiteRule(site));
   rules = result.rules;
   await drawRules();
+  // The row is gone, and its button with it. The focus goes to the Remove
+  // button that took its place, or the one above, or Load if none is left.
+  const buttons = el("rules-rows").querySelectorAll(".rules-remove");
+  (buttons[Math.min(index, buttons.length - 1)] || el("rules-load")).focus();
   showRulesMessage(result.error || "Removed the rule for " + site + ".", Boolean(result.error));
 }
 
@@ -2139,10 +2571,12 @@ function cancelRulesConfirm() {
 
 async function clearAllRules() {
   hideCleanup();
-  const result = await clearRules();
+  const result = await savingRules(() => clearRules());
   rules = result.rules;
   cancelRulesConfirm();
   await drawRules();
+  // "Turn off all rules" is hidden once there are none to turn off.
+  (el("rules-clear").hidden ? el("rules-load") : el("rules-clear")).focus();
   showRulesMessage(
     result.error || "Every rule is off. Chrome is allowing cookies everywhere again.",
     Boolean(result.error)
@@ -2191,6 +2625,12 @@ async function deleteOne(cookie) {
 // message's text later removes the button. That's fine: the change can
 // still be undone from the next open, for up to 10 minutes.
 async function offerUndo(message, change) {
+  // Every delete in the popup ends up here, so this is where the lifetime
+  // count of cleared cookies goes up.
+  if (change.kind === "delete") {
+    await changeCleared((change.restore || []).length);
+    await refreshStats();
+  }
   if ((change.restore || []).length + (change.remove || []).length === 0) {
     return;
   }
@@ -2208,6 +2648,30 @@ function appendUndoButton(message) {
   button.className = "row-button undo-button";
   button.textContent = "Undo";
   button.addEventListener("click", () => runUndo(message, button));
+  message.append(" ", button);
+}
+
+// "Reload the site", after a change the open page won't notice until it
+// loads again: a delete, Clear site data, an import or an Undo. It only
+// ever reloads when clicked. Reloading a tab needs no permission.
+function appendReloadButton(message) {
+  if (!page || typeof page.tabId !== "number") {
+    return;
+  }
+  const tabId = page.tabId;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "row-button reload-button";
+  button.textContent = "Reload the site";
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      await chrome.tabs.reload(tabId);
+      button.textContent = "Reloaded";
+    } catch (error) {
+      button.textContent = "Couldn't reload it: " + describeError(error);
+    }
+  });
   message.append(" ", button);
 }
 
@@ -2235,7 +2699,7 @@ function describeChange(change) {
 // something more important is already showing.
 async function offerStoredUndo() {
   const last = await loadLastChange();
-  if (!last || !el("main-message").hidden) {
+  if (!last || el("main-message").textContent !== "") {
     return;
   }
   showMainMessage(
@@ -2291,6 +2755,11 @@ async function runUndo(message, button) {
   const { keys } = await loadProtected();
   const result = await undoChange(last, (cookie) => isProtected(keys, cookie));
   await clearLastChange();
+  // Cookies put back weren't cleared after all.
+  if (last.kind === "delete") {
+    await changeCleared(-result.restored);
+    await refreshStats();
+  }
 
   const parts = [describeUndone(last, result)];
   if (result.kept > 0) {
@@ -2319,6 +2788,9 @@ async function runUndo(message, button) {
   }
   message.className = result.failures.length > 0 ? "result error" : "result";
   message.textContent = parts.join(" ");
+  if (result.restored + result.removed > 0) {
+    appendReloadButton(message);
+  }
 
   await refresh();
 }
@@ -2346,16 +2818,110 @@ function buildExport() {
   if (format === "netscape") {
     return { text: toNetscape(scopeAll), filename: base + ".txt", type: "text/plain" };
   }
+  // A Cookie header and curl are what the browser sends to this page, and
+  // a cookie another company keeps for this site is only sent to that
+  // company, so those two leave it out.
+  const sentHere = scopeAll.filter((cookie) => !setByOtherSite(cookie, page.hostname));
   if (format === "header") {
-    return { text: toHeader(scopeAll), filename: base + "-header.txt", type: "text/plain" };
+    return { text: toHeader(sentHere), filename: base + "-header.txt", type: "text/plain" };
   }
   if (format === "curl") {
-    return { text: toCurl(scopeAll, page.origin + "/"), filename: base + "-curl.sh", type: "text/plain" };
+    return { text: toCurl(sentHere, page.origin + "/"), filename: base + "-curl.sh", type: "text/plain" };
   }
   if (format === "playwright") {
     return { text: toPlaywright(scopeAll), filename: base + "-playwright.json", type: "application/json" };
   }
+  if (format === "selenium") {
+    return { text: toSelenium(scopeAll), filename: base + "-selenium.py", type: "text/plain" };
+  }
   return { text: toJson(scopeAll), filename: base + ".json", type: "application/json" };
+}
+
+// Selenium code has to stay readable to run, and cookieZ can't import it,
+// so a password would only make it useless. Every other format can be
+// locked, because cookieZ can import each of them back.
+function formatCanBeLocked() {
+  return selectedFormat() !== "selenium";
+}
+
+// The password box is off for Selenium, and says why. The sign-in warning
+// shows while the export has cookies that look like sign-ins and nothing
+// will lock it.
+function showExportPassword() {
+  const box = el("export-password");
+  const lockable = formatCanBeLocked();
+  box.disabled = !lockable;
+  if (!lockable) {
+    box.value = "";
+  }
+  el("export-password-note").textContent = lockable
+    ? "Locks the file, so it can only be imported with this password. The password isn't saved anywhere, so don't lose it."
+    : "Selenium code can't have a password: it has to stay readable to run. Choose another format to lock the file.";
+
+  const signIns = scopeAll.some((cookie) => looksLikeSignIn(cookie, knownCookie(cookie.name)));
+  el("export-warning").hidden = !signIns || box.value !== "";
+}
+
+const LOCKED_NOTE =
+  "Locked with your password. You'll need the password to import it, and it isn't saved anywhere.";
+
+// The export as it will be copied or saved. With a password, it's locked
+// first, which takes a moment, so "Encrypting…" shows meanwhile. Then the
+// password box is emptied, so the password isn't kept.
+// Returns null if it couldn't be locked, having said why.
+async function finishExport() {
+  const built = buildExport();
+  const password = el("export-password").value;
+  if (password === "" || !formatCanBeLocked()) {
+    return built;
+  }
+
+  const buttons = [el("export-copy"), el("export-download")];
+  for (const button of buttons) {
+    button.disabled = true;
+  }
+  showExportResult("Encrypting…", false);
+  try {
+    const locked = await lockText(built.text, password);
+    el("export-password").value = "";
+    showExportPassword();
+    // Shows what was copied or saved.
+    el("export-output").value = locked;
+    showExportResult(LOCKED_NOTE, false);
+    return {
+      text: locked,
+      filename: built.filename.replace(/\.[a-z]+$/, "") + "-locked.json",
+      type: "application/json",
+      locked: true,
+    };
+  } catch (error) {
+    showExportResult("Couldn't lock the export: " + describeError(error), true);
+    return null;
+  } finally {
+    for (const button of buttons) {
+      button.disabled = false;
+    }
+  }
+}
+
+function showExportResult(text, isError) {
+  const result = el("export-result");
+  result.className = isError ? "result error" : "result";
+  result.textContent = text;
+  result.hidden = false;
+}
+
+async function copyExport() {
+  const finished = await finishExport();
+  if (finished) {
+    await copyWithFeedback(el("export-copy"), finished.text);
+  }
+}
+
+// Leaving the screen forgets any password typed but not used.
+function closeExport() {
+  el("export-password").value = "";
+  showState("main");
 }
 
 function openExport() {
@@ -2387,7 +2953,10 @@ function openExport() {
   }
 
   el("export-result").hidden = true;
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
+  el("export-password").value = "";
+  el("export-password-show").checked = false;
+  el("export-password").type = "password";
   showExportText();
   showState("export");
   el("export-copy").focus();
@@ -2408,10 +2977,15 @@ function exportIsOnePage(sites) {
 
 function showExportText() {
   el("export-output").value = buildExport().text;
+  showExportPassword();
 }
 
-function downloadExport() {
-  const { text, filename, type } = buildExport();
+async function downloadExport() {
+  const finished = await finishExport();
+  if (!finished) {
+    return;
+  }
+  const { text, filename, type, locked } = finished;
 
   // A download made from the page itself. No downloads permission needed.
   const url = URL.createObjectURL(new Blob([text], { type }));
@@ -2423,10 +2997,10 @@ function downloadExport() {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 30000);
 
-  const result = el("export-result");
-  result.className = "result";
-  result.textContent = "Saving as " + filename + ".";
-  result.hidden = false;
+  showExportResult(
+    "Saving as " + filename + "." + (locked ? " " + LOCKED_NOTE : ""),
+    false
+  );
 }
 
 // --- import ----------------------------------------------------------------
@@ -2434,8 +3008,23 @@ function downloadExport() {
 // What the preview said will be written. Import writes exactly this list.
 let importPlan = null;
 
+// What's inside a password-protected export, once opened, so ticking "Put
+// them on this site instead" doesn't ask for the password again. Only ever
+// in memory, and forgotten as soon as the pasted text changes.
+let unlockedText = null;
+
+// Forgets the password and anything opened with it.
+function forgetImportPassword() {
+  unlockedText = null;
+  el("import-password").value = "";
+  el("import-password-show").checked = false;
+  el("import-password").type = "password";
+  el("import-password-row").hidden = true;
+}
+
 function openImport() {
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
+  forgetImportPassword();
   el("import-move").checked = false;
   el("import-file-row").hidden = !inTab;
   el("import-file-hint").hidden = inTab;
@@ -2449,6 +3038,49 @@ function openImport() {
 function resetImportPreview() {
   importPlan = null;
   el("import-preview").hidden = true;
+}
+
+// A password-protected export: asks for the password, then opens it.
+// Returns what's inside, or null after saying why it can't be opened yet.
+// A damaged file is reported before any password is asked for.
+async function openLockedImport() {
+  if (unlockedText !== null) {
+    return unlockedText;
+  }
+  const text = el("import-text").value;
+  const { error } = readLockedFile(text);
+  if (error) {
+    el("import-password-row").hidden = true;
+    showImportResult(error, true);
+    return null;
+  }
+
+  const box = el("import-password");
+  el("import-password-row").hidden = false;
+  if (box.value === "") {
+    showImportResult("Type the file's password, then press Check.", false);
+    box.focus();
+    return null;
+  }
+
+  // Opening takes a moment: the password goes through 600,000 rounds.
+  const password = box.value;
+  box.value = "";
+  const check = el("import-check");
+  check.disabled = true;
+  showImportResult("Opening the file…", false);
+  const result = await unlockText(text, password);
+  check.disabled = false;
+
+  if (!result.ok) {
+    showImportResult(result.error, true);
+    box.focus();
+    return null;
+  }
+  el("import-result").hidden = true;
+  forgetImportPassword();
+  unlockedText = result.text;
+  return unlockedText;
 }
 
 function fillList(list, items) {
@@ -2467,7 +3099,14 @@ async function checkImport() {
   resetImportPreview();
 
   const pageUrl = page.origin + "/";
-  const parsed = parseImport(el("import-text").value, { pageUrl });
+  let parsed = parseImport(el("import-text").value, { pageUrl });
+  if (parsed.format === "locked") {
+    const text = await openLockedImport();
+    if (text === null) {
+      return;
+    }
+    parsed = parseImport(text, { pageUrl });
+  }
   let entries = parsed.entries;
   let problems = parsed.problems;
 
@@ -2486,7 +3125,7 @@ async function checkImport() {
   try {
     existing = await getAllCookies();
   } catch (error) {
-    showImportResult("Couldn't read your current cookies to compare: " + error.message, true);
+    showImportResult("Couldn't read your current cookies to compare: " + describeError(error), true);
     return;
   }
 
@@ -2563,6 +3202,9 @@ async function checkImport() {
   const skipped = [...problems, ...plan.invalid.map((text) => "Will be skipped: " + text)];
   fillList(el("import-problems"), skipped);
 
+  // Said every time, next to the button that writes: a file of someone
+  // else's cookies is a known way to trick people.
+  el("import-warning").hidden = count === 0;
   el("import-confirm").textContent = "Import " + pluralise(count, "cookie", "cookies");
   el("import-confirm-row").hidden = count === 0;
   el("import-preview").hidden = false;
@@ -2631,6 +3273,9 @@ async function runImport() {
   }
   showImportResult(parts.join(" "), failures.length > 0);
   await offerUndo(el("import-result"), change);
+  if (change.remove.length + change.restore.length > 0) {
+    appendReloadButton(el("import-result"));
+  }
   fillList(el("import-failures"), failures);
 }
 
@@ -2641,15 +3286,17 @@ async function readImportFile() {
   }
   try {
     el("import-text").value = await file.text();
+    forgetImportPassword();
     await checkImport();
   } catch (error) {
-    showImportResult("Couldn't read " + file.name + ": " + error.message, true);
+    showImportResult("Couldn't read " + file.name + ": " + describeError(error), true);
   }
 }
 
 // Back on the main screen, an import made just now can be undone from the
 // status line, like any other change.
 async function closeImport() {
+  forgetImportPassword();
   showState("main");
   await refresh();
   await offerStoredUndo();
@@ -2714,21 +3361,19 @@ async function chooseTheme(theme) {
 
 el("grant-button").addEventListener("click", async () => {
   const message = el("gate-message");
-  message.hidden = true;
+  message.textContent = "";
 
   // Has to run straight from the click, or Chrome won't show the prompt.
   const { granted, error } = await requestHostAccess();
 
   if (error) {
     message.textContent = error;
-    message.hidden = false;
     return;
   }
 
   if (!granted) {
     message.textContent =
       "Access was declined, so cookies can't be listed. Click Grant access to try again.";
-    message.hidden = false;
     return;
   }
 
@@ -2779,19 +3424,29 @@ el("kept-confirm-no").addEventListener("click", () => {
 el("rules-open").addEventListener("click", openRules);
 el("rules-back").addEventListener("click", closeRules);
 el("rules-grant").addEventListener("click", grantRules);
-for (const radio of document.querySelectorAll('input[name="site-rule"]')) {
-  radio.addEventListener("change", () => chooseSiteRule(radio.value));
-}
-for (const radio of document.querySelectorAll('input[name="everywhere-rule"]')) {
-  radio.addEventListener("change", () => askEverywhere(radio.value));
-}
+onRadioChoice("site-rule", chooseSiteRule);
+onRadioChoice("everywhere-rule", askEverywhere);
 el("rules-everywhere-yes").addEventListener("click", () => chooseEverywhere(BLOCK));
 el("rules-everywhere-no").addEventListener("click", () => {
   el("rules-everywhere-confirm").hidden = true;
   focusChecked("everywhere-rule");
 });
-el("rules-cleanup-yes").addEventListener("click", () => runCleanup());
+// The offer is hidden after either answer, so the focus goes back to the
+// choice that made it.
+el("rules-cleanup-yes").addEventListener("click", () => {
+  focusChecked("site-rule");
+  runCleanup();
+});
 el("rules-delete-on-block").addEventListener("change", toggleDeleteOnBlock);
+el("rules-trackers").addEventListener("change", toggleTrackers);
+el("rules-trackers-cleanup-yes").addEventListener("click", () => {
+  el("rules-trackers").focus();
+  runCleanup();
+});
+el("rules-trackers-cleanup-no").addEventListener("click", () => {
+  el("rules-trackers").focus();
+  hideCleanup();
+});
 el("data-button").addEventListener("click", startSiteDataClear);
 el("data-yes").addEventListener("click", runSiteDataClear);
 el("data-no").addEventListener("click", () => {
@@ -2800,12 +3455,19 @@ el("data-no").addEventListener("click", () => {
 });
 el("whats-new-close").addEventListener("click", () => {
   el("whats-new").hidden = true;
+  el("search-input").focus();
 });
 el("rules-backup").addEventListener("click", saveRulesBackup);
 el("rules-load").addEventListener("change", readRulesBackup);
 el("rules-load-yes").addEventListener("click", loadRulesBackup);
-el("rules-load-no").addEventListener("click", cancelLoad);
-el("rules-cleanup-no").addEventListener("click", hideCleanup);
+el("rules-load-no").addEventListener("click", () => {
+  cancelLoad();
+  el("rules-load").focus();
+});
+el("rules-cleanup-no").addEventListener("click", () => {
+  focusChecked("site-rule");
+  hideCleanup();
+});
 el("rules-clear").addEventListener("click", startRulesConfirm);
 el("rules-confirm-yes").addEventListener("click", clearAllRules);
 el("rules-confirm-no").addEventListener("click", () => {
@@ -2850,14 +3512,28 @@ for (const radio of document.querySelectorAll('input[name="scope"]')) {
 
 el("delete-button").addEventListener("click", startConfirm);
 el("export-button").addEventListener("click", openExport);
-el("export-back").addEventListener("click", () => showState("main"));
-el("export-copy").addEventListener("click", () =>
-  copyWithFeedback(el("export-copy"), el("export-output").value)
-);
+el("export-back").addEventListener("click", closeExport);
+el("export-copy").addEventListener("click", copyExport);
 el("export-download").addEventListener("click", downloadExport);
 for (const radio of document.querySelectorAll('input[name="format"]')) {
   radio.addEventListener("change", showExportText);
 }
+// Typing a password puts the unlocked text back in the box, in case it was
+// showing a locked copy, and hides the sign-in warning.
+el("export-password").addEventListener("input", showExportText);
+el("export-password-show").addEventListener("change", () => {
+  el("export-password").type = el("export-password-show").checked ? "text" : "password";
+});
+el("import-password-show").addEventListener("change", () => {
+  el("import-password").type = el("import-password-show").checked ? "text" : "password";
+});
+// Enter in the password box does the same as Check.
+el("import-password").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    checkImport();
+  }
+});
 
 el("import-button").addEventListener("click", openImport);
 el("import-back").addEventListener("click", closeImport);
@@ -2868,6 +3544,7 @@ el("import-file").addEventListener("change", readImportFile);
 // A changed paste has to be checked again before it can be imported.
 el("import-text").addEventListener("input", () => {
   el("import-move").checked = false;
+  forgetImportPassword();
   resetImportPreview();
 });
 // Ticking "Put them on this site instead" checks again with the cookies
@@ -2877,6 +3554,15 @@ el("import-move").addEventListener("change", async () => {
   el("import-move").focus();
 });
 
+// A partitioned cookie has to be Secure, so ticking one ticks the other.
+el("field-partitioned").addEventListener("change", () => {
+  if (el("field-partitioned").checked) {
+    el("field-secure").checked = true;
+  }
+});
+el("name-copy").addEventListener("click", () =>
+  copyWithFeedback(el("name-copy"), el("field-name").value.trim())
+);
 // Copies the value as it would be saved: on one line, if edited as JSON.
 el("value-copy").addEventListener("click", () =>
   copyWithFeedback(el("value-copy"), valueToSave().value ?? el("field-value").value)
@@ -2884,6 +3570,7 @@ el("value-copy").addEventListener("click", () =>
 el("field-value").addEventListener("input", showDecoded);
 el("field-value").addEventListener("input", showValueSize);
 el("field-name").addEventListener("input", showValueSize);
+el("field-name").addEventListener("input", showKnownName);
 el("edit-duplicate").addEventListener("click", duplicateCookie);
 el("edit-setcookie").addEventListener("click", copySetCookie);
 el("field-json").addEventListener("change", toggleJson);
@@ -2898,6 +3585,9 @@ el("picked-clear").addEventListener("click", () => {
     box.checked = false;
   }
   scopeAfterPicking(before);
+  // The bar this button was on is now hidden. The header tick box is the
+  // nearest thing that does the same job.
+  (el("pick-all").disabled ? el("search-input") : el("pick-all")).focus();
 });
 for (const button of document.querySelectorAll("[data-picked-expire]")) {
   button.addEventListener("click", () => expirePicked(Number(button.dataset.pickedExpire)));
@@ -2910,7 +3600,7 @@ el("decoded-copy").addEventListener("click", () =>
 );
 
 el("help-button").addEventListener("click", () => {
-  el("main-message").hidden = true;
+  el("main-message").textContent = "";
   showState("help");
   el("help-back").focus();
 });
@@ -2935,6 +3625,35 @@ const BACK_BUTTONS = {
   help: "help-back",
 };
 
+// Esc on the Block cookies screen first backs out of a question that's open,
+// as its Cancel button would, focus included. Returns whether there was one.
+function cancelRulesQuestion() {
+  const questions = [
+    ["rules-everywhere-confirm", "rules-everywhere-no"],
+    ["rules-confirm", "rules-confirm-no"],
+    ["rules-load-confirm", "rules-load-no"],
+    ["rules-cleanup", "rules-cleanup-no"],
+    ["rules-trackers-cleanup", "rules-trackers-cleanup-no"],
+  ];
+  for (const [question, cancel] of questions) {
+    if (!el(question).hidden) {
+      el(cancel).click();
+      return true;
+    }
+  }
+  return false;
+}
+
+// Whether the main screen is asking something ("Delete these cookies?",
+// Clear site data, or a row's "Sure?"), which "n" shouldn't walk away from.
+function waitingForAnswer() {
+  return (
+    !el("confirm-row").hidden ||
+    !el("data-confirm").hidden ||
+    el("cookie-rows").querySelector(".armed") !== null
+  );
+}
+
 document.addEventListener("keydown", (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey) {
     return;
@@ -2946,7 +3665,9 @@ document.addEventListener("keydown", (event) => {
   // repo). In a tab it always works.
   if (event.key === "Escape") {
     const back = BACK_BUTTONS[currentState()];
-    if (back) {
+    if (currentState() === "rules" && cancelRulesQuestion()) {
+      event.preventDefault();
+    } else if (back) {
       event.preventDefault();
       el(back).click();
     } else if (currentState() === "main" && !el("confirm-row").hidden) {
@@ -2961,16 +3682,24 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
-  // "/" jumps to the search box, unless you're typing somewhere already.
-  if (event.key === "/" && currentState() === "main") {
-    const typing = event.target.closest("input, textarea, select");
-    if (!typing) {
-      event.preventDefault();
-      el("search-input").focus();
-    }
+  // "/" jumps to the search box, and "n" opens a new cookie, unless you're
+  // typing somewhere already.
+  const typing = event.target.closest("input, textarea, select");
+  if (currentState() !== "main" || typing) {
+    return;
+  }
+  if (event.key === "/") {
+    event.preventDefault();
+    el("search-input").focus();
+  } else if ((event.key === "n" || event.key === "N") && !waitingForAnswer()) {
+    event.preventDefault();
+    openEditor(null);
   }
 });
-el("confirm-no").addEventListener("click", cancelConfirm);
+el("confirm-no").addEventListener("click", () => {
+  cancelConfirm();
+  el("delete-button").focus();
+});
 el("confirm-yes").addEventListener("click", runDelete);
 
 for (const radio of document.querySelectorAll('input[name="theme"]')) {
