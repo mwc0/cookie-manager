@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 20 October 2026**
+**Last updated: 21 October 2026**
 
 ## The short version
 
