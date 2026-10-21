@@ -1,0 +1,20 @@
+name: I'd like…
+description: Something cookieZ should do, or do differently.
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The job you had in mind, more than the button you'd add. It helps me find the simplest way to do it.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+      description: How you'd like it to work, if you have an idea.
+  - type: markdown
+    attributes:
+      value: |
+        cookieZ will never send anything over the network, run in the background, or ask for more than it needs at install. Ideas that need any of those can't be built, but say so anyway if it's a problem for you: there may be another way.
