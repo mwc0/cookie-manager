@@ -6,6 +6,23 @@ const DAY = 24 * HOUR;
 // Within this, the expiry is shown as "in 3 days" rather than a date.
 const RELATIVE_WITHIN = 30 * DAY;
 
+// Each formatter is made once. Making one is slow, and toLocaleString()
+// with options makes a new one on every call: with a few hundred rows that
+// was most of the time it took to draw the table. The output is the same.
+const SHORT_DATE = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" });
+// What date.toLocaleString() gives with no options: the date and the time.
+const DATE_AND_TIME = new Intl.DateTimeFormat(undefined, {
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+});
+const RELATIVE = new Intl.RelativeTimeFormat(undefined, { numeric: "always" });
+const COUNT = new Intl.NumberFormat();
+const KILOBYTES = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
+
 // A cookie with no expiry date is a session cookie, deleted when the browser
 // closes. One that expires within 30 days says how soon: "in 3 days".
 export function formatExpiry(cookie, now = Date.now() / 1000) {
@@ -23,11 +40,7 @@ export function formatExpiry(cookie, now = Date.now() / 1000) {
     return relative;
   }
 
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  return SHORT_DATE.format(date);
 }
 
 // The full date and time, for the tooltip, with "in 3 days" when it's soon.
@@ -42,7 +55,7 @@ export function formatExpiryFull(cookie, now = Date.now() / 1000) {
   }
 
   const relative = formatRelative(cookie.expirationDate - now);
-  return "Expires " + date.toLocaleString() + (relative ? " (" + relative + ")" : "");
+  return "Expires " + DATE_AND_TIME.format(date) + (relative ? " (" + relative + ")" : "");
 }
 
 // Whether a cookie expires within the next day.
@@ -60,7 +73,7 @@ function formatRelative(secondsLeft) {
   if (!(secondsLeft > 0) || secondsLeft >= RELATIVE_WITHIN) {
     return "";
   }
-  const words = new Intl.RelativeTimeFormat(undefined, { numeric: "always" });
+  const words = RELATIVE;
   if (secondsLeft < HOUR) {
     return words.format(Math.max(1, Math.round(secondsLeft / 60)), "minute");
   }
@@ -326,11 +339,11 @@ export function formatBytes(bytes) {
   if (bytes < 1024) {
     return formatCount(bytes) + (bytes === 1 ? " byte" : " bytes");
   }
-  return (bytes / 1024).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " KB";
+  return KILOBYTES.format(bytes / 1024) + " KB";
 }
 
 export function formatCount(number) {
-  return number.toLocaleString();
+  return COUNT.format(number);
 }
 
 // A cookie's domain without the leading dot Chrome uses for "this site and
