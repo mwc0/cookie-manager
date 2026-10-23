@@ -22,7 +22,8 @@ A Chrome cookie manager (Manifest V3)
 - Tells you when Chrome silently changes what you asked for. It caps cookie
   expiry at about 400 days, so asking for a date beyond that says so instead
   of showing you a date that isn't what was stored.
-- Searches the current tab's cookies by name, value, domain or path. While a
+- Searches the current tab's cookies by name, value, domain or path, or
+  just one of them with a prefix such as `name:sid` or `domain:example.com`. While a
   search is active you also get a "just the cookies shown" delete scope, so
   filtering and then deleting removes what you can see rather than silently
   reaching past it. Quick filters include three checks for developers: not
@@ -74,6 +75,13 @@ A Chrome cookie manager (Manifest V3)
 - Warns, in one line, when an export holds cookies that look like sign-ins
   and has no password, and on import, that you should only import cookies
   you made yourself. Neither stops you.
+- Compares an earlier export with the cookies those sites have now, and
+  lists which are new since, gone or changed. Names and sites only, never
+  values, and nothing is written.
+- Asks once, after the fifth delete, import or save that worked, whether
+  you'd leave a review (once more later if you say "Not now", never if you
+  say no). Its button, also at the end of Help, opens the store's review
+  page when clicked: the only web page the extension can open.
 
 ## Permissions
 

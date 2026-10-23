@@ -155,14 +155,32 @@ async function getCookiesForDomainScope(page) {
 
 // Search box filter. Looks at name, value, domain and path all at once, and
 // ignores case, so people can find a cookie by whatever part they remember.
+//
+// Starting the search with "name:", "value:", "domain:" or "path:" looks at
+// that one field only, so "value:abc" doesn't also find a cookie named abc.
+// Nothing after the colon shows everything, as an empty search does.
+const SEARCH_FIELDS = ["name", "value", "domain", "path"];
+
 export function filterCookies(cookies, query) {
-  const needle = String(query || "").trim().toLowerCase();
+  let needle = String(query || "").trim().toLowerCase();
+  const field = SEARCH_FIELDS.find((name) => needle.startsWith(name + ":"));
+  if (field) {
+    needle = needle.slice(field.length + 1).trim();
+  }
   if (needle === "") {
     return cookies;
   }
 
+  if (field === "domain") {
+    // A leading dot only says the cookie also goes to subdomains, so
+    // ".example.com" and "example.com" are found by either spelling.
+    const bare = bareDomain(needle);
+    return cookies.filter((cookie) => bareDomain(cookie.domain).toLowerCase().includes(bare));
+  }
+
   return cookies.filter((cookie) => {
-    const haystack = [cookie.name, cookie.value, cookie.domain, cookie.path]
+    const parts = field ? [cookie[field]] : [cookie.name, cookie.value, cookie.domain, cookie.path];
+    const haystack = parts
       .map((part) => String(part == null ? "" : part).toLowerCase())
       .join("\n");
     return haystack.includes(needle);

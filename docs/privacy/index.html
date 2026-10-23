@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=1.9.0">
-  <script src="../theme.js?v=1.9.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2.0.0">
+  <script src="../theme.js?v=2.0.0" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
@@ -80,7 +80,7 @@
   <main id="main" class="page">
     <div class="wrap prose">
       <h1>Privacy policy</h1>
-      <p class="updated">For the cookieZ browser extension. Last updated: 20 October 2026.</p>
+      <p class="updated">For the cookieZ browser extension. Last updated: 21 October 2026.</p>
       <p class="aside">This covers the extension. For this website, see the <a href="../website-privacy/">website privacy policy</a>.</p>
 
       <h2>The short version</h2>
@@ -123,7 +123,7 @@
 
       <h2>What this extension stores on your device</h2>
 
-      <p>Five things are saved on your own computer, and a sixth is held briefly in memory so your last change can be undone. None of them is ever transmitted.</p>
+      <p>Six things are saved on your own computer, and a seventh is held briefly in memory so your last change can be undone. None of them is ever transmitted.</p>
 
       <h3>Your colour theme</h3>
 
@@ -168,6 +168,10 @@
 
       <p>One number: how many cookies cookieZ has deleted for you, in total, shown on the <strong>Block cookies</strong> screen. It goes up when you delete cookies with cookieZ and down when you undo a delete. It doesn't record which cookies, which sites or when, only the total. It counts cookies cookieZ cleared, not cookies Chrome blocked, because Chrome doesn't tell extensions when it blocks a cookie. It is stored using Chrome's <code>storage.local</code> API on your own computer and is never transmitted. Uninstalling the extension removes it.</p>
 
+      <h3>Whether to ask for a review</h3>
+
+      <p>cookieZ counts how many times a delete, an import or a save has worked, so that after the fifth it can ask, once, whether you'd leave a review. If you click <strong>Not now</strong>, it asks once more after the twenty-fifth, and never again after that. If you click <strong>Leave a review</strong> or <strong>No thanks</strong>, it never asks again. The record is that count and which of those you clicked, nothing else: not what was deleted, imported or saved, not which sites, not when. It is stored using Chrome's <code>storage.local</code> API on your own computer and is never transmitted. Uninstalling the extension removes it.</p>
+
       <h3>Your last change, for Undo</h3>
 
       <p>When you delete cookies, import cookies or save a cookie in the editor, cookieZ holds on to what it needs to undo that change if you click <strong>Undo</strong>:</p>
@@ -202,6 +206,10 @@
 
       <p>You can give an export a password. cookieZ uses it on your computer, with Chrome's own encryption, to lock that one file, and again to open it when you import it. The password is never saved and never sent anywhere: once the file is locked or opened, cookieZ forgets it. This also means a forgotten password can't be recovered. The locked file is one you copy or save yourself, like any other export, and cookieZ keeps no copy of it.</p>
 
+      <h2>The one web page cookieZ can open</h2>
+
+      <p><strong>Leave a review</strong>, in that one-time question and at the end of Help, opens cookieZ's review page in the Chrome Web Store in a new tab. It only happens when you click it. Like any page you open, the store page is loaded by Chrome, not by cookieZ, and cookieZ sends it nothing: no identifier, no count, nothing about you. It is the only web page cookieZ can open, and its address is written in one place in the source, <code>src/lib/review.js</code>.</p>
+
       <h2>Reloading the site</h2>
 
       <p>After a delete, Clear site data, an import or an Undo, cookieZ offers a <strong>Reload the site</strong> button. It reloads only the tab you're on, and only when you click it. Reloading a tab needs no permission, so nothing new is asked for.</p>
@@ -224,7 +232,7 @@
 
       <p><strong><code>cookies</code></strong>: required to read, create, edit and delete cookies. Without it the extension cannot do anything at all.</p>
 
-      <p><strong><code>storage</code></strong>: required to remember which cookies you marked as Kept, your site rules, your colour theme, the version you last opened and how many cookies cookieZ has cleared, so they survive closing the popup, and to hold your last change in memory for Undo.</p>
+      <p><strong><code>storage</code></strong>: required to remember which cookies you marked as Kept, your site rules, your colour theme, the version you last opened, how many cookies cookieZ has cleared and whether to ask for a review, so they survive closing the popup, and to hold your last change in memory for Undo.</p>
 
       <p><strong>Changing site settings</strong> (<code>contentSettings</code>): required only for <strong>Block</strong>. This permission is <strong>optional</strong> too. It is not part of the install prompt, and Chrome asks for it only if you click the button on the Block cookies screen. Chrome's own wording for it is broad, and mentions the camera, microphone and location, because one permission covers every kind of site setting. cookieZ uses it for one thing: the setting that says whether a site may use cookies. You can decline it and everything else works as before, and you can revoke it later from the extension's Details page.</p>
 

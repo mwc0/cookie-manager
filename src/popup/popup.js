@@ -69,6 +69,7 @@ import {
   matchSentCookies,
   isForSite,
   moveToSite,
+  compareCookies,
 } from "../lib/transfer.js";
 import { lockText, unlockText, readLockedFile } from "../lib/crypto.js";
 import { copyWithFeedback } from "./clipboard.js";
@@ -111,6 +112,7 @@ import {
 } from "../lib/theme.js";
 import { renderCookieTable, DEFAULT_SORT } from "./render.js";
 import { loadCleared, changeCleared } from "../lib/stats.js";
+import { noteJob, recordAnswer, STORE_REVIEWS_URL } from "../lib/review.js";
 import { loadKnownCookies, knownCookie, describeKnown } from "../lib/known.js";
 import {
   saveLastChange,
@@ -2433,8 +2435,12 @@ async function runSiteDataClear() {
 // --- what's new ---------------------------------------------------------------
 
 // One line, shown the first time cookieZ opens on a new version. Only the
-// version number last seen is saved.
+// version number last seen is saved. On a fresh install, when no version
+// has been saved yet, a welcome line shows instead.
 const WHATS_NEW = {
+  "2.0.0":
+    "New: search one field, such as name:session, and compare a site's cookies " +
+    "with an earlier export, from Import.",
   "1.9.0":
     "New: block known trackers' cookies from Block, lock an export with a password, " +
     "and reload the site after a change.",
@@ -2446,20 +2452,64 @@ const WHATS_NEW = {
     "and clear a site's stored data as well as its cookies.",
 };
 
+const WELCOME =
+  "Welcome. Click a cookie to edit it, or use the options below to delete or export. " +
+  "Help (?) explains the rest.";
+
+// Whether the What's new or welcome line showed on this open. The review
+// line waits for another open rather than appear alongside it.
+let whatsNewShown = false;
+
 async function showWhatsNew() {
   const version = chrome.runtime.getManifest().version;
+  let text;
   try {
     const stored = await chrome.storage.local.get("seenVersion");
     if (stored.seenVersion === version) {
       return;
     }
+    text = stored.seenVersion === undefined ? WELCOME : WHATS_NEW[version];
     await chrome.storage.local.set({ seenVersion: version });
   } catch (error) {
     return; // Not worth troubling anyone about.
   }
-  if (WHATS_NEW[version]) {
-    el("whats-new-text").textContent = WHATS_NEW[version];
+  if (text) {
+    el("whats-new-text").textContent = text;
     el("whats-new").hidden = false;
+    whatsNewShown = true;
+  }
+}
+
+// --- asking for a review ----------------------------------------------------
+
+// After a few deletes, imports or Saves have gone well, one quiet line asks
+// for a review. See src/lib/review.js for when, and how rarely.
+async function countJob(message) {
+  // A job that ended with an error doesn't count, and nor does one on an
+  // open that already showed What's new, so the ask never lands then.
+  if (whatsNewShown || message.classList.contains("error")) {
+    return;
+  }
+  const ask = await noteJob();
+  if (!ask) {
+    return;
+  }
+  el("review-later").textContent = ask === "first" ? "Not now" : "No thanks";
+  el("review-later").dataset.answer = ask === "first" ? "later" : "done";
+  el("review-ask").hidden = false;
+}
+
+// Opens the store's review page in a new tab, only when clicked. Returns
+// false, after saying why in `message`, if Chrome wouldn't open it.
+async function openReviewPage(message) {
+  try {
+    await chrome.tabs.create({ url: STORE_REVIEWS_URL });
+    return true;
+  } catch (error) {
+    message.className = "result error";
+    message.textContent = "Couldn't open the review page: " + describeError(error);
+    message.hidden = false;
+    return false;
   }
 }
 
@@ -2634,6 +2684,7 @@ async function offerUndo(message, change) {
   if ((change.restore || []).length + (change.remove || []).length === 0) {
     return;
   }
+  await countJob(message);
   const { error } = await saveLastChange(change);
   if (error) {
     message.append(" " + error);
@@ -3008,6 +3059,11 @@ async function downloadExport() {
 // What the preview said will be written. Import writes exactly this list.
 let importPlan = null;
 
+// Every cookie the preview read from the file, for Compare. Unlike
+// importPlan, this includes the ones that won't be written, such as
+// expired ones, so Compare can say they're gone.
+let importEntries = null;
+
 // What's inside a password-protected export, once opened, so ticking "Put
 // them on this site instead" doesn't ask for the password again. Only ever
 // in memory, and forgotten as soon as the pasted text changes.
@@ -3037,6 +3093,7 @@ function openImport() {
 
 function resetImportPreview() {
   importPlan = null;
+  importEntries = null;
   el("import-preview").hidden = true;
 }
 
@@ -3206,12 +3263,101 @@ async function checkImport() {
   // else's cookies is a known way to trick people.
   el("import-warning").hidden = count === 0;
   el("import-confirm").textContent = "Import " + pluralise(count, "cookie", "cookies");
-  el("import-confirm-row").hidden = count === 0;
+  // Compare works on anything that was read, even if nothing can be
+  // imported, so the row shows whenever there's a cookie in the file.
+  el("import-confirm").hidden = count === 0;
+  el("import-confirm-row").hidden = entries.length === 0;
   el("import-preview").hidden = false;
   importPlan = count > 0 ? plan : null;
+  importEntries = entries.length > 0 ? entries : null;
   if (importPlan) {
     el("import-confirm").focus();
   }
+}
+
+// --- compare with an export ---------------------------------------------------
+
+// Shows how the file read by the preview differs from the cookies the same
+// sites have now. Read only: nothing is written. It asks Chrome again,
+// rather than reusing what Check read, so it's up to date.
+async function compareImport() {
+  if (!importEntries) {
+    return;
+  }
+  const domains = Array.from(new Set(importEntries.map((entry) => bareDomain(entry.domain))));
+
+  let current;
+  try {
+    const lists = await Promise.all(domains.map((domain) => getCookiesForDomain(domain)));
+    // A file with example.com and www.example.com would find the
+    // www cookies twice.
+    const byKey = new Map();
+    for (const cookie of lists.flat()) {
+      byKey.set(cookieKey(cookie), cookie);
+    }
+    current = Array.from(byKey.values());
+  } catch (error) {
+    showImportResult("Couldn't read your current cookies to compare: " + describeError(error), true);
+    return;
+  }
+
+  const result = compareCookies(importEntries, current);
+  const differences = result.gone.length + result.added.length + result.changed.length;
+
+  if (differences === 0) {
+    el("compare-summary").textContent =
+      "No differences. " +
+      (result.same === 1
+        ? "The cookie in your file is the same now."
+        : "All " + formatCount(result.same) + " cookies in your file are the same now.");
+  } else {
+    const parts = [];
+    if (result.added.length > 0) {
+      parts.push(formatCount(result.added.length) + " new since");
+    }
+    if (result.gone.length > 0) {
+      parts.push(formatCount(result.gone.length) + " gone");
+    }
+    if (result.changed.length > 0) {
+      parts.push(formatCount(result.changed.length) + " changed");
+    }
+    parts.push(formatCount(result.same) + " the same");
+    el("compare-summary").textContent = parts.join(", ") + ".";
+  }
+
+  // Names and sites only, never values: the values may be sign-ins.
+  const rows = [
+    ...result.added.map((cookie) => [cookie, "New since"]),
+    ...result.gone.map((entry) => [entry, "Gone"]),
+    ...result.changed.map((item) => [item.cookie, "Changed: " + item.differences.join(", ")]),
+  ];
+  const body = el("compare-rows");
+  body.textContent = "";
+  for (const [cookie, what] of rows) {
+    const row = document.createElement("tr");
+    const cells = [
+      [cookie.name, "mono changes-name"],
+      [bareDomain(cookie.domain), "mono changes-site"],
+      [what, "changes-what"],
+    ];
+    for (const [text, className] of cells) {
+      const cell = document.createElement("td");
+      cell.className = className;
+      cell.textContent = text; // comes from a file, so never innerHTML
+      row.appendChild(cell);
+    }
+    body.appendChild(row);
+  }
+  el("compare-wrap").hidden = rows.length === 0;
+
+  showState("compare");
+  el("compare-back").focus();
+}
+
+function closeCompare() {
+  el("compare-rows").textContent = "";
+  showState("import");
+  el("import-compare").focus();
 }
 
 function showImportResult(text, isError) {
@@ -3457,6 +3603,19 @@ el("whats-new-close").addEventListener("click", () => {
   el("whats-new").hidden = true;
   el("search-input").focus();
 });
+el("review-open").addEventListener("click", async () => {
+  el("review-ask").hidden = true;
+  el("search-input").focus();
+  if (await openReviewPage(el("main-message"))) {
+    await recordAnswer("done");
+  }
+});
+el("review-later").addEventListener("click", async () => {
+  el("review-ask").hidden = true;
+  el("search-input").focus();
+  await recordAnswer(el("review-later").dataset.answer);
+});
+el("help-review").addEventListener("click", () => openReviewPage(el("help-review-message")));
 el("rules-backup").addEventListener("click", saveRulesBackup);
 el("rules-load").addEventListener("change", readRulesBackup);
 el("rules-load-yes").addEventListener("click", loadRulesBackup);
@@ -3540,6 +3699,8 @@ el("import-back").addEventListener("click", closeImport);
 el("import-check").addEventListener("click", checkImport);
 el("import-confirm").addEventListener("click", runImport);
 el("import-cancel").addEventListener("click", resetImportPreview);
+el("import-compare").addEventListener("click", compareImport);
+el("compare-back").addEventListener("click", closeCompare);
 el("import-file").addEventListener("change", readImportFile);
 // A changed paste has to be checked again before it can be imported.
 el("import-text").addEventListener("input", () => {
@@ -3622,6 +3783,7 @@ const BACK_BUTTONS = {
   edit: "edit-cancel",
   export: "export-back",
   import: "import-back",
+  compare: "compare-back",
   help: "help-back",
 };
 

@@ -54,8 +54,26 @@ def check_before(files):
         if not manifest.get(field):
             problems.append(f"manifest.json has no {field}")
 
-    if len(manifest.get("description", "")) > 132:
-        problems.append("the manifest description is over Chrome's 132 character limit")
+    # The name and description live in _locales/<language>/messages.json, one
+    # file per language the store shows the summary in. Check each one.
+    for field, key in (("name", "appName"), ("description", "appDesc")):
+        if manifest.get(field) != f"__MSG_{key}__":
+            problems.append(f"manifest.json's {field} should be __MSG_{key}__")
+    default = manifest.get("default_locale")
+    if f"_locales/{default}/messages.json" not in names:
+        problems.append(f"default_locale is {default!r}, but there is no _locales/{default}/messages.json")
+    for arc in sorted(n for n in names if n.startswith("_locales/")):
+        try:
+            messages = json.loads((SRC / arc).read_text(encoding="utf-8"))
+            name = messages["appName"]["message"]
+            desc = messages["appDesc"]["message"]
+        except (ValueError, KeyError, TypeError) as error:
+            problems.append(f"{arc} can't be read, or lacks appName or appDesc: {error}")
+            continue
+        if not name or not desc:
+            problems.append(f"{arc} has an empty name or description")
+        if len(desc) > 132:
+            problems.append(f"{arc}: the description is over Chrome's 132 character limit")
 
     # The store refuses a submission with no 128x128 icon, and a missing icon
     # path is a silent failure: the extension loads with a placeholder.
@@ -137,7 +155,8 @@ def main():
 
     size_kb = zip_path.stat().st_size / 1024
     print(f"\n{zip_path.name}  ({size_kb:.0f} KB, {len(files)} files)")
-    print(f"  name:    {manifest['name']}")
+    languages = sorted({arc.split("/")[1] for _, arc in files if arc.startswith("_locales/")})
+    print(f"  languages: {', '.join(languages)}")
     print(f"  version: {version}")
     print("\nVerified: manifest.json is at the archive root, every file matches")
     print("src/ byte for byte, and nothing from tests/ or store/ is in it.")

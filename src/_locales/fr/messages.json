@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "cookieZ - Cookie Editor",
+    "description": "The extension's name. The same in every language."
+  },
+  "appDesc": {
+    "message": "Affichez, modifiez, supprimez et bloquez les cookies. Aucune publicité, et rien de ce que vous faites ne quitte votre ordinateur.",
+    "description": "The summary under the name in the Chrome Web Store and on chrome://extensions. 132 characters at most."
+  }
+}

@@ -50,6 +50,30 @@ def scan_source(r):
 
     r.check("no network-capable code anywhere in src/", not hits, str(hits) if hits else "clean")
 
+    # The one web address cookieZ's code may hold is the store's review
+    # page, opened in a tab only when "Leave a review" is clicked. Any other
+    # https:// address in a string is a new place the extension could reach.
+    # Only code is read, so licence files don't count. The bundled lists
+    # name their sources, so they're left out too, and so are
+    # .invalid and .example addresses, which can't exist (rules.js tests
+    # with one, and a comment in cookies.js quotes one), and
+    # "https://" + something, which only builds a cookie's address.
+    review = re.search(
+        r'STORE_REVIEWS_URL =\s*"([^"]+)"',
+        (EXTENSION / "lib" / "review.js").read_text(encoding="utf-8"),
+    ).group(1)
+    addresses = []
+    for path in files:
+        if path.suffix not in {".js", ".html"} or "lists" in path.relative_to(EXTENSION).parts:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for match in re.finditer(r"""["'`](https://[^"'`\s]+)["'`]""", text):
+            if match.group(1) != "https://" and not re.match(r"https://[^/]*\.(invalid|example)(/|$)", match.group(1)):
+                addresses.append(f"{path.relative_to(EXTENSION).as_posix()}: {match.group(1)}")
+    r.check("the only web address in src/ is the store's review page",
+            addresses == [f"lib/review.js: {review}"],
+            str(addresses))
+
 
 def watch_requests(r):
     with sync_playwright() as p:

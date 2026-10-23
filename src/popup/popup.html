@@ -51,14 +51,15 @@
         <h1>One-time permission needed</h1>
       </div>
       <p>
-        Chrome won't hand a cookie to an extension without permission for the
-        site it belongs to. To list and delete your cookies, this extension
-        needs access to websites you visit.
+        Chrome only shows an extension a site's cookies once it has access
+        to that site. cookieZ needs access to the websites you visit.
+      </p>
+      <p>
+        Then you can see, edit, delete, block and export any site's cookies.
       </p>
       <p class="muted">
-        It is used only to read and delete cookies when you open this popup.
-        Nothing is sent anywhere. The extension makes no network
-        requests at all, and has no analytics.
+        Access is used only while cookieZ is open. Nothing is sent anywhere:
+        cookieZ makes no network requests and has no analytics.
       </p>
       <p>
         <button id="grant-button" class="primary" type="button">
@@ -196,7 +197,8 @@
         </div>
       </header>
 
-      <!-- Once, the first time cookieZ opens after an update. -->
+      <!-- Once, the first time cookieZ opens after an update, or a welcome
+           line on a fresh install. -->
       <p id="whats-new" class="result whats-new" hidden>
         <span id="whats-new-text"></span>
         <button id="whats-new-close" class="link-button" type="button">OK</button>
@@ -207,6 +209,15 @@
            room (popup.css). -->
       <p id="main-message" class="result" role="status"></p>
       <p id="size-warning" class="result" role="status"></p>
+      <!-- Under the result of what was just done, so that comes first. At most
+           twice, ever: after a few things have gone well. See
+           src/lib/review.js. "Leave a review" opens the store's page in a
+           new tab, only when clicked. -->
+      <p id="review-ask" class="result whats-new" hidden>
+        <span>Glad cookieZ is useful. A review in the Chrome Web Store helps other people find it.</span>
+        <button id="review-open" class="link-button" type="button">Leave a review</button>
+        <button id="review-later" class="link-button" type="button">Not now</button>
+      </p>
 
       <!-- Filters the table. While searching or filtering, an extra delete
            option removes only the cookies shown. -->
@@ -216,7 +227,7 @@
           <input
             id="search-input"
             type="search"
-            placeholder="Search name, value, domain or path"
+            placeholder="Search, or try name: or domain:"
             autocomplete="off"
             spellcheck="false"
           />
@@ -670,12 +681,43 @@
         </p>
         <div id="import-confirm-row" class="actions">
           <button id="import-confirm" class="primary" type="button"></button>
+          <!-- Read only: shows how the file differs from now, writes nothing. -->
+          <button id="import-compare" type="button">Compare</button>
           <button id="import-cancel" type="button">Cancel</button>
         </div>
       </section>
 
       <p id="import-result" class="result" role="status" hidden></p>
       <ul id="import-failures" class="errors" hidden></ul>
+    </section>
+
+    <!-- How an export differs from the cookies those sites have now. Names
+         and sites only, never values, and nothing is written. -->
+    <section id="state-compare" class="state" hidden>
+      <header class="bar">
+        <h1>Compared with your file</h1>
+        <button id="compare-back" type="button">Back</button>
+      </header>
+
+      <p id="compare-summary" class="scope-summary" role="status"></p>
+
+      <div id="compare-wrap">
+        <table id="compare-table">
+          <colgroup>
+            <col />
+            <col />
+            <col class="changes-what-col" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Site</th>
+              <th scope="col">Since your file</th>
+            </tr>
+          </thead>
+          <tbody id="compare-rows"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- What has happened to this site's cookies while cookieZ has been
@@ -974,9 +1016,10 @@
       </fieldset>
     </section>
 
-    <!-- Help that works offline. Nothing here is a link: the extension
-         doesn't open web pages or fetch anything, so the support site is
-         written out for you to visit yourself. -->
+    <!-- Help that works offline. The support site is written out for you to
+         visit yourself, not linked. The one button that opens a web page is
+         "Leave a review", and only when clicked: it opens the store's review
+         page in a new tab. cookieZ never fetches anything. -->
     <section id="state-help" class="state help" hidden>
       <header class="bar">
         <h1>Help</h1>
@@ -1070,7 +1113,7 @@
             <span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd></span>
             <span>Open cookieZ. Change it at chrome://extensions/shortcuts.</span>
             <span><kbd>/</kbd></span>
-            <span>Search the cookies.</span>
+            <span>Search the cookies. Start with name:, value:, domain: or path: to search that part only.</span>
             <span><kbd>N</kbd></span>
             <span>Add a new cookie.</span>
             <span><kbd>↑</kbd> <kbd>↓</kbd></span>
@@ -1099,6 +1142,12 @@
       <p class="help-contact">
         More help at cookiez.uk/support, or email support@cookiez.uk.
       </p>
+      <p class="help-review">
+        If cookieZ helps you, a review in the Chrome Web Store helps other
+        people find it.
+        <button id="help-review" class="link-button" type="button">Leave a review</button>
+      </p>
+      <p id="help-review-message" class="result" role="status"></p>
     </section>
 
     <script type="module" src="popup.js"></script>
