@@ -1218,7 +1218,8 @@ el("rules-trackers-cleanup-no").addEventListener("click", () => {
   hideCleanup();
 });
 el("data-button").addEventListener("click", startSiteDataClear);
-el("data-yes").addEventListener("click", runSiteDataClear);
+el("data-yes").addEventListener("click", () => runSiteDataClear(false));
+el("data-yes-reload").addEventListener("click", () => runSiteDataClear(true));
 el("data-no").addEventListener("click", () => {
   cancelSiteDataClear();
   el("data-button").focus();

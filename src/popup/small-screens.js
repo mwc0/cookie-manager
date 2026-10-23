@@ -220,6 +220,9 @@ export function closeChanges() {
 // version number last seen is saved. On a fresh install, when no version
 // has been saved yet, a welcome line shows instead.
 const WHATS_NEW = {
+  "2.1.0":
+    "New: keep cookieZ open beside the page in Chrome's side panel, and Clear and reload " +
+    "for a site you can't log in to.",
   "2.0.0":
     "New: search one field, such as name:session, and compare a site's cookies " +
     "with an earlier export, from Import.",

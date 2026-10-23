@@ -339,6 +339,8 @@
           <div id="data-confirm" class="confirm data-confirm" role="group" aria-labelledby="data-confirm-text" hidden>
             <span id="data-confirm-text"></span>
             <button id="data-yes" class="danger solid" type="button">Yes, clear it</button>
+            <!-- The usual fix for a site you can't log in to, in one click. -->
+            <button id="data-yes-reload" class="danger solid" type="button">Clear and reload</button>
             <button id="data-no" type="button">Cancel</button>
           </div>
         </div>
@@ -1038,7 +1040,8 @@
 
         <dt>Clearing cookies didn't let me log in</dt>
         <dd>
-          Try <strong>Clear site data</strong> under the delete options. As
+          Try <strong>Clear site data</strong> under the delete options, then
+          <strong>Clear and reload</strong>. As
           well as the site's cookies, it clears what else the site has
           stored: local storage, databases, cache storage and offline files.
           Kept cookies are left alone, and Undo can put the cookies back, but

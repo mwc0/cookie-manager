@@ -785,7 +785,9 @@ export function cancelSiteDataClear() {
   cancelConfirm();
 }
 
-export async function runSiteDataClear() {
+// `reload` is true for "Clear and reload", which reloads the site straight
+// after, instead of offering a button for it.
+export async function runSiteDataClear(reload) {
   const cookies = state.siteDataCookies;
   const site = baseHostOf(state.page.hostname);
   cancelSiteDataClear();
@@ -810,7 +812,16 @@ export async function runSiteDataClear() {
   );
   await offerUndo(el("main-message"), { kind: "delete", restore: removedCookies });
   // The page still has what it loaded. Reloading starts it afresh.
-  appendReloadButton(el("main-message"));
+  if (reload && typeof state.page.tabId === "number") {
+    try {
+      await chrome.tabs.reload(state.page.tabId);
+      el("main-message").append(" Reloaded the site.");
+    } catch (error) {
+      el("main-message").append(" Couldn't reload the site: " + describeError(error));
+    }
+  } else if (!reload) {
+    appendReloadButton(el("main-message"));
+  }
   await refresh();
 }
 

@@ -99,6 +99,24 @@ def main():
             page.wait_for_timeout(1000)
             r.check("Undo puts the cookie back", "top_header" in stored_names(context, site),
                     str(stored_names(context, site)))
+
+            # Clear and reload: the same clear, then the tab reloads by itself.
+            # The tab is a stand-in here, so the reload is recorded instead.
+            page.evaluate("""() => { window.reloaded = [];
+                chrome.tabs.reload = (id) => { window.reloaded.push(id); return Promise.resolve(); }; }""")
+            page.locator("#data-button").click()
+            page.wait_for_timeout(600)
+            page.locator("#data-yes-reload").click()
+            page.wait_for_timeout(1500)
+            message = page.locator("#main-message").text_content()
+            r.check("Clear and reload clears the site and reloads its tab, once",
+                    "top_header" not in stored_names(context, site)
+                    and page.evaluate("() => window.reloaded") == [1]
+                    and message.endswith("Reloaded the site.")
+                    and not page.locator("#main-message .reload-button").is_visible(), message)
+            r.check("and Undo is still offered", page.locator("#main-message .undo-button").is_visible())
+            page.locator("#main-message .undo-button").click()
+            page.wait_for_timeout(1000)
             page.close()
 
             # Saying no to the permission.
