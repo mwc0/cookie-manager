@@ -19,7 +19,7 @@
 // has both: the cookies it replaced, and the ones it added.
 
 import { describeError, bareDomain } from "./format.js";
-import { writeCookie, removeCookie } from "./cookies.js";
+import { writeCookie, removeCookies } from "./cookies.js";
 
 const MAX_AGE_SECONDS = 10 * 60;
 
@@ -113,25 +113,27 @@ function describe(cookie) {
 // the change, the old one replaces it: Undo means "put back what I had".
 // Returns { restored, expired, failures }, where failures are sentences.
 export async function restoreCookies(cookies, now = Date.now() / 1000) {
-  let restored = 0;
   let expired = 0;
-  const failures = [];
-
-  // One at a time, so the result for each cookie is known.
+  const toWrite = [];
   for (const cookie of cookies) {
     if (typeof cookie.expirationDate === "number" && cookie.expirationDate <= now) {
       expired += 1;
-      continue;
-    }
-    const { ok, error } = await writeCookie(null, valuesOf(cookie));
-    if (ok) {
-      restored += 1;
     } else {
-      failures.push(describe(cookie) + ": " + error);
+      toWrite.push(cookie);
     }
   }
 
-  return { restored, expired, failures };
+  // All at once, as removeCookies() deletes them: one at a time took about
+  // 10 seconds for 3,000 cookies. Each cookie still gets its own result,
+  // and the failures stay in the order the cookies came in.
+  const outcomes = await Promise.all(
+    toWrite.map(async (cookie) => ({ cookie, ...(await writeCookie(null, valuesOf(cookie))) }))
+  );
+
+  const failures = outcomes
+    .filter((outcome) => !outcome.ok)
+    .map((outcome) => describe(outcome.cookie) + ": " + outcome.error);
+  return { restored: outcomes.length - failures.length, expired, failures };
 }
 
 // Undoes a change: takes away what it added, then puts back what it
@@ -139,22 +141,14 @@ export async function restoreCookies(cookies, now = Date.now() / 1000) {
 // Kept. A kept cookie is never removed, by Undo or anything else here.
 // Returns { removed, kept, restored, expired, failures }.
 export async function undoChange(change, isKept, now = Date.now() / 1000) {
-  let removed = 0;
-  let kept = 0;
-  const failures = [];
+  const toRemove = change.remove.filter((cookie) => !isKept(cookie));
+  const kept = change.remove.length - toRemove.length;
+  const { removed, failed } = await removeCookies(toRemove);
+  const failures = failed.map((cookie) => describe(cookie) + ": couldn't be removed.");
 
-  for (const cookie of change.remove) {
-    if (isKept(cookie)) {
-      kept += 1;
-      continue;
-    }
-    if (await removeCookie(cookie)) {
-      removed += 1;
-    } else {
-      failures.push(describe(cookie) + ": couldn't be removed.");
-    }
-  }
-
+  // Only once every removal has finished: an import can replace a cookie
+  // with one of the same name, and putting the old one back mustn't race
+  // with taking the new one away.
   const back = await restoreCookies(change.restore, now);
   return {
     removed,
