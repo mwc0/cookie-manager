@@ -1,6 +1,6 @@
 // Small helpers every part of the popup uses: finding an element, switching
 // screens, the status line under the header, and whether the popup is open
-// in a tab of its own.
+// in a tab of its own or in the side panel.
 
 import { pluralise, describeError } from "../lib/format.js";
 
@@ -12,6 +12,13 @@ export const targetTabId = Number(new URLSearchParams(location.search).get("tab"
 export const inTab = targetTabId !== null;
 if (inTab) {
   document.body.classList.add("in-tab");
+}
+
+// Opened with "Open in side panel", the page is popup.html?panel=1, and it
+// follows whichever tab is active in its window.
+export const inPanel = new URLSearchParams(location.search).get("panel") === "1";
+if (inPanel) {
+  document.body.classList.add("in-panel");
 }
 
 export function showState(name) {

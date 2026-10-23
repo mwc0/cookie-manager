@@ -187,7 +187,15 @@
             </svg>
             <span class="visually-hidden">Help</span>
           </button>
-          <!-- Hidden when already in a tab. -->
+          <!-- Hidden when already in the side panel or a tab. -->
+          <button id="panel-button" class="icon-button" type="button" title="Open in side panel">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <path d="M15 4v16" />
+            </svg>
+            <span class="visually-hidden">Open in side panel</span>
+          </button>
+          <!-- Hidden when already in a tab or the side panel. -->
           <button id="tab-button" class="icon-button" type="button" title="Open in a tab">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
@@ -1129,6 +1137,14 @@
             <span><kbd>Esc</kbd></span>
             <span>Go back from this screen, the editor, export, import or site rules, or cancel a delete or other question.</span>
           </div>
+        </dd>
+
+        <dt>Can cookieZ stay open while I browse?</dt>
+        <dd>
+          Yes. Click the side panel button at the top. cookieZ opens at the
+          side of the window and shows the cookies of whichever tab you're
+          on. It waits while you're editing, and catches up when you're
+          back. The keyboard shortcuts work there too.
         </dd>
 
         <dt>Incognito</dt>
