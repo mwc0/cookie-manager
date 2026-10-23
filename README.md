@@ -90,7 +90,7 @@ Access to websites is **optional** and requested at runtime, the first time you
 open the popup. Chrome will not release a single cookie to an extension without
 it.
 
-Three more permissions are **optional** too, each requested only the first
+Four more permissions are **optional** too, each requested only the first
 time you use the feature that needs it:
 
 - `contentSettings`, for blocking. Chrome's wording for it mentions the
@@ -100,6 +100,8 @@ time you use the feature that needs it:
   turns on Chrome's own switch for that, and nothing else.
 - `browsingData`, only for Clear site data, which clears one site's stored
   data when you ask.
+- `sidePanel`, only for opening cookieZ in Chrome's side panel. Chrome
+  grants it without asking, since it doesn't show a warning.
 
 ## What it will never do
 
