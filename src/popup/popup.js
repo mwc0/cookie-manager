@@ -3,7 +3,12 @@
 // screens each have a file of their own: editor.js, rules-screen.js,
 // export-screen.js, import-screen.js and small-screens.js.
 
-import { hasHostAccess, requestHostAccess } from "../lib/permissions.js";
+import {
+  hasHostAccess,
+  requestHostAccess,
+  requestPermission,
+  PANEL_PERMISSION,
+} from "../lib/permissions.js";
 import { BLOCK } from "../lib/rules.js";
 import {
   getSiteCookies,
@@ -55,6 +60,7 @@ import {
   el,
   targetTabId,
   inTab,
+  inPanel,
   showState,
   showError,
   showBlocked,
@@ -193,8 +199,8 @@ async function getActiveTab() {
   return tabs[0] || null;
 }
 
-// The tab whose cookies are shown: the active tab in the popup, or the tab
-// it was opened from when it's open in a tab of its own.
+// The tab whose cookies are shown: the active tab in the popup and the side
+// panel, or the tab it was opened from when it's open in a tab of its own.
 async function getTargetTab() {
   if (!inTab) {
     return await getActiveTab();
@@ -1086,6 +1092,101 @@ async function openInTab() {
   window.close();
 }
 
+// --- side panel ------------------------------------------------------------
+
+// The window this page is in. Read at the start, so "Open in side panel"
+// doesn't have to wait for it between the click and opening the panel, and
+// the side panel can tell its own window's tabs from other windows'.
+let windowId = null;
+chrome.windows.getCurrent().then(
+  (current) => {
+    windowId = current.id;
+  },
+  (error) => console.warn("Couldn't read the current window:", error)
+);
+
+// Chrome only opens the side panel straight from a click, so nothing else is
+// awaited between the click and open(). There's no side_panel entry in the
+// manifest: the panel's page is set here, once the permission is granted.
+async function openInPanel() {
+  const { granted, error } = await requestPermission(PANEL_PERMISSION);
+  if (error) {
+    showMainMessage(error, true);
+    return;
+  }
+  if (!granted) {
+    showMainMessage("Chrome didn't allow the side panel, so cookieZ can't open there.", true);
+    return;
+  }
+  try {
+    await chrome.sidePanel.setOptions({ path: "popup/popup.html?panel=1", enabled: true });
+    await chrome.sidePanel.open({ windowId });
+  } catch (openError) {
+    const message = describeError(openError);
+    showMainMessage(
+      message.includes("user gesture")
+        ? "Chrome only opens the side panel straight from a click. Please click the button again."
+        : "Couldn't open the side panel: " + message,
+      true
+    );
+    return;
+  }
+  window.close();
+}
+
+// In the side panel, the page follows the active tab of its window: another
+// tab chosen, or the tab going to a new address. Like the live table, it
+// never pulls the rug: while the editor or another screen is open, or a
+// question is waiting for an answer, it waits, and catches up after. Nothing
+// about the tabs is saved.
+let tabTimer = null;
+let tabPending = false;
+
+function followActiveTab() {
+  tabPending = true;
+  if (tabTimer === null) {
+    // A page load reports several changes in a row. One reload covers them.
+    tabTimer = setTimeout(runTabFollow, 200);
+  }
+}
+
+// The blocked and error screens have nothing to lose, so they don't wait.
+function tabFollowWaits() {
+  const showing = currentState();
+  return showing !== "blocked" && showing !== "error" && liveRedrawWaits();
+}
+
+async function runTabFollow() {
+  if (tabFollowWaits()) {
+    tabTimer = setTimeout(runTabFollow, 1000);
+    return;
+  }
+  tabPending = false;
+  try {
+    await loadCurrentPage();
+  } catch (error) {
+    showError(error);
+  }
+  tabTimer = null;
+  // Another change came in while that was loading.
+  if (tabPending) {
+    followActiveTab();
+  }
+}
+
+if (inPanel) {
+  chrome.tabs.onActivated.addListener((info) => {
+    if (info.windowId === windowId) {
+      followActiveTab();
+    }
+  });
+  chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
+    if (tab.active && tab.windowId === windowId && (change.url || change.status === "complete")) {
+      followActiveTab();
+    }
+  });
+}
+
 // --- theme -----------------------------------------------------------------
 
 // "light" or "dark" if someone picked one, or null to follow the system. The
@@ -1156,11 +1257,13 @@ el("grant-button").addEventListener("click", async () => {
 });
 
 el("retry-button").addEventListener("click", init);
-// In a tab, the other tab may have moved to another site, so read its address
-// again too.
-el("refresh-button").addEventListener("click", () => (inTab ? loadCurrentPage() : refresh()));
-el("tab-button").hidden = inTab;
+// In a tab or the side panel, the tab may have moved to another site, so read
+// its address again too.
+el("refresh-button").addEventListener("click", () => (inTab || inPanel ? loadCurrentPage() : refresh()));
+el("tab-button").hidden = inTab || inPanel;
 el("tab-button").addEventListener("click", openInTab);
+el("panel-button").hidden = inTab || inPanel;
+el("panel-button").addEventListener("click", openInPanel);
 el("import-tab").addEventListener("click", openInTab);
 
 el("search-input").addEventListener("input", () => {

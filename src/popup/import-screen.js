@@ -20,7 +20,7 @@ import { unlockText, readLockedFile } from "../lib/crypto.js";
 import { isProtected } from "../lib/protect.js";
 import { pluralise, formatCount, describeError, bareDomain } from "../lib/format.js";
 import { state } from "./state.js";
-import { el, inTab, showState } from "./ui.js";
+import { el, inTab, inPanel, showState } from "./ui.js";
 import { refresh } from "./popup.js";
 import { describeExpiryChange } from "./editor.js";
 import { offerUndo, appendReloadButton, offerStoredUndo } from "./undo-button.js";
@@ -53,8 +53,9 @@ export function openImport() {
   el("main-message").textContent = "";
   forgetImportPassword();
   el("import-move").checked = false;
-  el("import-file-row").hidden = !inTab;
-  el("import-file-hint").hidden = inTab;
+  // The side panel stays open while a file is chosen, like a tab does.
+  el("import-file-row").hidden = !(inTab || inPanel);
+  el("import-file-hint").hidden = inTab || inPanel;
   resetImportPreview();
   el("import-result").hidden = true;
   el("import-failures").hidden = true;
