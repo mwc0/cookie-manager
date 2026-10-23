@@ -1679,8 +1679,11 @@ td.value .row-button.copy {
 }
 
 /* Open in a tab, the page can be as wide as the window allows, up to a
-   comfortable reading width. Nothing else changes. */
-body.in-tab {
+   comfortable reading width. In the side panel, it takes the panel's width.
+   Nothing else changes, unless the page is narrow: see the end of this
+   file. */
+body.in-tab,
+body.in-panel {
   width: auto;
   max-width: 1100px;
   max-height: none;
@@ -1916,5 +1919,95 @@ textarea.output:focus {
   #rules-body:disabled label.check,
   #rules-body:disabled .button-like {
     color: GrayText;
+  }
+}
+
+/* --- narrow: the side panel, or a narrow tab ---------------------------------
+
+   The side panel is usually 320 to 500px wide. Below 600px the table keeps
+   Name, Value and the row buttons, and the rest of a cookie is in the editor
+   (click its row). Rows of buttons wrap rather than run off the side. The
+   toolbar popup is always 780px, so none of this applies to it. */
+@media (max-width: 600px) {
+  .bar,
+  .bar-actions {
+    flex-wrap: wrap;
+  }
+
+  .bar-actions {
+    row-gap: 6px;
+  }
+
+  #cookie-table .col-domain,
+  #cookie-table .col-path,
+  #cookie-table .col-expires,
+  #cookie-table .col-flags,
+  #cookie-table .col-size,
+  #cookie-table th.domain,
+  #cookie-table th.path,
+  #cookie-table th.expires,
+  #cookie-table th.flags,
+  #cookie-table th.size,
+  #cookie-table td.domain,
+  #cookie-table td.path,
+  #cookie-table td.expires,
+  #cookie-table td.flags,
+  #cookie-table td.size {
+    display: none;
+  }
+
+  #cookie-table .col-name {
+    width: 96px;
+  }
+
+  .search-field {
+    flex-basis: 100%;
+  }
+
+  .filters-checks,
+  .confirm,
+  .scope {
+    flex-wrap: wrap;
+  }
+
+  #delete-panel {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  /* Side by side needs more room than this. */
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* The other screens' tables: their fixed columns shrink to fit. */
+  #kept-table .kept-path-col {
+    width: 48px;
+  }
+
+  #rules-table .rules-action-col {
+    width: 84px;
+  }
+
+  #kept-table .kept-action-col {
+    width: 96px;
+  }
+
+  #rules-table .rules-rule-col {
+    width: 35%;
+  }
+
+  #compare-table .changes-what-col {
+    width: 40%;
+  }
+
+  .help .keys {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .help .keys span:nth-child(even) {
+    margin-bottom: 6px;
   }
 }

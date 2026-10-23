@@ -393,14 +393,15 @@
               <!-- Name, Value, Domain and Expires sort the table. Value sorts by
                    size, biggest first. popup.js sets aria-sort on the one in
                    use. The Size column only shows when there's room for it:
-                   open in a tab. -->
+                   open in a tab. When the page is narrow, as in the side
+                   panel, Domain, Path, Expires and Flags are hidden too. -->
               <th scope="col"><button type="button" class="sort" data-sort="name">Name</button></th>
               <th scope="col"><button type="button" class="sort" data-sort="size" title="Sort by size">Value</button></th>
               <th scope="col" class="size">Size</th>
-              <th scope="col" aria-sort="ascending"><button type="button" class="sort" data-sort="domain">Domain</button></th>
-              <th scope="col">Path</th>
-              <th scope="col"><button type="button" class="sort" data-sort="expires">Expires</button></th>
-              <th scope="col">Flags</th>
+              <th scope="col" class="domain" aria-sort="ascending"><button type="button" class="sort" data-sort="domain">Domain</button></th>
+              <th scope="col" class="path">Path</th>
+              <th scope="col" class="expires"><button type="button" class="sort" data-sort="expires">Expires</button></th>
+              <th scope="col" class="flags">Flags</th>
               <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
           </thead>
