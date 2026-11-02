@@ -122,6 +122,9 @@ cookieZ saves its own version number, such as 1.7.0, the first time you
 open a new version, so it can show one line about what's new just once.
 That is the whole record.
 
+The very first time it opens, cookieZ also asks Chrome whether it's pinned to
+the toolbar, so it only mentions pinning if it isn't. The answer isn't saved.
+
 ### How many cookies cookieZ has cleared
 
 One number: how many cookies cookieZ has deleted for you, in total, shown
@@ -213,8 +216,8 @@ can open, and its address is written in one place in the source,
 
 ## Reloading the site
 
-After a delete, Clear site data, an import or an Undo, cookieZ offers a
-**Reload the site** button. It reloads only the tab you're on, and only when
+After a delete, an import or an Undo, or clearing a site's data without
+reloading, cookieZ offers a **Reload the site** button. It reloads only the tab you're on, and only when
 you click it. **Clear and reload** clears a site's data and then reloads that
 tab straight away, because that's what the button says. Reloading a tab needs
 no permission, so nothing new is asked for.
@@ -270,7 +273,7 @@ those sites only.
 
 ## Clearing a site's data
 
-**Clear site data** deletes the site's cookies the usual way, so kept cookies
+**Clear and reload** deletes the site's cookies the usual way, so kept cookies
 are left alone and Undo can put the cookies back. It then asks Chrome to
 clear what else that site has stored on your computer: its local storage,
 databases, cache storage and offline files. cookieZ never reads that data;

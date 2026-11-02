@@ -30,7 +30,7 @@ The store images lead with the dark look, like the website. One of them,
 the editor, is the light one, to show both themes exist. STORE_LIGHT below
 says which.
 
-The store takes five screenshots and this makes seven, so two are left out
+The store takes five screenshots and this makes eight, so three are left out
 when uploading. store/README.md says which.
 
 The seventh is the side panel. Playwright can't capture Chrome's real side
@@ -86,6 +86,7 @@ SHOTS = [
     ("05-keep", "Keep the cookies you don't want to lose"),
     ("06-rules", "Choose which sites may set cookies"),
     ("07-side-panel", "Keep cookieZ open beside the page"),
+    ("08-site-report", "See what a site has stored on you"),
 ]
 
 # The store images are the dark captures, except these, which are light.
@@ -366,6 +367,19 @@ def shoot(p, dark=False):
                 caption, OUT / f"{name}.png", "dark")
         print(f"  wrote {name}.png (dark)")
         panel.close()
+
+        # 8. the Site report, for the store only, with a few well-known names.
+        page.evaluate(
+            "async (cookies) => { for (const c of cookies) await chrome.cookies.set(c); }",
+            [{"url": SITE, "name": n, "value": "example"} for n in ("_gid", "_fbp", "_gcl_au", "OptanonConsent")],
+        )
+        page.reload()
+        page.wait_for_timeout(1400)
+        page.locator("#report-open").click()
+        page.wait_for_timeout(500)
+        name, caption = SHOTS[7]
+        compose(context, page.locator("body").screenshot(), caption, OUT / f"{name}.png", "dark")
+        print(f"  wrote {name}.png (dark)")
 
     page.close()
     context.close()

@@ -70,6 +70,8 @@ A cookie editor and blocker for Chrome. It asks for only `cookies` and
   import or an Undo, since the open page still has what it loaded. It only
   reloads when you click it, and needs no permission. Clear and reload does
   both in one click.
+- Shows a Site report: the site's cookies by purpose and usual company, and
+  what's worth checking. It's a guess from each name, and says so.
 - Stays open beside the page in Chrome's side panel, and follows the tab
   you're on, for when the popup closing every time gets in the way.
 - Exports and imports cookies in several formats, including Python code

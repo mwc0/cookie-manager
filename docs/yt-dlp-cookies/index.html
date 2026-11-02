@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <!-- Applies the theme the visitor picked, before the page is drawn, so it
+       doesn't flash. It's inline and not deferred for that reason. See theme.js. -->
+  <script>
+    try {
+      const saved = localStorage.getItem("color-scheme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.classList.add(saved);
+        document.querySelector('meta[name="color-scheme"]').content = saved;
+      }
+    } catch (e) {}
+  </script>
+  <title>Export cookies.txt for yt-dlp - cookieZ</title>
+  <meta name="description" content="How to give yt-dlp your cookies with a cookies.txt file, using an extension that can't send them anywhere, and how to keep the file safe.">
+  <link rel="canonical" href="https://cookiez.uk/yt-dlp-cookies/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="cookieZ">
+  <meta property="og:title" content="Export cookies.txt for yt-dlp - cookieZ">
+  <meta property="og:description" content="How to give yt-dlp your cookies with a cookies.txt file, using an extension that can't send them anywhere, and how to keep the file safe.">
+  <meta property="og:url" content="https://cookiez.uk/yt-dlp-cookies/">
+  <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
+  <!-- The heading uses this font, so fetch it straight away. -->
+  <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../style.css?v=2.2.0">
+  <script src="../theme.js?v=2.2.0" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../#features">Features</a></li>
+          <li><a href="../privacy/">Privacy</a></li>
+          <li><a href="../support/">Support</a></li>
+        </ul>
+      </nav>
+      <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
+      <div class="header-end">
+        <a class="pill" href="https://github.com/mwc0/cookie-manager">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 8-4 4 4 4m6-8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Source code
+        </a>
+        <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="1.5" x2="12" y2="3.6"/>
+              <line x1="12" y1="20.4" x2="12" y2="22.5"/>
+              <line x1="1.5" y1="12" x2="3.6" y2="12"/>
+              <line x1="20.4" y1="12" x2="22.5" y2="12"/>
+              <line x1="4.6" y1="4.6" x2="6.1" y2="6.1"/>
+              <line x1="17.9" y1="17.9" x2="19.4" y2="19.4"/>
+              <line x1="4.6" y1="19.4" x2="6.1" y2="17.9"/>
+              <line x1="17.9" y1="6.1" x2="19.4" y2="4.6"/>
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <div class="wrap prose">
+      <h1>Export cookies.txt for yt-dlp</h1>
+      <p class="updated">Use your own login with yt-dlp, without giving your cookies to an extension you can't check.</p>
+
+      <p>yt-dlp is a free command-line tool that downloads videos. Some videos only play when you're logged in, and yt-dlp isn't. So you give it your browser's cookies in a file called cookies.txt, and it uses them to act as your logged-in browser.</p>
+
+      <p>That file can sign someone in as you, so the tool that makes it matters. A well-known cookies.txt extension was removed from the Chrome Web Store in 2023 for sending people's cookies to a server. cookieZ makes no network requests, and <a href="https://github.com/mwc0/cookie-manager">its code is public</a>, so you can check that yourself.</p>
+
+      <h2>Make the file</h2>
+      <ol>
+        <li>Log in to the site in Chrome.</li>
+        <li>Click the cookieZ icon on that site. The first time, it asks for access to websites.</li>
+        <li>Under the delete options, choose <strong>This domain and its subdomains</strong>. Nothing is deleted: export uses the same choice.</li>
+        <li>Click <strong>Export</strong> and choose <strong>cookies.txt</strong>.</li>
+        <li>Click <strong>Download</strong> and save the file somewhere private.</li>
+      </ol>
+
+      <h2>Use it with yt-dlp</h2>
+      <p>Pass the file with <code>--cookies</code>:</p>
+      <pre><code>yt-dlp --cookies cookies.txt "VIDEO_ADDRESS"</code></pre>
+
+      <h2>Keep it safe</h2>
+      <ul>
+        <li><strong>Treat the file like a password.</strong> Anyone who has it can sign in as you until the login expires.</li>
+        <li>Don't paste it into a website, a chat or a bug report.</li>
+        <li>Delete it when you've finished. To end the login completely, sign out of the site.</li>
+        <li>If you need to send it somewhere, cookieZ can lock an export with a password, but yt-dlp can't read a locked file until it's unlocked in cookieZ.</li>
+      </ul>
+
+      <h2>If it doesn't work</h2>
+      <p>Logins expire, so make a new file and try again. Some sites also tie a login to your browser, and they may refuse it from another program.</p>
+
+      <p class="aside">Only use this with your own account, and for things you're allowed to download. A site's terms may not allow it. cookieZ has no link with yt-dlp.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; 2026 cookieZ</span>
+      <ul>
+        <li><a href="../privacy/">Extension privacy</a></li>
+        <li><a href="../website-privacy/">Website privacy</a></li>
+        <li><a href="../support/">Support</a></li>
+        <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

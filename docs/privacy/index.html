@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=2.1.0">
-  <script src="../theme.js?v=2.1.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2.2.0">
+  <script src="../theme.js?v=2.2.0" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
@@ -164,6 +164,8 @@
 
       <p>cookieZ saves its own version number, such as 1.7.0, the first time you open a new version, so it can show one line about what's new just once. That is the whole record.</p>
 
+      <p>The very first time it opens, cookieZ also asks Chrome whether it's pinned to the toolbar, so it only mentions pinning if it isn't. The answer isn't saved.</p>
+
       <h3>How many cookies cookieZ has cleared</h3>
 
       <p>One number: how many cookies cookieZ has deleted for you, in total, shown on the <strong>Block cookies</strong> screen. It goes up when you delete cookies with cookieZ and down when you undo a delete. It doesn't record which cookies, which sites or when, only the total. It counts cookies cookieZ cleared, not cookies Chrome blocked, because Chrome doesn't tell extensions when it blocks a cookie. It is stored using Chrome's <code>storage.local</code> API on your own computer and is never transmitted. Uninstalling the extension removes it.</p>
@@ -212,7 +214,7 @@
 
       <h2>Reloading the site</h2>
 
-      <p>After a delete, Clear site data, an import or an Undo, cookieZ offers a <strong>Reload the site</strong> button. It reloads only the tab you're on, and only when you click it. <strong>Clear and reload</strong> clears a site's data and then reloads that tab straight away, because that's what the button says. Reloading a tab needs no permission, so nothing new is asked for.</p>
+      <p>After a delete, an import or an Undo, or clearing a site's data without reloading, cookieZ offers a <strong>Reload the site</strong> button. It reloads only the tab you're on, and only when you click it. <strong>Clear and reload</strong> clears a site's data and then reloads that tab straight away, because that's what the button says. Reloading a tab needs no permission, so nothing new is asked for.</p>
 
       <h2>The side panel</h2>
 
@@ -232,7 +234,7 @@
 
       <h2>Clearing a site's data</h2>
 
-      <p><strong>Clear site data</strong> deletes the site's cookies the usual way, so kept cookies are left alone and Undo can put the cookies back. It then asks Chrome to clear what else that site has stored on your computer: its local storage, databases, cache storage and offline files. cookieZ never reads that data; Chrome deletes it directly, and it can't be put back. Only the site the popup is open on is affected.</p>
+      <p><strong>Clear and reload</strong> deletes the site's cookies the usual way, so kept cookies are left alone and Undo can put the cookies back. It then asks Chrome to clear what else that site has stored on your computer: its local storage, databases, cache storage and offline files. cookieZ never reads that data; Chrome deletes it directly, and it can't be put back. Only the site the popup is open on is affected.</p>
 
       <h2>Permissions, and why each one exists</h2>
 
