@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=2.0.0">
-  <script src="../theme.js?v=2.0.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2.1.0">
+  <script src="../theme.js?v=2.1.0" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
@@ -80,7 +80,7 @@
   <main id="main" class="page">
     <div class="wrap prose">
       <h1>Privacy policy</h1>
-      <p class="updated">For the cookieZ browser extension. Last updated: 21 October 2026.</p>
+      <p class="updated">For the cookieZ browser extension. Last updated: 2 November 2026.</p>
       <p class="aside">This covers the extension. For this website, see the <a href="../website-privacy/">website privacy policy</a>.</p>
 
       <h2>The short version</h2>
@@ -196,7 +196,7 @@
 
       <h2>Cookies the extension reads</h2>
 
-      <p>cookieZ reads your cookies in order to show them to you, which is what it is for. This happens only while the popup is open, only in response to you opening it, and the results only ever reach your own screen. While it is open, Chrome also tells it when a site changes a cookie, so the table can show the change and the <strong>What changed</strong> screen can list it. That list holds the cookie's name, its site, the time, and whether it was added, changed, removed or expired. It never holds the cookie's value. It is kept in memory only, and nothing about those changes is kept once the popup closes.</p>
+      <p>cookieZ reads your cookies in order to show them to you, which is what it is for. This happens only while the popup or the side panel is open, only in response to you opening it, and the results only ever reach your own screen. While it is open, Chrome also tells it when a site changes a cookie, so the table can show the change and the <strong>What changed</strong> screen can list it. That list holds the cookie's name, its site, the time, and whether it was added, changed, removed or expired. It never holds the cookie's value. It is kept in memory only, and nothing about those changes is kept once the popup closes.</p>
 
       <p>Cookie values are shown in the popup's table. They are never transmitted, and never stored by the extension, except for the short-lived Undo copy described above. They only leave the popup if you choose: when you copy a value, a Set-Cookie line or an export, it goes to your clipboard, and when you download an export, it is saved as a file on your computer, where you choose. cookieZ keeps no copy of either.</p>
 
@@ -212,7 +212,13 @@
 
       <h2>Reloading the site</h2>
 
-      <p>After a delete, Clear site data, an import or an Undo, cookieZ offers a <strong>Reload the site</strong> button. It reloads only the tab you're on, and only when you click it. Reloading a tab needs no permission, so nothing new is asked for.</p>
+      <p>After a delete, Clear site data, an import or an Undo, cookieZ offers a <strong>Reload the site</strong> button. It reloads only the tab you're on, and only when you click it. <strong>Clear and reload</strong> clears a site's data and then reloads that tab straight away, because that's what the button says. Reloading a tab needs no permission, so nothing new is asked for.</p>
+
+      <h2>The side panel</h2>
+
+      <p>cookieZ can stay open beside the page, in Chrome's side panel, instead of in the small window that closes when you click away. It's the same cookieZ, with the same screens.</p>
+
+      <p>While the side panel is open, Chrome tells cookieZ when you switch to another tab in that window, or when the page in it loads, so it can show the cookies of the site you're now on. It isn't told about other windows. It doesn't record which sites you visit: it shows the site you're on, and nothing about it is kept once you move on or close the panel. When the side panel is closed, cookieZ isn't told anything.</p>
 
       <h2>Blocking cookies</h2>
 
@@ -239,6 +245,8 @@
       <p><strong>Changing privacy settings</strong> (<code>privacy</code>): required only to block other companies' cookies on every site, and <strong>optional</strong>. Chrome asks for it the first time you choose that, and its prompt reads "Change your privacy-related settings". cookieZ uses it for one setting: whether other companies' cookies are allowed. You can decline it and everything else works as before.</p>
 
       <p><strong>Clearing browsing data</strong> (<code>browsingData</code>): required only for <strong>Clear site data</strong>, and <strong>optional</strong>. Chrome asks for it the first time you use that. cookieZ uses it to clear one site's stored data when you ask, and never anything else, never on its own, and never your history or passwords.</p>
+
+      <p><strong>Side panel</strong> (<code>sidePanel</code>): required only for <strong>Open in side panel</strong>, and <strong>optional</strong>. cookieZ asks for it the first time you click that. Chrome adds it without showing a prompt, because it gives cookieZ nothing except a place to show itself beside the page. You can revoke it from the extension's Details page; everything else works as before.</p>
 
       <p><strong>Access to websites</strong> (<code>*://*/*</code>): Chrome will not release a single cookie to an extension without permission for the site that cookie belongs to. This permission is <strong>optional</strong>: it is deliberately kept out of the install prompt and requested at runtime, the first time you open the popup. You can decline it, and you can revoke it later from the extension's Details page in <code>chrome://extensions</code>. It is used only to read and change cookies when you ask.</p>
 
