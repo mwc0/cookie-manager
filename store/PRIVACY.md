@@ -1,6 +1,6 @@
 # Privacy Policy: cookieZ
 
-**Last updated: 21 October 2026**
+**Last updated: 2 November 2026**
 
 ## The short version
 
@@ -173,8 +173,8 @@ Like everything else here, it is never transmitted.
 ## Cookies the extension reads
 
 cookieZ reads your cookies in order to show them to you, which is what
-it is for. This happens only while the popup is open, only in response to you
-opening it, and the results only ever reach your own screen. While it is
+it is for. This happens only while the popup or the side panel is open, only
+in response to you opening it, and the results only ever reach your own screen. While it is
 open, Chrome also tells it when a site changes a cookie, so the table can
 show the change and the **What changed** screen can list it. That list holds
 the cookie's name, its site, the time, and whether it was added, changed,
@@ -215,8 +215,22 @@ can open, and its address is written in one place in the source,
 
 After a delete, Clear site data, an import or an Undo, cookieZ offers a
 **Reload the site** button. It reloads only the tab you're on, and only when
-you click it. Reloading a tab needs no permission, so nothing new is asked
-for.
+you click it. **Clear and reload** clears a site's data and then reloads that
+tab straight away, because that's what the button says. Reloading a tab needs
+no permission, so nothing new is asked for.
+
+## The side panel
+
+cookieZ can stay open beside the page, in Chrome's side panel, instead of in
+the small window that closes when you click away. It's the same cookieZ,
+with the same screens.
+
+While the side panel is open, Chrome tells cookieZ when you switch to
+another tab in that window, or when the page in it loads, so it can show the
+cookies of the site you're now on. It isn't told about other windows. It
+doesn't record which sites you visit: it shows the site you're on, and
+nothing about it is kept once you move on or close the panel. When the side
+panel is closed, cookieZ isn't told anything.
 
 ## Blocking cookies
 
@@ -293,6 +307,12 @@ as before.
 data**, and **optional**. Chrome asks for it the first time you use that.
 cookieZ uses it to clear one site's stored data when you ask, and never
 anything else, never on its own, and never your history or passwords.
+
+**Side panel** (`sidePanel`): required only for **Open in side panel**, and
+**optional**. cookieZ asks for it the first time you click that. Chrome adds
+it without showing a prompt, because it gives cookieZ nothing except a place
+to show itself beside the page. You can revoke it from the extension's
+Details page; everything else works as before.
 
 **Access to websites** (`*://*/*`): Chrome will not release a single cookie
 to an extension without permission for the site that cookie belongs to. This

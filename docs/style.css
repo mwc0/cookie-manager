@@ -1055,6 +1055,22 @@ main::before {
   color: var(--ink);
 }
 
+.more-features summary {
+  padding: 15px clamp(18px, 3vw, 32px);
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.more-features summary:hover {
+  background: rgb(var(--light) / 0.06);
+}
+
+.more-features[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
 @media (max-width: 700px) {
   .ledger-head {
     display: none;

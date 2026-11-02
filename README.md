@@ -68,7 +68,10 @@ A cookie editor and blocker for Chrome. It asks for only `cookies` and
   their cookies cleared before you can log in again.
 - Offers a "Reload the site" button after a delete, Clear site data, an
   import or an Undo, since the open page still has what it loaded. It only
-  reloads when you click it, and needs no permission.
+  reloads when you click it, and needs no permission. Clear and reload does
+  both in one click.
+- Stays open beside the page in Chrome's side panel, and follows the tab
+  you're on, for when the popup closing every time gets in the way.
 - Exports and imports cookies in several formats, including Python code
   for your own test scripts. An export can be locked with a password, using
   the browser's own encryption (AES-GCM, with the key made from the
@@ -94,7 +97,7 @@ Access to websites is **optional** and requested at runtime, the first time you
 open the popup. Chrome will not release a single cookie to an extension without
 it.
 
-Three more permissions are **optional** too, each requested only the first
+Four more permissions are **optional** too, each requested only the first
 time you use the feature that needs it:
 
 - `contentSettings`, for blocking. Chrome's wording for it mentions the
@@ -104,6 +107,8 @@ time you use the feature that needs it:
   turns on Chrome's own switch for that, and nothing else.
 - `browsingData`, only for Clear site data, which clears one site's stored
   data when you ask.
+- `sidePanel`, only for opening cookieZ in Chrome's side panel. Chrome
+  grants it without asking, since it doesn't show a warning.
 
 ## What it will never do
 

@@ -61,6 +61,8 @@ a real window.
 | `test_changes.py` | The "What changed" list, and that nothing of it is kept once cookieZ closes. |
 | `test_keyboard.py` | The table from the keyboard: arrows, Enter, Space, K and Delete, and where focus lands after each. |
 | `test_ui.py` | Clicking a row to edit, the decoded value, Help, the "Sure?" step, the badges, target sizes and Esc. |
+| `test_stress.py` | A heavy profile: about 3,000 cookies on about 300 sites, with large values, partitioned and Kept cookies. All sites counts, lists, deletes, puts back with Undo and exports every one exactly, and each step is timed against a loose limit. Prints a table of timings. Deleting 3,000 cookies takes Chrome itself 15 to 25 seconds, so that limit is high on purpose. |
+| `test_side_panel.py` | Open in side panel: where the button shows, what it asks Chrome to do (with `chrome.sidePanel` recorded, see below), and its messages when that fails. The panel following the active tab and a new address, waiting while the editor or a question is open, ignoring other windows, and the keyboard there. No screen scrolling sideways at 360px in either theme, and the 780px popup unchanged. |
 | `test_review.py` | The review ask: no line before the 5th delete, import or Save, then once more at the 25th only after "Not now", never after "No thanks" or "Leave a review", and never on the same open as What's new. Both "Leave a review" buttons open exactly the store's review page. |
 | `test_theme.py` | The Light and Dark buttons: following the system, saving the other choice, and removing it again. |
 | `test_no_network.py` | That the extension makes no outbound requests, via both a static scan of `src/` and a live capture of a whole session. |
@@ -141,6 +143,17 @@ Site rules add a third:
    properly couldn't be automated either. So `test_rules.py` checks the
    rules within one run of the browser, and that cookieZ puts them back if
    Chrome loses them, and the restart is checked by hand.
+
+The side panel adds a fourth:
+
+4. **The side panel really opening.** In the test browser, calling
+   `chrome.sidePanel.open()` closes the whole browser, so `test_side_panel.py`
+   records the call instead of making it. A probe did show that the click
+   still counts as a click after `permissions.request()` and `setOptions()`
+   (`navigator.userActivation.isActive` was still true when `open()` was
+   called). Check by hand in real Chrome before release: click the side
+   panel button in the toolbar popup, the first time and again later, and
+   the panel opens on the current tab's cookies.
 
 ## Two things worth knowing before editing these
 

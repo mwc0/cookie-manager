@@ -21,7 +21,7 @@ The store images are always exactly 1280x800 PNGs.
 The first store image is also copied to docs/images/01-overview.png, the
 preview image shown when someone shares a link to the website.
 
-The six captures are taken twice, once with the browser set to light and
+The first six captures are taken twice, once with the browser set to light and
 once set to dark, which the popup follows. The website gets both:
 popup-NAME.webp and popup-NAME-dark.webp, each also at 2x. It shows the one
 that matches the page's theme.
@@ -30,8 +30,11 @@ The store images lead with the dark look, like the website. One of them,
 the editor, is the light one, to show both themes exist. STORE_LIGHT below
 says which.
 
-The store takes five screenshots and this makes six, so one is left out when
-uploading. store/README.md says which.
+The store takes five screenshots and this makes seven, so two are left out
+when uploading. store/README.md says which.
+
+The seventh is the side panel. Playwright can't capture Chrome's real side
+panel, so it's popup.html?panel=1 placed beside a plain page drawn here.
 
 The captions use the typeface bundled with the extension. It's read from
 src/popup/fonts and put inside the page, so nothing is fetched.
@@ -82,6 +85,7 @@ SHOTS = [
     ("04-search", "Search or filter, then delete only what you're looking at"),
     ("05-keep", "Keep the cookies you don't want to lose"),
     ("06-rules", "Choose which sites may set cookies"),
+    ("07-side-panel", "Keep cookieZ open beside the page"),
 ]
 
 # The store images are the dark captures, except these, which are light.
@@ -178,6 +182,25 @@ def to_webp(context, png_bytes):
     return base64.b64decode(webp)
 
 
+def beside_page(context, panel_png):
+    """Put a side panel capture to the right of a plain page, 780px wide."""
+    data_uri = "data:image/png;base64," + base64.b64encode(panel_png).decode("ascii")
+    frame = context.new_page()
+    frame.set_viewport_size({"width": 780, "height": 620})
+    frame.set_content(f"""<!DOCTYPE html><html><body style="margin:0;display:flex;height:620px;background:#fff;
+        color:#121829;font-family:sans-serif">
+      <div style="flex:1;padding:70px 44px;box-sizing:border-box">
+        <h1 style="margin:0 0 16px;font-size:28px">Example Domain</h1>
+        <p style="margin:0;line-height:1.5">This page stands in for the site you're working on.</p>
+      </div>
+      <img src="{data_uri}" style="width:400px;height:620px;display:block">
+    </body></html>""")
+    frame.wait_for_timeout(200)
+    png = frame.screenshot()
+    frame.close()
+    return png
+
+
 def compose(context, png_bytes, caption, out_path, theme, clipped=False):
     """Put a popup capture on a 1280x800 canvas with a caption."""
     data_uri = "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
@@ -204,7 +227,7 @@ def compose(context, png_bytes, caption, out_path, theme, clipped=False):
 
 def shoot(p, dark=False):
     """
-    Takes the six screenshots once.
+    Takes the screenshots once.
 
     Each pass writes the website's captures for its theme, and the store
     images that use that theme (see STORE_LIGHT). The dark pass (dark=True)
@@ -329,6 +352,20 @@ def shoot(p, dark=False):
     page.wait_for_timeout(600)
     page.evaluate("() => document.activeElement && document.activeElement.blur()")
     capture(*SHOTS[5])
+
+    # 7. the side panel, for the store only, in the dark pass.
+    if dark:
+        panel = context.new_page()
+        panel.set_viewport_size({"width": 400, "height": 620})
+        stub_active_tab(panel, SITE)
+        panel.goto(popup_url(ext_id) + "?panel=1")
+        panel.wait_for_timeout(1400)
+        panel.mouse.move(0, 0)
+        name, caption = SHOTS[6]
+        compose(context, beside_page(context, panel.locator("body").screenshot()),
+                caption, OUT / f"{name}.png", "dark")
+        print(f"  wrote {name}.png (dark)")
+        panel.close()
 
     page.close()
     context.close()
