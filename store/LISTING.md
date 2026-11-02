@@ -78,7 +78,7 @@ Features:
 Privacy:
 cookieZ makes no network requests. No ads, no analytics, no tracking, and nothing you do leaves your computer. You can check this yourself in the Network tab of Chrome's DevTools.
 
-When you install it, it asks for two permissions: cookies, and storage to remember your settings. It asks for access to websites the first time you open it, and you can say no.
+When you install it, it asks for three permissions: cookies, storage to remember your settings, and the side panel so it can stay open beside the page. Chrome shows no warning for the side panel. It asks for access to websites the first time you open it, and you can say no.
 
 The code is open source, so you can read all of it:
 https://github.com/mwc0/cookie-manager
@@ -135,6 +135,17 @@ import or save are held in chrome.storage.session (memory only, never
 written to disk, cleared by the browser on exit): the cookies as they were
 before, and any the change added. Only the last change is held, and it is
 dropped after 10 minutes or once used. Nothing is synced or transmitted.
+```
+
+### `sidePanel`
+
+```
+Used only for the "Open in side panel" button, which shows the extension's
+own popup page in Chrome's side panel so it can stay open beside the page
+while the user works. The panel is opened only when the user clicks that
+button. It gives the extension no access to page content or browsing data.
+It is requested at install rather than at runtime because granting it at
+runtime made chrome.sidePanel.open() crash the browser.
 ```
 
 ### Host permission (`*://*/*`, optional)
