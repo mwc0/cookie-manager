@@ -531,6 +531,8 @@ button.danger:hover:not(:disabled) {
 #table-wrap,
 #kept-wrap,
 #changes-wrap,
+#report-wrap,
+#report-checks,
 #compare-wrap,
 #rules-wrap,
 .rules-group,
@@ -548,6 +550,8 @@ button.danger:hover:not(:disabled) {
 #table-wrap::after,
 #kept-wrap::after,
 #changes-wrap::after,
+#report-wrap::after,
+#report-checks::after,
 #compare-wrap::after,
 #rules-wrap::after,
 .rules-group::after,
@@ -1448,15 +1452,47 @@ button.row-button.keep.kept:hover:not(:disabled) {
   text-align: right;
 }
 
-/* The list of what changed. */
-#changes-intro {
+/* The list of what changed, and the Site report. */
+#changes-intro,
+#report-intro {
   max-width: 72ch;
   color: var(--fg-soft);
 }
 
 #changes-wrap,
+#report-wrap,
+#report-checks,
 #compare-wrap {
   overflow: hidden;
+}
+
+.report-heading {
+  margin: 14px 0 6px;
+}
+
+.report-purpose-col {
+  width: 230px;
+}
+
+.report-count-col {
+  width: 72px;
+}
+
+.report-action-col {
+  width: 100px;
+}
+
+.report-count {
+  font-variant-numeric: tabular-nums;
+}
+
+td.report-action {
+  text-align: right;
+}
+
+.report-note {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 #compare-summary {

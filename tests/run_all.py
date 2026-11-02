@@ -41,6 +41,7 @@ FILES = [
     "test_ui.py",
     "test_stress.py",
     "test_side_panel.py",
+    "test_report.py",
     "test_review.py",
     "test_no_network.py",
     "test_devtools_crosscheck.py",

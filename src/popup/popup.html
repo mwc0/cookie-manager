@@ -94,6 +94,8 @@
                  changed since cookieZ was opened. -->
             <p class="count-line">
               <span id="cookie-count"></span>
+              <span aria-hidden="true">&middot;</span>
+              <button id="report-open" class="link-button" type="button" title="See what this site has stored, and what's worth checking">Site report</button>
               <span id="changes-link" hidden>
                 <span aria-hidden="true">&middot;</span>
                 <button id="changes-open" class="link-button" type="button" title="See what changed"></button>
@@ -743,6 +745,65 @@
     <!-- What has happened to this site's cookies while cookieZ has been
          open. Names only, never values, and held in memory: it's gone when
          cookieZ closes. -->
+    <!-- What the site has stored, by purpose. See report-screen.js. -->
+    <section id="state-report" class="state" hidden>
+      <header class="bar">
+        <h1>Site report</h1>
+        <button id="report-back" type="button">Back</button>
+      </header>
+
+      <p id="report-intro">
+        What <span id="report-site" class="mono"></span> has stored in this
+        browser. Purposes are a guess from each cookie's name, using a list
+        inside cookieZ, because any site can give a cookie any name. Nothing
+        here is saved.
+      </p>
+      <p id="report-no-list" class="error" hidden>
+        The list of known cookie names couldn't be loaded, so no cookie could be recognised.
+      </p>
+      <p id="report-empty" hidden>This site hasn't stored any cookies.</p>
+
+      <div id="report-body">
+        <div id="report-wrap">
+          <table id="report-table">
+            <colgroup>
+              <col class="report-purpose-col" />
+              <col class="report-count-col" />
+              <col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Purpose</th>
+                <th scope="col">Cookies</th>
+                <th scope="col">Usually set by</th>
+              </tr>
+            </thead>
+            <tbody id="report-rows"></tbody>
+          </table>
+        </div>
+
+        <h2 class="report-heading">Worth checking</h2>
+        <p id="report-checks-none" class="muted" hidden>Nothing to flag on this site.</p>
+        <div id="report-checks">
+          <table id="report-check-table">
+            <colgroup>
+              <col />
+              <col class="report-count-col" />
+              <col class="report-action-col" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">What</th>
+                <th scope="col">Cookies</th>
+                <th scope="col"><span class="visually-hidden">Action</span></th>
+              </tr>
+            </thead>
+            <tbody id="report-check-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section id="state-changes" class="state" hidden>
       <header class="bar">
         <h1>What changed</h1>
@@ -1054,6 +1115,13 @@
           subdomains, such as login.example.com.
           <strong>All sites</strong> deletes every cookie in this browser
           profile. The count and the sites are always shown first.
+        </dd>
+
+        <dt>What does a site store on me?</dt>
+        <dd>
+          <strong>Site report</strong>, beside the cookie count, groups a
+          site's cookies by purpose and lists anything worth checking. Each
+          purpose is a guess from the cookie's name.
         </dd>
 
         <dt>Clearing cookies didn't let me log in</dt>

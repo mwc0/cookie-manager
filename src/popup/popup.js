@@ -125,6 +125,7 @@ import {
   showWhatsNew,
   openReviewPage,
 } from "./small-screens.js";
+import { openReport, closeReport } from "./report-screen.js";
 import { offerUndo, appendReloadButton, offerStoredUndo } from "./undo-button.js";
 import {
   copyExport,
@@ -1288,6 +1289,10 @@ el("search-clear").addEventListener("click", () => {
 });
 
 el("changes-open").addEventListener("click", openChanges);
+el("report-open").addEventListener("click", () =>
+  openReport(pageCookies, (cookie) => isProtected(state.protectedKeys, cookie))
+);
+el("report-back").addEventListener("click", closeReport);
 el("changes-back").addEventListener("click", closeChanges);
 el("kept-open").addEventListener("click", openKept);
 el("kept-back").addEventListener("click", closeKept);
@@ -1506,6 +1511,7 @@ const BACK_BUTTONS = {
   rules: "rules-back",
   kept: "kept-back",
   changes: "changes-back",
+  report: "report-back",
   edit: "edit-cancel",
   export: "export-back",
   import: "import-back",
