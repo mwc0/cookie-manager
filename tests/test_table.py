@@ -131,7 +131,7 @@ def main():
 
         # Copy, Edit and Keep show on hover or focus. Until then they're see-through,
         # which a click in a test doesn't notice, so measure it.
-        row = page.locator("#cookie-rows tr").first
+        row = page.locator("#cookie-rows tr", has=page.locator(".keep:not(.kept)")).first
         faded = """(row) => [...row.querySelectorAll('.copy-name, .edit, .keep')]
             .map((button) => getComputedStyle(button).opacity)"""
         page.mouse.move(0, 0)

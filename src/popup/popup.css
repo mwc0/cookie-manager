@@ -641,6 +641,18 @@ button.danger:hover:not(:disabled) {
   margin-top: 7px;
 }
 
+/* Save and Cancel stay in view however long the value is, or however far
+   the decoded panel pushes the form. */
+#state-edit .actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: 0;
+  padding-block: 8px;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
 .confirm {
   display: flex;
   align-items: center;
