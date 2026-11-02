@@ -32,10 +32,9 @@ plain fact, not a keyword in the title or summary:
 
 ## Screenshots
 
-Seven are done, in `screenshots/`. The store takes five at most, so two are
-left out when uploading. Since 2.1 the suggestion is to upload 01, 02, 03,
-06 (site rules) and 07 (side panel), and leave out 04 (search) and 05
-(Keep), which the website still shows. Regenerate them after any UI change with:
+Eight are done, in `screenshots/`. The store takes five at most, so three
+are left out when uploading. Since 2.2 the suggestion is to upload 01, 02,
+03, 06 (site rules) and 08 (Site report), and leave out 04, 05 and 07. Regenerate them after any UI change with:
 
 ```
 cd tests && python make_store_screenshots.py
@@ -56,6 +55,7 @@ capture onto a 1280x800 canvas with a caption.
 | `05-keep.png` | A kept row, its Delete disabled, and the summary saying what will be left alone. |
 | `06-rules.png` | The Block cookies screen, with a few sites on the list. |
 | `07-side-panel.png` | cookieZ in the side panel, beside a page. The page is drawn by the script. |
+| `08-site-report.png` | The Site report: cookies by purpose, and what's worth checking. |
 
 Upload them in that order. The store shows the first one largest, and the
 second is the answer to the "delete all doesn't actually delete all"

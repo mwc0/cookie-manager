@@ -94,6 +94,8 @@
                  changed since cookieZ was opened. -->
             <p class="count-line">
               <span id="cookie-count"></span>
+              <span aria-hidden="true">&middot;</span>
+              <button id="report-open" class="link-button" type="button" title="See what this site has stored, and what's worth checking">Site report</button>
               <span id="changes-link" hidden>
                 <span aria-hidden="true">&middot;</span>
                 <button id="changes-open" class="link-button" type="button" title="See what changed"></button>
@@ -105,53 +107,6 @@
           </div>
         </div>
         <div class="bar-actions">
-          <!-- Follows the system theme until someone picks the other one.
-               popup.js selects the button for the theme showing. -->
-          <div class="theme" role="radiogroup" aria-label="Colour theme">
-            <input
-              type="radio"
-              name="theme"
-              id="theme-light"
-              value="light"
-              class="visually-hidden"
-            />
-            <label for="theme-light" title="Light theme">
-              <!-- Icons are inline SVG, since an icon font would be a network request.
-                   currentColor makes them match the label's colour. -->
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="4.2" fill="currentColor" />
-                <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                  <line x1="12" y1="1.5" x2="12" y2="3.6" />
-                  <line x1="12" y1="20.4" x2="12" y2="22.5" />
-                  <line x1="1.5" y1="12" x2="3.6" y2="12" />
-                  <line x1="20.4" y1="12" x2="22.5" y2="12" />
-                  <line x1="4.6" y1="4.6" x2="6.1" y2="6.1" />
-                  <line x1="17.9" y1="17.9" x2="19.4" y2="19.4" />
-                  <line x1="4.6" y1="19.4" x2="6.1" y2="17.9" />
-                  <line x1="17.9" y1="6.1" x2="19.4" y2="4.6" />
-                </g>
-              </svg>
-              <span class="visually-hidden">Light</span>
-            </label>
-
-            <input
-              type="radio"
-              name="theme"
-              id="theme-dark"
-              value="dark"
-              class="visually-hidden"
-            />
-            <label for="theme-dark" title="Dark theme">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path
-                  d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span class="visually-hidden">Dark</span>
-            </label>
-          </div>
-
           <!-- Opens the blocking screen. Its label says what's being done to
                this site's cookies, and it lights up while something is. -->
           <button id="rules-open" class="block-button" type="button" title="Choose which cookies this site may set">
@@ -165,9 +120,6 @@
 
           <button id="add-button" type="button" title="Create a new cookie">
             Add cookie
-          </button>
-          <button id="import-button" type="button" title="Add cookies from a JSON or cookies.txt export">
-            Import
           </button>
           <!-- Icon buttons. Each has its name in a visually hidden span for
                screen readers, and as its tooltip. The icons are drawn like
@@ -187,21 +139,76 @@
             </svg>
             <span class="visually-hidden">Help</span>
           </button>
-          <!-- Hidden when already in the side panel or a tab. -->
-          <button id="panel-button" class="icon-button" type="button" title="Open in side panel">
+          <button id="more-button" class="icon-button" type="button" popovertarget="more-menu" title="More">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <rect x="3" y="4" width="18" height="16" rx="2" />
-              <path d="M15 4v16" />
+              <path d="M5 12h.01M12 12h.01M19 12h.01" />
             </svg>
-            <span class="visually-hidden">Open in side panel</span>
+            <span class="visually-hidden">More</span>
           </button>
-          <!-- Hidden when already in a tab or the side panel. -->
-          <button id="tab-button" class="icon-button" type="button" title="Open in a tab">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
-            </svg>
-            <span class="visually-hidden">Open in a tab</span>
-          </button>
+          <!-- The things people set once. A native popover, so Esc and clicking
+               away close it, and focus goes back to the More button. -->
+          <div id="more-menu" class="more-menu" popover>
+            <!-- Follows the system theme until someone picks the other one.
+                 popup.js selects the button for the theme showing. -->
+            <div class="theme" role="radiogroup" aria-label="Colour theme">
+              <input
+                type="radio"
+                name="theme"
+                id="theme-light"
+                value="light"
+                class="visually-hidden"
+              />
+              <label for="theme-light" title="Light theme">
+                <!-- Icons are inline SVG, since an icon font would be a network request.
+                     currentColor makes them match the label's colour. -->
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="4.2" fill="currentColor" />
+                  <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="12" y1="1.5" x2="12" y2="3.6" />
+                    <line x1="12" y1="20.4" x2="12" y2="22.5" />
+                    <line x1="1.5" y1="12" x2="3.6" y2="12" />
+                    <line x1="20.4" y1="12" x2="22.5" y2="12" />
+                    <line x1="4.6" y1="4.6" x2="6.1" y2="6.1" />
+                    <line x1="17.9" y1="17.9" x2="19.4" y2="19.4" />
+                    <line x1="4.6" y1="19.4" x2="6.1" y2="17.9" />
+                    <line x1="17.9" y1="6.1" x2="19.4" y2="4.6" />
+                  </g>
+                </svg>
+                <span class="visually-hidden">Light</span>
+              </label>
+
+              <input
+                type="radio"
+                name="theme"
+                id="theme-dark"
+                value="dark"
+                class="visually-hidden"
+              />
+              <label for="theme-dark" title="Dark theme">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <span class="visually-hidden">Dark</span>
+              </label>
+            </div>
+            <!-- Hidden when already in the side panel or a tab. -->
+            <button id="panel-button" class="menu-item" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <path d="M15 4v16" />
+              </svg>
+              Open in side panel
+            </button>
+            <button id="tab-button" class="menu-item" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+              </svg>
+              Open in a tab
+            </button>
+          </div>
         </div>
       </header>
 
@@ -276,7 +283,7 @@
       <!-- The count shown here comes from the same list that gets deleted.
            Export uses the same choice of cookies. -->
       <section id="delete-panel">
-        <h2>Delete or export cookies</h2>
+        <h2 class="visually-hidden">Delete or export cookies</h2>
 
         <div class="scopes" role="radiogroup" aria-label="What to delete">
           <!-- Only shown while some cookies are ticked in the table. -->
@@ -325,9 +332,14 @@
           <button id="export-button" type="button" disabled>
             Export&hellip;
           </button>
-          <!-- This site's cookies, plus everything else it has stored. -->
-          <button id="data-button" type="button" title="Delete this site's cookies and clear everything else it has stored">
-            Clear site data&hellip;
+          <button id="import-button" type="button" title="Add cookies from a JSON or cookies.txt export">
+            Import
+          </button>
+          <!-- This site's cookies, plus everything else it has stored. The
+               usual fix for a site you can't log in to. It asks first, with
+               the count. -->
+          <button id="data-button" type="button" title="Can't log in? Delete this site's cookies, clear everything else it has stored, and reload it">
+            Clear and reload&hellip;
           </button>
           <!-- Opens the list of every kept cookie, on any site. Only shown
                when there is one. -->
@@ -346,9 +358,8 @@
 
           <div id="data-confirm" class="confirm data-confirm" role="group" aria-labelledby="data-confirm-text" hidden>
             <span id="data-confirm-text"></span>
-            <button id="data-yes" class="danger solid" type="button">Yes, clear it</button>
-            <!-- The usual fix for a site you can't log in to, in one click. -->
             <button id="data-yes-reload" class="danger solid" type="button">Clear and reload</button>
+            <button id="data-yes" class="danger" type="button">Clear, don't reload</button>
             <button id="data-no" type="button">Cancel</button>
           </div>
         </div>
@@ -734,6 +745,65 @@
     <!-- What has happened to this site's cookies while cookieZ has been
          open. Names only, never values, and held in memory: it's gone when
          cookieZ closes. -->
+    <!-- What the site has stored, by purpose. See report-screen.js. -->
+    <section id="state-report" class="state" hidden>
+      <header class="bar">
+        <h1>Site report</h1>
+        <button id="report-back" type="button">Back</button>
+      </header>
+
+      <p id="report-intro">
+        What <span id="report-site" class="mono"></span> has stored in this
+        browser. Purposes are a guess from each cookie's name, using a list
+        inside cookieZ, because any site can give a cookie any name. Nothing
+        here is saved.
+      </p>
+      <p id="report-no-list" class="error" hidden>
+        The list of known cookie names couldn't be loaded, so no cookie could be recognised.
+      </p>
+      <p id="report-empty" hidden>This site hasn't stored any cookies.</p>
+
+      <div id="report-body">
+        <div id="report-wrap">
+          <table id="report-table">
+            <colgroup>
+              <col class="report-purpose-col" />
+              <col class="report-count-col" />
+              <col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Purpose</th>
+                <th scope="col">Cookies</th>
+                <th scope="col">Usually set by</th>
+              </tr>
+            </thead>
+            <tbody id="report-rows"></tbody>
+          </table>
+        </div>
+
+        <h2 class="report-heading">Worth checking</h2>
+        <p id="report-checks-none" class="muted" hidden>Nothing to flag on this site.</p>
+        <div id="report-checks">
+          <table id="report-check-table">
+            <colgroup>
+              <col />
+              <col class="report-count-col" />
+              <col class="report-action-col" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">What</th>
+                <th scope="col">Cookies</th>
+                <th scope="col"><span class="visually-hidden">Action</span></th>
+              </tr>
+            </thead>
+            <tbody id="report-check-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section id="state-changes" class="state" hidden>
       <header class="bar">
         <h1>What changed</h1>
@@ -1047,9 +1117,16 @@
           profile. The count and the sites are always shown first.
         </dd>
 
+        <dt>What does a site store on me?</dt>
+        <dd>
+          <strong>Site report</strong>, beside the cookie count, groups a
+          site's cookies by purpose and lists anything worth checking. Each
+          purpose is a guess from the cookie's name.
+        </dd>
+
         <dt>Clearing cookies didn't let me log in</dt>
         <dd>
-          Try <strong>Clear site data</strong> under the delete options, then
+          Try <strong>Clear and reload</strong> under the delete options, then
           <strong>Clear and reload</strong>. As
           well as the site's cookies, it clears what else the site has
           stored: local storage, databases, cache storage and offline files.

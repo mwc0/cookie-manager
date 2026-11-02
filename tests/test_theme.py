@@ -31,6 +31,8 @@ def state(page):
 
 
 def pick(page, theme):
+    if not page.locator("#more-menu").is_visible():
+        page.locator("#more-button").click()
     page.locator(f'label[for="theme-{theme}"]').click()
     page.wait_for_timeout(400)
 

@@ -220,6 +220,9 @@ export function closeChanges() {
 // version number last seen is saved. On a fresh install, when no version
 // has been saved yet, a welcome line shows instead.
 const WHATS_NEW = {
+  "2.2.0":
+    "New: a tidier main screen with room for more cookies, and a Site report " +
+    "beside the cookie count.",
   "2.1.0":
     "New: keep cookieZ open beside the page in Chrome's side panel, and Clear and reload " +
     "for a site you can't log in to.",
@@ -238,8 +241,9 @@ const WHATS_NEW = {
 };
 
 const WELCOME =
-  "Welcome. Click a cookie to edit it, or use the options below to delete or export. " +
-  "Help (?) explains the rest.";
+  "Welcome. Click a cookie to edit it. Can't log in to a site? Clear and reload usually " +
+  "fixes it. Help (?) explains the rest.";
+const PIN_HINT = " To keep cookieZ in reach, pin it from the puzzle piece in Chrome's toolbar.";
 
 // Whether the What's new or welcome line showed on this open. The review
 // line waits for another open rather than appear alongside it.
@@ -254,6 +258,10 @@ export async function showWhatsNew() {
       return;
     }
     text = stored.seenVersion === undefined ? WELCOME : WHATS_NEW[version];
+    if (stored.seenVersion === undefined) {
+      const { isOnToolbar } = await chrome.action.getUserSettings();
+      text += isOnToolbar ? "" : PIN_HINT;
+    }
     await chrome.storage.local.set({ seenVersion: version });
   } catch (error) {
     return; // Not worth troubling anyone about.

@@ -114,6 +114,8 @@ def main():
         r.check("a fresh install shows the welcome line, not What's new",
                 empty.locator("#whats-new").is_visible()
                 and line.startswith("Welcome.") and "New:" not in line, repr(line))
+        r.check("it says how to pin cookieZ, which isn't pinned here",
+                "pin it from the puzzle piece" in line, repr(line))
 
         # Someone updating from an older version gets What's new instead.
         empty.evaluate("async () => { await chrome.storage.local.set({seenVersion: '1.9.0'}); }")

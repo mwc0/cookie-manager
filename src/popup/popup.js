@@ -125,6 +125,7 @@ import {
   showWhatsNew,
   openReviewPage,
 } from "./small-screens.js";
+import { openReport, closeReport } from "./report-screen.js";
 import { offerUndo, appendReloadButton, offerStoredUndo } from "./undo-button.js";
 import {
   copyExport,
@@ -1264,6 +1265,10 @@ el("tab-button").hidden = inTab || inPanel;
 el("tab-button").addEventListener("click", openInTab);
 el("panel-button").hidden = inTab || inPanel;
 el("panel-button").addEventListener("click", openInPanel);
+// A result or an error from these goes on the main screen, so get out of its way.
+for (const item of document.querySelectorAll(".menu-item")) {
+  item.addEventListener("click", () => el("more-menu").hidePopover());
+}
 el("import-tab").addEventListener("click", openInTab);
 
 el("search-input").addEventListener("input", () => {
@@ -1284,6 +1289,10 @@ el("search-clear").addEventListener("click", () => {
 });
 
 el("changes-open").addEventListener("click", openChanges);
+el("report-open").addEventListener("click", () =>
+  openReport(pageCookies, (cookie) => isProtected(state.protectedKeys, cookie))
+);
+el("report-back").addEventListener("click", closeReport);
 el("changes-back").addEventListener("click", closeChanges);
 el("kept-open").addEventListener("click", openKept);
 el("kept-back").addEventListener("click", closeKept);
@@ -1502,6 +1511,7 @@ const BACK_BUTTONS = {
   rules: "rules-back",
   kept: "kept-back",
   changes: "changes-back",
+  report: "report-back",
   edit: "edit-cancel",
   export: "export-back",
   import: "import-back",

@@ -8,8 +8,11 @@ get wrong: host-only, session, SameSite, a path, and a partitioned cookie.
 """
 
 import ast
+import http.cookiejar
 import json
+import os
 import sys
+import tempfile
 
 from playwright.sync_api import sync_playwright
 
@@ -370,6 +373,20 @@ def main():
         netscape, _ = export_text(page, "netscape")
         r.check("cookies.txt marks HttpOnly cookies the standard way",
                 "#HttpOnly_.transfer.test\tTRUE\t/\tTRUE\t" in netscape, netscape[:200])
+        # yt-dlp and curl-style tools read this format. Python's own reader is the
+        # strict one those are built on.
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as file:
+            file.write(netscape)
+        jar = http.cookiejar.MozillaCookieJar(file.name)
+        try:
+            jar.load(ignore_discard=True, ignore_expires=True)
+            problem = ""
+        except http.cookiejar.LoadError as error:
+            problem = str(error)
+        os.unlink(file.name)
+        r.check("a standard cookie file reader loads the export, every cookie",
+                not problem and len(jar) == sum("	" in line for line in netscape.splitlines()),
+                problem or str(len(jar)))
         page.evaluate(CLEAR)
         preview, result = do_import(page, netscape)
         after = snapshot(page)
@@ -544,6 +561,7 @@ def main():
         check_compare(r, page)
 
         # --- open in a tab ---
+        page.locator("#more-button").click()
         with context.expect_page() as info:
             page.locator("#tab-button").click()
         opened = info.value

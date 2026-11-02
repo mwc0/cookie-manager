@@ -129,6 +129,22 @@ def main():
         r.check("Kept stays first whichever way round the sort is",
                 order(page)[0] == "zulu", str(order(page)))
 
+        # Copy, Edit and Keep show on hover or focus. Until then they're see-through,
+        # which a click in a test doesn't notice, so measure it.
+        row = page.locator("#cookie-rows tr", has=page.locator(".keep:not(.kept)")).first
+        faded = """(row) => [...row.querySelectorAll('.copy-name, .edit, .keep')]
+            .map((button) => getComputedStyle(button).opacity)"""
+        page.mouse.move(0, 0)
+        page.wait_for_timeout(250)
+        r.check("a row's Copy, Edit and Keep are faded at rest", row.evaluate(faded) == ["0", "0", "0"], str(row.evaluate(faded)))
+        row.hover()
+        page.wait_for_timeout(250)
+        r.check("they all show on hover", row.evaluate(faded) == ["1", "1", "1"], str(row.evaluate(faded)))
+        page.mouse.move(0, 0)
+        row.focus()
+        page.wait_for_timeout(250)
+        r.check("and on keyboard focus", row.evaluate(faded) == ["1", "1", "1"], str(row.evaluate(faded)))
+
         r.check("no console errors throughout", not errors, str(errors[:3]))
         context.close()
 

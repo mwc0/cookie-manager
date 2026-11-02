@@ -30,8 +30,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=2.1.0">
-  <script src="../theme.js?v=2.1.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2.2.0">
+  <script src="../theme.js?v=2.2.0" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -126,11 +126,19 @@
         </details>
         <details>
           <summary>Why does it ask to change my privacy settings, or to clear browsing data?</summary>
-          <p>Only if you use the feature that needs it. Blocking other companies' cookies on every site turns on Chrome's own setting for that, which needs permission to change privacy settings; cookieZ changes nothing else there. <strong>Clear site data</strong> needs permission to clear browsing data; it only ever clears the site you have open, and never your history or passwords. Say no to either and the rest of cookieZ works as before.</p>
+          <p>Only if you use the feature that needs it. Blocking other companies' cookies on every site turns on Chrome's own setting for that, which needs permission to change privacy settings; cookieZ changes nothing else there. <strong>Clear and reload</strong> needs permission to clear browsing data; it only ever clears the site you have open, and never your history or passwords. Say no to either and the rest of cookieZ works as before.</p>
+        </details>
+        <details>
+          <summary>How do I export cookies for yt-dlp?</summary>
+          <p>See <a href="../yt-dlp-cookies/">Export cookies.txt for yt-dlp</a>.</p>
+        </details>
+        <details>
+          <summary>What does the Site report show?</summary>
+          <p>Click <strong>Site report</strong> beside the cookie count. It groups the site's cookies by purpose and the company that usually sets them, and lists what's worth checking. Each purpose is a guess from the cookie's name, because any site can give a cookie any name. Nothing in it is saved.</p>
         </details>
         <details>
           <summary>Clearing cookies didn't let me log in</summary>
-          <p>Some sites keep more than cookies. Click <strong>Clear site data</strong> under the delete options: it deletes the site's cookies and clears what else it has stored, such as local storage and cached files. Kept cookies are left alone, and Undo can put the cookies back, but not the rest. Then click <strong>Reload the site</strong> next to the message.</p>
+          <p>Some sites keep more than cookies. Click <strong>Clear and reload</strong> under the delete options: it deletes the site's cookies and clears what else it has stored, such as local storage and cached files. Kept cookies are left alone, and Undo can put the cookies back, but not the rest. Then click <strong>Reload the site</strong> next to the message.</p>
         </details>
         <details>
           <summary>A site stopped working after I set a rule</summary>
@@ -150,7 +158,7 @@
         </details>
         <details>
           <summary>Why are there cookies from other companies on this site?</summary>
-          <p>A company whose content is embedded on a site, such as a video or a chat box, can save a partitioned cookie that is only used on that site. cookieZ lists those with the site's own cookies, marked "set in a frame, kept for this site only". They're included when you delete this page's or this domain's cookies, in Clear site data and in exports, apart from a Cookie header or curl command, since the browser never sends them to this site.</p>
+          <p>A company whose content is embedded on a site, such as a video or a chat box, can save a partitioned cookie that is only used on that site. cookieZ lists those with the site's own cookies, marked "set in a frame, kept for this site only". They're included when you delete this page's or this domain's cookies, in Clear and reload and in exports, apart from a Cookie header or curl command, since the browser never sends them to this site.</p>
         </details>
         <details>
           <summary>What does "changes" next to the cookie count mean?</summary>

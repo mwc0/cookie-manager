@@ -435,6 +435,46 @@ button.danger:hover:not(:disabled) {
   gap: 6px;
 }
 
+/* The More menu. Anchored to its button, so it stays there in a wide tab. */
+#more-button {
+  anchor-name: --more;
+}
+
+.more-menu {
+  position-anchor: --more;
+  inset: auto;
+  top: anchor(bottom);
+  right: anchor(right);
+  flex-direction: column;
+  gap: 4px;
+  min-width: 190px;
+  margin: 6px 0 0;
+  padding: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.more-menu:popover-open {
+  display: flex;
+}
+
+.more-menu .theme {
+  align-self: flex-start;
+  margin-bottom: 2px;
+}
+
+.menu-item {
+  justify-content: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border-color: transparent;
+  text-align: left;
+}
+
 /* --- status messages ---------------------------------------------------------
 
    Results ("Deleted 6 cookies. Undo") always appear in one place, under the
@@ -491,6 +531,8 @@ button.danger:hover:not(:disabled) {
 #table-wrap,
 #kept-wrap,
 #changes-wrap,
+#report-wrap,
+#report-checks,
 #compare-wrap,
 #rules-wrap,
 .rules-group,
@@ -508,6 +550,8 @@ button.danger:hover:not(:disabled) {
 #table-wrap::after,
 #kept-wrap::after,
 #changes-wrap::after,
+#report-wrap::after,
+#report-checks::after,
 #compare-wrap::after,
 #rules-wrap::after,
 .rules-group::after,
@@ -526,14 +570,25 @@ button.danger:hover:not(:disabled) {
 /* --- delete panel --------------------------------------------------------- */
 
 #delete-panel {
-  padding: 11px 14px 14px;
+  padding: 8px 14px 10px;
   margin-bottom: 12px;
 }
 
+/* One line, so the cookies get the room. The site names move out of the
+   way: the line under this says exactly which sites a delete will touch. */
 .scopes {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.scopes .scope:not(#scope-picked-row, #scope-matches-row) .scope-target {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .scope {
@@ -558,7 +613,7 @@ button.danger:hover:not(:disabled) {
 
 /* The panel's most important line: exactly what the button will do. */
 .scope-summary {
-  margin: 10px 0 0;
+  margin: 4px 0 0;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -574,7 +629,7 @@ button.danger:hover:not(:disabled) {
 }
 
 #scope-domains ul {
-  max-height: 110px;
+  max-height: 72px;
   margin: 6px 0 0;
   padding: 0 0 0 18px;
   overflow-y: auto;
@@ -587,7 +642,19 @@ button.danger:hover:not(:disabled) {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 7px;
+}
+
+/* Save and Cancel stay in view however long the value is, or however far
+   the decoded panel pushes the form. */
+#state-edit .actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: 0;
+  padding-block: 8px;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
 }
 
 .confirm {
@@ -755,8 +822,9 @@ td.size {
 }
 
 .col-actions {
-  /* Four 26px buttons, or "Sure?" and its cancel button. */
-  width: 132px;
+  /* Two 26px buttons: Delete, and the bookmark on a Kept cookie. The rest
+     sit over the Flags column when they show (.row-tools). */
+  width: 68px;
 }
 
 th {
@@ -982,12 +1050,48 @@ td.value.expanded .value-toggle {
 /* --- row actions ------------------------------------------------------- */
 
 td.row-actions {
-  /* Less padding than other cells, because the buttons have their own.
-     This lines them up with the first line of the row. */
-  padding-top: 3px;
-  padding-bottom: 3px;
+  position: relative;
+}
+
+/* Delete, and a Kept bookmark, always show. The rest fade in over the
+   Flags column on hover or keyboard focus, and stay on the page, so the
+   tab order and screen readers don't change. A row can always be clicked
+   to edit it. */
+.row-tools {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  display: flex;
+  justify-content: flex-end;
   white-space: nowrap;
-  text-align: right;
+}
+
+.row-tools .row-button {
+  background: var(--panel);
+}
+
+.row-tools :where(.copy-name, .edit, .keep:not(.kept)) {
+  opacity: 0;
+}
+
+tr:hover .row-tools :where(.copy-name, .edit, .keep),
+tr:focus-within .row-tools :where(.copy-name, .edit, .keep) {
+  opacity: 1;
+}
+
+.row-tools .row-button:disabled {
+  opacity: 0.5;
+}
+
+/* No hover on a touch screen, so everything shows and takes its own room. */
+@media (hover: none) {
+  .row-tools :where(.copy-name, .edit, .keep) {
+    opacity: 1;
+  }
+
+  #cookie-table .col-actions {
+    width: 132px;
+  }
 }
 
 .row-button {
@@ -1000,7 +1104,7 @@ td.row-actions {
   font-size: 12px;
 }
 
-td.row-actions .row-button:first-child {
+.row-tools .row-button:first-child {
   margin-left: 0;
 }
 
@@ -1348,15 +1452,47 @@ button.row-button.keep.kept:hover:not(:disabled) {
   text-align: right;
 }
 
-/* The list of what changed. */
-#changes-intro {
+/* The list of what changed, and the Site report. */
+#changes-intro,
+#report-intro {
   max-width: 72ch;
   color: var(--fg-soft);
 }
 
 #changes-wrap,
+#report-wrap,
+#report-checks,
 #compare-wrap {
   overflow: hidden;
+}
+
+.report-heading {
+  margin: 14px 0 6px;
+}
+
+.report-purpose-col {
+  width: 230px;
+}
+
+.report-count-col {
+  width: 72px;
+}
+
+.report-action-col {
+  width: 100px;
+}
+
+.report-count {
+  font-variant-numeric: tabular-nums;
+}
+
+td.report-action {
+  text-align: right;
+}
+
+.report-note {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 #compare-summary {
