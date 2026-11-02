@@ -220,9 +220,7 @@ export function closeChanges() {
 // version number last seen is saved. On a fresh install, when no version
 // has been saved yet, a welcome line shows instead.
 const WHATS_NEW = {
-  "2.2.1":
-    "Fixed: Open in side panel no longer closes Chrome. It opens beside the page again, " +
-    "from More.",
+  "2.2.1": "Bug fixes.",
   "2.2.0":
     "New: a tidier main screen with room for more cookies, and a Site report " +
     "beside the cookie count.",
