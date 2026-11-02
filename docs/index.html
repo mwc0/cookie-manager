@@ -15,13 +15,32 @@
       }
     } catch (e) {}
   </script>
-  <title>cookieZ - Cookie Editor for Chrome</title>
-  <meta name="description" content="A free cookie editor for Chrome. View, create, edit and delete cookies, and delete all of them when you ask. No ads, no tracking, no network requests.">
+  <title>cookieZ - Cookie Editor &amp; Blocker for Chrome</title>
+  <meta name="description" content="A free cookie editor and blocker for Chrome. View, create, edit, delete and block cookies, and delete all of them when you ask. No ads, no tracking, no network requests.">
   <link rel="canonical" href="https://cookiez.uk/">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "cookieZ",
+    "alternateName": "Cookie Editor & Blocker - cookieZ",
+    "description": "A free cookie editor and blocker for Chrome. No ads, no tracking, no network requests.",
+    "url": "https://cookiez.uk/",
+    "applicationCategory": "BrowserApplication",
+    "operatingSystem": "Chrome",
+    "installUrl": "https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb",
+    "license": "https://opensource.org/license/mit",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "GBP"
+    }
+  }
+  </script>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="cookieZ">
-  <meta property="og:title" content="cookieZ - Cookie Editor for Chrome">
-  <meta property="og:description" content="A free cookie editor for Chrome. View, create, edit and delete cookies, and delete all of them when you ask. No ads, no tracking, no network requests.">
+  <meta property="og:title" content="cookieZ - Cookie Editor &amp; Blocker for Chrome">
+  <meta property="og:description" content="A free cookie editor and blocker for Chrome. View, create, edit, delete and block cookies, and delete all of them when you ask. No ads, no tracking, no network requests.">
   <meta property="og:url" content="https://cookiez.uk/">
   <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
   <meta property="og:image:width" content="1280">
@@ -84,8 +103,8 @@
       <div class="beam" aria-hidden="true"></div>
       <div class="wrap">
         <div class="hero-copy ticks">
-          <h1>See, edit and delete the cookies on any site</h1>
-          <p class="lede">cookieZ is a free cookie editor for Chrome. When you ask it to delete everything, it deletes everything. No ads, no tracking, and it never connects to the internet.</p>
+          <h1>See, edit, delete and block the cookies on any site</h1>
+          <p class="lede">cookieZ is a free cookie editor and blocker for Chrome. When you ask it to delete everything, it deletes everything. No ads, no tracking, and it never connects to the internet.</p>
         </div>
         <div class="actions">
           <a class="button" href="https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb">Add to Chrome</a>
@@ -206,26 +225,31 @@
             <li><strong>Deletes at the scope you pick</strong> <span>This page, this domain and its subdomains, every site, or just the cookies you tick. The count and the list of sites are shown first.</span></li>
             <li><strong>Undoes a mistake</strong> <span>Deleted, imported or saved the wrong thing? Undo puts the cookies back as they were, for 10 minutes afterwards.</span></li>
             <li><strong>Creates and edits cookies</strong> <span>Click any cookie to change its name, value, domain, path, expiry, Secure, HttpOnly or SameSite. Encoded values and dates are shown in a form you can read, and JSON is edited laid out. Set an expiry in one click, duplicate a cookie, copy its name, or copy it as the line a server would send. You can also make a partitioned cookie for the site you're on.</span></li>
-            <li><strong>Says why a cookie won't save</strong> <span>Chrome refuses some cookies without giving a reason: too big, or breaking the rules for names starting __Host- or __Secure-. cookieZ tells you which, before it tries.</span></li>
-            <li><strong>Exports and imports</strong> <span>JSON, cookies.txt, a Playwright file, a Cookie header or a curl command, or Python code for your own test scripts. Imports all but the code, plus Set-Cookie lines and other cookie editors' JSON, with a preview first.</span></li>
-            <li><strong>Locks an export with a password</strong> <span>Add a password and the file is locked on your computer, using the browser's own encryption. Import asks for the password. It's never saved, so don't lose it. If an export holds sign-in cookies and has no password, cookieZ says so.</span></li>
-            <li><strong>Reloads the site when you're ready</strong> <span>After a delete, Clear site data, an import or an Undo, a button reloads the page you're on, so it starts afresh. Nothing reloads until you click it. Clear and reload clears a site's data and reloads it in one click.</span></li>
-            <li><strong>Stays open beside the page</strong> <span>Open cookieZ in Chrome's side panel and it stays there while you work, showing the cookies of whichever tab you're on.</span></li>
-            <li><strong>Copies cookies between sites</strong> <span>Import cookies from one site onto another, such as from a staging site to localhost.</span></li>
-            <li><strong>Compares with an earlier export</strong> <span>Load an export from before and see which cookies are new since, which have gone and which have changed. Names and sites only, never values, and nothing is written.</span></li>
-            <li><strong>Keeps up with the site</strong> <span>When a site sets or changes a cookie, the table updates by itself and marks what changed. A list shows what was added, changed, removed or expired while cookieZ was open.</span></li>
-            <li><strong>Shows how big they are</strong> <span>Each site's total, with a warning when there are enough cookies to stop you logging in. Sort by size to find the biggest.</span></li>
-            <li><strong>Searches and filters</strong> <span>By name, value, domain or path, or in one click: Secure, Session, Expiring soon and more. Checks for developers find cookies that aren't Secure, that scripts can read, or that are SameSite None. Then you can delete just the cookies you can see.</span></li>
-            <li><strong>Names well-known cookies</strong> <span>A cookie with a well-known name gets a Known label, and the editor says who usually sets it and what for. It's a guess from the name, looked up in a list inside cookieZ.</span></li>
             <li><strong>Blocks cookies you don't want</strong> <span>One Block button: allow a site's cookies, clear them when Chrome closes, block other companies' cookies or block every cookie. Or block other companies' cookies on every site at once, or just known trackers' cookies. Chrome does the blocking, so it works while cookieZ is closed.</span></li>
-            <li><strong>Counts what it's cleared</strong> <span>The Block screen shows how many cookies cookieZ has cleared for you so far. The number stays on your computer.</span></li>
+            <li><strong>Exports and imports</strong> <span>JSON, cookies.txt, a Playwright file, a Cookie header or a curl command, or Python code for your own test scripts. Imports all but the code, plus Set-Cookie lines and other cookie editors' JSON, with a preview first.</span></li>
             <li><strong>Clears a site's data</strong> <span>When clearing cookies isn't enough to log in again, clear the rest the site has stored too: local storage, databases and cache. Kept cookies stay.</span></li>
-            <li><strong>Keeps the ones you need</strong> <span>Mark a cookie as Kept and cookieZ won't delete it, even when you clear every site. Kept cookies are listed first when others sort the same, and one screen lists everything you've kept.</span></li>
-            <li><strong>Tells you when Chrome changes things</strong> <span>Chrome caps cookie expiry at about 400 days. If you ask for longer, cookieZ says so.</span></li>
-            <li><strong>Works in incognito</strong> <span>Incognito cookies stay separate from your normal ones.</span></li>
-            <li><strong>Light or dark</strong> <span>It starts in your system's theme and remembers if you pick the other one.</span></li>
-            <li><strong>Works from the keyboard</strong> <span>Alt+Shift+K opens it, / jumps to the search, N starts a new cookie, the arrow keys move through cookies and Esc goes back. Screen readers read out its messages. Help is built in, and works offline.</span></li>
+            <li><strong>Stays open beside the page</strong> <span>Open cookieZ in Chrome's side panel and it stays there while you work, showing the cookies of whichever tab you're on.</span></li>
           </ul>
+          <details class="more-features">
+            <summary>15 more things it does</summary>
+            <ul class="features">
+              <li><strong>Says why a cookie won't save</strong> <span>Chrome refuses some cookies without giving a reason: too big, or breaking the rules for names starting __Host- or __Secure-. cookieZ tells you which, before it tries.</span></li>
+              <li><strong>Locks an export with a password</strong> <span>Add a password and the file is locked on your computer, using the browser's own encryption. Import asks for the password. It's never saved, so don't lose it. If an export holds sign-in cookies and has no password, cookieZ says so.</span></li>
+              <li><strong>Reloads the site when you're ready</strong> <span>After a delete, Clear site data, an import or an Undo, a button reloads the page you're on, so it starts afresh. Nothing reloads until you click it. Clear and reload clears a site's data and reloads it in one click.</span></li>
+              <li><strong>Copies cookies between sites</strong> <span>Import cookies from one site onto another, such as from a staging site to localhost.</span></li>
+              <li><strong>Compares with an earlier export</strong> <span>Load an export from before and see which cookies are new since, which have gone and which have changed. Names and sites only, never values, and nothing is written.</span></li>
+              <li><strong>Keeps up with the site</strong> <span>When a site sets or changes a cookie, the table updates by itself and marks what changed. A list shows what was added, changed, removed or expired while cookieZ was open.</span></li>
+              <li><strong>Shows how big they are</strong> <span>Each site's total, with a warning when there are enough cookies to stop you logging in. Sort by size to find the biggest.</span></li>
+              <li><strong>Searches and filters</strong> <span>By name, value, domain or path, or in one click: Secure, Session, Expiring soon and more. Checks for developers find cookies that aren't Secure, that scripts can read, or that are SameSite None. Then you can delete just the cookies you can see.</span></li>
+              <li><strong>Names well-known cookies</strong> <span>A cookie with a well-known name gets a Known label, and the editor says who usually sets it and what for. It's a guess from the name, looked up in a list inside cookieZ.</span></li>
+              <li><strong>Counts what it's cleared</strong> <span>The Block screen shows how many cookies cookieZ has cleared for you so far. The number stays on your computer.</span></li>
+              <li><strong>Keeps the ones you need</strong> <span>Mark a cookie as Kept and cookieZ won't delete it, even when you clear every site. Kept cookies are listed first when others sort the same, and one screen lists everything you've kept.</span></li>
+              <li><strong>Tells you when Chrome changes things</strong> <span>Chrome caps cookie expiry at about 400 days. If you ask for longer, cookieZ says so.</span></li>
+              <li><strong>Works in incognito</strong> <span>Incognito cookies stay separate from your normal ones.</span></li>
+              <li><strong>Light or dark</strong> <span>It starts in your system's theme and remembers if you pick the other one.</span></li>
+              <li><strong>Works from the keyboard</strong> <span>Alt+Shift+K opens it, / jumps to the search, N starts a new cookie, the arrow keys move through cookies and Esc goes back. Screen readers read out its messages. Help is built in, and works offline.</span></li>
+            </ul>
+          </details>
         </div>
       </div>
     </section>
