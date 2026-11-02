@@ -1,9 +1,13 @@
-# cookieZ - Cookie Editor
+# cookieZ - Cookie Editor & Blocker
 
-A Chrome cookie manager (Manifest V3)
+A cookie editor and blocker for Chrome. It asks for only `cookies` and
+`storage` at install, and makes no network requests.
 
+[Add to Chrome](https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb)
+| [Website](https://cookiez.uk/)
+| [Help](https://cookiez.uk/support/)
 
-## What it does so far
+## What it does
 
 - Lists the current site's cookies, with domain, path, expiry and flags,
   including the partitioned cookies other companies keep for that site.
