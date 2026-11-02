@@ -90,23 +90,24 @@
         <li>Click the cookieZ icon on that site. The first time, it asks for access to websites.</li>
         <li>Under the delete options, choose <strong>This domain and its subdomains</strong>. Nothing is deleted: export uses the same choice.</li>
         <li>Click <strong>Export</strong> and choose <strong>cookies.txt</strong>.</li>
-        <li>Click <strong>Download</strong> and save the file somewhere private.</li>
+        <li>Click <strong>Download</strong> and save the file somewhere private. cookieZ names it after the site and the date, such as <code>cookies-www.youtube.com-2026-11-02.txt</code>.</li>
       </ol>
 
       <h2>Use it with yt-dlp</h2>
-      <p>Pass the file with <code>--cookies</code>:</p>
-      <pre><code>yt-dlp --cookies cookies.txt "VIDEO_ADDRESS"</code></pre>
+      <p>Pass the file with <code>--cookies</code>, using its full name and where you saved it:</p>
+      <pre><code>yt-dlp --cookies "C:\Users\you\Downloads\cookies-www.youtube.com-2026-11-02.txt" "VIDEO_ADDRESS"</code></pre>
+      <p><strong>Check the name and the folder.</strong> If yt-dlp can't find the file, it doesn't say so. It carries on without your login and makes a new file with that name. If a site still asks you to sign in, this is the first thing to check.</p>
 
       <h2>Keep it safe</h2>
       <ul>
         <li><strong>Treat the file like a password.</strong> Anyone who has it can sign in as you until the login expires.</li>
         <li>Don't paste it into a website, a chat or a bug report.</li>
-        <li>Delete it when you've finished. To end the login completely, sign out of the site.</li>
+        <li>yt-dlp updates the file when it finishes, so it stays a login file after use. Delete it when you've finished. To end the login completely, sign out of the site.</li>
         <li>If you need to send it somewhere, cookieZ can lock an export with a password, but yt-dlp can't read a locked file until it's unlocked in cookieZ.</li>
       </ul>
 
       <h2>If it doesn't work</h2>
-      <p>Logins expire, so make a new file and try again. Some sites also tie a login to your browser, and they may refuse it from another program.</p>
+      <p>Check the file's name and folder first. Logins also expire, and some sites change their login cookies often, so make a new file and try again. Some sites also tie a login to your browser, and they may refuse it from another program.</p>
 
       <p class="aside">Only use this with your own account, and for things you're allowed to download. A site's terms may not allow it. cookieZ has no link with yt-dlp.</p>
     </div>
