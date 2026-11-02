@@ -147,14 +147,15 @@ Site rules add a third:
 
 The side panel adds a fourth:
 
-4. **The side panel really opening.** In the test browser, calling
-   `chrome.sidePanel.open()` closes the whole browser, so `test_side_panel.py`
-   records the call instead of making it. A probe did show that the click
-   still counts as a click after `permissions.request()` and `setOptions()`
-   (`navigator.userActivation.isActive` was still true when `open()` was
-   called). Check by hand in real Chrome before release: click the side
-   panel button in the toolbar popup, the first time and again later, and
-   the panel opens on the current tab's cookies.
+4. **The side panel really opening.** `test_side_panel.py` records the
+   call to `chrome.sidePanel.open()` instead of making it, because Playwright
+   can't click the toolbar icon to open the real popup. Note that the browser
+   closing when `open()` was called wasn't a quirk of the test browser: it was
+   Chrome crashing, because `sidePanel` was an optional permission granted at
+   runtime. It is asked for at install now, and with that `open()` works,
+   from the real toolbar popup too. Check by hand in real Chrome before
+   release: click the side panel button in the toolbar popup, the first time
+   and again later, and the panel opens on the current tab's cookies.
 
 ## Two things worth knowing before editing these
 

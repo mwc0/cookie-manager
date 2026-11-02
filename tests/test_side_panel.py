@@ -2,10 +2,9 @@
 The side panel: the button that opens it, the panel following the active
 tab, and the narrow layout.
 
-Chrome's real sidePanel.open() can't be driven here: in the test browser,
-opening the side panel closes the whole browser. So the button is tested
-with chrome.sidePanel replaced by a stand-in that records what it was asked
-to do. Whether the real panel opens from the toolbar popup is checked by
+Chrome's real sidePanel.open() isn't driven here: the popup is opened as a
+tab, not from the toolbar. So the button is tested with chrome.sidePanel
+replaced by a stand-in that records what it was asked to do. Whether the real panel opens from the toolbar popup is checked by
 hand. See README.md.
 
 The panel itself is popup.html?panel=1 loaded in an ordinary tab of the same
@@ -152,22 +151,6 @@ def check_button(r, context, ext_id):
             message == "Couldn't open the side panel: No active side panel for windowId: 7", message)
     page.close()
 
-    # Declined. Chrome doesn't ask for this permission, but if it ever says no:
-    page = context.new_page()
-    page.add_init_script(RECORD_PANEL)
-    page.add_init_script("chrome.permissions.request = () => Promise.resolve(false);")
-    stub_active_tab(page, SITE)
-    page.goto(popup_url(ext_id))
-    page.wait_for_timeout(1200)
-    page.locator("#more-button").click()
-    page.locator("#panel-button").click()
-    page.wait_for_timeout(400)
-    message = text_of(page, "main-message")
-    r.check("if the permission is refused, the popup says so and opens nothing",
-            message == "Chrome didn't allow the side panel, so cookieZ can't open there."
-            and page.evaluate("window.__calls") == [],
-            message)
-    page.close()
     r.check("no console errors in the popup", not errors, str(errors))
 
 

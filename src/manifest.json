@@ -13,7 +13,8 @@
   },
   "permissions": [
     "cookies",
-    "storage"
+    "storage",
+    "sidePanel"
   ],
   "optional_host_permissions": [
     "*://*/*"
@@ -21,8 +22,7 @@
   "optional_permissions": [
     "contentSettings",
     "privacy",
-    "browsingData",
-    "sidePanel"
+    "browsingData"
   ],
   "incognito": "split",
   "commands": {

@@ -205,13 +205,15 @@ NO_RULES_PERMISSION = """
 
 def check_manifest(r):
     manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
-    r.check("the real manifest still asks for only cookies and storage at install",
-            manifest.get("permissions") == ["cookies", "storage"], str(manifest.get("permissions")))
-    r.check("the permissions for rules, every-site blocking, site data and the side panel are optional",
-            manifest.get("optional_permissions") == ["contentSettings", "privacy", "browsingData", "sidePanel"],
+    # sidePanel shows no warning, and asking for it later crashed Chrome. See
+    # openInPanel() in popup.js.
+    r.check("the real manifest still asks for only cookies, storage and the side panel at install",
+            manifest.get("permissions") == ["cookies", "storage", "sidePanel"], str(manifest.get("permissions")))
+    r.check("the permissions for rules, every-site blocking and site data are optional",
+            manifest.get("optional_permissions") == ["contentSettings", "privacy", "browsingData"],
             str(manifest.get("optional_permissions")))
     r.check("there is still no background script", "background" not in manifest, str(sorted(manifest)))
-    r.check("there is no side_panel key, so the panel needs the permission first",
+    r.check("there is no side_panel key, so the panel's page is set from the button",
             "side_panel" not in manifest, str(sorted(manifest)))
 
 
