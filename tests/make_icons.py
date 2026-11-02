@@ -8,22 +8,16 @@ here, not in src/, so it doesn't end up in the store zip. It also writes the
 website's two copies, docs/images/favicon-32.png and docs/images/icon-128.png,
 so they can't fall out of step with the extension's.
 
-The icon is the keycap Z from the website's logo, not a cookie. Most cookie
-extensions use a cookie. A keycap looks like a developer tool, and it stops
-"cookieZ" looking like a typo for "cookies".
+The icon is a keycap Z, not a cookie. Most cookie extensions use a cookie. A
+keycap looks like a developer tool, and it stops "cookieZ" looking like a
+typo for "cookies".
 
-It's the dark key from the website: a navy key with a pale Z. It has to
-work at 16 pixels wide in the toolbar, on a light toolbar and on a dark one,
-so the small sizes are flat shapes with no thin lines, gradients or text.
-The Z is drawn as shapes too, not typed in a font, so the result doesn't
-depend on which fonts are installed.
-
-What makes it look like a key is the band along the bottom, where the face
-sits further in from the edge. That still shows at 16px. The band is lighter
-than the face, so the key's outline can still be seen on a dark toolbar.
-
-The two big sizes (48 and 128) also get what the website's key has: a face
-that's lighter at the top, and a soft glow underneath.
+It's drawn as a real key seen from just above: four sloped walls round a top
+face, with the tall wall at the front. The walls are what make it look like a
+key, so they stay at every size. It has to work at 16 pixels wide in the
+toolbar, on a light toolbar and on a dark one, so the small sizes leave out the
+gradient and the dish in the top face. The Z is one shape, not typed in a font,
+so the result doesn't depend on which fonts are installed.
 """
 
 import sys
@@ -39,44 +33,47 @@ SIZES = [16, 32, 48, 128]
 # The website's copies: which size goes where.
 SITE_COPIES = {32: "favicon-32.png", 128: "icon-128.png"}
 
-# The colours. They're the website's dark-theme key (docs/style.css), with
-# the edge a little lighter, because the website's 1px border doesn't show
-# at 16px.
-EDGE = "#5b6796"
-FACE = "#232a45"
-FACE_TOP = "#343e63"
-FACE_BOTTOM = "#1b2136"
-LETTER = "#eef1fb"
-GLOW = "#8aa8ff"
+# The colours: the website's navy key, with the walls lit from above.
+FACE = "#26304f"
+FACE_TOP = "#36426f"
+FACE_BOTTOM = "#1c2445"
+WALL_TOP = "#93adf7"
+WALL_LEFT = "#4560b8"
+WALL_RIGHT = "#334a95"
+WALL_FRONT = "#141b3d"
+EDGE_LIGHT = "#7f9cf0"
+LETTER = "#ffffff"
 
-# The Z: two bars and a slanted piece between them. It fills most of the
-# face, so it can still be read at 16px.
-#
-# The numbers depend on each other, so change them together. The bars are 14
-# high, and the slanted piece fills the gap between them (y 42 to 66). The Z
-# is centred on the face (y 14 to 94), not the whole icon, or it looks too
-# low.
-LETTER_SHAPES = f"""
-  <g fill="{LETTER}">
-    <rect x="38" y="28" width="52" height="14"/>
-    <polygon points="90,42 70,42 38,66 58,66"/>
-    <rect x="38" y="66" width="52" height="14"/>
+# The walls run on under the top face. It has rounded corners and they meet at
+# a point, so if they stopped at its edge the gaps would show.
+WALLS = f"""
+  <defs>
+    <clipPath id="key"><rect x="4" y="4" width="120" height="120" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#key)">
+    <polygon points="4,4 124,4 98.8,19.1 29.2,19.1" fill="{WALL_TOP}"/>
+    <polygon points="4,4 29.2,19.1 29.2,70 4,124" fill="{WALL_LEFT}"/>
+    <polygon points="124,4 98.8,19.1 98.8,70 124,124" fill="{WALL_RIGHT}"/>
+    <polygon points="4,124 29.2,70 98.8,70 124,124" fill="{WALL_FRONT}"/>
   </g>"""
 
+# The Z, as one shape, so there's no seam where its parts meet. It's centred on
+# the top face (x 18 to 110, y 12 to 94), not the whole icon.
+LETTER_SHAPE = (
+    '<polygon fill="' + LETTER + '" points="36,29 92,29 92,41 56,66 92,66 92,78 36,78 36,66 72,41 36,41"/>'
+)
+
 # For 16 and 32 pixels: flat shapes only.
-#
-# The face is 26 in from the bottom but only 6 from the top, which leaves a
-# band showing along the bottom. That band is what makes it look like a
-# raised key, and at 16px it's still one row of pixels.
 SMALL = f"""
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <rect x="8" y="8" width="112" height="112" rx="24" fill="{EDGE}"/>
-  <rect x="18" y="14" width="92" height="80" rx="16" fill="{FACE}"/>
-  {LETTER_SHAPES}
+  {WALLS}
+  <rect x="18" y="12" width="92" height="82" rx="12" fill="{FACE}"/>
+  {LETTER_SHAPE}
 </svg>
 """
 
-# For 48 and 128 pixels: the same key, with the lit face and the glow.
+# For 48 and 128 pixels: the same key, with a lit top face, a dish in it, and
+# a thin light round its edge.
 LARGE = f"""
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
   <defs>
@@ -84,16 +81,17 @@ LARGE = f"""
       <stop offset="0" stop-color="{FACE_TOP}"/>
       <stop offset="1" stop-color="{FACE_BOTTOM}"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="{GLOW}" stop-opacity="0.55"/>
-      <stop offset="1" stop-color="{GLOW}" stop-opacity="0"/>
+    <radialGradient id="dish">
+      <stop offset="0" stop-color="#0c1124" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#0c1124" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <!-- The glow, behind the key and showing below it. -->
-  <ellipse cx="64" cy="108" rx="62" ry="20" fill="url(#glow)"/>
-  <rect x="8" y="8" width="112" height="112" rx="24" fill="{EDGE}"/>
-  <rect x="18" y="14" width="92" height="80" rx="16" fill="url(#face)"/>
-  {LETTER_SHAPES}
+  {WALLS}
+  <rect x="18" y="12" width="92" height="82" rx="12" fill="url(#face)"/>
+  <rect x="22" y="16" width="84" height="74" rx="9" fill="url(#dish)"/>
+  <rect x="18.75" y="12.75" width="90.5" height="80.5" rx="11.25" fill="none"
+        stroke="{EDGE_LIGHT}" stroke-opacity="0.55" stroke-width="1.5"/>
+  {LETTER_SHAPE}
 </svg>
 """
 
