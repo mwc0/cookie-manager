@@ -44,17 +44,19 @@ WALL_FRONT = "#141b3d"
 EDGE_LIGHT = "#7f9cf0"
 LETTER = "#ffffff"
 
-# The walls run on under the top face. It has rounded corners and they meet at
-# a point, so if they stopped at its edge the gaps would show.
+# The walls run on under the top face, or gaps would show at its rounded
+# corners. Each join runs from the middle of the outer rounded corner through
+# the middle of the top face's, so it meets both curves squarely. Those points
+# depend on the rx values here and on the top face, so change them together.
 WALLS = f"""
   <defs>
     <clipPath id="key"><rect x="4" y="4" width="120" height="120" rx="18"/></clipPath>
   </defs>
   <g clip-path="url(#key)">
-    <polygon points="4,4 124,4 98.8,19.1 29.2,19.1" fill="{WALL_TOP}"/>
-    <polygon points="4,4 29.2,19.1 29.2,70 4,124" fill="{WALL_LEFT}"/>
-    <polygon points="124,4 98.8,19.1 98.8,70 124,124" fill="{WALL_RIGHT}"/>
-    <polygon points="4,124 29.2,70 98.8,70 124,124" fill="{WALL_FRONT}"/>
+    <polygon points="0,0 128,0 130.9,3.1 99.2,19.2 28.8,19.2 -2.9,3.1" fill="{WALL_TOP}"/>
+    <polygon points="-2.9,3.1 28.8,19.2 28.8,73.6 -2.9,146.9" fill="{WALL_LEFT}"/>
+    <polygon points="130.9,3.1 99.2,19.2 99.2,73.6 130.9,146.9" fill="{WALL_RIGHT}"/>
+    <polygon points="-2.9,146.9 28.8,73.6 99.2,73.6 130.9,146.9" fill="{WALL_FRONT}"/>
   </g>"""
 
 # The Z, as one shape, so there's no seam where its parts meet. It's centred on
