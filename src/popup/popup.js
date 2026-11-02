@@ -3,12 +3,7 @@
 // screens each have a file of their own: editor.js, rules-screen.js,
 // export-screen.js, import-screen.js and small-screens.js.
 
-import {
-  hasHostAccess,
-  requestHostAccess,
-  requestPermission,
-  PANEL_PERMISSION,
-} from "../lib/permissions.js";
+import { hasHostAccess, requestHostAccess } from "../lib/permissions.js";
 import { BLOCK } from "../lib/rules.js";
 import {
   getSiteCookies,
@@ -1108,17 +1103,13 @@ chrome.windows.getCurrent().then(
 
 // Chrome only opens the side panel straight from a click, so nothing else is
 // awaited between the click and open(). There's no side_panel entry in the
-// manifest: the panel's page is set here, once the permission is granted.
+// manifest: the panel's page is set here.
+//
+// The sidePanel permission is asked for at install, not here. When it was
+// optional and granted from this click, Chrome crashed on open(), and kept
+// crashing on every later open() until it restarted. Chrome shows no warning
+// for it, so asking at install costs nothing.
 async function openInPanel() {
-  const { granted, error } = await requestPermission(PANEL_PERMISSION);
-  if (error) {
-    showMainMessage(error, true);
-    return;
-  }
-  if (!granted) {
-    showMainMessage("Chrome didn't allow the side panel, so cookieZ can't open there.", true);
-    return;
-  }
   try {
     await chrome.sidePanel.setOptions({ path: "popup/popup.html?panel=1", enabled: true });
     await chrome.sidePanel.open({ windowId });

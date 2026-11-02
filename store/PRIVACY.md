@@ -311,11 +311,10 @@ data**, and **optional**. Chrome asks for it the first time you use that.
 cookieZ uses it to clear one site's stored data when you ask, and never
 anything else, never on its own, and never your history or passwords.
 
-**Side panel** (`sidePanel`): required only for **Open in side panel**, and
-**optional**. cookieZ asks for it the first time you click that. Chrome adds
-it without showing a prompt, because it gives cookieZ nothing except a place
-to show itself beside the page. You can revoke it from the extension's
-Details page; everything else works as before.
+**Side panel** (`sidePanel`): required only for **Open in side panel**. It
+is part of the install, and Chrome adds it without showing a warning,
+because it gives cookieZ nothing except a place to show itself beside the
+page.
 
 **Access to websites** (`*://*/*`): Chrome will not release a single cookie
 to an extension without permission for the site that cookie belongs to. This
