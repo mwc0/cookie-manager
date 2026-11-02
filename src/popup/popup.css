@@ -1965,9 +1965,20 @@ textarea.output:focus {
   }
 
   .filters-checks,
-  .confirm,
-  .scope {
+  .confirm {
     flex-wrap: wrap;
+  }
+
+  /* The radio in one column and the words in the next, so a site name that
+     doesn't fit goes under its option's name, not under the radio. */
+  .scope {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 7px;
+  }
+
+  .scope-target {
+    grid-column: 2;
   }
 
   #delete-panel {
