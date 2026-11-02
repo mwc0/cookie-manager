@@ -1264,6 +1264,10 @@ el("tab-button").hidden = inTab || inPanel;
 el("tab-button").addEventListener("click", openInTab);
 el("panel-button").hidden = inTab || inPanel;
 el("panel-button").addEventListener("click", openInPanel);
+// A result or an error from these goes on the main screen, so get out of its way.
+for (const item of document.querySelectorAll(".menu-item")) {
+  item.addEventListener("click", () => el("more-menu").hidePopover());
+}
 el("import-tab").addEventListener("click", openInTab);
 
 el("search-input").addEventListener("input", () => {

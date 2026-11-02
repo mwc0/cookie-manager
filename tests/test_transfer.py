@@ -544,6 +544,7 @@ def main():
         check_compare(r, page)
 
         # --- open in a tab ---
+        page.locator("#more-button").click()
         with context.expect_page() as info:
             page.locator("#tab-button").click()
         opened = info.value

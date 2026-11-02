@@ -306,11 +306,12 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     remove.focus();
   });
 
-  cell.appendChild(copy);
-  cell.appendChild(keep);
-  cell.appendChild(edit);
-  cell.appendChild(remove);
-  cell.appendChild(cancel);
+  // Out of the table's flow, so the buttons that only show on hover or focus
+  // can sit over the Flags column instead of taking width from the value.
+  const tools = document.createElement("div");
+  tools.className = "row-tools";
+  tools.append(copy, edit, keep, remove, cancel);
+  cell.appendChild(tools);
   return cell;
 }
 

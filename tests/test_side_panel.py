@@ -90,7 +90,9 @@ def serve(page):
 
 def check_button(r, context, ext_id):
     page, errors = open_popup(context, ext_id, SITE)
+    page.locator("#more-button").click()
     r.check("the popup has an Open in side panel button", page.locator("#panel-button").is_visible())
+    page.keyboard.press("Escape")
 
     tab_view = context.new_page()
     stub_active_tab(tab_view, SITE)
@@ -120,6 +122,7 @@ def check_button(r, context, ext_id):
     page.goto(popup_url(ext_id))
     page.wait_for_timeout(1200)
     window_id = page.evaluate("async () => (await chrome.windows.getCurrent()).id")
+    page.locator("#more-button").click()
     page.locator("#panel-button").click()
     page.wait_for_timeout(400)
     calls = page.evaluate("window.__calls")
@@ -131,6 +134,7 @@ def check_button(r, context, ext_id):
 
     page.evaluate("""() => { window.__calls = [];
         window.__openFails = 'sidePanel.open() may only be called in response to a user gesture.'; }""")
+    page.locator("#more-button").click()
     page.locator("#panel-button").click()
     page.wait_for_timeout(400)
     message = text_of(page, "main-message")
@@ -140,6 +144,7 @@ def check_button(r, context, ext_id):
             message)
 
     page.evaluate("() => { window.__calls = []; window.__openFails = 'No active side panel for windowId: 7'; }")
+    page.locator("#more-button").click()
     page.locator("#panel-button").click()
     page.wait_for_timeout(400)
     message = text_of(page, "main-message")
@@ -154,6 +159,7 @@ def check_button(r, context, ext_id):
     stub_active_tab(page, SITE)
     page.goto(popup_url(ext_id))
     page.wait_for_timeout(1200)
+    page.locator("#more-button").click()
     page.locator("#panel-button").click()
     page.wait_for_timeout(400)
     message = text_of(page, "main-message")
