@@ -1,0 +1,2 @@
+# The tests are Python, but the extension is JavaScript. This keeps GitHub's language count to the extension.
+tests/** linguist-vendored
