@@ -1,7 +1,7 @@
 # cookieZ - Cookie Editor & Blocker
 
-A cookie editor and blocker for Chrome. It asks for only `cookies` and
-`storage` at install, and makes no network requests.
+A cookie editor and blocker for Chrome. It asks for only `cookies`,
+`storage` and `sidePanel` at install, and makes no network requests.
 
 [Add to Chrome](https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb)
 | [Website](https://cookiez.uk/)
@@ -94,12 +94,14 @@ A cookie editor and blocker for Chrome. It asks for only `cookies` and
 
 ## Permissions
 
-The extension asks for `cookies` and `storage` at install, and nothing else.
+The extension asks for `cookies`, `storage` and `sidePanel` at install, and
+nothing else. `sidePanel` only lets cookieZ open in Chrome's side panel, and
+Chrome shows no warning for it.
 Access to websites is **optional** and requested at runtime, the first time you
 open the popup. Chrome will not release a single cookie to an extension without
 it.
 
-Four more permissions are **optional** too, each requested only the first
+Three more permissions are **optional** too, each requested only the first
 time you use the feature that needs it:
 
 - `contentSettings`, for blocking. Chrome's wording for it mentions the
@@ -109,8 +111,6 @@ time you use the feature that needs it:
   turns on Chrome's own switch for that, and nothing else.
 - `browsingData`, only for Clear site data, which clears one site's stored
   data when you ask.
-- `sidePanel`, only for opening cookieZ in Chrome's side panel. Chrome
-  grants it without asking, since it doesn't show a warning.
 
 ## What it will never do
 

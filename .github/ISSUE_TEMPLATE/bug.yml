@@ -1,0 +1,53 @@
+name: Something's broken
+description: cookieZ did something wrong, or didn't do what it said it would.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. **Please don't paste real cookie values** here: this page is public, and a cookie's value can sign someone in as you. Names and sites are fine.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: And what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can I make it happen?
+      description: The steps, one per line. Use example.com in place of a real site if you'd rather not say which one.
+      placeholder: |
+        1. Open cookieZ on example.com
+        2. Click ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: cookiez-version
+    attributes:
+      label: cookieZ version
+      description: On chrome://extensions, under cookieZ's name.
+      placeholder: "2.0.0"
+    validations:
+      required: true
+  - type: input
+    id: chrome-version
+    attributes:
+      label: Chrome version
+      description: On chrome://settings/help.
+      placeholder: "141.0.7390.54"
+  - type: dropdown
+    id: window
+    attributes:
+      label: Normal window or incognito?
+      options:
+        - Normal window
+        - Incognito
+        - Both
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: A screenshot helps, as long as no cookie values show.
