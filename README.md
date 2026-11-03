@@ -1,7 +1,7 @@
 # cookieZ - Cookie Editor & Blocker
 
-A cookie editor and blocker for Chrome. It asks for only `cookies` and
-`storage` at install, and makes no network requests.
+A cookie editor and blocker for Chrome. It asks for only `cookies`,
+`storage` and `sidePanel` at install, and makes no network requests.
 
 [Add to Chrome](https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb)
 | [Website](https://cookiez.uk/)
