@@ -23,6 +23,7 @@
 // "data" is the export's text (JSON, cookies.txt and so on), encrypted.
 
 import { describeError } from "./format.js";
+import { t } from "./i18n.js";
 
 export const LOCKED_KIND = "cookieZ encrypted export";
 const VERSION = 1;
@@ -70,11 +71,7 @@ export async function lockText(text, password) {
 // { file } with the salt, IV and data as bytes, or { error } with a
 // sentence saying what's wrong.
 export function readLockedFile(text) {
-  const damaged = {
-    error:
-      "This password-protected file is damaged, so it can't be opened. " +
-      "If you still have the cookies, export them again.",
-  };
+  const damaged = { error: t("transfer_lockedDamaged") };
 
   let parsed;
   try {
@@ -86,9 +83,7 @@ export function readLockedFile(text) {
     return damaged;
   }
   if (typeof parsed.version === "number" && parsed.version > VERSION) {
-    return {
-      error: "This file was made by a newer version of cookieZ. Update cookieZ to open it.",
-    };
+    return { error: t("transfer_lockedNewerVersion") };
   }
   if (parsed.version !== VERSION || parsed.kdf !== KDF) {
     return damaged;
@@ -123,7 +118,7 @@ export async function unlockText(text, password) {
   try {
     key = await deriveKey(password, file.salt, file.iterations);
   } catch (problem) {
-    return { ok: false, error: "The file couldn't be opened: " + describeError(problem) };
+    return { ok: false, error: t("transfer_unlockFailed", describeError(problem)) };
   }
 
   try {
@@ -133,12 +128,7 @@ export async function unlockText(text, password) {
     // AES-GCM can't tell a wrong password from a file that's been changed:
     // both fail its check in the same way. A wrong password is far more
     // likely, so that comes first.
-    return {
-      ok: false,
-      error:
-        "That password doesn't open this file. Check it and try again. " +
-        "If you're sure it's right, the file has been changed or damaged since it was saved.",
-    };
+    return { ok: false, error: t("transfer_wrongPassword") };
   }
 }
 

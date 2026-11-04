@@ -6,5 +6,393 @@
   "appDesc": {
     "message": "View, edit, delete and block cookies. There are no ads, and nothing you do leaves your computer.",
     "description": "The summary under the name in the Chrome Web Store and on chrome://extensions. 132 characters at most."
+  },
+  "transfer_nothingToImport": {
+    "message": "There's nothing to import. Paste some cookies first.",
+    "description": "Import screen: shown when the user presses Check with the text box empty."
+  },
+  "transfer_hasPassword": {
+    "message": "This file has a password. Type it to see what's in it.",
+    "description": "Import screen: the pasted text is an export locked with a password, so its cookies can't be read until the password is typed."
+  },
+  "transfer_jsonUnreadable": {
+    "message": "This looks like JSON, but it couldn't be read: $1",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the browser's own error message, in English, such as \"Unexpected end of JSON input\". JSON is a file format: don't translate it."
+  },
+  "transfer_jsonNotList": {
+    "message": "This JSON isn't a list of cookies.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. The text is valid JSON (a file format, don't translate it), but not a list of cookies."
+  },
+  "transfer_jsonItemNotCookie": {
+    "message": "Cookie $1: not a cookie.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the cookie's place in the file's list, counting from 1, such as 3. That item in the list isn't a cookie at all."
+  },
+  "transfer_jsonItemNoName": {
+    "message": "Cookie $1: it has no name.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the cookie's place in the file's list, counting from 1, such as 3. That cookie has no name, so it can't be imported."
+  },
+  "transfer_jsonItemNoDomain": {
+    "message": "Cookie $1: $2 has no domain.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the cookie's place in the file's list, counting from 1, such as 3. $2 is the cookie's name, such as session_id. It doesn't say which website it belongs to."
+  },
+  "transfer_netscapeColumns": {
+    "message": "Line $1 isn't in cookies.txt format, which has 7 columns separated by tabs.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the line number in the pasted text, such as 4. cookies.txt is a file format name: don't translate it."
+  },
+  "transfer_netscapeExpiry": {
+    "message": "Line $1: the expiry isn't a number.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the line number in the pasted text, such as 4. The expiry is the column saying when the cookie expires."
+  },
+  "transfer_noCookiesFound": {
+    "message": "No cookies were found. Paste a JSON export or the contents of a cookies.txt file.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. Nothing in the text could be read as a cookie. JSON and cookies.txt are file format names: don't translate them."
+  },
+  "transfer_noSetCookieLines": {
+    "message": "No Set-Cookie lines were found.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. Set-Cookie is the name of a web header: don't translate it."
+  },
+  "transfer_setCookieNoName": {
+    "message": "Line $1: it doesn't start with a cookie's name and value.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the line number in the pasted text, such as 4. The line looked like a Set-Cookie header (don't translate Set-Cookie) but has no name=value at the start."
+  },
+  "transfer_setCookiePartitioned": {
+    "message": "Line $1: $2 is partitioned, and a Set-Cookie line doesn't say which site it was embedded in. Import it from a JSON export instead.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the line number in the pasted text, such as 4. $2 is the cookie's name, such as session_id. A partitioned cookie is one Chrome keeps separately for each site it is embedded in. Set-Cookie and JSON: don't translate."
+  },
+  "transfer_setCookieNoDomain": {
+    "message": "Line $1: $2 has no Domain, and there's no page to put it on.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the line number in the pasted text, such as 4. $2 is the cookie's name, such as session_id. Domain is the name of a cookie attribute: keep it as it is."
+  },
+  "transfer_notAPair": {
+    "message": "“$1” isn't a name=value pair, so it's skipped.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is a piece of the pasted Cookie header, up to 40 characters, such as \"abc\". name=value is the format a cookie is written in: keep it as it is."
+  },
+  "transfer_headerNoSite": {
+    "message": "A Cookie header doesn't say which site it's for, and there's no page to put it on.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. A Cookie header is the line a browser sends with cookie names and values (\"Cookie\" is the header's name: keep it). cookieZ was opened without a web page, so it doesn't know which site to put them on."
+  },
+  "transfer_headerEmpty": {
+    "message": "No cookies were found in the Cookie header.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. \"Cookie\" is the header's name: keep it."
+  },
+  "transfer_curlWindows": {
+    "message": "This is the Windows (cmd) version of “Copy as cURL”. Copy the bash version instead, and paste that.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. “Copy as cURL” is the name of a menu item in Chrome's developer tools: use the name Chrome uses in this language if it translates it. Windows, cmd and bash are product names: don't translate."
+  },
+  "transfer_curlUnclosedQuote": {
+    "message": "This curl command couldn't be read, because a quote isn't closed.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. curl is a program's name: don't translate it. A quote mark opens and never closes."
+  },
+  "transfer_curlCookieFile": {
+    "message": "This curl command reads its cookies from a file ($1), which cookieZ can't open. Paste the cookies themselves instead.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. $1 is the file name in the command, such as cookies.txt. curl is a program's name: don't translate it."
+  },
+  "transfer_curlNoAddress": {
+    "message": "This curl command has no web address, so there's no telling which site its cookies are for.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. curl is a program's name: don't translate it."
+  },
+  "transfer_curlNoCookies": {
+    "message": "This curl command doesn't send any cookies.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. curl is a program's name: don't translate it."
+  },
+  "transfer_cantMovePartitioned": {
+    "message": "$1 ($2) is partitioned, so it can't be moved to another site.",
+    "description": "A problem shown in the Import screen's preview, in a list of things that couldn't be read from the text the user pasted or the file they chose. Shown when the user ticks \"Put them on this site instead\". $1 is the cookie's name, such as session_id. $2 is its site, such as example.com. A partitioned cookie belongs to the site it was embedded in."
+  },
+  "transfer_differenceValue": {
+    "message": "value",
+    "description": "Compare screen: one word in a comma-separated list of what differs between a cookie in a file and the same cookie now, after \"Changed: \". The other words in the list are Secure, HttpOnly and SameSite, which stay in English. Means the cookie's value. Short: a single word, lower case."
+  },
+  "transfer_differenceExpiry": {
+    "message": "expiry",
+    "description": "Compare screen: one word in a comma-separated list of what differs between a cookie in a file and the same cookie now, after \"Changed: \". Means the cookie now expires at a different kind of time (when the browser closes, or on a date). Short: a single word, lower case."
+  },
+  "transfer_lockedDamaged": {
+    "message": "This password-protected file is damaged, so it can't be opened. If you still have the cookies, export them again.",
+    "description": "Import screen: error when a password-protected export has been cut short or changed, before any password is asked for."
+  },
+  "transfer_lockedNewerVersion": {
+    "message": "This file was made by a newer version of cookieZ. Update cookieZ to open it.",
+    "description": "Import screen: error when a password-protected export was made by a newer cookieZ than this one. cookieZ is the product name: don't translate."
+  },
+  "transfer_unlockFailed": {
+    "message": "The file couldn't be opened: $1",
+    "description": "Import screen: error when opening a password-protected export fails for a technical reason. $1 is the browser's own error message, in English."
+  },
+  "transfer_wrongPassword": {
+    "message": "That password doesn't open this file. Check it and try again. If you're sure it's right, the file has been changed or damaged since it was saved.",
+    "description": "Import screen: error when the password typed doesn't open a password-protected export."
+  },
+  "transfer_typePassword": {
+    "message": "Type the file's password, then press Check.",
+    "description": "Import screen: status line asking for the password of a password-protected export. Check is the label of the button next to it: use the same word as that button."
+  },
+  "transfer_opening": {
+    "message": "Opening the file…",
+    "description": "Import screen: status line while a password-protected export is being opened, which takes a second or two."
+  },
+  "transfer_cantReadCurrent": {
+    "message": "Couldn't read your current cookies to compare: $1",
+    "description": "Import and Compare screens: error when Chrome won't list the cookies the browser has now. $1 is Chrome's own error message, in English."
+  },
+  "transfer_nothingCanBeImported": {
+    "message": "Nothing can be imported.",
+    "description": "Import screen: the first sentence of the preview when none of the cookies read can be written."
+  },
+  "transfer_willAddForSite_one": {
+    "message": "Will add $1 cookie for $2.",
+    "description": "Import screen: the first sentence of the preview, when every cookie is for one site. $1 is the number of cookies, 1 here. $2 is the site, such as example.com."
+  },
+  "transfer_willAddForSite_other": {
+    "message": "Will add $1 cookies for $2.",
+    "description": "Import screen: the first sentence of the preview, when every cookie is for one site. $1 is the number of cookies, such as 12. $2 is the site, such as example.com."
+  },
+  "transfer_willAddAcrossSites_one": {
+    "message": "Will add $1 cookie across $2.",
+    "description": "Import screen: the first sentence of the preview, when the cookies are for several sites. $1 is the number of cookies, 1 here. $2 is the number of sites, from \"transfer_siteCount\", such as \"3 sites\"."
+  },
+  "transfer_willAddAcrossSites_other": {
+    "message": "Will add $1 cookies across $2.",
+    "description": "Import screen: the first sentence of the preview, when the cookies are for several sites. $1 is the number of cookies, such as 12. $2 is the number of sites, from \"transfer_siteCount\", such as \"3 sites\"."
+  },
+  "transfer_siteCount_one": {
+    "message": "$1 site",
+    "description": "A number of websites, used inside other sentences, such as \"Will add 12 cookies across 3 sites.\" $1 is the number, 1 here."
+  },
+  "transfer_siteCount_other": {
+    "message": "$1 sites",
+    "description": "A number of websites, used inside other sentences, such as \"Will add 12 cookies across 3 sites.\" $1 is the number, such as 3."
+  },
+  "transfer_replaces_one": {
+    "message": "$1 of them replaces a cookie you already have.",
+    "description": "Import screen: a sentence in the preview. $1 is how many of the cookies to import have the same name, site and path as one the browser has now, 1 here."
+  },
+  "transfer_replaces_other": {
+    "message": "$1 of them replace cookies you already have.",
+    "description": "Import screen: a sentence in the preview. $1 is how many of the cookies to import have the same name, site and path as one the browser has now, such as 4."
+  },
+  "transfer_onlyValueChanges_one": {
+    "message": "Only its value changes.",
+    "description": "Import screen: follows \"1 of them replaces a cookie you already have.\" when the import is a Cookie header or a curl command, which only carry values. $1 (the number, 1) isn't shown."
+  },
+  "transfer_onlyValueChanges_other": {
+    "message": "Only their values change.",
+    "description": "Import screen: follows \"4 of them replace cookies you already have.\" when the import is a Cookie header or a curl command, which only carry values. $1 (the number) isn't shown, but can be used if the language needs it."
+  },
+  "transfer_newSessionCookies_one": {
+    "message": "$1 new cookie will be a session cookie, so Chrome removes it when it closes.",
+    "description": "Import screen: a sentence in the preview, for a Cookie header or curl command, which don't say when a cookie expires. $1 is the number of new cookies, 1 here. A session cookie is one that's removed when the browser closes."
+  },
+  "transfer_newSessionCookies_other": {
+    "message": "$1 new cookies will be session cookies, so Chrome removes them when it closes.",
+    "description": "Import screen: a sentence in the preview, for a Cookie header or curl command, which don't say when a cookie expires. $1 is the number of new cookies, such as 5. A session cookie is one that's removed when the browser closes."
+  },
+  "transfer_keptInImport_one": {
+    "message": "$1 of those is a kept cookie.",
+    "description": "Import screen: a sentence in the preview. $1 is how many of the cookies being replaced are marked Kept (protected from deleting), 1 here. Use the same word for \"kept\" as the Kept badge elsewhere."
+  },
+  "transfer_keptInImport_other": {
+    "message": "$1 of those are kept cookies.",
+    "description": "Import screen: a sentence in the preview. $1 is how many of the cookies being replaced are marked Kept (protected from deleting), such as 2. Use the same word for \"kept\" as the Kept badge elsewhere."
+  },
+  "transfer_alreadyExpired_one": {
+    "message": "$1 cookie has already expired and will be skipped.",
+    "description": "Import screen: a sentence in the preview. $1 is the number of cookies in the file whose expiry date has passed, 1 here."
+  },
+  "transfer_alreadyExpired_other": {
+    "message": "$1 cookies have already expired and will be skipped.",
+    "description": "Import screen: a sentence in the preview. $1 is the number of cookies in the file whose expiry date has passed, such as 3."
+  },
+  "transfer_duplicates_one": {
+    "message": "$1 duplicate in the file will be skipped.",
+    "description": "Import screen: a sentence in the preview. $1 is the number of cookies that appear twice in the file, 1 here. Only the last copy is imported."
+  },
+  "transfer_duplicates_other": {
+    "message": "$1 duplicates in the file will be skipped.",
+    "description": "Import screen: a sentence in the preview. $1 is the number of cookies that appear twice in the file, such as 2. Only the last copy is imported."
+  },
+  "transfer_showSites_one": {
+    "message": "Show the $1 site",
+    "description": "Import screen: the label of a fold-out list of the sites the import will change. $1 is the number of sites. In practice this list only appears for 2 or more sites. Short: one line."
+  },
+  "transfer_showSites_other": {
+    "message": "Show the $1 sites",
+    "description": "Import screen: the label of a fold-out list of the sites the import will change. $1 is the number of sites, such as 3. Short: one line."
+  },
+  "transfer_willBeSkipped": {
+    "message": "Will be skipped: $1",
+    "description": "Import screen: an item in the preview's list of cookies that can't be written. $1 is the cookie's name and site, then why, such as \"session_id (example.com): The name can't contain a semicolon.\""
+  },
+  "transfer_importButton_one": {
+    "message": "Import $1 cookie",
+    "description": "Import screen: the button that writes the cookies. $1 is the number, 1 here. Short: a button label."
+  },
+  "transfer_importButton_other": {
+    "message": "Import $1 cookies",
+    "description": "Import screen: the button that writes the cookies. $1 is the number, such as 12. Short: a button label."
+  },
+  "transfer_compareSame_one": {
+    "message": "No differences. The cookie in your file is the same now.",
+    "description": "Compare screen: the summary when the one cookie in the file matches the browser's cookie now. $1 (the number, 1) isn't shown."
+  },
+  "transfer_compareSame_other": {
+    "message": "No differences. All $1 cookies in your file are the same now.",
+    "description": "Compare screen: the summary when every cookie in the file matches the browser's cookies now. $1 is the number, such as 12."
+  },
+  "transfer_compareNew": {
+    "message": "$1 new since, $4 the same.",
+    "description": "Compare screen: the summary comparing a file with the cookies the browser has now. $1 is how many cookies the browser has now that weren't in the file (\"new since\" the file was made), such as 2. $4 is how many are unchanged, such as 10. ($2 and $3 are 0 here and not shown.)"
+  },
+  "transfer_compareNewGone": {
+    "message": "$1 new since, $2 gone, $4 the same.",
+    "description": "Compare screen: the summary comparing a file with the cookies the browser has now. $1 is how many are new since the file was made, $2 how many in the file are gone now, $4 how many are unchanged. Each is a number, such as 3. ($3 is 0 here and not shown.)"
+  },
+  "transfer_compareNewGoneChanged": {
+    "message": "$1 new since, $2 gone, $3 changed, $4 the same.",
+    "description": "Compare screen: the summary comparing a file with the cookies the browser has now. $1 is how many are new since the file was made, $2 how many in the file are gone now, $3 how many have changed, $4 how many are unchanged. Each is a number, such as 3."
+  },
+  "transfer_compareNewChanged": {
+    "message": "$1 new since, $3 changed, $4 the same.",
+    "description": "Compare screen: the summary comparing a file with the cookies the browser has now. $1 is how many are new since the file was made, $3 how many have changed, $4 how many are unchanged. Each is a number, such as 3. ($2 is 0 here and not shown.)"
+  },
+  "transfer_compareGone": {
+    "message": "$2 gone, $4 the same.",
+    "description": "Compare screen: the summary comparing a file with the cookies the browser has now. $2 is how many cookies in the file are gone now, $4 how many are unchanged. Each is a number, such as 3. ($1 and $3 are 0 here and not shown.)"
+  },
+  "transfer_compareGoneChanged": {
+    "message": "$2 gone, $3 changed, $4 the same.",
+    "description": "Compare screen: the summary comparing a file with the cookies the browser has now. $2 is how many cookies in the file are gone now, $3 how many have changed, $4 how many are unchanged. Each is a number, such as 3. ($1 is 0 here and not shown.)"
+  },
+  "transfer_compareChanged": {
+    "message": "$3 changed, $4 the same.",
+    "description": "Compare screen: the summary comparing a file with the cookies the browser has now. $3 is how many cookies have changed, $4 how many are unchanged. Each is a number, such as 3. ($1 and $2 are 0 here and not shown.)"
+  },
+  "transfer_rowNewSince": {
+    "message": "New since",
+    "description": "Compare screen: a table cell saying this cookie is in the browser now but wasn't in the file (it's new since the file was made). Short: a table cell."
+  },
+  "transfer_rowGone": {
+    "message": "Gone",
+    "description": "Compare screen: a table cell saying this cookie was in the file but isn't in the browser now. Short: a table cell."
+  },
+  "transfer_rowChanged": {
+    "message": "Changed: $1",
+    "description": "Compare screen: a table cell saying this cookie differs from the one in the file. $1 is a comma-separated list of what differs, such as \"value, Secure\". Short: a table cell."
+  },
+  "transfer_importing": {
+    "message": "Importing…",
+    "description": "Import screen: status line while the cookies are being written."
+  },
+  "transfer_imported_one": {
+    "message": "Imported $1 cookie.",
+    "description": "Import screen: the result after importing. $1 is the number of cookies written, 1 here."
+  },
+  "transfer_imported_other": {
+    "message": "Imported $1 cookies.",
+    "description": "Import screen: the result after importing. $1 is the number of cookies written, such as 12."
+  },
+  "transfer_importedReplaced_one": {
+    "message": "Imported $1 cookie ($2 replaced).",
+    "description": "Import screen: the result after importing, when some cookies replaced ones the browser had. $1 is the number written, 1 here. $2 is how many of them replaced an existing cookie, 1 here."
+  },
+  "transfer_importedReplaced_other": {
+    "message": "Imported $1 cookies ($2 replaced).",
+    "description": "Import screen: the result after importing, when some cookies replaced ones the browser had. $1 is the number written, such as 12. $2 is how many of them replaced an existing cookie, such as 4."
+  },
+  "transfer_expiryShortened_one": {
+    "message": "Chrome shortened the expiry of $1 cookie, because it limits how far ahead a cookie can expire.",
+    "description": "Import screen: a sentence in the result. $1 is the number of cookies, 1 here. Chrome allows an expiry date at most about 400 days ahead."
+  },
+  "transfer_expiryShortened_other": {
+    "message": "Chrome shortened the expiry of $1 cookies, because it limits how far ahead a cookie can expire.",
+    "description": "Import screen: a sentence in the result. $1 is the number of cookies, such as 3. Chrome allows an expiry date at most about 400 days ahead."
+  },
+  "transfer_chromeRefused_one": {
+    "message": "Chrome refused $1 cookie:",
+    "description": "Import screen: the last sentence of the result, followed by a list of the cookies Chrome wouldn't write, each with Chrome's reason. $1 is the number, 1 here. Ends with a colon because the list follows."
+  },
+  "transfer_chromeRefused_other": {
+    "message": "Chrome refused $1 cookies:",
+    "description": "Import screen: the last sentence of the result, followed by a list of the cookies Chrome wouldn't write, each with Chrome's reason. $1 is the number, such as 2. Ends with a colon because the list follows."
+  },
+  "transfer_cantReadFile": {
+    "message": "Couldn't read $1: $2",
+    "description": "Import screen: error when the chosen file can't be read. $1 is the file's name, such as cookies.json. $2 is the browser's own error message, in English."
+  },
+  "transfer_passwordNote": {
+    "message": "Locks the file, so it can only be imported with this password. The password isn't saved anywhere, so don't lose it.",
+    "description": "Export screen: the note under the optional password box."
+  },
+  "transfer_seleniumNoPassword": {
+    "message": "Selenium code can't have a password: it has to stay readable to run. Choose another format to lock the file.",
+    "description": "Export screen: the note under the password box, which is turned off when the Selenium format is chosen. Selenium is a product name: don't translate."
+  },
+  "transfer_encrypting": {
+    "message": "Encrypting…",
+    "description": "Export screen: status line while the export is being locked with the password, which takes a second or two."
+  },
+  "transfer_lockedNote": {
+    "message": "Locked with your password. You'll need the password to import it, and it isn't saved anywhere.",
+    "description": "Export screen: status line after a password-protected export is copied or saved."
+  },
+  "transfer_cantLock": {
+    "message": "Couldn't lock the export: $1",
+    "description": "Export screen: error when locking the export with a password fails. $1 is the browser's own error message, in English."
+  },
+  "transfer_exportFromSite_one": {
+    "message": "$1 cookie from $2.",
+    "description": "Export screen: the summary at the top saying what will be exported. $1 is the number of cookies, 1 here. $2 is the site, such as example.com."
+  },
+  "transfer_exportFromSite_other": {
+    "message": "$1 cookies from $2.",
+    "description": "Export screen: the summary at the top saying what will be exported. $1 is the number of cookies, such as 12. $2 is the site, such as example.com."
+  },
+  "transfer_exportAcrossSites_one": {
+    "message": "$1 cookie across $2.",
+    "description": "Export screen: the summary at the top saying what will be exported. $1 is the number of cookies, 1 here. $2 is the number of sites, from \"transfer_siteCount\", such as \"3 sites\" (or \"0 sites\" when there are no cookies)."
+  },
+  "transfer_exportAcrossSites_other": {
+    "message": "$1 cookies across $2.",
+    "description": "Export screen: the summary at the top saying what will be exported. $1 is the number of cookies, such as 12. $2 is the number of sites, from \"transfer_siteCount\", such as \"3 sites\" (or \"0 sites\" when there are no cookies)."
+  },
+  "transfer_keptCookieCount_one": {
+    "message": "$1 kept cookie",
+    "description": "A number of cookies marked Kept (protected from deleting), used inside \"12 cookies from example.com, including 1 kept cookie.\" $1 is the number, 1 here. Use the same word for \"kept\" as the Kept badge elsewhere."
+  },
+  "transfer_keptCookieCount_other": {
+    "message": "$1 kept cookies",
+    "description": "A number of cookies marked Kept (protected from deleting), used inside \"12 cookies from example.com, including 2 kept cookies.\" $1 is the number, such as 2. Use the same word for \"kept\" as the Kept badge elsewhere."
+  },
+  "transfer_exportFromSiteKept_one": {
+    "message": "$1 cookie from $2, including $3.",
+    "description": "Export screen: the summary at the top saying what will be exported. $1 is the number of cookies, 1 here. $2 is the site, such as example.com. $3 is from \"transfer_keptCookieCount\", such as \"1 kept cookie\"."
+  },
+  "transfer_exportFromSiteKept_other": {
+    "message": "$1 cookies from $2, including $3.",
+    "description": "Export screen: the summary at the top saying what will be exported. $1 is the number of cookies, such as 12. $2 is the site, such as example.com. $3 is from \"transfer_keptCookieCount\", such as \"2 kept cookies\"."
+  },
+  "transfer_exportAcrossSitesKept_one": {
+    "message": "$1 cookie across $2, including $3.",
+    "description": "Export screen: the summary at the top saying what will be exported. $1 is the number of cookies, 1 here. $2 is from \"transfer_siteCount\", such as \"3 sites\". $3 is from \"transfer_keptCookieCount\", such as \"1 kept cookie\"."
+  },
+  "transfer_exportAcrossSitesKept_other": {
+    "message": "$1 cookies across $2, including $3.",
+    "description": "Export screen: the summary at the top saying what will be exported. $1 is the number of cookies, such as 12. $2 is from \"transfer_siteCount\", such as \"3 sites\". $3 is from \"transfer_keptCookieCount\", such as \"2 kept cookies\"."
+  },
+  "transfer_headerNote": {
+    "message": "Names and values only, as a browser sends them to this page.",
+    "description": "Export screen: the note under the Cookie header format choice. Short: one line under a radio button."
+  },
+  "transfer_curlNote": {
+    "message": "Sends these cookies to this page, for bash or zsh.",
+    "description": "Export screen: the note under the curl format choice. bash and zsh are the names of command-line shells: don't translate. Short: one line under a radio button."
+  },
+  "transfer_onePageOnly": {
+    "message": "Only for the cookies of one page. Choose “This page” to use it.",
+    "description": "Export screen: replaces the note under the Cookie header and curl format choices when they're turned off. “This page” is the label of a scope choice on the main screen: use the same words as that label."
+  },
+  "transfer_savingAs": {
+    "message": "Saving as $1.",
+    "description": "Export screen: status line after Download is pressed. $1 is the file name, such as cookies-example.com-2026-11-04.json."
   }
 }

@@ -24,6 +24,7 @@
 import { bareDomain } from "./format.js";
 import { validateCookieValues } from "./cookies.js";
 import { isLockedExport } from "./crypto.js";
+import { t } from "./i18n.js";
 
 // --- export ------------------------------------------------------------------
 
@@ -229,7 +230,7 @@ export function looksLikeSignIn(cookie, known = null) {
 export function parseImport(text, { pageUrl = null } = {}) {
   const trimmed = String(text || "").trim();
   if (trimmed === "") {
-    return { format: null, entries: [], problems: ["There's nothing to import. Paste some cookies first."] };
+    return { format: null, entries: [], problems: [t("transfer_nothingToImport")] };
   }
 
   // A password-protected export. import-screen.js asks for the password,
@@ -239,7 +240,7 @@ export function parseImport(text, { pageUrl = null } = {}) {
     return {
       format: "locked",
       entries: [],
-      problems: ["This file has a password. Type it to see what's in it."],
+      problems: [t("transfer_hasPassword")],
     };
   }
 
@@ -267,7 +268,7 @@ function parseJson(text) {
     return {
       format: "json",
       entries: [],
-      problems: ["This looks like JSON, but it couldn't be read: " + error.message],
+      problems: [t("transfer_jsonUnreadable", error.message)],
     };
   }
 
@@ -277,16 +278,16 @@ function parseJson(text) {
     return {
       format: "json",
       entries: [],
-      problems: ["This JSON isn't a list of cookies."],
+      problems: [t("transfer_jsonNotList")],
     };
   }
 
   const entries = [];
   const problems = [];
   list.forEach((item, index) => {
-    const entry = fromJsonItem(item);
+    const entry = fromJsonItem(item, index + 1);
     if (typeof entry === "string") {
-      problems.push("Cookie " + (index + 1) + ": " + entry);
+      problems.push(entry);
     } else {
       entries.push(entry);
     }
@@ -295,15 +296,16 @@ function parseJson(text) {
 }
 
 // Returns an entry, or a sentence saying why the item can't be used.
-function fromJsonItem(item) {
+// `number` is the item's place in the list, counting from 1.
+function fromJsonItem(item, number) {
   if (!item || typeof item !== "object") {
-    return "not a cookie.";
+    return t("transfer_jsonItemNotCookie", number);
   }
   if (typeof item.name !== "string" || item.name === "") {
-    return "it has no name.";
+    return t("transfer_jsonItemNoName", number);
   }
   if (typeof item.domain !== "string" || item.domain === "") {
-    return item.name + " has no domain.";
+    return t("transfer_jsonItemNoDomain", number, item.name);
   }
 
   // EditThisCookie and Cookie-Editor use expirationDate. Puppeteer and
@@ -372,16 +374,14 @@ function parseNetscape(text) {
 
     const fields = line.split("\t");
     if (fields.length < 7) {
-      problems.push(
-        "Line " + (index + 1) + " isn't in cookies.txt format, which has 7 columns separated by tabs."
-      );
+      problems.push(t("transfer_netscapeColumns", index + 1));
       return;
     }
 
     const [domain, includeSubdomains, path, secure, expires, name, ...rest] = fields;
     const expiry = Number(expires);
     if (!Number.isFinite(expiry)) {
-      problems.push("Line " + (index + 1) + ": the expiry isn't a number.");
+      problems.push(t("transfer_netscapeExpiry", index + 1));
       return;
     }
 
@@ -401,7 +401,7 @@ function parseNetscape(text) {
   });
 
   if (entries.length === 0 && problems.length === 0) {
-    problems.push("No cookies were found. Paste a JSON export or the contents of a cookies.txt file.");
+    problems.push(t("transfer_noCookiesFound"));
   }
   return { format: "netscape", entries, problems };
 }
@@ -468,28 +468,28 @@ function parseSetCookie(text, pageUrl) {
       line = line.slice(prefix[0].length);
     }
 
-    const entry = fromSetCookie(line, host, now);
+    const entry = fromSetCookie(line, host, now, index + 1);
     if (typeof entry === "string") {
-      problems.push("Line " + (index + 1) + ": " + entry);
+      problems.push(entry);
     } else {
       entries.push(entry);
     }
   });
 
   if (entries.length === 0 && problems.length === 0) {
-    problems.push("No Set-Cookie lines were found.");
+    problems.push(t("transfer_noSetCookieLines"));
   }
   return { format: "set-cookie", entries, problems };
 }
 
 // Reads one Set-Cookie value the way a browser would. Returns an entry, or a
-// sentence saying why it can't be used.
-function fromSetCookie(line, host, now) {
+// sentence saying why it can't be used. `number` is its line number.
+function fromSetCookie(line, host, now, number) {
   const [pair, ...attributes] = line.split(";");
   const equals = pair.indexOf("=");
   const name = equals > 0 ? pair.slice(0, equals).trim() : "";
   if (name === "") {
-    return "it doesn't start with a cookie's name and value.";
+    return t("transfer_setCookieNoName", number);
   }
 
   const entry = {
@@ -540,14 +540,10 @@ function fromSetCookie(line, host, now) {
   }
 
   if (partitioned) {
-    return (
-      name +
-      " is partitioned, and a Set-Cookie line doesn't say which site it was embedded in. " +
-      "Import it from a JSON export instead."
-    );
+    return t("transfer_setCookiePartitioned", number, name);
   }
   if (!entry.domain) {
-    return name + " has no Domain, and there's no page to put it on.";
+    return t("transfer_setCookieNoDomain", number, name);
   }
 
   // Max-Age wins over Expires, as it does in browsers. Zero or less means
@@ -578,7 +574,7 @@ function readCookiePairs(text) {
       const equals = piece.indexOf("=");
       if (equals <= 0) {
         const shown = piece.length > 40 ? piece.slice(0, 40) + "…" : piece;
-        problems.push("“" + shown + "” isn't a name=value pair, so it's skipped.");
+        problems.push(t("transfer_notAPair", shown));
         continue;
       }
       pairs.push({ name: piece.slice(0, equals).trim(), value: piece.slice(equals + 1).trim() });
@@ -592,12 +588,12 @@ function parseCookieHeader(text, pageUrl) {
     return {
       format: "header",
       entries: [],
-      problems: ["A Cookie header doesn't say which site it's for, and there's no page to put it on."],
+      problems: [t("transfer_headerNoSite")],
     };
   }
   const { pairs, problems } = readCookiePairs(text);
   if (pairs.length === 0 && problems.length === 0) {
-    problems.push("No cookies were found in the Cookie header.");
+    problems.push(t("transfer_headerEmpty"));
   }
   return { format: "header", entries: pairs.map((pair) => ({ ...pair, sendTo: pageUrl })), problems };
 }
@@ -621,14 +617,12 @@ function parseCurl(text) {
 
   // The cmd version escapes quotes as ^" and ends lines with ^.
   if (/\^"/.test(text) || /\s\^\r?\n/.test(text)) {
-    return result([], [
-      "This is the Windows (cmd) version of “Copy as cURL”. Copy the bash version instead, and paste that.",
-    ]);
+    return result([], [t("transfer_curlWindows")]);
   }
 
   const words = shellWords(text);
   if (words === null) {
-    return result([], ["This curl command couldn't be read, because a quote isn't closed."]);
+    return result([], [t("transfer_curlUnclosedQuote")]);
   }
 
   let address = null;
@@ -641,10 +635,7 @@ function parseCurl(text) {
     if (value.includes("=")) {
       cookieTexts.push(value);
     } else {
-      problems.push(
-        "This curl command reads its cookies from a file (" + value + "), which cookieZ can't open. " +
-          "Paste the cookies themselves instead."
-      );
+      problems.push(t("transfer_curlCookieFile", value));
     }
   };
 
@@ -674,13 +665,10 @@ function parseCurl(text) {
   }
 
   if (!hostOf(address)) {
-    return result([], [
-      ...problems,
-      "This curl command has no web address, so there's no telling which site its cookies are for.",
-    ]);
+    return result([], [...problems, t("transfer_curlNoAddress")]);
   }
   if (cookieTexts.length === 0) {
-    return result([], problems.length > 0 ? problems : ["This curl command doesn't send any cookies."]);
+    return result([], problems.length > 0 ? problems : [t("transfer_curlNoCookies")]);
   }
 
   const { pairs, problems: pairProblems } = readCookiePairs(cookieTexts.join("\n"));
@@ -930,7 +918,7 @@ export function moveToSite(entries, pageUrl) {
     if (entry.sendTo) {
       moved.push({ ...entry, sendTo: pageUrl });
     } else if (entry.partitionKey) {
-      problems.push(entry.name + " (" + entry.domain + ") is partitioned, so it can't be moved to another site.");
+      problems.push(t("transfer_cantMovePartitioned", entry.name, entry.domain));
     } else {
       moved.push({ ...entry, domain: host, hostOnly: true });
     }
@@ -1065,7 +1053,7 @@ export function compareCookies(fileEntries, current) {
 function differencesBetween(entry, cookie) {
   const differences = [];
   if (String(entry.value) !== String(cookie.value)) {
-    differences.push("value");
+    differences.push(t("transfer_differenceValue"));
   }
   if (Boolean(entry.secure) !== Boolean(cookie.secure)) {
     differences.push("Secure");
@@ -1079,7 +1067,7 @@ function differencesBetween(entry, cookie) {
   const entrySession = typeof entry.expirationDate !== "number";
   const cookieSession = typeof cookie.expirationDate !== "number";
   if (entrySession !== cookieSession) {
-    differences.push("expiry");
+    differences.push(t("transfer_differenceExpiry"));
   }
   return differences;
 }

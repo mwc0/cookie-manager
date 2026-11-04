@@ -18,7 +18,8 @@ import {
 } from "../lib/transfer.js";
 import { unlockText, readLockedFile } from "../lib/crypto.js";
 import { isProtected } from "../lib/protect.js";
-import { pluralise, formatCount, describeError, bareDomain } from "../lib/format.js";
+import { formatCount, describeError, bareDomain } from "../lib/format.js";
+import { t, tn } from "../lib/i18n.js";
 import { state } from "./state.js";
 import { el, inTab, inPanel, showState } from "./ui.js";
 import { refresh } from "./popup.js";
@@ -87,7 +88,7 @@ async function openLockedImport() {
   const box = el("import-password");
   el("import-password-row").hidden = false;
   if (box.value === "") {
-    showImportResult("Type the file's password, then press Check.", false);
+    showImportResult(t("transfer_typePassword"), false);
     box.focus();
     return null;
   }
@@ -97,7 +98,7 @@ async function openLockedImport() {
   box.value = "";
   const check = el("import-check");
   check.disabled = true;
-  showImportResult("Opening the file…", false);
+  showImportResult(t("transfer_opening"), false);
   const result = await unlockText(text, password);
   check.disabled = false;
 
@@ -154,7 +155,7 @@ export async function checkImport() {
   try {
     existing = await getAllCookies();
   } catch (error) {
-    showImportResult("Couldn't read your current cookies to compare: " + describeError(error), true);
+    showImportResult(t("transfer_cantReadCurrent", describeError(error)), true);
     return;
   }
 
@@ -176,65 +177,51 @@ export async function checkImport() {
 
   const parts = [];
   if (count === 0) {
-    parts.push("Nothing can be imported.");
+    parts.push(t("transfer_nothingCanBeImported"));
   } else {
     parts.push(
-      "Will add " +
-        pluralise(count, "cookie", "cookies") +
-        (plan.domains.length === 1
-          ? " for " + plan.domains[0]
-          : " across " + pluralise(plan.domains.length, "site", "sites")) +
-        "."
+      plan.domains.length === 1
+        ? tn("transfer_willAddForSite", count, plan.domains[0])
+        : tn("transfer_willAddAcrossSites", count, tn("transfer_siteCount", plan.domains.length))
     );
     if (replacing > 0) {
-      parts.push(
-        formatCount(replacing) +
-          (replacing === 1 ? " of them replaces a cookie" : " of them replace cookies") +
-          " you already have." +
-          (fromHeader ? (replacing === 1 ? " Only its value changes." : " Only their values change.") : "")
-      );
+      parts.push(tn("transfer_replaces", replacing));
+      if (fromHeader) {
+        parts.push(tn("transfer_onlyValueChanges", replacing));
+      }
     }
     const adding = count - replacing;
     if (fromHeader && adding > 0) {
-      parts.push(
-        pluralise(adding, "new cookie", "new cookies") +
-          (adding === 1
-            ? " will be a session cookie, so Chrome removes it when it closes."
-            : " will be session cookies, so Chrome removes them when it closes.")
-      );
+      parts.push(tn("transfer_newSessionCookies", adding));
     }
     if (kept > 0) {
-      parts.push(
-        formatCount(kept) + (kept === 1 ? " of those is a kept cookie." : " of those are kept cookies.")
-      );
+      parts.push(tn("transfer_keptInImport", kept));
     }
   }
   if (plan.expired > 0) {
-    parts.push(
-      pluralise(plan.expired, "cookie has", "cookies have") + " already expired and will be skipped."
-    );
+    parts.push(tn("transfer_alreadyExpired", plan.expired));
   }
   if (plan.duplicates > 0) {
-    parts.push(pluralise(plan.duplicates, "duplicate", "duplicates") + " in the file will be skipped.");
+    parts.push(tn("transfer_duplicates", plan.duplicates));
   }
   el("import-summary").textContent = parts.join(" ");
 
   if (plan.domains.length > 1) {
     fillList(el("import-domains-list"), plan.domains);
-    el("import-domains-summary").textContent = "Show the " + formatCount(plan.domains.length) + " sites";
+    el("import-domains-summary").textContent = tn("transfer_showSites", plan.domains.length);
     el("import-domains").open = false;
     el("import-domains").hidden = false;
   } else {
     el("import-domains").hidden = true;
   }
 
-  const skipped = [...problems, ...plan.invalid.map((text) => "Will be skipped: " + text)];
+  const skipped = [...problems, ...plan.invalid.map((text) => t("transfer_willBeSkipped", text))];
   fillList(el("import-problems"), skipped);
 
   // Said every time, next to the button that writes: a file of someone
   // else's cookies is a known way to trick people.
   el("import-warning").hidden = count === 0;
-  el("import-confirm").textContent = "Import " + pluralise(count, "cookie", "cookies");
+  el("import-confirm").textContent = tn("transfer_importButton", count);
   // Compare works on anything that was read, even if nothing can be
   // imported, so the row shows whenever there's a cookie in the file.
   el("import-confirm").hidden = count === 0;
@@ -269,7 +256,7 @@ export async function compareImport() {
     }
     current = Array.from(byKey.values());
   } catch (error) {
-    showImportResult("Couldn't read your current cookies to compare: " + describeError(error), true);
+    showImportResult(t("transfer_cantReadCurrent", describeError(error)), true);
     return;
   }
 
@@ -277,31 +264,32 @@ export async function compareImport() {
   const differences = result.gone.length + result.added.length + result.changed.length;
 
   if (differences === 0) {
-    el("compare-summary").textContent =
-      "No differences. " +
-      (result.same === 1
-        ? "The cookie in your file is the same now."
-        : "All " + formatCount(result.same) + " cookies in your file are the same now.");
+    el("compare-summary").textContent = tn("transfer_compareSame", result.same);
   } else {
-    const parts = [];
-    if (result.added.length > 0) {
-      parts.push(formatCount(result.added.length) + " new since");
-    }
-    if (result.gone.length > 0) {
-      parts.push(formatCount(result.gone.length) + " gone");
-    }
-    if (result.changed.length > 0) {
-      parts.push(formatCount(result.changed.length) + " changed");
-    }
-    parts.push(formatCount(result.same) + " the same");
-    el("compare-summary").textContent = parts.join(", ") + ".";
+    // One sentence for each mix of new, gone and changed, so each can be
+    // translated whole: transfer_compareNew, transfer_compareNewGone,
+    // transfer_compareNewGoneChanged, transfer_compareNewChanged,
+    // transfer_compareGone, transfer_compareGoneChanged and
+    // transfer_compareChanged. Each is given all four counts.
+    const key =
+      "transfer_compare" +
+      (result.added.length > 0 ? "New" : "") +
+      (result.gone.length > 0 ? "Gone" : "") +
+      (result.changed.length > 0 ? "Changed" : "");
+    el("compare-summary").textContent = t(
+      key,
+      formatCount(result.added.length),
+      formatCount(result.gone.length),
+      formatCount(result.changed.length),
+      formatCount(result.same)
+    );
   }
 
   // Names and sites only, never values: the values may be sign-ins.
   const rows = [
-    ...result.added.map((cookie) => [cookie, "New since"]),
-    ...result.gone.map((entry) => [entry, "Gone"]),
-    ...result.changed.map((item) => [item.cookie, "Changed: " + item.differences.join(", ")]),
+    ...result.added.map((cookie) => [cookie, t("transfer_rowNewSince")]),
+    ...result.gone.map((entry) => [entry, t("transfer_rowGone")]),
+    ...result.changed.map((item) => [item.cookie, t("transfer_rowChanged", item.differences.join(", "))]),
   ];
   const body = el("compare-rows");
   body.textContent = "";
@@ -345,7 +333,7 @@ export async function runImport() {
   }
   const plan = importPlan;
   resetImportPreview();
-  showImportResult("Importing…", false);
+  showImportResult(t("transfer_importing"), false);
 
   let created = 0;
   let replaced = 0;
@@ -374,20 +362,15 @@ export async function runImport() {
   }
 
   const parts = [
-    "Imported " +
-      pluralise(created + replaced, "cookie", "cookies") +
-      (replaced > 0 ? " (" + formatCount(replaced) + " replaced)" : "") +
-      ".",
+    replaced > 0
+      ? tn("transfer_importedReplaced", created + replaced, formatCount(replaced))
+      : tn("transfer_imported", created + replaced),
   ];
   if (shortened > 0) {
-    parts.push(
-      "Chrome shortened the expiry of " +
-        pluralise(shortened, "cookie", "cookies") +
-        ", because it limits how far ahead a cookie can expire."
-    );
+    parts.push(tn("transfer_expiryShortened", shortened));
   }
   if (failures.length > 0) {
-    parts.push("Chrome refused " + pluralise(failures.length, "cookie", "cookies") + ":");
+    parts.push(tn("transfer_chromeRefused", failures.length));
   }
   showImportResult(parts.join(" "), failures.length > 0);
   await offerUndo(el("import-result"), change);
@@ -407,7 +390,7 @@ export async function readImportFile() {
     forgetImportPassword();
     await checkImport();
   } catch (error) {
-    showImportResult("Couldn't read " + file.name + ": " + describeError(error), true);
+    showImportResult(t("transfer_cantReadFile", file.name, describeError(error)), true);
   }
 }
 
