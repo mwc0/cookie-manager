@@ -15,7 +15,7 @@ import { copyWithFeedback } from "./clipboard.js";
 import {
   cookieBytes,
   LARGE_COOKIE_BYTES,
-  formatExpiryFull,
+  formatExpiryWhen,
   toLocalDateTimeValue,
   fromLocalDateTimeValue,
   describeValue,
@@ -25,7 +25,9 @@ import {
   compactJson,
   describeError,
   bareDomain,
+  formatCount,
 } from "../lib/format.js";
+import { t } from "../lib/i18n.js";
 import { knownCookie, describeKnown } from "../lib/known.js";
 import { state } from "./state.js";
 import { el, showState, showMainMessage } from "./ui.js";
@@ -44,7 +46,7 @@ export function openEditor(cookie) {
   state.editing = cookie || null;
 
   el("main-message").textContent = "";
-  el("edit-title").textContent = cookie ? "Edit cookie" : "New cookie";
+  el("edit-title").textContent = cookie ? t("cookie_editTitleEdit") : t("cookie_editTitleNew");
   el("edit-errors").hidden = true;
   el("edit-errors").textContent = "";
   el("edit-changed").hidden = true;
@@ -88,13 +90,10 @@ export function openEditor(cookie) {
   // be edited here.
   const partition = el("edit-partition");
   if (cookie && setByOtherSite(cookie, state.page.hostname)) {
-    partition.textContent =
-      "Set by " + bareDomain(cookie.domain) + " in a frame on this site, " +
-      "and kept for this site only (a partitioned, or CHIPS, cookie). Its partition is kept as it is when you save.";
+    partition.textContent = t("cookie_editPartitionEmbedded", bareDomain(cookie.domain));
     partition.hidden = false;
   } else if (cookie && cookie.partitionKey) {
-    partition.textContent =
-      "This is a partitioned (CHIPS) cookie. Its partition is kept as it is when you save.";
+    partition.textContent = t("cookie_editPartitioned");
     partition.hidden = false;
   } else {
     partition.hidden = true;
@@ -131,9 +130,7 @@ export function showValueSize() {
   const bytes = cookieBytes({ name: el("field-name").value, value: valueToSave().value || el("field-value").value });
   const note = el("value-size");
   note.hidden = bytes < LARGE_COOKIE_BYTES;
-  note.textContent =
-    bytes.toLocaleString("en-GB") + " of " + MAX_COOKIE_BYTES.toLocaleString("en-GB") +
-    " bytes (name and value together).";
+  note.textContent = t("cookie_editValueSize", formatCount(bytes), formatCount(MAX_COOKIE_BYTES));
   note.className = bytes > MAX_COOKIE_BYTES ? "field-note error" : "field-note muted";
 }
 
@@ -159,7 +156,7 @@ export function duplicateCookie() {
   }
   el("partitioned-row").hidden = false;
   state.editing = null;
-  el("edit-title").textContent = "New cookie";
+  el("edit-title").textContent = t("cookie_editTitleNew");
   el("edit-duplicate").hidden = true;
   el("edit-changed").hidden = true;
   showFormErrors([]);
@@ -177,7 +174,7 @@ export function duplicateCookie() {
 export function showDecoded() {
   const shown = el("field-json").checked ? null : describeValue(el("field-value").value);
   el("value-decoded").hidden = shown === null;
-  el("value-decoded-label").textContent = shown ? shown.label : "Decoded";
+  el("value-decoded-label").textContent = shown ? shown.label : t("cookie_valueDecoded");
   el("value-decoded-text").textContent = shown ? shown.text : "";
 }
 
@@ -313,7 +310,7 @@ function showFormErrors(errors) {
 
 // Chrome won't let a cookie expire more than about 400 days ahead. If you ask
 // for longer, it quietly shortens it. This compares what was saved with what
-// was asked for, and returns a note if Chrome changed it. It doesn't assume
+// was asked for, and returns a sentence if Chrome changed it. It doesn't assume
 // 400 days, so it still works if Chrome changes the limit.
 export function describeExpiryChange(values, saved) {
   if (!saved || values.session || typeof values.expirationDate !== "number") {
@@ -328,18 +325,14 @@ export function describeExpiryChange(values, saved) {
     return "";
   }
 
-  return (
-    " Chrome shortened the expiry to " +
-    formatExpiryFull({ expirationDate: saved.expirationDate }).replace(/^Expires /, "") +
-    " It limits how far ahead a cookie is allowed to expire."
-  );
+  return t("cookie_editExpiryShortened", formatExpiryWhen({ expirationDate: saved.expirationDate }));
 }
 
 export async function saveEditor() {
   // JSON that no longer parses would be saved as broken text, so stop.
   const json = valueToSave();
   if (json.error) {
-    showFormErrors([json.error + " Fix it, or untick \"Edit as JSON\" to save it as typed."]);
+    showFormErrors([t("cookie_editJsonFixIt", json.error)]);
     return;
   }
   const values = readForm();
@@ -378,9 +371,10 @@ export async function saveEditor() {
       : { kind: "create", remove: [cookie] };
 
     closeEditor();
+    const shortened = describeExpiryChange(values, cookie);
     showMainMessage(
-      (original ? "Saved changes to " + values.name + "." : "Created " + values.name + ".") +
-        describeExpiryChange(values, cookie),
+      (original ? t("cookie_editSaved", values.name) : t("cookie_editCreated", values.name)) +
+        (shortened ? " " + shortened : ""),
       false
     );
     await offerUndo(el("main-message"), change);

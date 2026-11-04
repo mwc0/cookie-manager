@@ -3,29 +3,30 @@
 // saved, and the purposes are looked up on this computer only.
 
 import { passesFilter } from "../lib/cookies.js";
-import { knownCookie, loadKnownCookies } from "../lib/known.js";
-import { pluralise } from "../lib/format.js";
+import { knownCookie, loadKnownCookies, joinNames } from "../lib/known.js";
+import { t, tn } from "../lib/i18n.js";
 import { state } from "./state.js";
 import { el, showState } from "./ui.js";
 
-// In the order a reader cares about. The database's own word is the key.
+// In the order a reader cares about. The database's own word, then the key
+// of the label's message.
 const PURPOSES = [
-  ["Marketing", "Advertising and marketing"],
-  ["Analytics", "Analytics"],
-  ["Personalization", "Personalisation"],
-  ["Functional", "Site features"],
-  ["Security", "Security"],
-  ["Necessary", "Needed to run the site"],
+  ["Marketing", "cookie_reportPurposeMarketing"],
+  ["Analytics", "cookie_reportPurposeAnalytics"],
+  ["Personalization", "cookie_reportPurposePersonalisation"],
+  ["Functional", "cookie_reportPurposeFunctional"],
+  ["Security", "cookie_reportPurposeSecurity"],
+  ["Necessary", "cookie_reportPurposeNecessary"],
 ];
 
 // Each one is a quick filter, so the two can never disagree. "Show them"
-// switches it on.
+// switches it on. The filter, then the keys of its title and note.
 const CHECKS = [
-  ["notsecure", "Also sent over plain HTTP", "They don't have the Secure flag."],
-  ["readable", "Readable by the page's scripts", "They don't have the HttpOnly flag."],
-  ["samesitenone", "Sent when another site loads this one", "They have SameSite None."],
-  ["large", "Close to Chrome's 4 KB limit", "A site with too many of these can stop logins working."],
-  ["soon", "Expire within a day", "A sign-in held in one of these won't last."],
+  ["notsecure", "cookie_reportCheckNotSecure", "cookie_reportCheckNotSecureNote"],
+  ["readable", "cookie_reportCheckReadable", "cookie_reportCheckReadableNote"],
+  ["samesitenone", "cookie_reportCheckSameSiteNone", "cookie_reportCheckSameSiteNoneNote"],
+  ["large", "cookie_reportCheckLarge", "cookie_reportCheckLargeNote"],
+  ["soon", "cookie_reportCheckSoon", "cookie_reportCheckSoonNote"],
 ];
 
 const MAX_NAMES = 3;
@@ -44,9 +45,9 @@ function joinCompanies(names) {
   const shown = names.slice(0, MAX_NAMES);
   const others = names.length - shown.length;
   if (others > 0) {
-    return shown.join(", ") + " and " + pluralise(others, "other", "others");
+    return tn("cookie_reportCompaniesOthers", others, shown.join(", "));
   }
-  return shown.length > 1 ? shown.slice(0, -1).join(", ") + " and " + shown[shown.length - 1] : shown.join("");
+  return joinNames(shown);
 }
 
 function drawPurposes(cookies) {
@@ -75,7 +76,7 @@ function drawPurposes(cookies) {
   };
   for (const [kind, label] of PURPOSES) {
     if (groups.has(kind)) {
-      addRow(label, groups.get(kind));
+      addRow(t(label), groups.get(kind));
     }
   }
   // A kind the database adds later still gets counted.
@@ -85,7 +86,7 @@ function drawPurposes(cookies) {
     }
   }
   if (groups.has(null)) {
-    addRow("Not recognised", groups.get(null));
+    addRow(t("cookie_reportNotRecognised"), groups.get(null));
   }
 }
 
@@ -94,24 +95,25 @@ function drawChecks(cookies, isKept) {
   rows.textContent = "";
   const https = state.page.origin.startsWith("https:");
 
-  for (const [filter, title, detail] of CHECKS) {
+  for (const [filter, titleKey, detailKey] of CHECKS) {
     const count = cookies.filter((cookie) => passesFilter(cookie, filter, isKept)).length;
     // On a plain HTTP page no cookie can be Secure, so this says nothing.
     if (count === 0 || (filter === "notsecure" && !https)) {
       continue;
     }
 
+    const title = t(titleKey);
     const words = cell(title);
     const note = document.createElement("span");
     note.className = "report-note";
-    note.textContent = detail;
+    note.textContent = t(detailKey);
     words.append(document.createElement("br"), note);
 
     const show = document.createElement("button");
     show.type = "button";
     show.className = "row-button";
-    show.textContent = "Show them";
-    show.setAttribute("aria-label", "Show the " + pluralise(count, "cookie", "cookies") + ": " + title);
+    show.textContent = t("cookie_reportShowThem");
+    show.setAttribute("aria-label", tn("cookie_reportShowThemLabel", count, title));
     show.addEventListener("click", () => {
       closeReport();
       const chip = document.querySelector('#filters .chip[data-filter="' + filter + '"]');

@@ -1,4 +1,7 @@
-// Formatting for display. Nothing in here calls Chrome or changes anything.
+// Formatting for display. Nothing in here changes anything; the only call
+// to Chrome is for the words, through i18n.js.
+
+import { t, tn } from "./i18n.js";
 
 const HOUR = 60 * 60;
 const DAY = 24 * HOUR;
@@ -27,12 +30,12 @@ const KILOBYTES = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 })
 // closes. One that expires within 30 days says how soon: "in 3 days".
 export function formatExpiry(cookie, now = Date.now() / 1000) {
   if (typeof cookie.expirationDate !== "number") {
-    return "Session";
+    return t("cookie_expirySession");
   }
 
   const date = new Date(cookie.expirationDate * 1000);
   if (Number.isNaN(date.getTime())) {
-    return "Unknown";
+    return t("cookie_expiryUnknown");
   }
 
   const relative = formatRelative(cookie.expirationDate - now);
@@ -46,16 +49,24 @@ export function formatExpiry(cookie, now = Date.now() / 1000) {
 // The full date and time, for the tooltip, with "in 3 days" when it's soon.
 export function formatExpiryFull(cookie, now = Date.now() / 1000) {
   if (typeof cookie.expirationDate !== "number") {
-    return "Session cookie - removed when the browser closes";
+    return t("cookie_expirySessionFull");
   }
 
   const date = new Date(cookie.expirationDate * 1000);
   if (Number.isNaN(date.getTime())) {
-    return "Expiry date could not be read";
+    return t("cookie_expiryUnreadable");
   }
 
+  return t("cookie_expiresOn", formatExpiryWhen(cookie, now));
+}
+
+// The date and time a cookie expires, with "in 3 days" when it's soon, for
+// formatExpiryFull() and the editor's note when Chrome shortens an expiry.
+// The cookie must have a readable expiry date.
+export function formatExpiryWhen(cookie, now = Date.now() / 1000) {
+  const date = DATE_AND_TIME.format(new Date(cookie.expirationDate * 1000));
   const relative = formatRelative(cookie.expirationDate - now);
-  return "Expires " + DATE_AND_TIME.format(date) + (relative ? " (" + relative + ")" : "");
+  return relative ? t("cookie_expiryDateAndRelative", date, relative) : date;
 }
 
 // Whether a cookie expires within the next day.
@@ -94,9 +105,9 @@ export function formatSameSite(value) {
     case "strict":
       return "Strict";
     case "unspecified":
-      return "Unset";
+      return t("cookie_sameSiteUnset");
     default:
-      return value || "Unset";
+      return value || t("cookie_sameSiteUnset");
   }
 }
 
@@ -191,7 +202,7 @@ function asDate(text) {
   if (ms < Date.UTC(2001, 0, 1) || ms > Date.UTC(2100, 0, 1)) {
     return null;
   }
-  return new Date(ms).toLocaleString("en-GB", {
+  return t("cookie_valueAsDateText", new Date(ms).toLocaleString(undefined, {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -199,7 +210,7 @@ function asDate(text) {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-  }) + " (your time)";
+  }));
 }
 
 // Base64 or its URL-safe form, decoded, if what comes out is readable text.
@@ -240,12 +251,12 @@ export function describeValue(value) {
 
   const date = asDate(trimmed);
   if (date) {
-    return { label: "As a date", text: date };
+    return { label: t("cookie_valueAsDate"), text: date };
   }
 
   const base64 = asBase64(trimmed);
   if (base64 !== null) {
-    return { label: "Decoded from Base64", text: decodeValue(base64) || base64 };
+    return { label: t("cookie_valueFromBase64"), text: decodeValue(base64) || base64 };
   }
 
   const decoded = decodeValue(original);
@@ -253,7 +264,7 @@ export function describeValue(value) {
     return null;
   }
   const wasUrl = /%[0-9a-f]{2}/i.test(original);
-  return { label: wasUrl ? "Decoded" : "Laid out", text: decoded };
+  return { label: wasUrl ? t("cookie_valueDecoded") : t("cookie_valueLaidOut"), text: decoded };
 }
 
 // --- editing a value as JSON ----------------------------------------------
@@ -291,7 +302,7 @@ export function compactJson(text) {
   } catch (error) {
     return {
       value: null,
-      error: "The value isn't valid JSON: " + describeError(error) + ".",
+      error: t("cookie_valueNotJson", describeError(error)),
     };
   }
 }
@@ -337,9 +348,9 @@ export function headerBytes(cookies) {
 // "812 bytes", "3.1 KB"
 export function formatBytes(bytes) {
   if (bytes < 1024) {
-    return formatCount(bytes) + (bytes === 1 ? " byte" : " bytes");
+    return tn("cookie_bytes", bytes);
   }
-  return KILOBYTES.format(bytes / 1024) + " KB";
+  return t("cookie_kilobytes", KILOBYTES.format(bytes / 1024));
 }
 
 export function formatCount(number) {

@@ -9,6 +9,8 @@
 // in a test, so it isn't loaded with the popup. loadKnownCookies() loads it
 // once the table is showing, and until then knownCookie() finds nothing.
 
+import { t, tn } from "./i18n.js";
+
 // Too common to mean anything. Each of these is in the database under one
 // company, but plenty of sites use them for their own cookies. Compared in
 // lower case, so "Session" is skipped too, even though the match itself is
@@ -147,40 +149,41 @@ export function describeKnownBy(known) {
   if (others === 0) {
     return known.by[0];
   }
-  return known.by[0] + " and " + others + (others === 1 ? " other" : " others");
+  return tn("cookie_knownByOthers", others, known.by[0]);
 }
 
-// The database's word for what a cookie is for, in a sentence.
+// The database's word for what a cookie is for, in a sentence: the key of
+// its message.
 const KINDS = {
-  Functional: "functional",
-  Analytics: "analytics",
-  Marketing: "marketing",
-  Security: "security",
-  Necessary: "necessary",
-  Personalization: "personalisation",
+  Functional: "cookie_kindFunctional",
+  Analytics: "cookie_kindAnalytics",
+  Marketing: "cookie_kindMarketing",
+  Security: "cookie_kindSecurity",
+  Necessary: "cookie_kindNecessary",
+  Personalization: "cookie_kindPersonalisation",
 };
 
 // "Known name: Google Analytics, analytics. ID used to identify users."
 // Some entries have no description yet ("Pending"), so that part is left
 // out for them.
 export function describeKnown(known) {
-  const kind = KINDS[known.kind] || String(known.kind || "").toLowerCase();
-  let sentence = "Known name: " + known.by[0] + (kind ? ", " + kind : "") + ".";
+  const kind = KINDS[known.kind] ? t(KINDS[known.kind]) : String(known.kind || "").toLowerCase();
+  let sentence = kind ? t("cookie_knownNameKind", known.by[0], kind) : t("cookie_knownName", known.by[0]);
 
   const what = String(known.what || "").trim();
   if (what !== "" && what !== "Pending") {
     sentence += " " + what + (/[.!?…]$/.test(what) ? "" : ".");
   }
   if (known.by.length > 1) {
-    sentence += " Also listed under " + joinNames(known.by.slice(1)) + ".";
+    sentence += " " + t("cookie_knownAlsoListed", joinNames(known.by.slice(1)));
   }
   return sentence;
 }
 
-// "A", "A and B", "A, B and C"
-function joinNames(names) {
+// "A", "A and B", "A, B and C". Exported for the Site report.
+export function joinNames(names) {
   if (names.length <= 1) {
     return names.join("");
   }
-  return names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+  return t("cookie_listAnd", names.slice(0, -1).join(", "), names[names.length - 1]);
 }

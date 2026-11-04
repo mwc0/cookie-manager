@@ -1,8 +1,9 @@
 // Everything that talks to chrome.cookies goes through this file, so the
 // awkward parts of that API are handled in one place.
 
-import { cookieBytes, describeError, expiresSoon, LARGE_COOKIE_BYTES, bareDomain } from "./format.js";
+import { cookieBytes, describeError, expiresSoon, LARGE_COOKIE_BYTES, bareDomain, formatCount } from "./format.js";
 import { knownCookie } from "./known.js";
+import { t } from "./i18n.js";
 
 // Chrome won't store a cookie whose name and value together are bigger than
 // this many bytes.
@@ -323,16 +324,16 @@ export function validateCookieValues(values, { imported = false } = {}) {
   const value = String(values.value || "");
 
   if (name.trim() === "") {
-    errors.push("A cookie needs a name.");
+    errors.push(t("cookie_errorNoName"));
   } else if (/[\s;=,]/.test(name)) {
-    errors.push("A cookie name can't contain spaces, semicolons, commas or equals signs.");
+    errors.push(t("cookie_errorNameCharacters"));
   }
 
   // A semicolon ends a cookie's value, so it can't be in one. Commas can:
   // Chrome stores them, and sites put JSON in cookies that has them. This
   // refused commas until 1.7, which meant such a cookie couldn't be saved.
   if (/;/.test(value)) {
-    errors.push("A cookie value can't contain a semicolon.");
+    errors.push(t("cookie_errorValueSemicolon"));
   }
 
   // TRAP: Chrome refuses a cookie over 4,096 bytes with the same vague error
@@ -340,8 +341,7 @@ export function validateCookieValues(values, { imported = false } = {}) {
   const bytes = cookieBytes({ name, value });
   if (bytes > MAX_COOKIE_BYTES) {
     errors.push(
-      "Chrome won't store a cookie bigger than 4,096 bytes (name and value together). " +
-        (imported ? "It is " : "This one is ") + bytes.toLocaleString("en-GB") + "."
+      t(imported ? "cookie_errorTooBigImported" : "cookie_errorTooBig", formatCount(MAX_COOKIE_BYTES), formatCount(bytes))
     );
   }
 
@@ -351,46 +351,43 @@ export function validateCookieValues(values, { imported = false } = {}) {
   if (/^__secure-/i.test(name) && !values.secure) {
     errors.push(
       imported
-        ? "Its name starts with __Secure- but it isn't Secure, and Chrome won't accept that."
-        : "A name starting with __Secure- only works on a Secure cookie. Tick Secure, or change the name."
+        ? t("cookie_errorSecurePrefixImported")
+        : t("cookie_errorSecurePrefix")
     );
   }
 
   if (/^__host-/i.test(name)) {
     const missing = [];
     if (!values.secure) {
-      missing.push("Secure");
+      missing.push(t("cookie_hostPrefixSecure"));
     }
     if (!values.hostOnly) {
-      missing.push("host-only");
+      missing.push(t("cookie_hostPrefixHostOnly"));
     }
     if ((values.path || "/") !== "/") {
-      missing.push("on the path /");
+      missing.push(t("cookie_hostPrefixRootPath"));
     }
     if (missing.length > 0) {
-      errors.push(
-        (imported
-          ? "Its name starts with __Host-, so Chrome only accepts it if it is Secure, host-only and on the path /. It isn't "
-          : "A name starting with __Host- only works on a cookie that is Secure, host-only and on the path /. This one isn't ") +
-          missing.join(" or ") + "."
-      );
+      // "Secure or host-only or on the path /"
+      const list = missing.reduce((sofar, next) => t("cookie_listOr", sofar, next));
+      errors.push(t(imported ? "cookie_errorHostPrefixImported" : "cookie_errorHostPrefix", list));
     }
   }
 
   if (String(values.domain || "").trim() === "") {
-    errors.push("A cookie needs a domain.");
+    errors.push(t("cookie_errorNoDomain"));
   }
 
   if (!String(values.path || "").startsWith("/")) {
-    errors.push("The path has to start with a slash.");
+    errors.push(t("cookie_errorPathSlash"));
   }
 
   // TRAP: Chrome rejects SameSite=None unless the cookie is also Secure.
   if (values.sameSite === "no_restriction" && !values.secure) {
     errors.push(
       imported
-        ? "It has SameSite “None” but isn't Secure, and Chrome won't accept that."
-        : "SameSite “None” only works on a Secure cookie. Tick Secure, or choose a different SameSite."
+        ? t("cookie_errorSameSiteNoneImported")
+        : t("cookie_errorSameSiteNone")
     );
   }
 
@@ -398,16 +395,16 @@ export function validateCookieValues(values, { imported = false } = {}) {
   if (values.partitionKey && !values.secure) {
     errors.push(
       imported
-        ? "It's partitioned but isn't Secure, and Chrome won't accept that."
-        : "A partitioned cookie only works when it's Secure. Tick Secure."
+        ? t("cookie_errorPartitionedImported")
+        : t("cookie_errorPartitioned")
     );
   }
 
   if (!values.session && typeof values.expirationDate !== "number") {
     errors.push(
       imported
-        ? "It has no expiry date and isn't marked as a session cookie."
-        : "Set an expiry date, or tick “Session cookie”."
+        ? t("cookie_errorNoExpiryImported")
+        : t("cookie_errorNoExpiry")
     );
   }
 
@@ -438,9 +435,7 @@ export async function writeCookie(original, values) {
       if (!removed) {
         return {
           ok: false,
-          error:
-            "The original cookie couldn't be removed, so the change was stopped " +
-            "rather than risk leaving two copies of it behind.",
+          error: t("cookie_errorOriginalNotRemoved"),
         };
       }
     }
@@ -480,7 +475,7 @@ export async function writeCookie(original, values) {
 
   return {
     ok: false,
-    error: "Chrome didn't accept the cookie, and didn't say why.",
+    error: t("cookie_errorNotAccepted"),
   };
 }
 
@@ -490,11 +485,7 @@ function describeWriteFailure(error) {
   const message = describeError(error);
 
   if (message.includes("Failed to parse or set cookie")) {
-    return (
-      message +
-      " This usually means the domain doesn't match the cookie, or the name " +
-      "or value contains a character cookies aren't allowed to carry."
-    );
+    return t("cookie_errorParseOrSet", message);
   }
   return message;
 }
