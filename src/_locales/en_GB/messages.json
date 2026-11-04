@@ -6,5 +6,981 @@
   "appDesc": {
     "message": "View, edit, delete and block cookies. There are no ads, and nothing you do leaves your computer.",
     "description": "The summary under the name in the Chrome Web Store and on chrome://extensions. 132 characters at most."
+  },
+  "page_loading": {
+    "message": "Reading cookies…",
+    "description": "Shown for a moment while the popup reads the site's cookies."
+  },
+  "page_gateHeading": {
+    "message": "One-time permission needed",
+    "description": "Heading of the first screen, before the user has let cookieZ see websites. Short."
+  },
+  "page_gateIntro": {
+    "message": "Chrome only shows an extension a site's cookies once it has access to that site. cookieZ needs access to the websites you visit.",
+    "description": "First screen: why cookieZ asks for access to websites."
+  },
+  "page_gateAfter": {
+    "message": "Then you can see, edit, delete, block and export any site's cookies.",
+    "description": "First screen: what the user can do once access is given."
+  },
+  "page_gatePrivacy": {
+    "message": "Access is used only while cookieZ is open. Nothing is sent anywhere: cookieZ makes no network requests and has no analytics.",
+    "description": "First screen, in small grey text: the privacy promise. cookieZ is the product name."
+  },
+  "page_gateGrant": {
+    "message": "Grant access",
+    "description": "First screen: the button that asks Chrome for access to websites. Short: a button label."
+  },
+  "page_blockedHeading": {
+    "message": "No cookies on this page",
+    "description": "Heading when the current page is one Chrome doesn't let extensions read, such as chrome:// pages or the Chrome Web Store."
+  },
+  "page_blockedHint": {
+    "message": "Open a normal website and click the icon again.",
+    "description": "Under that heading: what to do instead. 'The icon' is cookieZ's button in Chrome's toolbar."
+  },
+  "page_errorHeading": {
+    "message": "Something went wrong",
+    "description": "Heading of the screen shown when something unexpected fails."
+  },
+  "page_retry": {
+    "message": "Try again",
+    "description": "Button on the error screen that tries again. Short: a button label."
+  },
+  "page_reportOpenTitle": {
+    "message": "See what this site has stored, and what's worth checking",
+    "description": "Tooltip on the 'Site report' link."
+  },
+  "page_reportOpen": {
+    "message": "Site report",
+    "description": "Link-style button beside the cookie count at the top, opening the site report. Short."
+  },
+  "page_changesOpenTitle": {
+    "message": "See what changed",
+    "description": "Tooltip on the link that reads like '3 changes', beside the cookie count."
+  },
+  "page_rulesOpenTitle": {
+    "message": "Choose which cookies this site may set",
+    "description": "Tooltip on the Block button at the top."
+  },
+  "page_rulesOpen": {
+    "message": "Block",
+    "description": "Button at the top that opens the screen for blocking this site's cookies. Very short: it sits beside an icon in a crowded bar."
+  },
+  "page_addTitle": {
+    "message": "Create a new cookie",
+    "description": "Tooltip on the 'Add cookie' button."
+  },
+  "page_add": {
+    "message": "Add cookie",
+    "description": "Button at the top that opens the editor for a new cookie. Short: a button label."
+  },
+  "page_refreshTitle": {
+    "message": "Read the cookies again",
+    "description": "Tooltip on the refresh icon button."
+  },
+  "page_refresh": {
+    "message": "Refresh",
+    "description": "Name of the refresh icon button, for screen readers. Short."
+  },
+  "page_help": {
+    "message": "Help",
+    "description": "'Help': the name and tooltip of the ? icon button, and the heading of the Help screen. Short."
+  },
+  "page_more": {
+    "message": "More",
+    "description": "Name and tooltip of the ... icon button that opens the More menu. Short."
+  },
+  "page_themeGroup": {
+    "message": "Colour theme",
+    "description": "Name of the pair of light/dark theme buttons in the More menu. Read out by screen readers only, never shown."
+  },
+  "page_themeLightTitle": {
+    "message": "Light theme",
+    "description": "Tooltip on the sun icon that switches to the light theme."
+  },
+  "page_themeLight": {
+    "message": "Light",
+    "description": "Name of the sun icon button that switches to the light theme. Read out by screen readers only, never shown."
+  },
+  "page_themeDarkTitle": {
+    "message": "Dark theme",
+    "description": "Tooltip on the moon icon that switches to the dark theme."
+  },
+  "page_themeDark": {
+    "message": "Dark",
+    "description": "Name of the moon icon button that switches to the dark theme. Read out by screen readers only, never shown."
+  },
+  "page_openInSidePanel": {
+    "message": "Open in side panel",
+    "description": "More menu item: opens cookieZ in Chrome's side panel. Short: a menu item."
+  },
+  "page_openInTab": {
+    "message": "Open in a tab",
+    "description": "More menu item: opens cookieZ in a browser tab of its own. Short: a menu item."
+  },
+  "page_whatsNewOk": {
+    "message": "OK",
+    "description": "Button that closes the one-off 'What's new' line. Short: a button label."
+  },
+  "page_reviewAsk": {
+    "message": "Glad cookieZ is useful. A review in the Chrome Web Store helps other people find it.",
+    "description": "A line shown at most twice, asking for a review. cookieZ is the product name."
+  },
+  "page_reviewOpen": {
+    "message": "Leave a review",
+    "description": "Link-style button that opens cookieZ's page in the Chrome Web Store to leave a review. Short: a button label."
+  },
+  "page_reviewLater": {
+    "message": "Not now",
+    "description": "Link-style button that hides the review request. Short: a button label."
+  },
+  "page_searchLabel": {
+    "message": "Search cookies",
+    "description": "Name of the search box. Read out by screen readers only, never shown."
+  },
+  "page_searchPlaceholder": {
+    "message": "Search, or try name: or domain:",
+    "description": "Grey hint inside the empty search box. Keep 'name:' and 'domain:' in English: they are typed search prefixes."
+  },
+  "page_filtersGroup": {
+    "message": "Show only",
+    "description": "Name of the row of filter buttons under the search box. Read out by screen readers only, never shown."
+  },
+  "page_filterSession": {
+    "message": "Session",
+    "description": "Filter button: show only session cookies (deleted when the browser closes). Short: a small filter button."
+  },
+  "page_filterKept": {
+    "message": "Kept",
+    "description": "Filter button: show only cookies the user has marked as Kept, which cookieZ never deletes. Use the same word as the 'Kept' badge. Short: a small filter button."
+  },
+  "page_filterSoon": {
+    "message": "Expiring soon",
+    "description": "Filter button: show only cookies that expire soon. Short: a small filter button."
+  },
+  "page_filterLarge": {
+    "message": "Large",
+    "description": "Filter button: show only large cookies, close to Chrome's size limit. Short: a small filter button."
+  },
+  "page_filterKnownTitle": {
+    "message": "Cookies with a name in the Open Cookie Database. A guess from the name only.",
+    "description": "Tooltip on the 'Known' filter. The Open Cookie Database is the name of a public list; leave it in English."
+  },
+  "page_filterKnown": {
+    "message": "Known",
+    "description": "Filter button: show only cookies whose name is in a list of known cookies. Short: a small filter button."
+  },
+  "page_filterNotSecureTitle": {
+    "message": "Cookies without Secure, so they're also sent over plain HTTP",
+    "description": "Tooltip on the 'Not Secure' filter. Secure is the cookie attribute's name; keep it in English."
+  },
+  "page_filterNotSecure": {
+    "message": "Not Secure",
+    "description": "Filter button: cookies without the Secure attribute. Keep 'Secure' in English. Short: a small filter button."
+  },
+  "page_filterReadableTitle": {
+    "message": "Cookies without HttpOnly, so the page's scripts can read them",
+    "description": "Tooltip on the 'Readable by scripts' filter. HttpOnly is the cookie attribute's name; keep it in English."
+  },
+  "page_filterReadable": {
+    "message": "Readable by scripts",
+    "description": "Filter button: cookies the page's JavaScript can read (no HttpOnly). Short: a small filter button."
+  },
+  "page_filterSameSiteNoneTitle": {
+    "message": "Cookies with SameSite None, sent when another site loads something from this one",
+    "description": "Tooltip on the 'SameSite None' filter. Keep 'SameSite None' in English: it is the attribute and its value."
+  },
+  "page_searchClearTitle": {
+    "message": "Clear the search and the filters",
+    "description": "Tooltip on the Clear button beside the search box."
+  },
+  "page_searchClear": {
+    "message": "Clear",
+    "description": "Button that empties the search box and turns off the filters. Short: a button label."
+  },
+  "page_deletePanelHeading": {
+    "message": "Delete or export cookies",
+    "description": "Heading of the delete and export area. Read out by screen readers only, never shown."
+  },
+  "page_scopesGroup": {
+    "message": "What to delete",
+    "description": "Name of the list of choices for which cookies to delete. Read out by screen readers only, never shown."
+  },
+  "page_scopePicked": {
+    "message": "Just the ticked cookies",
+    "description": "Choice of which cookies to delete or export: only the ones ticked in the table."
+  },
+  "page_scopeMatches": {
+    "message": "Just the cookies shown",
+    "description": "Choice of which cookies to delete or export: only the ones the search shows."
+  },
+  "page_scopePage": {
+    "message": "This page",
+    "description": "Choice of which cookies to delete or export: the ones the current page gets. Short."
+  },
+  "page_scopeDomain": {
+    "message": "This domain and its subdomains",
+    "description": "Choice of which cookies to delete or export: the whole domain, subdomains included."
+  },
+  "page_scopeAll": {
+    "message": "All sites",
+    "description": "Choice of which cookies to delete or export: every site in the browser. Short."
+  },
+  "page_scopeAllNote": {
+    "message": "everything in this browser profile",
+    "description": "Small note beside 'All sites', starting lower case, explaining it."
+  },
+  "page_scopeCounting": {
+    "message": "Counting…",
+    "description": "Shown for a moment while the number of cookies about to be deleted is counted."
+  },
+  "page_delete": {
+    "message": "Delete…",
+    "description": "Button that starts deleting the chosen cookies; it asks first, hence the dots. Short: a button label."
+  },
+  "page_export": {
+    "message": "Export…",
+    "description": "Button that opens the export screen; hence the dots. Short: a button label."
+  },
+  "page_importTitle": {
+    "message": "Add cookies from a JSON or cookies.txt export",
+    "description": "Tooltip on the Import button. JSON and cookies.txt are file formats; keep them."
+  },
+  "page_import": {
+    "message": "Import",
+    "description": "Button that opens the import screen. Short: a button label."
+  },
+  "page_dataTitle": {
+    "message": "Can't log in? Delete this site's cookies, clear everything else it has stored, and reload it",
+    "description": "Tooltip on the 'Clear and reload...' button."
+  },
+  "page_dataButton": {
+    "message": "Clear and reload…",
+    "description": "Button that deletes this site's cookies and other stored data, then reloads the page. It asks first, hence the dots. Short: a button label."
+  },
+  "page_confirmDelete": {
+    "message": "Yes, delete",
+    "description": "Button that confirms a delete, after a question like 'Delete 6 cookies?'. Short: a button label."
+  },
+  "page_cancel": {
+    "message": "Cancel",
+    "description": "Button that cancels a question or leaves a form without saving. Used on several screens. Short: a button label."
+  },
+  "page_dataYesReload": {
+    "message": "Clear and reload",
+    "description": "Button that confirms clearing the site's data and then reloads the page. Short: a button label."
+  },
+  "page_dataYes": {
+    "message": "Clear, don't reload",
+    "description": "Button that confirms clearing the site's data without reloading the page. Short: a button label."
+  },
+  "page_pickedGroup": {
+    "message": "Ticked cookies",
+    "description": "Name of the bar of actions for the cookies ticked in the table. Read out by screen readers only, never shown."
+  },
+  "page_pickedKeep": {
+    "message": "Keep",
+    "description": "Button: mark the ticked cookies as Kept, so cookieZ never deletes them. Short: a button label."
+  },
+  "page_pickedUnkeep": {
+    "message": "Stop keeping",
+    "description": "Button: stop keeping the ticked cookies, so deletes include them again. Short: a button label."
+  },
+  "page_expireIn": {
+    "message": "Expire in",
+    "description": "Label before the buttons '1 hour', '1 day', '1 week', '1 year', which set when cookies expire. Short."
+  },
+  "page_expireIn1Hour": {
+    "message": "Expire in 1 hour",
+    "description": "Full name of the '1 hour' expiry button. Read out by screen readers only, never shown."
+  },
+  "page_preset1Hour": {
+    "message": "1 hour",
+    "description": "Button: make the cookie expire 1 hour from now. Follows 'Expire in'. Very short."
+  },
+  "page_expireIn1Day": {
+    "message": "Expire in 1 day",
+    "description": "Full name of the '1 day' expiry button. Read out by screen readers only, never shown."
+  },
+  "page_preset1Day": {
+    "message": "1 day",
+    "description": "Button: make the cookie expire 1 day from now. Follows 'Expire in'. Very short."
+  },
+  "page_expireIn1Week": {
+    "message": "Expire in 1 week",
+    "description": "Full name of the '1 week' expiry button. Read out by screen readers only, never shown."
+  },
+  "page_preset1Week": {
+    "message": "1 week",
+    "description": "Button: make the cookie expire 1 week from now. Follows 'Expire in'. Very short."
+  },
+  "page_expireIn1Year": {
+    "message": "Expire in 1 year",
+    "description": "Full name of the '1 year' expiry button. Read out by screen readers only, never shown."
+  },
+  "page_preset1Year": {
+    "message": "1 year",
+    "description": "Button: make the cookie expire 1 year from now. Follows 'Expire in'. Very short."
+  },
+  "page_pickedClear": {
+    "message": "Untick all",
+    "description": "Link-style button that unticks every ticked cookie. Short: a button label."
+  },
+  "page_pickAll": {
+    "message": "Tick every cookie shown",
+    "description": "Tooltip and name of the tick box at the top of the table that ticks every cookie."
+  },
+  "page_colName": {
+    "message": "Name",
+    "description": "The cookie's name. Used as a column heading in several tables. Short: a table column heading."
+  },
+  "page_sortBySize": {
+    "message": "Sort by size",
+    "description": "Tooltip on the Value column heading: clicking it sorts by size."
+  },
+  "page_colValue": {
+    "message": "Value",
+    "description": "The cookie's value. Short: a table column heading."
+  },
+  "page_colSize": {
+    "message": "Size",
+    "description": "The cookie's size in bytes. Short: a table column heading."
+  },
+  "page_colDomain": {
+    "message": "Domain",
+    "description": "The site the cookie belongs to. Short: a table column heading."
+  },
+  "page_colPath": {
+    "message": "Path",
+    "description": "The cookie's path, the part of the site it is sent to. Used in several tables. Short: a table column heading."
+  },
+  "page_colExpires": {
+    "message": "Expires",
+    "description": "When the cookie expires. Short: a table column heading."
+  },
+  "page_colFlags": {
+    "message": "Flags",
+    "description": "Column of small badges such as Secure and HttpOnly. Short: a table column heading. Read out by screen readers too."
+  },
+  "page_colActions": {
+    "message": "Actions",
+    "description": "Column of buttons on each row. Read out by screen readers only, never shown."
+  },
+  "page_emptyTable": {
+    "message": "No cookies are set for this site.",
+    "description": "Shown in place of the table when the site has no cookies."
+  },
+  "page_back": {
+    "message": "Back",
+    "description": "Button that goes back to the main screen. Used on every screen. Short: a button label."
+  },
+  "page_editRuleNote": {
+    "message": "Your site rules block cookies on this site. You can still save one here, but the site won't be able to read it.",
+    "description": "Note in the cookie editor when the user's own rules block cookies on this site."
+  },
+  "page_fieldName": {
+    "message": "Name",
+    "description": "Label of the cookie editor's Name box. Short."
+  },
+  "page_copyNameTitle": {
+    "message": "Copy the name",
+    "description": "Tooltip on the Copy button beside the name."
+  },
+  "page_copy": {
+    "message": "Copy",
+    "description": "Button that copies something to the clipboard. Used in several places. Short: a button label."
+  },
+  "page_nameKnownNote": {
+    "message": "A guess from the name only. From the Open Cookie Database.",
+    "description": "Small grey note under a known cookie's description. The Open Cookie Database is the name of a public list; leave it in English."
+  },
+  "page_fieldValue": {
+    "message": "Value",
+    "description": "Label of the cookie editor's Value box. Short."
+  },
+  "page_copyValueTitle": {
+    "message": "Copy the value",
+    "description": "Tooltip on the Copy button beside the value."
+  },
+  "page_editAsJson": {
+    "message": "Edit as JSON: laid out here, saved on one line",
+    "description": "Tick box in the editor, for a value that is JSON. JSON is a format name; keep it."
+  },
+  "page_decoded": {
+    "message": "Decoded",
+    "description": "Label above the value shown in a readable form (URL-decoded, Base64-decoded and so on). Short."
+  },
+  "page_copyDecodedTitle": {
+    "message": "Copy the decoded value",
+    "description": "Tooltip on the Copy button beside the decoded value."
+  },
+  "page_fieldDomain": {
+    "message": "Domain",
+    "description": "Label of the cookie editor's Domain box. Short."
+  },
+  "page_fieldPath": {
+    "message": "Path",
+    "description": "Label of the cookie editor's Path box. Short."
+  },
+  "page_sameSiteUnset": {
+    "message": "Unset (Chrome decides)",
+    "description": "Choice in the SameSite list: no SameSite attribute, so Chrome uses its default."
+  },
+  "page_sameSiteNone": {
+    "message": "None (needs Secure)",
+    "description": "Choice in the SameSite list. Keep 'None' and 'Secure' in English: they are the attribute value and attribute name."
+  },
+  "page_fieldExpires": {
+    "message": "Expires",
+    "description": "Label of the editor's expiry date. Short."
+  },
+  "page_sessionCheck": {
+    "message": "Session cookie: deleted when the browser closes",
+    "description": "Tick box in the editor: make it a session cookie."
+  },
+  "page_fieldFlags": {
+    "message": "Flags",
+    "description": "Label of the editor's group of tick boxes (Secure, HttpOnly, Host-only). Short."
+  },
+  "page_secureCheck": {
+    "message": "Secure: only sent over HTTPS",
+    "description": "Tick box in the editor. Keep 'Secure' and 'HTTPS' in English."
+  },
+  "page_httpOnlyCheck": {
+    "message": "HttpOnly: hidden from page JavaScript",
+    "description": "Tick box in the editor. Keep 'HttpOnly' in English."
+  },
+  "page_hostOnlyCheck": {
+    "message": "Host-only: this exact host, not its subdomains",
+    "description": "Tick box in the editor: the cookie is sent to this exact host only."
+  },
+  "page_partitionedCheck": {
+    "message": "Partitioned (CHIPS): kept for <span id=\"partitioned-site\"></span> only. Needs Secure.",
+    "description": "Tick box in the editor, for a new cookie. The span holds a site, for example example.com. Keep 'Partitioned', 'CHIPS' and 'Secure' in English. Keep the <span ...></span> exactly as it is; cookieZ puts the value into it."
+  },
+  "page_editChanged": {
+    "message": "The site changed this cookie while you were editing. Saving will overwrite it.",
+    "description": "Warning in the editor when the website changed the cookie while it was open."
+  },
+  "page_save": {
+    "message": "Save",
+    "description": "Button that saves the cookie in the editor. Short: a button label."
+  },
+  "page_duplicateTitle": {
+    "message": "Start a new cookie with these details",
+    "description": "Tooltip on the Duplicate button."
+  },
+  "page_duplicate": {
+    "message": "Duplicate",
+    "description": "Button that starts a new cookie with the details of the one being edited. Short: a button label."
+  },
+  "page_copySetCookieTitle": {
+    "message": "Copy this cookie as the Set-Cookie line a server would send",
+    "description": "Tooltip on the 'Copy as Set-Cookie' button. Set-Cookie is the HTTP header's name; keep it."
+  },
+  "page_copySetCookie": {
+    "message": "Copy as Set-Cookie",
+    "description": "Button that copies the cookie as a Set-Cookie header line. Keep 'Set-Cookie'. Short: a button label."
+  },
+  "page_exportHeading": {
+    "message": "Export cookies",
+    "description": "Heading of the export screen."
+  },
+  "page_formatGroup": {
+    "message": "Format",
+    "description": "Name of the list of export formats. Read out by screen readers only, never shown."
+  },
+  "page_formatJsonNote": {
+    "message": "Compatible with other cookie editors. Keeps every detail.",
+    "description": "Note beside the JSON export format."
+  },
+  "page_formatPlaywrightNote": {
+    "message": "A storageState file, for starting a test already logged in.",
+    "description": "Note beside the Playwright export format (Playwright is a testing tool). Keep 'storageState': it is the file type's name."
+  },
+  "page_formatSeleniumNote": {
+    "message": "Python add_cookie() calls, for a test. Can't hold partitions.",
+    "description": "Note beside the Selenium export format (Selenium is a testing tool). Keep 'Python add_cookie()'."
+  },
+  "page_formatNetscapeNote": {
+    "message": "For curl, wget, yt-dlp and other tools. Can't hold SameSite or partitions.",
+    "description": "Note beside the cookies.txt export format. Keep the tool names curl, wget, yt-dlp, and 'SameSite'."
+  },
+  "page_formatHeader": {
+    "message": "Cookie header",
+    "description": "Export format: a Cookie header line, as a browser sends it. Keep 'Cookie' if the header is known by that name. Short."
+  },
+  "page_formatHeaderNote": {
+    "message": "Names and values only, for one site.",
+    "description": "Note beside the 'Cookie header' export format."
+  },
+  "page_formatCurl": {
+    "message": "curl command",
+    "description": "Export format: a curl command (curl is a program; keep its name). Short."
+  },
+  "page_formatCurlNote": {
+    "message": "Sends these cookies to this page, for bash or zsh.",
+    "description": "Note beside the curl export format. bash and zsh are program names."
+  },
+  "page_exportOutputLabel": {
+    "message": "Exported cookies",
+    "description": "Name of the box showing the exported text. Read out by screen readers only, never shown."
+  },
+  "page_exportPasswordLabel": {
+    "message": "Password (optional)",
+    "description": "Label of the optional password box on the export screen. Short."
+  },
+  "page_show": {
+    "message": "Show",
+    "description": "Tick box beside a password box that shows the password. Very short."
+  },
+  "page_exportPasswordNote": {
+    "message": "Locks the file, so it can only be imported with this password. The password isn't saved anywhere, so don't lose it.",
+    "description": "Note under the export password box."
+  },
+  "page_exportWarning": {
+    "message": "Anyone with this file can be signed in as you. Add a password, or keep it somewhere private.",
+    "description": "Warning on the export screen when the cookies include sign-ins and there's no password."
+  },
+  "page_download": {
+    "message": "Download",
+    "description": "Button that saves the export as a file. Short: a button label."
+  },
+  "page_importHeading": {
+    "message": "Import cookies",
+    "description": "Heading of the import screen."
+  },
+  "page_importIntro": {
+    "message": "Paste cookies exported as JSON (from cookieZ or another cookie editor), a cookies.txt file, Set-Cookie lines, or a curl command (from “Copy as cURL” in DevTools). A Cookie header on its own goes on this site. A cookieZ export with a password asks for it.",
+    "description": "Import screen: what can be pasted. Keep JSON, cookies.txt, Set-Cookie, curl, DevTools and cookieZ. 'Copy as cURL' is the name of a menu item in Chrome DevTools; use the name Chrome uses in your language."
+  },
+  "page_importFileLabel": {
+    "message": "Or choose a file:",
+    "description": "Label of the file picker on the import screen. Short."
+  },
+  "page_importFileHint": {
+    "message": "To choose a file instead, <button id=\"import-tab\" class=\"link-button\" type=\"button\">open cookieZ in a tab</button>.",
+    "description": "Import screen, in the popup, where files can't be chosen. The <button> is a link that opens cookieZ in a tab; translate its text, keep its tags and attributes exactly."
+  },
+  "page_importTextLabel": {
+    "message": "Cookies to import",
+    "description": "Name of the box where cookies are pasted. Read out by screen readers only, never shown."
+  },
+  "page_importPasswordLabel": {
+    "message": "This file has a password. Type it, then press Check.",
+    "description": "Label of the password box for a password-protected export. 'Check' is the button below; use the same word as that button."
+  },
+  "page_importCheck": {
+    "message": "Check",
+    "description": "Button that reads the pasted text and shows what would be imported. Short: a button label."
+  },
+  "page_importMove": {
+    "message": "Put them on <span id=\"import-move-site\"></span> instead",
+    "description": "Tick box on the import preview: put the imported cookies on the current site instead of the ones in the file. The span holds the site, for example example.com. Keep the <span ...></span> exactly as it is; cookieZ puts the value into it."
+  },
+  "page_importWarning": {
+    "message": "Only import cookies you made yourself. Cookies from someone else can sign you in to their account, or be used to trick you.",
+    "description": "Warning on the import preview."
+  },
+  "page_importCompare": {
+    "message": "Compare",
+    "description": "Button that compares the file with the cookies the browser has now, without changing anything. Short: a button label."
+  },
+  "page_compareHeading": {
+    "message": "Compared with your file",
+    "description": "Heading of the screen comparing an import file with the browser's cookies."
+  },
+  "page_colSite": {
+    "message": "Site",
+    "description": "The site a cookie belongs to. Used in several tables. Short: a table column heading."
+  },
+  "page_colSinceFile": {
+    "message": "Since your file",
+    "description": "Comparison table: what changed since the file was made, for example 'Changed' or 'New'. Short: a table column heading."
+  },
+  "page_reportHeading": {
+    "message": "Site report",
+    "description": "Heading of the site report screen."
+  },
+  "page_reportIntro": {
+    "message": "What <span id=\"report-site\" class=\"mono\"></span> has stored in this browser. Purposes are a guess from each cookie's name, using a list inside cookieZ, because any site can give a cookie any name. Nothing here is saved.",
+    "description": "Site report screen: what it shows. The span holds the site, for example example.com. cookieZ is the product name. Keep the <span ...></span> exactly as it is; cookieZ puts the value into it."
+  },
+  "page_reportNoList": {
+    "message": "The list of known cookie names couldn't be loaded, so no cookie could be recognised.",
+    "description": "Error on the site report when the built-in list of cookie names fails to load."
+  },
+  "page_reportEmpty": {
+    "message": "This site hasn't stored any cookies.",
+    "description": "Site report, when the site has no cookies."
+  },
+  "page_colPurpose": {
+    "message": "Purpose",
+    "description": "Site report table: what the cookies are for, such as Advertising or Analytics. Short: a table column heading."
+  },
+  "page_colCookies": {
+    "message": "Cookies",
+    "description": "A number of cookies. Used in several tables. Short: a table column heading."
+  },
+  "page_colSetBy": {
+    "message": "Usually set by",
+    "description": "Site report table: the companies that usually set cookies of this kind. Short: a table column heading."
+  },
+  "page_reportChecksHeading": {
+    "message": "Worth checking",
+    "description": "Site report: heading above a list of things worth a look, such as very large cookies."
+  },
+  "page_reportChecksNone": {
+    "message": "Nothing to flag on this site.",
+    "description": "Site report, when there is nothing worth a look."
+  },
+  "page_colWhat": {
+    "message": "What",
+    "description": "Site report table: the thing worth a look. Short: a table column heading."
+  },
+  "page_colAction": {
+    "message": "Action",
+    "description": "Column holding a button on each row. Read out by screen readers only, never shown."
+  },
+  "page_changesHeading": {
+    "message": "What changed",
+    "description": "Heading of the screen listing changes to this site's cookies."
+  },
+  "page_changesIntro": {
+    "message": "What has happened to this site's cookies since you opened cookieZ, newest first, whether the site did it or you did. Nothing here is saved: the list is gone when cookieZ closes.",
+    "description": "Changes screen: what it shows. cookieZ is the product name."
+  },
+  "page_colTime": {
+    "message": "Time",
+    "description": "Time of day a change happened. Short: a table column heading."
+  },
+  "page_colWhatHappened": {
+    "message": "What happened",
+    "description": "What happened to the cookie, such as Added or Removed. Short: a table column heading."
+  },
+  "page_keptHeading": {
+    "message": "Kept cookies",
+    "description": "Heading of the screen listing every Kept cookie. 'Kept' is the same word as the badge and filter."
+  },
+  "page_keptIntro": {
+    "message": "cookieZ leaves these out of every delete. This is the whole list it has saved, for every site: names, never values.",
+    "description": "Kept cookies screen: what it shows. cookieZ is the product name."
+  },
+  "page_colStopKeeping": {
+    "message": "Stop keeping",
+    "description": "Column of 'Stop keeping' buttons in the Kept cookies table. Read out by screen readers only, never shown."
+  },
+  "page_keptEmpty": {
+    "message": "No cookies are marked as Kept.",
+    "description": "Kept cookies screen, when there are none."
+  },
+  "page_keptClear": {
+    "message": "Stop keeping all…",
+    "description": "Button that stops keeping every cookie; it asks first, hence the dots. Short: a button label."
+  },
+  "page_keptConfirmYes": {
+    "message": "Yes, stop keeping",
+    "description": "Button that confirms 'Stop keeping all'. Short: a button label."
+  },
+  "page_rulesHeading": {
+    "message": "Block cookies",
+    "description": "Heading of the screen for blocking cookies."
+  },
+  "page_rulesIntro": {
+    "message": "Choose which sites may set cookies. Chrome follows these rules all the time, even when cookieZ is closed. Nothing is sent anywhere.",
+    "description": "Block screen: what the rules are. cookieZ is the product name."
+  },
+  "page_rulesGate": {
+    "message": "To set rules, cookieZ needs Chrome's permission to change site settings. Chrome's prompt also mentions the camera, microphone and location, because one permission covers every site setting. cookieZ only ever changes the cookie setting.",
+    "description": "Block screen, before Chrome's permission to change site settings is given: why Chrome's prompt mentions the camera and so on."
+  },
+  "page_rulesGateSaved": {
+    "message": "Your saved rules are listed below, but Chrome isn't following them until you allow this again.",
+    "description": "Block screen, when there are saved rules but the permission was taken away."
+  },
+  "page_rulesGrant": {
+    "message": "Allow cookieZ to set rules",
+    "description": "Button that asks Chrome for permission to change site settings. Short: a button label."
+  },
+  "page_rulesIncognito": {
+    "message": "Rules are set from a normal window. They apply in incognito windows too.",
+    "description": "Block screen, opened from an incognito window."
+  },
+  "page_rulesSiteHeading": {
+    "message": "On <span id=\"rules-site-name\"></span>",
+    "description": "Heading of the rules for the current site. The span holds the site, for example example.com. Keep the <span ...></span> exactly as it is; cookieZ puts the value into it."
+  },
+  "page_ruleAllowAll": {
+    "message": "Allow all cookies",
+    "description": "Rule choice for a site: allow every cookie. Bold line of a choice."
+  },
+  "page_ruleAllowAllNote": {
+    "message": "Including ones from other companies on its pages.",
+    "description": "Note under 'Allow all cookies'. 'Other companies' means third parties."
+  },
+  "page_ruleSession": {
+    "message": "Clear when Chrome closes",
+    "description": "Rule choice for a site: its cookies are deleted when Chrome closes. Bold line of a choice."
+  },
+  "page_ruleSessionNote": {
+    "message": "The site works as normal, but Chrome deletes its cookies, and other companies' cookies on its pages, every time it closes.",
+    "description": "Note under 'Clear when Chrome closes'."
+  },
+  "page_ruleOwnOnly": {
+    "message": "Block other companies' cookies",
+    "description": "Rule choice: block third-party cookies. Bold line of a choice, used for one site and for every site."
+  },
+  "page_ruleOwnOnlyNote": {
+    "message": "The site keeps its own cookies, so signing in still works. Embedded videos, maps and \"sign in with\" buttons from other companies may stop working.",
+    "description": "Note under 'Block other companies' cookies', for one site."
+  },
+  "page_ruleBlockAll": {
+    "message": "Block all cookies",
+    "description": "Rule choice: block every cookie. Bold line of a choice, used for one site and for every site."
+  },
+  "page_ruleBlockAllNote": {
+    "message": "The site can't set or read any cookie. You'll be signed out, and it may not work at all.",
+    "description": "Note under 'Block all cookies', for one site."
+  },
+  "page_rulesDeleteOnBlock": {
+    "message": "When I block cookies, delete the ones already saved without asking",
+    "description": "Tick box on the Block screen."
+  },
+  "page_cleanupYes": {
+    "message": "Delete them",
+    "description": "Button after blocking: delete the cookies already saved. Short: a button label."
+  },
+  "page_cleanupNo": {
+    "message": "Leave them",
+    "description": "Button after blocking: leave the cookies already saved. Short: a button label."
+  },
+  "page_rulesEverywhereHeading": {
+    "message": "On every other site",
+    "description": "Heading of the rules for every site without a rule of its own."
+  },
+  "page_everywhereAllow": {
+    "message": "Allow cookies",
+    "description": "Rule choice for every other site: allow cookies. Bold line of a choice."
+  },
+  "page_everywhereAllowNote": {
+    "message": "What Chrome normally does.",
+    "description": "Note under 'Allow cookies' for every other site."
+  },
+  "page_everywhereOwnOnlyNote": {
+    "message": "Every site keeps its own cookies, and other companies' are blocked, using Chrome's own switch. Partitioned cookies, which can't follow you between sites, still work, as do a few Chrome makes exceptions for.",
+    "description": "Note under 'Block other companies' cookies', for every site."
+  },
+  "page_everywhereBlockNote": {
+    "message": "Only sites you've set to allow can use cookies. You won't be able to sign in anywhere else.",
+    "description": "Note under 'Block all cookies', for every site."
+  },
+  "page_everywhereConfirm": {
+    "message": "Block cookies on every site without a rule of its own?",
+    "description": "Question asked before blocking all cookies on every site."
+  },
+  "page_everywhereConfirmYes": {
+    "message": "Yes, block them",
+    "description": "Button that confirms blocking all cookies on every site. Short: a button label."
+  },
+  "page_trackersGroup": {
+    "message": "Known trackers",
+    "description": "Name of the known-trackers section of the Block screen. Read out by screen readers only, never shown."
+  },
+  "page_trackersName": {
+    "message": "Block known trackers' cookies on every site",
+    "description": "Tick box on the Block screen. Bold line of a choice."
+  },
+  "page_trackersNote": {
+    "message": "Cookies from <span id=\"rules-trackers-count\">about 130</span> advertising and analytics companies, from a list inside cookieZ that updates when cookieZ does. Sites you've set to allow all cookies still get them. This blocks the trackers' cookies, not the trackers themselves.",
+    "description": "Note under the trackers tick box. The span holds the number of companies, for example 130; 'about 130' is only shown if the number can't be filled in. Translate 'about 130', keep the span's tags exactly. cookieZ is the product name."
+  },
+  "page_rulesListHeading": {
+    "message": "Sites with a rule of their own",
+    "description": "Heading of the table of sites with their own rule."
+  },
+  "page_colRule": {
+    "message": "Rule",
+    "description": "Rules table: the rule a site has, such as 'Block all cookies'. Short: a table column heading."
+  },
+  "page_colCookiesNow": {
+    "message": "Cookies now",
+    "description": "Rules table: how many cookies the site has now. Short: a table column heading."
+  },
+  "page_colRemove": {
+    "message": "Remove",
+    "description": "Column of Remove buttons in the rules table. Read out by screen readers only, never shown."
+  },
+  "page_rulesEmpty": {
+    "message": "No site has a rule of its own.",
+    "description": "Rules table, when no site has a rule."
+  },
+  "page_rulesClear": {
+    "message": "Turn off all rules…",
+    "description": "Button that turns off every rule; it asks first, hence the dots. Short: a button label."
+  },
+  "page_rulesConfirm": {
+    "message": "Turn off every rule? Chrome goes back to allowing cookies everywhere.",
+    "description": "Question asked before turning off every rule."
+  },
+  "page_rulesConfirmYes": {
+    "message": "Yes, turn them off",
+    "description": "Button that confirms turning off every rule. Short: a button label."
+  },
+  "page_rulesBackup": {
+    "message": "Save a copy",
+    "description": "Button that saves the rules as a file. Short: a button label."
+  },
+  "page_rulesLoad": {
+    "message": "Load a copy…",
+    "description": "Button that loads rules from a saved file; hence the dots. Short: a button label."
+  },
+  "page_rulesLoadYes": {
+    "message": "Replace my rules",
+    "description": "Button that confirms replacing the rules with the ones in the file. Short: a button label."
+  },
+  "page_helpScopeQ": {
+    "message": "Which delete option should I pick?",
+    "description": "Question in the Help screen."
+  },
+  "page_helpScopeA": {
+    "message": "<strong>This page</strong> deletes the cookies this page gets. <strong>This domain and its subdomains</strong> also reaches subdomains, such as login.example.com. <strong>All sites</strong> deletes every cookie in this browser profile. The count and the sites are always shown first.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons. The bold words are the choices in the delete area. login.example.com is an example address; keep it."
+  },
+  "page_helpReportQ": {
+    "message": "What does a site store on me?",
+    "description": "Question in the Help screen."
+  },
+  "page_helpReportA": {
+    "message": "<strong>Site report</strong>, beside the cookie count, groups a site's cookies by purpose and lists anything worth checking. Each purpose is a guess from the cookie's name.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons."
+  },
+  "page_helpLoginQ": {
+    "message": "Clearing cookies didn't let me log in",
+    "description": "Question in the Help screen."
+  },
+  "page_helpLoginA": {
+    "message": "Try <strong>Clear and reload</strong> under the delete options, then <strong>Clear and reload</strong>. As well as the site's cookies, it clears what else the site has stored: local storage, databases, cache storage and offline files. Kept cookies are left alone, and Undo can put the cookies back, but not the rest.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons."
+  },
+  "page_helpUndoQ": {
+    "message": "I deleted or changed the wrong cookies",
+    "description": "Question in the Help screen."
+  },
+  "page_helpUndoA": {
+    "message": "Click <strong>Undo</strong> in the message at the top. It works for 10 minutes after a delete, an import or a Save, even if you close cookieZ, and only for the most recent one.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons. 'Undo' and 'Save' are button names. cookieZ is the product name."
+  },
+  "page_helpLiveQ": {
+    "message": "Why did a row light up?",
+    "description": "Question in the Help screen: rows in the table briefly highlight."
+  },
+  "page_helpLiveA": {
+    "message": "The site, or cookieZ, has just added or changed that cookie. The table follows changes as they happen, so you don't need to press Refresh. Click <strong>changes</strong> next to the cookie count to see a list of what was added, changed, removed or expired since you opened cookieZ.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons. 'changes' is the link beside the cookie count, as in '3 changes'."
+  },
+  "page_helpKeptQ": {
+    "message": "What does the bookmark do?",
+    "description": "Question in the Help screen. The bookmark is the icon on each row that marks a cookie as Kept."
+  },
+  "page_helpKeptA": {
+    "message": "It marks a cookie as <strong>Kept</strong>, so cookieZ leaves it out of every delete, even \"All sites\". It doesn't stop the website changing or removing the cookie itself. To see every cookie you've kept, on any site, click <strong>Kept cookies</strong> under the delete options.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons. 'All sites' is the delete choice of that name."
+  },
+  "page_helpBlockQ": {
+    "message": "Can I stop a site setting cookies?",
+    "description": "Question in the Help screen."
+  },
+  "page_helpBlockA": {
+    "message": "Yes. Click <strong>Block</strong> at the top. For each site you can allow all cookies, have them cleared when Chrome closes, block other companies' cookies, or block every cookie. You can also block other companies' cookies on every site, or every cookie on every site except the ones you allow. Chrome does the blocking, so it works while cookieZ is closed, and removing cookieZ removes the rules. Chrome has its own switch for blocking other companies' cookies everywhere, in its settings; cookieZ doesn't change that.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons."
+  },
+  "page_helpBrokenQ": {
+    "message": "A site stopped working after I set a rule",
+    "description": "Question in the Help screen."
+  },
+  "page_helpBrokenA": {
+    "message": "Click <strong>Block</strong> on that site and choose <strong>Allow all cookies</strong>, or remove its rule from the list. Then reload the page.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons."
+  },
+  "page_helpBadgesQ": {
+    "message": "What do the badges mean?",
+    "description": "Question in the Help screen. Badges are the small labels on each row, such as Secure."
+  },
+  "page_helpBadgesA": {
+    "message": "<strong>Secure</strong>: only sent over HTTPS. <strong>HttpOnly</strong>: hidden from the page's own JavaScript. <strong>Subdomains</strong>: also sent to every subdomain. <strong>Partitioned</strong>: kept separately for each site it's used on. <strong>SameSite</strong>: when other sites can send it. <strong>Large</strong>: close to Chrome's 4 KB limit for one cookie.",
+    "description": "Answer in the Help screen. Keep the <strong> tags around the same words as in your translation of those buttons. Keep Secure, HttpOnly, Partitioned, SameSite and HTTPS in English; translate Subdomains and Large as on the badges."
+  },
+  "page_helpSizeQ": {
+    "message": "What's the size next to the cookie count?",
+    "description": "Question in the Help screen."
+  },
+  "page_helpSizeA": {
+    "message": "Roughly how much this site's cookies add to every request. Many servers refuse more than about 8 KB, which can stop you logging in, so cookieZ warns you above 6 KB.",
+    "description": "Answer in the Help screen. KB is kilobytes."
+  },
+  "page_helpKeysQ": {
+    "message": "Keyboard",
+    "description": "Heading of the keyboard shortcuts section of the Help screen."
+  },
+  "page_keyOpen": {
+    "message": "Open cookieZ. Change it at chrome://extensions/shortcuts.",
+    "description": "Help, keyboard shortcuts: what Alt+Shift+K does. Keep chrome://extensions/shortcuts as it is."
+  },
+  "page_keySearch": {
+    "message": "Search the cookies. Start with name:, value:, domain: or path: to search that part only.",
+    "description": "Help, keyboard shortcuts: what / does. Keep name:, value:, domain: and path: in English: they are typed search prefixes."
+  },
+  "page_keyAdd": {
+    "message": "Add a new cookie.",
+    "description": "Help, keyboard shortcuts: what N does."
+  },
+  "page_keyMove": {
+    "message": "Move between cookies. <kbd>Home</kbd> and <kbd>End</kbd> jump to the first and last.",
+    "description": "Help, keyboard shortcuts: what the up and down arrows do. Keep the <kbd> tags and the key names inside them."
+  },
+  "page_keyEdit": {
+    "message": "Edit the cookie.",
+    "description": "Help, keyboard shortcuts: what Enter does."
+  },
+  "page_keyTick": {
+    "message": "Tick it.",
+    "description": "Help, keyboard shortcuts: what Space does (ticks the cookie's tick box)."
+  },
+  "page_keyKeep": {
+    "message": "Keep it, or stop keeping it.",
+    "description": "Help, keyboard shortcuts: what K does."
+  },
+  "page_keyDelete": {
+    "message": "Delete it. It asks \"Sure?\" first: press <kbd>Enter</kbd> to delete.",
+    "description": "Help, keyboard shortcuts: what Delete does. 'Sure?' is the question shown on the row. Keep the <kbd> tags and the key name inside them."
+  },
+  "page_keyEsc": {
+    "message": "Go back from this screen, the editor, export, import or site rules, or cancel a delete or other question.",
+    "description": "Help, keyboard shortcuts: what Esc does."
+  },
+  "page_helpPanelQ": {
+    "message": "Can cookieZ stay open while I browse?",
+    "description": "Question in the Help screen."
+  },
+  "page_helpPanelA": {
+    "message": "Yes. Click More (the three dots at the top), then Open in side panel. cookieZ opens at the side of the window and shows the cookies of whichever tab you're on. It waits while you're editing, and catches up when you're back. The keyboard shortcuts work there too.",
+    "description": "Answer in the Help screen. 'More' and 'Open in side panel' are the button and menu item of those names; use the same words."
+  },
+  "page_helpIncognitoQ": {
+    "message": "Incognito",
+    "description": "Heading in the Help screen. Use the word Chrome uses for incognito in your language."
+  },
+  "page_helpIncognitoA": {
+    "message": "Turn on \"Allow in incognito\" on cookieZ's Details page in chrome://extensions. Incognito cookies are kept separate, and a delete in one never touches the other.",
+    "description": "Answer in the Help screen. 'Allow in incognito' and 'Details' are names on Chrome's extensions page; use Chrome's own words for them in your language."
+  },
+  "page_helpContact": {
+    "message": "More help at cookiez.uk/support, or email support@cookiez.uk.",
+    "description": "Bottom of the Help screen. Keep the web address and email address exactly."
+  },
+  "page_helpReview": {
+    "message": "If cookieZ helps you, a review in the Chrome Web Store helps other people find it.",
+    "description": "Bottom of the Help screen, before the 'Leave a review' button. cookieZ is the product name."
   }
 }

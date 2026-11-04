@@ -39,7 +39,7 @@
          has a message, so the popup is never blank. -->
 
     <section id="state-loading" class="state">
-      <p class="muted">Reading cookies&hellip;</p>
+      <p class="muted" data-i18n="page_loading">Reading cookies&hellip;</p>
     </section>
 
     <!-- Shown until access to websites is granted. Without that access, Chrome
@@ -48,21 +48,21 @@
     <section id="state-gate" class="state notice" hidden>
       <div class="site">
         <svg class="mark" aria-hidden="true" focusable="false"><use href="#keycap" /></svg>
-        <h1>One-time permission needed</h1>
+        <h1 data-i18n="page_gateHeading">One-time permission needed</h1>
       </div>
-      <p>
+      <p data-i18n="page_gateIntro">
         Chrome only shows an extension a site's cookies once it has access
         to that site. cookieZ needs access to the websites you visit.
       </p>
-      <p>
+      <p data-i18n="page_gateAfter">
         Then you can see, edit, delete, block and export any site's cookies.
       </p>
-      <p class="muted">
+      <p class="muted" data-i18n="page_gatePrivacy">
         Access is used only while cookieZ is open. Nothing is sent anywhere:
         cookieZ makes no network requests and has no analytics.
       </p>
       <p>
-        <button id="grant-button" class="primary" type="button">
+        <button id="grant-button" data-i18n="page_gateGrant" class="primary" type="button">
           Grant access
         </button>
       </p>
@@ -71,16 +71,16 @@
 
     <!-- Pages like chrome:// and the Web Store can't have their cookies read. -->
     <section id="state-blocked" class="state notice" hidden>
-      <h1>No cookies on this page</h1>
+      <h1 data-i18n="page_blockedHeading">No cookies on this page</h1>
       <p id="blocked-message"></p>
-      <p class="muted">Open a normal website and click the icon again.</p>
+      <p class="muted" data-i18n="page_blockedHint">Open a normal website and click the icon again.</p>
     </section>
 
     <section id="state-error" class="state notice" hidden>
-      <h1>Something went wrong</h1>
+      <h1 data-i18n="page_errorHeading">Something went wrong</h1>
       <p id="error-message" class="error"></p>
       <p>
-        <button id="retry-button" type="button">Try again</button>
+        <button id="retry-button" data-i18n="page_retry" type="button">Try again</button>
       </p>
     </section>
 
@@ -95,10 +95,10 @@
             <p class="count-line">
               <span id="cookie-count"></span>
               <span aria-hidden="true">&middot;</span>
-              <button id="report-open" class="link-button" type="button" title="See what this site has stored, and what's worth checking">Site report</button>
+              <button id="report-open" data-i18n="page_reportOpen" data-i18n-title="page_reportOpenTitle" class="link-button" type="button" title="See what this site has stored, and what's worth checking">Site report</button>
               <span id="changes-link" hidden>
                 <span aria-hidden="true">&middot;</span>
-                <button id="changes-open" class="link-button" type="button" title="See what changed"></button>
+                <button id="changes-open" data-i18n-title="page_changesOpenTitle" class="link-button" type="button" title="See what changed"></button>
               </span>
             </p>
             <!-- Says what the site just changed, for screen readers. The
@@ -109,48 +109,48 @@
         <div class="bar-actions">
           <!-- Opens the blocking screen. Its label says what's being done to
                this site's cookies, and it lights up while something is. -->
-          <button id="rules-open" class="block-button" type="button" title="Choose which cookies this site may set">
+          <button id="rules-open" data-i18n-title="page_rulesOpenTitle" class="block-button" type="button" title="Choose which cookies this site may set">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 2.5 4.5 5.4v6.1c0 4.6 3.1 8.6 7.5 10 4.4-1.4 7.5-5.4 7.5-10V5.4z"
                     fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
               <path d="M8.6 15.4 15.4 8.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>
-            <span id="rules-open-label">Block</span>
+            <span id="rules-open-label" data-i18n="page_rulesOpen">Block</span>
           </button>
 
-          <button id="add-button" type="button" title="Create a new cookie">
+          <button id="add-button" data-i18n="page_add" data-i18n-title="page_addTitle" type="button" title="Create a new cookie">
             Add cookie
           </button>
           <!-- Icon buttons. Each has its name in a visually hidden span for
                screen readers, and as its tooltip. The icons are drawn like
                the ones in icons.js: 24 x 24, 2px lines. -->
-          <button id="refresh-button" class="icon-button" type="button" title="Read the cookies again">
+          <button id="refresh-button" data-i18n-title="page_refreshTitle" class="icon-button" type="button" title="Read the cookies again">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M20 12a8 8 0 1 1-2.34-5.66" />
               <path d="M20 4v5h-5" />
             </svg>
-            <span class="visually-hidden">Refresh</span>
+            <span class="visually-hidden" data-i18n="page_refresh">Refresh</span>
           </button>
-          <button id="help-button" class="icon-button" type="button" title="Help">
+          <button id="help-button" data-i18n-title="page_help" class="icon-button" type="button" title="Help">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <circle cx="12" cy="12" r="9" />
               <path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.5" />
               <path d="M12 17h.01" />
             </svg>
-            <span class="visually-hidden">Help</span>
+            <span class="visually-hidden" data-i18n="page_help">Help</span>
           </button>
-          <button id="more-button" class="icon-button" type="button" popovertarget="more-menu" title="More">
+          <button id="more-button" data-i18n-title="page_more" class="icon-button" type="button" popovertarget="more-menu" title="More">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M5 12h.01M12 12h.01M19 12h.01" />
             </svg>
-            <span class="visually-hidden">More</span>
+            <span class="visually-hidden" data-i18n="page_more">More</span>
           </button>
           <!-- The things people set once. A native popover, so Esc and clicking
                away close it, and focus goes back to the More button. -->
           <div id="more-menu" class="more-menu" popover>
             <!-- Follows the system theme until someone picks the other one.
                  popup.js selects the button for the theme showing. -->
-            <div class="theme" role="radiogroup" aria-label="Colour theme">
+            <div class="theme" data-i18n-aria-label="page_themeGroup" role="radiogroup" aria-label="Colour theme">
               <input
                 type="radio"
                 name="theme"
@@ -158,7 +158,7 @@
                 value="light"
                 class="visually-hidden"
               />
-              <label for="theme-light" title="Light theme">
+              <label for="theme-light" data-i18n-title="page_themeLightTitle" title="Light theme">
                 <!-- Icons are inline SVG, since an icon font would be a network request.
                      currentColor makes them match the label's colour. -->
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -174,7 +174,7 @@
                     <line x1="17.9" y1="6.1" x2="19.4" y2="4.6" />
                   </g>
                 </svg>
-                <span class="visually-hidden">Light</span>
+                <span class="visually-hidden" data-i18n="page_themeLight">Light</span>
               </label>
 
               <input
@@ -184,14 +184,14 @@
                 value="dark"
                 class="visually-hidden"
               />
-              <label for="theme-dark" title="Dark theme">
+              <label for="theme-dark" data-i18n-title="page_themeDarkTitle" title="Dark theme">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                   <path
                     d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
                     fill="currentColor"
                   />
                 </svg>
-                <span class="visually-hidden">Dark</span>
+                <span class="visually-hidden" data-i18n="page_themeDark">Dark</span>
               </label>
             </div>
             <!-- Hidden when already in the side panel or a tab. -->
@@ -200,13 +200,13 @@
                 <rect x="3" y="4" width="18" height="16" rx="2" />
                 <path d="M15 4v16" />
               </svg>
-              Open in side panel
+              <span data-i18n="page_openInSidePanel">Open in side panel</span>
             </button>
             <button id="tab-button" class="menu-item" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
               </svg>
-              Open in a tab
+              <span data-i18n="page_openInTab">Open in a tab</span>
             </button>
           </div>
         </div>
@@ -216,7 +216,7 @@
            line on a fresh install. -->
       <p id="whats-new" class="result whats-new" hidden>
         <span id="whats-new-text"></span>
-        <button id="whats-new-close" class="link-button" type="button">OK</button>
+        <button id="whats-new-close" class="link-button" type="button" data-i18n="page_whatsNewOk">OK</button>
       </p>
       <!-- Status lines like these are always on the page and only their
            text changes, so screen readers hear every message. A line
@@ -229,20 +229,20 @@
            src/lib/review.js. "Leave a review" opens the store's page in a
            new tab, only when clicked. -->
       <p id="review-ask" class="result whats-new" hidden>
-        <span>Glad cookieZ is useful. A review in the Chrome Web Store helps other people find it.</span>
-        <button id="review-open" class="link-button" type="button">Leave a review</button>
-        <button id="review-later" class="link-button" type="button">Not now</button>
+        <span data-i18n="page_reviewAsk">Glad cookieZ is useful. A review in the Chrome Web Store helps other people find it.</span>
+        <button id="review-open" class="link-button" type="button" data-i18n="page_reviewOpen">Leave a review</button>
+        <button id="review-later" class="link-button" type="button" data-i18n="page_reviewLater">Not now</button>
       </p>
 
       <!-- Filters the table. While searching or filtering, an extra delete
            option removes only the cookies shown. -->
       <div class="search">
-        <label for="search-input" class="visually-hidden">Search cookies</label>
+        <label for="search-input" class="visually-hidden" data-i18n="page_searchLabel">Search cookies</label>
         <span class="search-field">
           <input
             id="search-input"
             type="search"
-            placeholder="Search, or try name: or domain:"
+            placeholder="Search, or try name: or domain:" data-i18n-placeholder="page_searchPlaceholder"
             autocomplete="off"
             spellcheck="false"
           />
@@ -252,30 +252,30 @@
         <!-- Quick filters. Each shows only the cookies it describes, and they
              add up: Secure and Session together shows cookies that are both.
              popup.js hides any that no cookie on this site matches. -->
-        <div id="filters" class="filters" role="group" aria-label="Show only" hidden>
+        <div id="filters" class="filters" role="group" aria-label="Show only" data-i18n-aria-label="page_filtersGroup" hidden>
           <button type="button" class="chip" data-filter="secure" aria-pressed="false">Secure</button>
           <button type="button" class="chip" data-filter="httponly" aria-pressed="false">HttpOnly</button>
-          <button type="button" class="chip" data-filter="session" aria-pressed="false">Session</button>
-          <button type="button" class="chip" data-filter="kept" aria-pressed="false">Kept</button>
-          <button type="button" class="chip" data-filter="soon" aria-pressed="false">Expiring soon</button>
-          <button type="button" class="chip" data-filter="large" aria-pressed="false">Large</button>
+          <button type="button" class="chip" data-filter="session" aria-pressed="false" data-i18n="page_filterSession">Session</button>
+          <button type="button" class="chip" data-filter="kept" aria-pressed="false" data-i18n="page_filterKept">Kept</button>
+          <button type="button" class="chip" data-filter="soon" aria-pressed="false" data-i18n="page_filterSoon">Expiring soon</button>
+          <button type="button" class="chip" data-filter="large" aria-pressed="false" data-i18n="page_filterLarge">Large</button>
           <button type="button" class="chip" data-filter="partitioned" aria-pressed="false">Partitioned</button>
-          <button type="button" class="chip" data-filter="known" aria-pressed="false"
-                  title="Cookies with a name in the Open Cookie Database. A guess from the name only.">Known</button>
+          <button type="button" class="chip" data-filter="known" aria-pressed="false" data-i18n="page_filterKnown"
+                  title="Cookies with a name in the Open Cookie Database. A guess from the name only." data-i18n-title="page_filterKnownTitle">Known</button>
           <!-- Checks for developers. Facts about each cookie, nothing more.
                "Not Secure" is only offered on an HTTPS page. They're kept
                together, so if the row is too long they move to the next
                line as a group. -->
           <span class="filters-checks">
-            <button type="button" class="chip" data-filter="notsecure" aria-pressed="false"
-                    title="Cookies without Secure, so they're also sent over plain HTTP">Not Secure</button>
-            <button type="button" class="chip" data-filter="readable" aria-pressed="false"
-                    title="Cookies without HttpOnly, so the page's scripts can read them">Readable by scripts</button>
+            <button type="button" class="chip" data-filter="notsecure" aria-pressed="false" data-i18n="page_filterNotSecure"
+                    title="Cookies without Secure, so they're also sent over plain HTTP" data-i18n-title="page_filterNotSecureTitle">Not Secure</button>
+            <button type="button" class="chip" data-filter="readable" aria-pressed="false" data-i18n="page_filterReadable"
+                    title="Cookies without HttpOnly, so the page's scripts can read them" data-i18n-title="page_filterReadableTitle">Readable by scripts</button>
             <button type="button" class="chip" data-filter="samesitenone" aria-pressed="false"
-                    title="Cookies with SameSite None, sent when another site loads something from this one">SameSite None</button>
+                    title="Cookies with SameSite None, sent when another site loads something from this one" data-i18n-title="page_filterSameSiteNoneTitle">SameSite None</button>
           </span>
         </div>
-        <button id="search-clear" type="button" hidden title="Clear the search and the filters">
+        <button id="search-clear" data-i18n="page_searchClear" type="button" hidden title="Clear the search and the filters" data-i18n-title="page_searchClearTitle">
           Clear
         </button>
       </div>
@@ -283,40 +283,40 @@
       <!-- The count shown here comes from the same list that gets deleted.
            Export uses the same choice of cookies. -->
       <section id="delete-panel">
-        <h2 class="visually-hidden">Delete or export cookies</h2>
+        <h2 class="visually-hidden" data-i18n="page_deletePanelHeading">Delete or export cookies</h2>
 
-        <div class="scopes" role="radiogroup" aria-label="What to delete">
+        <div class="scopes" role="radiogroup" aria-label="What to delete" data-i18n-aria-label="page_scopesGroup">
           <!-- Only shown while some cookies are ticked in the table. -->
           <label class="scope" id="scope-picked-row" hidden>
             <input type="radio" name="scope" value="picked" />
-            <span class="scope-label">Just the ticked cookies</span>
+            <span class="scope-label" data-i18n="page_scopePicked">Just the ticked cookies</span>
             <span class="scope-target scope-note" id="scope-target-picked"></span>
           </label>
           <!-- Only shown while searching. Without it, pressing Delete after a search
                would remove every cookie in the scope, not just the ones on screen. -->
           <label class="scope" id="scope-matches-row" hidden>
             <input type="radio" name="scope" value="matches" />
-            <span class="scope-label">Just the cookies shown</span>
+            <span class="scope-label" data-i18n="page_scopeMatches">Just the cookies shown</span>
             <span class="scope-target scope-note" id="scope-target-matches"></span>
           </label>
           <label class="scope">
             <input type="radio" name="scope" value="page" checked />
-            <span class="scope-label">This page</span>
+            <span class="scope-label" data-i18n="page_scopePage">This page</span>
             <span class="scope-target" id="scope-target-page"></span>
           </label>
           <label class="scope">
             <input type="radio" name="scope" value="domain" />
-            <span class="scope-label">This domain and its subdomains</span>
+            <span class="scope-label" data-i18n="page_scopeDomain">This domain and its subdomains</span>
             <span class="scope-target" id="scope-target-domain"></span>
           </label>
           <label class="scope">
             <input type="radio" name="scope" value="all" />
-            <span class="scope-label">All sites</span>
-            <span class="scope-target scope-note">everything in this browser profile</span>
+            <span class="scope-label" data-i18n="page_scopeAll">All sites</span>
+            <span class="scope-target scope-note" data-i18n="page_scopeAllNote">everything in this browser profile</span>
           </label>
         </div>
 
-        <p id="scope-summary" class="scope-summary" role="status">
+        <p id="scope-summary" class="scope-summary" role="status" data-i18n="page_scopeCounting">
           Counting&hellip;
         </p>
 
@@ -326,19 +326,19 @@
         </details>
 
         <div class="actions">
-          <button id="delete-button" class="danger" type="button" disabled>
+          <button id="delete-button" class="danger" type="button" disabled data-i18n="page_delete">
             Delete&hellip;
           </button>
-          <button id="export-button" type="button" disabled>
+          <button id="export-button" type="button" disabled data-i18n="page_export">
             Export&hellip;
           </button>
-          <button id="import-button" type="button" title="Add cookies from a JSON or cookies.txt export">
+          <button id="import-button" data-i18n="page_import" data-i18n-title="page_importTitle" type="button" title="Add cookies from a JSON or cookies.txt export">
             Import
           </button>
           <!-- This site's cookies, plus everything else it has stored. The
                usual fix for a site you can't log in to. It asks first, with
                the count. -->
-          <button id="data-button" type="button" title="Can't log in? Delete this site's cookies, clear everything else it has stored, and reload it">
+          <button id="data-button" data-i18n="page_dataButton" data-i18n-title="page_dataTitle" type="button" title="Can't log in? Delete this site's cookies, clear everything else it has stored, and reload it">
             Clear and reload&hellip;
           </button>
           <!-- Opens the list of every kept cookie, on any site. Only shown
@@ -350,17 +350,17 @@
                onto its buttons. -->
           <div id="confirm-row" class="confirm" role="group" aria-labelledby="confirm-text" hidden>
             <span id="confirm-text"></span>
-            <button id="confirm-yes" class="danger solid" type="button">
+            <button id="confirm-yes" class="danger solid" type="button" data-i18n="page_confirmDelete">
               Yes, delete
             </button>
-            <button id="confirm-no" type="button">Cancel</button>
+            <button id="confirm-no" type="button" data-i18n="page_cancel">Cancel</button>
           </div>
 
           <div id="data-confirm" class="confirm data-confirm" role="group" aria-labelledby="data-confirm-text" hidden>
             <span id="data-confirm-text"></span>
-            <button id="data-yes-reload" class="danger solid" type="button">Clear and reload</button>
-            <button id="data-yes" class="danger" type="button">Clear, don't reload</button>
-            <button id="data-no" type="button">Cancel</button>
+            <button id="data-yes-reload" class="danger solid" type="button" data-i18n="page_dataYesReload">Clear and reload</button>
+            <button id="data-yes" class="danger" type="button" data-i18n="page_dataYes">Clear, don't reload</button>
+            <button id="data-no" type="button" data-i18n="page_cancel">Cancel</button>
           </div>
         </div>
 
@@ -369,16 +369,16 @@
       <!-- Only while cookies are ticked: things to do to all of them. The
            expiry buttons carry "Expire in" in their names, since a screen
            reader moving from button to button skips the words before them. -->
-      <div id="picked-bar" class="picked-bar" role="group" aria-label="Ticked cookies" hidden>
+      <div id="picked-bar" class="picked-bar" role="group" aria-label="Ticked cookies" data-i18n-aria-label="page_pickedGroup" hidden>
         <span id="picked-count"></span>
-        <button id="picked-keep" class="row-button" type="button">Keep</button>
-        <button id="picked-unkeep" class="row-button" type="button">Stop keeping</button>
-        <span class="picked-label">Expire in</span>
-        <button class="row-button" type="button" data-picked-expire="3600" aria-label="Expire in 1 hour">1 hour</button>
-        <button class="row-button" type="button" data-picked-expire="86400" aria-label="Expire in 1 day">1 day</button>
-        <button class="row-button" type="button" data-picked-expire="604800" aria-label="Expire in 1 week">1 week</button>
-        <button class="row-button" type="button" data-picked-expire="31536000" aria-label="Expire in 1 year">1 year</button>
-        <button id="picked-clear" class="link-button" type="button">Untick all</button>
+        <button id="picked-keep" class="row-button" type="button" data-i18n="page_pickedKeep">Keep</button>
+        <button id="picked-unkeep" class="row-button" type="button" data-i18n="page_pickedUnkeep">Stop keeping</button>
+        <span class="picked-label" data-i18n="page_expireIn">Expire in</span>
+        <button class="row-button" type="button" data-picked-expire="3600" aria-label="Expire in 1 hour" data-i18n-aria-label="page_expireIn1Hour" data-i18n="page_preset1Hour">1 hour</button>
+        <button class="row-button" type="button" data-picked-expire="86400" aria-label="Expire in 1 day" data-i18n-aria-label="page_expireIn1Day" data-i18n="page_preset1Day">1 day</button>
+        <button class="row-button" type="button" data-picked-expire="604800" aria-label="Expire in 1 week" data-i18n-aria-label="page_expireIn1Week" data-i18n="page_preset1Week">1 week</button>
+        <button class="row-button" type="button" data-picked-expire="31536000" aria-label="Expire in 1 year" data-i18n-aria-label="page_expireIn1Year" data-i18n="page_preset1Year">1 year</button>
+        <button id="picked-clear" class="link-button" type="button" data-i18n="page_pickedClear">Untick all</button>
       </div>
 
       <div id="table-wrap">
@@ -399,8 +399,8 @@
           <thead>
             <tr>
               <th scope="col" class="pick">
-                <label class="pick-target" title="Tick every cookie shown">
-                  <input type="checkbox" id="pick-all" aria-label="Tick every cookie shown" />
+                <label class="pick-target" title="Tick every cookie shown" data-i18n-title="page_pickAll">
+                  <input type="checkbox" id="pick-all" aria-label="Tick every cookie shown" data-i18n-aria-label="page_pickAll" />
                 </label>
               </th>
               <!-- Name, Value, Domain and Expires sort the table. Value sorts by
@@ -408,19 +408,19 @@
                    use. The Size column only shows when there's room for it:
                    open in a tab. When the page is narrow, as in the side
                    panel, Domain, Path, Expires and Flags are hidden too. -->
-              <th scope="col"><button type="button" class="sort" data-sort="name">Name</button></th>
-              <th scope="col"><button type="button" class="sort" data-sort="size" title="Sort by size">Value</button></th>
-              <th scope="col" class="size">Size</th>
-              <th scope="col" class="domain" aria-sort="ascending"><button type="button" class="sort" data-sort="domain">Domain</button></th>
-              <th scope="col" class="path">Path</th>
-              <th scope="col" class="expires"><button type="button" class="sort" data-sort="expires">Expires</button></th>
-              <th scope="col" class="flags">Flags</th>
-              <th scope="col"><span class="visually-hidden">Actions</span></th>
+              <th scope="col"><button type="button" class="sort" data-sort="name" data-i18n="page_colName">Name</button></th>
+              <th scope="col"><button type="button" class="sort" data-sort="size" title="Sort by size" data-i18n="page_colValue" data-i18n-title="page_sortBySize">Value</button></th>
+              <th scope="col" class="size" data-i18n="page_colSize">Size</th>
+              <th scope="col" class="domain" aria-sort="ascending"><button type="button" class="sort" data-sort="domain" data-i18n="page_colDomain">Domain</button></th>
+              <th scope="col" class="path" data-i18n="page_colPath">Path</th>
+              <th scope="col" class="expires"><button type="button" class="sort" data-sort="expires" data-i18n="page_colExpires">Expires</button></th>
+              <th scope="col" class="flags" data-i18n="page_colFlags">Flags</th>
+              <th scope="col"><span class="visually-hidden" data-i18n="page_colActions">Actions</span></th>
             </tr>
           </thead>
           <tbody id="cookie-rows"></tbody>
         </table>
-        <p id="empty-message" class="muted empty" hidden>
+        <p id="empty-message" class="muted empty" hidden data-i18n="page_emptyTable">
           No cookies are set for this site.
         </p>
       </div>
@@ -432,11 +432,11 @@
     <section id="state-edit" class="state" hidden>
       <header class="bar">
         <h1 id="edit-title"></h1>
-        <button id="edit-cancel" type="button">Back</button>
+        <button id="edit-cancel" type="button" data-i18n="page_back">Back</button>
       </header>
 
       <!-- Shown when the site rules block every cookie on this site. -->
-      <p id="edit-rule-note" class="result" hidden>
+      <p id="edit-rule-note" class="result" hidden data-i18n="page_editRuleNote">
         Your site rules block cookies on this site. You can still save one
         here, but the site won't be able to read it.
       </p>
@@ -444,29 +444,29 @@
       <form id="edit-form" autocomplete="off">
         <div class="field">
           <div class="field-label-row">
-            <label for="field-name">Name</label>
-            <button id="name-copy" class="row-button" type="button" title="Copy the name">Copy</button>
+            <label for="field-name" data-i18n="page_fieldName">Name</label>
+            <button id="name-copy" data-i18n="page_copy" class="row-button" type="button" title="Copy the name" data-i18n-title="page_copyNameTitle">Copy</button>
           </div>
           <input id="field-name" name="name" type="text" class="mono" spellcheck="false" />
           <!-- Only when the name is in the Open Cookie Database. A guess from
                the name, and it says so. -->
           <p id="name-known" class="field-note known-note" hidden>
             <span id="name-known-text"></span>
-            <span class="muted">A guess from the name only. From the Open Cookie Database.</span>
+            <span class="muted" data-i18n="page_nameKnownNote">A guess from the name only. From the Open Cookie Database.</span>
           </p>
         </div>
 
         <div class="field">
           <div class="field-label-row">
-            <label for="field-value">Value</label>
-            <button id="value-copy" class="row-button" type="button" title="Copy the value">Copy</button>
+            <label for="field-value" data-i18n="page_fieldValue">Value</label>
+            <button id="value-copy" data-i18n="page_copy" class="row-button" type="button" title="Copy the value" data-i18n-title="page_copyValueTitle">Copy</button>
           </div>
           <textarea id="field-value" name="value" class="mono" rows="4" spellcheck="false"></textarea>
           <!-- Only for a value that is a JSON object or list. Ticked, the value
                is laid out here and saved on one line again. -->
           <label id="value-json-row" class="check" hidden>
             <input id="field-json" type="checkbox" />
-            <span>Edit as JSON: laid out here, saved on one line</span>
+            <span data-i18n="page_editAsJson">Edit as JSON: laid out here, saved on one line</span>
           </label>
           <!-- Shown once the cookie is getting close to Chrome's size limit. -->
           <p id="value-size" class="field-note muted" hidden></p>
@@ -475,8 +475,8 @@
                the same value, easier to read. It never changes the value. -->
           <div id="value-decoded" class="decoded" hidden>
             <div class="field-label-row">
-              <span class="label" id="value-decoded-label">Decoded</span>
-              <button id="decoded-copy" class="row-button" type="button" title="Copy the decoded value">Copy</button>
+              <span class="label" id="value-decoded-label" data-i18n="page_decoded">Decoded</span>
+              <button id="decoded-copy" data-i18n="page_copy" class="row-button" type="button" title="Copy the decoded value" data-i18n-title="page_copyDecodedTitle">Copy</button>
             </div>
             <pre id="value-decoded-text" class="mono" aria-labelledby="value-decoded-label"></pre>
           </div>
@@ -484,11 +484,11 @@
 
         <div class="field-row">
           <div class="field">
-            <label for="field-domain">Domain</label>
+            <label for="field-domain" data-i18n="page_fieldDomain">Domain</label>
             <input id="field-domain" name="domain" type="text" class="mono" spellcheck="false" />
           </div>
           <div class="field">
-            <label for="field-path">Path</label>
+            <label for="field-path" data-i18n="page_fieldPath">Path</label>
             <input id="field-path" name="path" type="text" class="mono" spellcheck="false" />
           </div>
         </div>
@@ -499,64 +499,64 @@
           <div class="field">
             <label for="field-samesite">SameSite</label>
             <select id="field-samesite" name="sameSite">
-              <option value="unspecified">Unset (Chrome decides)</option>
+              <option value="unspecified" data-i18n="page_sameSiteUnset">Unset (Chrome decides)</option>
               <option value="lax">Lax</option>
               <option value="strict">Strict</option>
-              <option value="no_restriction">None (needs Secure)</option>
+              <option value="no_restriction" data-i18n="page_sameSiteNone">None (needs Secure)</option>
             </select>
           </div>
 
           <div class="field">
-            <span class="label">Expires</span>
+            <span class="label" data-i18n="page_fieldExpires">Expires</span>
             <label class="check">
               <input id="field-session" name="session" type="checkbox" />
-              <span>Session cookie: deleted when the browser closes</span>
+              <span data-i18n="page_sessionCheck">Session cookie: deleted when the browser closes</span>
             </label>
             <input id="field-expiry" name="expirationDate" type="datetime-local" />
             <!-- Shortcuts: each sets the date that far from now. -->
-            <div class="presets" role="group" aria-label="Expire in">
-              <button class="row-button" type="button" data-expire-in="3600">1 hour</button>
-              <button class="row-button" type="button" data-expire-in="86400">1 day</button>
-              <button class="row-button" type="button" data-expire-in="604800">1 week</button>
-              <button class="row-button" type="button" data-expire-in="31536000">1 year</button>
+            <div class="presets" role="group" aria-label="Expire in" data-i18n-aria-label="page_expireIn">
+              <button class="row-button" type="button" data-expire-in="3600" data-i18n="page_preset1Hour">1 hour</button>
+              <button class="row-button" type="button" data-expire-in="86400" data-i18n="page_preset1Day">1 day</button>
+              <button class="row-button" type="button" data-expire-in="604800" data-i18n="page_preset1Week">1 week</button>
+              <button class="row-button" type="button" data-expire-in="31536000" data-i18n="page_preset1Year">1 year</button>
             </div>
           </div>
         </div>
 
         <div class="field">
-          <span class="label">Flags</span>
+          <span class="label" data-i18n="page_fieldFlags">Flags</span>
           <label class="check">
             <input id="field-secure" name="secure" type="checkbox" />
-            <span>Secure: only sent over HTTPS</span>
+            <span data-i18n="page_secureCheck">Secure: only sent over HTTPS</span>
           </label>
           <label class="check">
             <input id="field-httponly" name="httpOnly" type="checkbox" />
-            <span>HttpOnly: hidden from page JavaScript</span>
+            <span data-i18n="page_httpOnlyCheck">HttpOnly: hidden from page JavaScript</span>
           </label>
           <label class="check">
             <input id="field-hostonly" name="hostOnly" type="checkbox" />
-            <span>Host-only: this exact host, not its subdomains</span>
+            <span data-i18n="page_hostOnlyCheck">Host-only: this exact host, not its subdomains</span>
           </label>
           <!-- Only for a new cookie: a partition can't be changed later. -->
           <label id="partitioned-row" class="check" hidden>
             <input id="field-partitioned" type="checkbox" />
-            <span>Partitioned (CHIPS): kept for <span id="partitioned-site"></span> only. Needs Secure.</span>
+            <span data-i18n-html="page_partitionedCheck">Partitioned (CHIPS): kept for <span id="partitioned-site"></span> only. Needs Secure.</span>
           </label>
         </div>
 
         <p id="edit-partition" class="muted" hidden></p>
-        <p id="edit-changed" class="notice" role="status" hidden>
+        <p id="edit-changed" class="notice" role="status" hidden data-i18n="page_editChanged">
           The site changed this cookie while you were editing. Saving will
           overwrite it.
         </p>
         <ul id="edit-errors" class="errors" hidden></ul>
 
         <div class="actions">
-          <button id="edit-save" class="primary" type="submit">Save</button>
-          <button id="edit-cancel-2" type="button">Cancel</button>
+          <button id="edit-save" class="primary" type="submit" data-i18n="page_save">Save</button>
+          <button id="edit-cancel-2" type="button" data-i18n="page_cancel">Cancel</button>
           <!-- Only when editing a cookie that already exists. -->
-          <button id="edit-duplicate" type="button" title="Start a new cookie with these details" hidden>Duplicate</button>
-          <button id="edit-setcookie" type="button" title="Copy this cookie as the Set-Cookie line a server would send">Copy as Set-Cookie</button>
+          <button id="edit-duplicate" data-i18n="page_duplicate" type="button" title="Start a new cookie with these details" data-i18n-title="page_duplicateTitle" hidden>Duplicate</button>
+          <button id="edit-setcookie" data-i18n="page_copySetCookie" type="button" title="Copy this cookie as the Set-Cookie line a server would send" data-i18n-title="page_copySetCookieTitle">Copy as Set-Cookie</button>
         </div>
       </form>
     </section>
@@ -565,46 +565,46 @@
          included. -->
     <section id="state-export" class="state" hidden>
       <header class="bar">
-        <h1>Export cookies</h1>
-        <button id="export-back" type="button">Back</button>
+        <h1 data-i18n="page_exportHeading">Export cookies</h1>
+        <button id="export-back" type="button" data-i18n="page_back">Back</button>
       </header>
 
       <p id="export-summary" class="scope-summary"></p>
 
-      <div class="formats" role="radiogroup" aria-label="Format">
+      <div class="formats" role="radiogroup" aria-label="Format" data-i18n-aria-label="page_formatGroup">
         <label class="scope">
           <input type="radio" name="format" value="json" checked />
           <span class="scope-label">JSON</span>
-          <span class="scope-note muted">Compatible with other cookie editors. Keeps every detail.</span>
+          <span class="scope-note muted" data-i18n="page_formatJsonNote">Compatible with other cookie editors. Keeps every detail.</span>
         </label>
         <label class="scope">
           <input type="radio" name="format" value="playwright" />
           <span class="scope-label">Playwright</span>
-          <span class="scope-note muted">A storageState file, for starting a test already logged in.</span>
+          <span class="scope-note muted" data-i18n="page_formatPlaywrightNote">A storageState file, for starting a test already logged in.</span>
         </label>
         <label class="scope">
           <input type="radio" name="format" value="selenium" />
           <span class="scope-label">Selenium</span>
-          <span class="scope-note muted">Python add_cookie() calls, for a test. Can't hold partitions.</span>
+          <span class="scope-note muted" data-i18n="page_formatSeleniumNote">Python add_cookie() calls, for a test. Can't hold partitions.</span>
         </label>
         <label class="scope">
           <input type="radio" name="format" value="netscape" />
           <span class="scope-label">cookies.txt</span>
-          <span class="scope-note muted">For curl, wget, yt-dlp and other tools. Can't hold SameSite or partitions.</span>
+          <span class="scope-note muted" data-i18n="page_formatNetscapeNote">For curl, wget, yt-dlp and other tools. Can't hold SameSite or partitions.</span>
         </label>
         <label class="scope">
           <input type="radio" name="format" value="header" />
-          <span class="scope-label">Cookie header</span>
-          <span class="scope-note muted" id="header-note">Names and values only, for one site.</span>
+          <span class="scope-label" data-i18n="page_formatHeader">Cookie header</span>
+          <span class="scope-note muted" id="header-note" data-i18n="page_formatHeaderNote">Names and values only, for one site.</span>
         </label>
         <label class="scope">
           <input type="radio" name="format" value="curl" />
-          <span class="scope-label">curl command</span>
-          <span class="scope-note muted" id="curl-note">Sends these cookies to this page, for bash or zsh.</span>
+          <span class="scope-label" data-i18n="page_formatCurl">curl command</span>
+          <span class="scope-note muted" id="curl-note" data-i18n="page_formatCurlNote">Sends these cookies to this page, for bash or zsh.</span>
         </label>
       </div>
 
-      <label for="export-output" class="visually-hidden">Exported cookies</label>
+      <label for="export-output" class="visually-hidden" data-i18n="page_exportOutputLabel">Exported cookies</label>
       <textarea id="export-output" class="mono output" rows="9" readonly spellcheck="false"></textarea>
 
       <!-- Optional. With a password, Copy and Download give a locked file
@@ -612,15 +612,15 @@
            never saved, and the box is emptied once it's been used. See
            src/lib/crypto.js. -->
       <div class="field export-password">
-        <label for="export-password">Password (optional)</label>
+        <label for="export-password" data-i18n="page_exportPasswordLabel">Password (optional)</label>
         <div class="password-row">
           <input id="export-password" type="password" autocomplete="new-password" spellcheck="false" />
           <label class="check">
             <input id="export-password-show" type="checkbox" />
-            <span>Show</span>
+            <span data-i18n="page_show">Show</span>
           </label>
         </div>
-        <p id="export-password-note" class="field-note muted">
+        <p id="export-password-note" class="field-note muted" data-i18n="page_exportPasswordNote">
           Locks the file, so it can only be imported with this password. The
           password isn't saved anywhere, so don't lose it.
         </p>
@@ -628,14 +628,14 @@
 
       <!-- Only while the export has cookies that look like sign-ins and no
            password. -->
-      <p id="export-warning" class="warning" hidden>
+      <p id="export-warning" class="warning" hidden data-i18n="page_exportWarning">
         Anyone with this file can be signed in as you. Add a password, or
         keep it somewhere private.
       </p>
 
       <div class="actions">
-        <button id="export-copy" class="primary" type="button">Copy</button>
-        <button id="export-download" type="button">Download</button>
+        <button id="export-copy" class="primary" type="button" data-i18n="page_copy">Copy</button>
+        <button id="export-download" type="button" data-i18n="page_download">Download</button>
       </div>
       <p id="export-result" class="result" role="status" hidden></p>
     </section>
@@ -643,11 +643,11 @@
     <!-- Nothing is written until the preview has been shown and confirmed. -->
     <section id="state-import" class="state" hidden>
       <header class="bar">
-        <h1>Import cookies</h1>
-        <button id="import-back" type="button">Back</button>
+        <h1 data-i18n="page_importHeading">Import cookies</h1>
+        <button id="import-back" type="button" data-i18n="page_back">Back</button>
       </header>
 
-      <p>
+      <p data-i18n="page_importIntro">
         Paste cookies exported as JSON (from cookieZ or another cookie
         editor), a cookies.txt file, Set-Cookie lines, or a curl command
         (from “Copy as cURL” in DevTools). A Cookie header on its own goes
@@ -657,31 +657,31 @@
       <!-- Choosing a file can close the popup in Chrome, so it's only offered
            in a tab. -->
       <p id="import-file-row" hidden>
-        <label for="import-file">Or choose a file:</label>
+        <label for="import-file" data-i18n="page_importFileLabel">Or choose a file:</label>
         <input id="import-file" type="file" accept=".json,.txt,application/json,text/plain" />
       </p>
-      <p id="import-file-hint" class="muted">
+      <p id="import-file-hint" class="muted" data-i18n-html="page_importFileHint">
         To choose a file instead, <button id="import-tab" class="link-button" type="button">open cookieZ in a tab</button>.
       </p>
 
-      <label for="import-text" class="visually-hidden">Cookies to import</label>
+      <label for="import-text" class="visually-hidden" data-i18n="page_importTextLabel">Cookies to import</label>
       <textarea id="import-text" class="mono output" rows="9" spellcheck="false" autocomplete="off"></textarea>
 
       <!-- Only for a password-protected export. The password is used once
            to open it, then the box is emptied. It's never saved. -->
       <div id="import-password-row" class="field" hidden>
-        <label for="import-password">This file has a password. Type it, then press Check.</label>
+        <label for="import-password" data-i18n="page_importPasswordLabel">This file has a password. Type it, then press Check.</label>
         <div class="password-row">
           <input id="import-password" type="password" autocomplete="off" spellcheck="false" />
           <label class="check">
             <input id="import-password-show" type="checkbox" />
-            <span>Show</span>
+            <span data-i18n="page_show">Show</span>
           </label>
         </div>
       </div>
 
       <div class="actions">
-        <button id="import-check" class="primary" type="button">Check</button>
+        <button id="import-check" class="primary" type="button" data-i18n="page_importCheck">Check</button>
       </div>
 
       <section id="import-preview" hidden>
@@ -689,7 +689,7 @@
         <p id="import-move-row" class="check-row" hidden>
           <label>
             <input id="import-move" type="checkbox" />
-            <span>Put them on <span id="import-move-site"></span> instead</span>
+            <span data-i18n-html="page_importMove">Put them on <span id="import-move-site"></span> instead</span>
           </label>
         </p>
         <details id="import-domains" hidden>
@@ -697,15 +697,15 @@
           <ul id="import-domains-list"></ul>
         </details>
         <ul id="import-problems" class="errors" hidden></ul>
-        <p id="import-warning" class="warning" hidden>
+        <p id="import-warning" class="warning" hidden data-i18n="page_importWarning">
           Only import cookies you made yourself. Cookies from someone else
           can sign you in to their account, or be used to trick you.
         </p>
         <div id="import-confirm-row" class="actions">
           <button id="import-confirm" class="primary" type="button"></button>
           <!-- Read only: shows how the file differs from now, writes nothing. -->
-          <button id="import-compare" type="button">Compare</button>
-          <button id="import-cancel" type="button">Cancel</button>
+          <button id="import-compare" type="button" data-i18n="page_importCompare">Compare</button>
+          <button id="import-cancel" type="button" data-i18n="page_cancel">Cancel</button>
         </div>
       </section>
 
@@ -717,8 +717,8 @@
          and sites only, never values, and nothing is written. -->
     <section id="state-compare" class="state" hidden>
       <header class="bar">
-        <h1>Compared with your file</h1>
-        <button id="compare-back" type="button">Back</button>
+        <h1 data-i18n="page_compareHeading">Compared with your file</h1>
+        <button id="compare-back" type="button" data-i18n="page_back">Back</button>
       </header>
 
       <p id="compare-summary" class="scope-summary" role="status"></p>
@@ -732,9 +732,9 @@
           </colgroup>
           <thead>
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Site</th>
-              <th scope="col">Since your file</th>
+              <th scope="col" data-i18n="page_colName">Name</th>
+              <th scope="col" data-i18n="page_colSite">Site</th>
+              <th scope="col" data-i18n="page_colSinceFile">Since your file</th>
             </tr>
           </thead>
           <tbody id="compare-rows"></tbody>
@@ -748,20 +748,20 @@
     <!-- What the site has stored, by purpose. See report-screen.js. -->
     <section id="state-report" class="state" hidden>
       <header class="bar">
-        <h1>Site report</h1>
-        <button id="report-back" type="button">Back</button>
+        <h1 data-i18n="page_reportHeading">Site report</h1>
+        <button id="report-back" type="button" data-i18n="page_back">Back</button>
       </header>
 
-      <p id="report-intro">
+      <p id="report-intro" data-i18n-html="page_reportIntro">
         What <span id="report-site" class="mono"></span> has stored in this
         browser. Purposes are a guess from each cookie's name, using a list
         inside cookieZ, because any site can give a cookie any name. Nothing
         here is saved.
       </p>
-      <p id="report-no-list" class="error" hidden>
+      <p id="report-no-list" class="error" hidden data-i18n="page_reportNoList">
         The list of known cookie names couldn't be loaded, so no cookie could be recognised.
       </p>
-      <p id="report-empty" hidden>This site hasn't stored any cookies.</p>
+      <p id="report-empty" hidden data-i18n="page_reportEmpty">This site hasn't stored any cookies.</p>
 
       <div id="report-body">
         <div id="report-wrap">
@@ -773,17 +773,17 @@
             </colgroup>
             <thead>
               <tr>
-                <th scope="col">Purpose</th>
-                <th scope="col">Cookies</th>
-                <th scope="col">Usually set by</th>
+                <th scope="col" data-i18n="page_colPurpose">Purpose</th>
+                <th scope="col" data-i18n="page_colCookies">Cookies</th>
+                <th scope="col" data-i18n="page_colSetBy">Usually set by</th>
               </tr>
             </thead>
             <tbody id="report-rows"></tbody>
           </table>
         </div>
 
-        <h2 class="report-heading">Worth checking</h2>
-        <p id="report-checks-none" class="muted" hidden>Nothing to flag on this site.</p>
+        <h2 class="report-heading" data-i18n="page_reportChecksHeading">Worth checking</h2>
+        <p id="report-checks-none" class="muted" hidden data-i18n="page_reportChecksNone">Nothing to flag on this site.</p>
         <div id="report-checks">
           <table id="report-check-table">
             <colgroup>
@@ -793,9 +793,9 @@
             </colgroup>
             <thead>
               <tr>
-                <th scope="col">What</th>
-                <th scope="col">Cookies</th>
-                <th scope="col"><span class="visually-hidden">Action</span></th>
+                <th scope="col" data-i18n="page_colWhat">What</th>
+                <th scope="col" data-i18n="page_colCookies">Cookies</th>
+                <th scope="col"><span class="visually-hidden" data-i18n="page_colAction">Action</span></th>
               </tr>
             </thead>
             <tbody id="report-check-rows"></tbody>
@@ -806,11 +806,11 @@
 
     <section id="state-changes" class="state" hidden>
       <header class="bar">
-        <h1>What changed</h1>
-        <button id="changes-back" type="button">Back</button>
+        <h1 data-i18n="page_changesHeading">What changed</h1>
+        <button id="changes-back" type="button" data-i18n="page_back">Back</button>
       </header>
 
-      <p id="changes-intro">
+      <p id="changes-intro" data-i18n="page_changesIntro">
         What has happened to this site's cookies since you opened cookieZ,
         newest first, whether the site did it or you did. Nothing here is
         saved: the list is gone when cookieZ closes.
@@ -826,10 +826,10 @@
           </colgroup>
           <thead>
             <tr>
-              <th scope="col">Time</th>
-              <th scope="col">Name</th>
-              <th scope="col">Site</th>
-              <th scope="col">What happened</th>
+              <th scope="col" data-i18n="page_colTime">Time</th>
+              <th scope="col" data-i18n="page_colName">Name</th>
+              <th scope="col" data-i18n="page_colSite">Site</th>
+              <th scope="col" data-i18n="page_colWhatHappened">What happened</th>
             </tr>
           </thead>
           <tbody id="changes-rows"></tbody>
@@ -841,11 +841,11 @@
          and nothing else: it never looks up other sites' cookies. -->
     <section id="state-kept" class="state" hidden>
       <header class="bar">
-        <h1>Kept cookies</h1>
-        <button id="kept-back" type="button">Back</button>
+        <h1 data-i18n="page_keptHeading">Kept cookies</h1>
+        <button id="kept-back" type="button" data-i18n="page_back">Back</button>
       </header>
 
-      <p id="kept-intro">
+      <p id="kept-intro" data-i18n="page_keptIntro">
         cookieZ leaves these out of every delete. This is the whole list it
         has saved, for every site: names, never values.
       </p>
@@ -861,23 +861,23 @@
           </colgroup>
           <thead>
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Site</th>
-              <th scope="col">Path</th>
-              <th scope="col"><span class="visually-hidden">Stop keeping</span></th>
+              <th scope="col" data-i18n="page_colName">Name</th>
+              <th scope="col" data-i18n="page_colSite">Site</th>
+              <th scope="col" data-i18n="page_colPath">Path</th>
+              <th scope="col"><span class="visually-hidden" data-i18n="page_colStopKeeping">Stop keeping</span></th>
             </tr>
           </thead>
           <tbody id="kept-rows"></tbody>
         </table>
-        <p id="kept-empty" class="muted empty" hidden>No cookies are marked as Kept.</p>
+        <p id="kept-empty" class="muted empty" hidden data-i18n="page_keptEmpty">No cookies are marked as Kept.</p>
       </div>
 
       <div class="actions">
-        <button id="kept-clear" class="danger" type="button">Stop keeping all&hellip;</button>
+        <button id="kept-clear" class="danger" type="button" data-i18n="page_keptClear">Stop keeping all&hellip;</button>
         <span id="kept-confirm" class="confirm" role="group" aria-labelledby="kept-confirm-text" hidden>
           <span id="kept-confirm-text"></span>
-          <button id="kept-confirm-yes" class="danger solid" type="button">Yes, stop keeping</button>
-          <button id="kept-confirm-no" type="button">Cancel</button>
+          <button id="kept-confirm-yes" class="danger solid" type="button" data-i18n="page_keptConfirmYes">Yes, stop keeping</button>
+          <button id="kept-confirm-no" type="button" data-i18n="page_cancel">Cancel</button>
         </span>
       </div>
     </section>
@@ -887,11 +887,11 @@
          cookieZ is closed. See src/lib/rules.js. -->
     <section id="state-rules" class="state" hidden>
       <header class="bar">
-        <h1>Block cookies</h1>
-        <button id="rules-back" type="button">Back</button>
+        <h1 data-i18n="page_rulesHeading">Block cookies</h1>
+        <button id="rules-back" type="button" data-i18n="page_back">Back</button>
       </header>
 
-      <p id="rules-intro">
+      <p id="rules-intro" data-i18n="page_rulesIntro">
         Choose which sites may set cookies. Chrome follows these rules all
         the time, even when cookieZ is closed. Nothing is sent anywhere.
       </p>
@@ -902,22 +902,22 @@
 
       <!-- Shown until the extra permission is given. -->
       <div id="rules-gate" hidden>
-        <p>
+        <p data-i18n="page_rulesGate">
           To set rules, cookieZ needs Chrome's permission to change site
           settings. Chrome's prompt also mentions the camera, microphone and
           location, because one permission covers every site setting.
           cookieZ only ever changes the cookie setting.
         </p>
-        <p id="rules-gate-saved" hidden>
+        <p id="rules-gate-saved" hidden data-i18n="page_rulesGateSaved">
           Your saved rules are listed below, but Chrome isn't following them
           until you allow this again.
         </p>
         <p>
-          <button id="rules-grant" class="primary" type="button">Allow cookieZ to set rules</button>
+          <button id="rules-grant" class="primary" type="button" data-i18n="page_rulesGrant">Allow cookieZ to set rules</button>
         </p>
       </div>
 
-      <p id="rules-incognito" hidden>
+      <p id="rules-incognito" hidden data-i18n="page_rulesIncognito">
         Rules are set from a normal window. They apply in incognito windows
         too.
       </p>
@@ -926,20 +926,20 @@
            (its disabled attribute) turns off every control inside it. -->
       <fieldset id="rules-body" hidden>
         <section id="rules-site" class="rules-group">
-          <h2 id="rules-site-heading">On <span id="rules-site-name"></span></h2>
+          <h2 id="rules-site-heading" data-i18n-html="page_rulesSiteHeading">On <span id="rules-site-name"></span></h2>
           <div class="rule-options" role="radiogroup" aria-labelledby="rules-site-heading">
             <label class="rule-option">
               <input type="radio" name="site-rule" value="allow" />
               <span>
-                <strong>Allow all cookies</strong>
-                <span class="rule-note">Including ones from other companies on its pages.</span>
+                <strong data-i18n="page_ruleAllowAll">Allow all cookies</strong>
+                <span class="rule-note" data-i18n="page_ruleAllowAllNote">Including ones from other companies on its pages.</span>
               </span>
             </label>
             <label class="rule-option">
               <input type="radio" name="site-rule" value="session" />
               <span>
-                <strong>Clear when Chrome closes</strong>
-                <span class="rule-note">
+                <strong data-i18n="page_ruleSession">Clear when Chrome closes</strong>
+                <span class="rule-note" data-i18n="page_ruleSessionNote">
                   The site works as normal, but Chrome deletes its cookies,
                   and other companies' cookies on its pages, every time it
                   closes.
@@ -949,8 +949,8 @@
             <label class="rule-option">
               <input type="radio" name="site-rule" value="own-only" />
               <span>
-                <strong>Block other companies' cookies</strong>
-                <span class="rule-note">
+                <strong data-i18n="page_ruleOwnOnly">Block other companies' cookies</strong>
+                <span class="rule-note" data-i18n="page_ruleOwnOnlyNote">
                   The site keeps its own cookies, so signing in still works.
                   Embedded videos, maps and "sign in with" buttons from other
                   companies may stop working.
@@ -960,8 +960,8 @@
             <label class="rule-option">
               <input type="radio" name="site-rule" value="block" />
               <span>
-                <strong>Block all cookies</strong>
-                <span class="rule-note">
+                <strong data-i18n="page_ruleBlockAll">Block all cookies</strong>
+                <span class="rule-note" data-i18n="page_ruleBlockAllNote">
                   The site can't set or read any cookie. You'll be signed
                   out, and it may not work at all.
                 </span>
@@ -971,7 +971,7 @@
           <p id="rules-site-note" class="field-note" hidden></p>
           <label class="check rules-always">
             <input id="rules-delete-on-block" type="checkbox" />
-            <span>When I block cookies, delete the ones already saved without asking</span>
+            <span data-i18n="page_rulesDeleteOnBlock">When I block cookies, delete the ones already saved without asking</span>
           </label>
 
           <!-- Blocking doesn't remove the cookies a site already has, so
@@ -979,26 +979,26 @@
                cookies are left alone, and Undo works. -->
           <div id="rules-cleanup" class="confirm" role="group" aria-labelledby="rules-cleanup-text" hidden>
             <span id="rules-cleanup-text"></span>
-            <button id="rules-cleanup-yes" class="danger solid" type="button">Delete them</button>
-            <button id="rules-cleanup-no" type="button">Leave them</button>
+            <button id="rules-cleanup-yes" class="danger solid" type="button" data-i18n="page_cleanupYes">Delete them</button>
+            <button id="rules-cleanup-no" type="button" data-i18n="page_cleanupNo">Leave them</button>
           </div>
         </section>
 
         <section id="rules-everywhere" class="rules-group">
-          <h2 id="rules-everywhere-heading">On every other site</h2>
+          <h2 id="rules-everywhere-heading" data-i18n="page_rulesEverywhereHeading">On every other site</h2>
           <div class="rule-options" role="radiogroup" aria-labelledby="rules-everywhere-heading">
             <label class="rule-option">
               <input type="radio" name="everywhere-rule" value="allow" />
               <span>
-                <strong>Allow cookies</strong>
-                <span class="rule-note">What Chrome normally does.</span>
+                <strong data-i18n="page_everywhereAllow">Allow cookies</strong>
+                <span class="rule-note" data-i18n="page_everywhereAllowNote">What Chrome normally does.</span>
               </span>
             </label>
             <label class="rule-option">
               <input type="radio" name="everywhere-rule" value="own-only" />
               <span>
-                <strong>Block other companies' cookies</strong>
-                <span class="rule-note">
+                <strong data-i18n="page_ruleOwnOnly">Block other companies' cookies</strong>
+                <span class="rule-note" data-i18n="page_everywhereOwnOnlyNote">
                   Every site keeps its own cookies, and other companies' are
                   blocked, using Chrome's own switch. Partitioned cookies, which
                   can't follow you between sites, still work, as do a few Chrome
@@ -1009,8 +1009,8 @@
             <label class="rule-option">
               <input type="radio" name="everywhere-rule" value="block" />
               <span>
-                <strong>Block all cookies</strong>
-                <span class="rule-note">
+                <strong data-i18n="page_ruleBlockAll">Block all cookies</strong>
+                <span class="rule-note" data-i18n="page_everywhereBlockNote">
                   Only sites you've set to allow can use cookies. You won't
                   be able to sign in anywhere else.
                 </span>
@@ -1019,15 +1019,15 @@
           </div>
           <p id="rules-everywhere-note" class="field-note" hidden></p>
           <div id="rules-everywhere-confirm" class="confirm" role="group" aria-labelledby="rules-everywhere-confirm-text" hidden>
-            <span id="rules-everywhere-confirm-text">Block cookies on every site without a rule of its own?</span>
-            <button id="rules-everywhere-yes" class="danger solid" type="button">Yes, block them</button>
-            <button id="rules-everywhere-no" type="button">Cancel</button>
+            <span id="rules-everywhere-confirm-text" data-i18n="page_everywhereConfirm">Block cookies on every site without a rule of its own?</span>
+            <button id="rules-everywhere-yes" class="danger solid" type="button" data-i18n="page_everywhereConfirmYes">Yes, block them</button>
+            <button id="rules-everywhere-no" type="button" data-i18n="page_cancel">Cancel</button>
           </div>
         </section>
 
         <!-- Known trackers, from the list in src/lists/trackers.js. The
              number is filled in from the list by popup.js. -->
-        <section id="rules-trackers-group" class="rules-group" aria-label="Known trackers">
+        <section id="rules-trackers-group" class="rules-group" aria-label="Known trackers" data-i18n-aria-label="page_trackersGroup">
           <label class="rule-option">
             <!-- Named by the bold line alone, with the note read after it,
                  so a screen reader doesn't read the whole paragraph as the
@@ -1035,8 +1035,8 @@
             <input id="rules-trackers" type="checkbox"
                    aria-labelledby="rules-trackers-name" aria-describedby="rules-trackers-note" />
             <span>
-              <strong id="rules-trackers-name">Block known trackers' cookies on every site</strong>
-              <span id="rules-trackers-note" class="rule-note">
+              <strong id="rules-trackers-name" data-i18n="page_trackersName">Block known trackers' cookies on every site</strong>
+              <span id="rules-trackers-note" class="rule-note" data-i18n-html="page_trackersNote">
                 Cookies from <span id="rules-trackers-count">about 130</span> advertising and analytics companies,
                 from a list inside cookieZ that updates when cookieZ does.
                 Sites you've set to allow all cookies still get them. This
@@ -1050,12 +1050,12 @@
                cookies are left alone and Undo works. -->
           <div id="rules-trackers-cleanup" class="confirm" role="group" aria-labelledby="rules-trackers-cleanup-text" hidden>
             <span id="rules-trackers-cleanup-text"></span>
-            <button id="rules-trackers-cleanup-yes" class="danger solid" type="button">Delete them</button>
-            <button id="rules-trackers-cleanup-no" type="button">Leave them</button>
+            <button id="rules-trackers-cleanup-yes" class="danger solid" type="button" data-i18n="page_cleanupYes">Delete them</button>
+            <button id="rules-trackers-cleanup-no" type="button" data-i18n="page_cleanupNo">Leave them</button>
           </div>
         </section>
 
-        <h2 id="rules-list-heading">Sites with a rule of their own</h2>
+        <h2 id="rules-list-heading" data-i18n="page_rulesListHeading">Sites with a rule of their own</h2>
         <div id="rules-wrap">
           <table id="rules-table" aria-labelledby="rules-list-heading">
             <colgroup>
@@ -1066,32 +1066,32 @@
             </colgroup>
             <thead>
               <tr>
-                <th scope="col">Site</th>
-                <th scope="col">Rule</th>
-                <th scope="col">Cookies now</th>
-                <th scope="col"><span class="visually-hidden">Remove</span></th>
+                <th scope="col" data-i18n="page_colSite">Site</th>
+                <th scope="col" data-i18n="page_colRule">Rule</th>
+                <th scope="col" data-i18n="page_colCookiesNow">Cookies now</th>
+                <th scope="col"><span class="visually-hidden" data-i18n="page_colRemove">Remove</span></th>
               </tr>
             </thead>
             <tbody id="rules-rows"></tbody>
           </table>
-          <p id="rules-empty" class="muted empty" hidden>No site has a rule of its own.</p>
+          <p id="rules-empty" class="muted empty" hidden data-i18n="page_rulesEmpty">No site has a rule of its own.</p>
         </div>
 
         <div class="actions">
-          <button id="rules-clear" class="danger" type="button">Turn off all rules&hellip;</button>
+          <button id="rules-clear" class="danger" type="button" data-i18n="page_rulesClear">Turn off all rules&hellip;</button>
           <span id="rules-confirm" class="confirm" role="group" aria-labelledby="rules-confirm-text" hidden>
-            <span id="rules-confirm-text">Turn off every rule? Chrome goes back to allowing cookies everywhere.</span>
-            <button id="rules-confirm-yes" class="danger solid" type="button">Yes, turn them off</button>
-            <button id="rules-confirm-no" type="button">Cancel</button>
+            <span id="rules-confirm-text" data-i18n="page_rulesConfirm">Turn off every rule? Chrome goes back to allowing cookies everywhere.</span>
+            <button id="rules-confirm-yes" class="danger solid" type="button" data-i18n="page_rulesConfirmYes">Yes, turn them off</button>
+            <button id="rules-confirm-no" type="button" data-i18n="page_cancel">Cancel</button>
           </span>
           <!-- A copy of the rules, as a file you save yourself. -->
-          <button id="rules-backup" type="button">Save a copy</button>
-          <label id="rules-load-label" class="button-like" for="rules-load">Load a copy&hellip;</label>
+          <button id="rules-backup" type="button" data-i18n="page_rulesBackup">Save a copy</button>
+          <label id="rules-load-label" class="button-like" for="rules-load" data-i18n="page_rulesLoad">Load a copy&hellip;</label>
           <input id="rules-load" class="visually-hidden" type="file" accept=".json,application/json" />
           <span id="rules-load-confirm" class="confirm" role="group" aria-labelledby="rules-load-text" hidden>
             <span id="rules-load-text"></span>
-            <button id="rules-load-yes" class="danger solid" type="button">Replace my rules</button>
-            <button id="rules-load-no" type="button">Cancel</button>
+            <button id="rules-load-yes" class="danger solid" type="button" data-i18n="page_rulesLoadYes">Replace my rules</button>
+            <button id="rules-load-no" type="button" data-i18n="page_cancel">Cancel</button>
           </span>
         </div>
       </fieldset>
@@ -1103,13 +1103,13 @@
          page in a new tab. cookieZ never fetches anything. -->
     <section id="state-help" class="state help" hidden>
       <header class="bar">
-        <h1>Help</h1>
-        <button id="help-back" type="button">Back</button>
+        <h1 data-i18n="page_help">Help</h1>
+        <button id="help-back" type="button" data-i18n="page_back">Back</button>
       </header>
 
       <dl>
-        <dt>Which delete option should I pick?</dt>
-        <dd>
+        <dt data-i18n="page_helpScopeQ">Which delete option should I pick?</dt>
+        <dd data-i18n-html="page_helpScopeA">
           <strong>This page</strong> deletes the cookies this page gets.
           <strong>This domain and its subdomains</strong> also reaches
           subdomains, such as login.example.com.
@@ -1117,15 +1117,15 @@
           profile. The count and the sites are always shown first.
         </dd>
 
-        <dt>What does a site store on me?</dt>
-        <dd>
+        <dt data-i18n="page_helpReportQ">What does a site store on me?</dt>
+        <dd data-i18n-html="page_helpReportA">
           <strong>Site report</strong>, beside the cookie count, groups a
           site's cookies by purpose and lists anything worth checking. Each
           purpose is a guess from the cookie's name.
         </dd>
 
-        <dt>Clearing cookies didn't let me log in</dt>
-        <dd>
+        <dt data-i18n="page_helpLoginQ">Clearing cookies didn't let me log in</dt>
+        <dd data-i18n-html="page_helpLoginA">
           Try <strong>Clear and reload</strong> under the delete options, then
           <strong>Clear and reload</strong>. As
           well as the site's cookies, it clears what else the site has
@@ -1134,15 +1134,15 @@
           not the rest.
         </dd>
 
-        <dt>I deleted or changed the wrong cookies</dt>
-        <dd>
+        <dt data-i18n="page_helpUndoQ">I deleted or changed the wrong cookies</dt>
+        <dd data-i18n-html="page_helpUndoA">
           Click <strong>Undo</strong> in the message at the top. It works
           for 10 minutes after a delete, an import or a Save, even if you
           close cookieZ, and only for the most recent one.
         </dd>
 
-        <dt>Why did a row light up?</dt>
-        <dd>
+        <dt data-i18n="page_helpLiveQ">Why did a row light up?</dt>
+        <dd data-i18n-html="page_helpLiveA">
           The site, or cookieZ, has just added or changed that cookie. The
           table follows changes as they happen, so you don't need to press
           Refresh. Click <strong>changes</strong> next to the cookie count
@@ -1150,8 +1150,8 @@
           you opened cookieZ.
         </dd>
 
-        <dt>What does the bookmark do?</dt>
-        <dd>
+        <dt data-i18n="page_helpKeptQ">What does the bookmark do?</dt>
+        <dd data-i18n-html="page_helpKeptA">
           It marks a cookie as <strong>Kept</strong>, so cookieZ leaves it out
           of every delete, even "All sites". It doesn't stop the website
           changing or removing the cookie itself. To see every cookie you've
@@ -1159,8 +1159,8 @@
           delete options.
         </dd>
 
-        <dt>Can I stop a site setting cookies?</dt>
-        <dd>
+        <dt data-i18n="page_helpBlockQ">Can I stop a site setting cookies?</dt>
+        <dd data-i18n-html="page_helpBlockA">
           Yes. Click <strong>Block</strong> at the top. For each site you
           can allow all cookies, have them cleared when Chrome closes, block
           other companies' cookies, or block every cookie. You can also block
@@ -1172,15 +1172,15 @@
           change that.
         </dd>
 
-        <dt>A site stopped working after I set a rule</dt>
-        <dd>
+        <dt data-i18n="page_helpBrokenQ">A site stopped working after I set a rule</dt>
+        <dd data-i18n-html="page_helpBrokenA">
           Click <strong>Block</strong> on that site and choose
           <strong>Allow all cookies</strong>, or remove its rule from the
           list. Then reload the page.
         </dd>
 
-        <dt>What do the badges mean?</dt>
-        <dd>
+        <dt data-i18n="page_helpBadgesQ">What do the badges mean?</dt>
+        <dd data-i18n-html="page_helpBadgesA">
           <strong>Secure</strong>: only sent over HTTPS.
           <strong>HttpOnly</strong>: hidden from the page's own JavaScript.
           <strong>Subdomains</strong>: also sent to every subdomain.
@@ -1189,39 +1189,39 @@
           <strong>Large</strong>: close to Chrome's 4 KB limit for one cookie.
         </dd>
 
-        <dt>What's the size next to the cookie count?</dt>
-        <dd>
+        <dt data-i18n="page_helpSizeQ">What's the size next to the cookie count?</dt>
+        <dd data-i18n="page_helpSizeA">
           Roughly how much this site's cookies add to every request. Many
           servers refuse more than about 8 KB, which can stop you logging in,
           so cookieZ warns you above 6 KB.
         </dd>
 
-        <dt>Keyboard</dt>
+        <dt data-i18n="page_helpKeysQ">Keyboard</dt>
         <dd>
           <div class="keys">
             <span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd></span>
-            <span>Open cookieZ. Change it at chrome://extensions/shortcuts.</span>
+            <span data-i18n="page_keyOpen">Open cookieZ. Change it at chrome://extensions/shortcuts.</span>
             <span><kbd>/</kbd></span>
-            <span>Search the cookies. Start with name:, value:, domain: or path: to search that part only.</span>
+            <span data-i18n="page_keySearch">Search the cookies. Start with name:, value:, domain: or path: to search that part only.</span>
             <span><kbd>N</kbd></span>
-            <span>Add a new cookie.</span>
+            <span data-i18n="page_keyAdd">Add a new cookie.</span>
             <span><kbd>↑</kbd> <kbd>↓</kbd></span>
-            <span>Move between cookies. <kbd>Home</kbd> and <kbd>End</kbd> jump to the first and last.</span>
+            <span data-i18n-html="page_keyMove">Move between cookies. <kbd>Home</kbd> and <kbd>End</kbd> jump to the first and last.</span>
             <span><kbd>Enter</kbd></span>
-            <span>Edit the cookie.</span>
+            <span data-i18n="page_keyEdit">Edit the cookie.</span>
             <span><kbd>Space</kbd></span>
-            <span>Tick it.</span>
+            <span data-i18n="page_keyTick">Tick it.</span>
             <span><kbd>K</kbd></span>
-            <span>Keep it, or stop keeping it.</span>
+            <span data-i18n="page_keyKeep">Keep it, or stop keeping it.</span>
             <span><kbd>Delete</kbd></span>
-            <span>Delete it. It asks "Sure?" first: press <kbd>Enter</kbd> to delete.</span>
+            <span data-i18n-html="page_keyDelete">Delete it. It asks "Sure?" first: press <kbd>Enter</kbd> to delete.</span>
             <span><kbd>Esc</kbd></span>
-            <span>Go back from this screen, the editor, export, import or site rules, or cancel a delete or other question.</span>
+            <span data-i18n="page_keyEsc">Go back from this screen, the editor, export, import or site rules, or cancel a delete or other question.</span>
           </div>
         </dd>
 
-        <dt>Can cookieZ stay open while I browse?</dt>
-        <dd>
+        <dt data-i18n="page_helpPanelQ">Can cookieZ stay open while I browse?</dt>
+        <dd data-i18n="page_helpPanelA">
           Yes. Click More (the three dots at the top), then Open in side
           panel. cookieZ opens at the
           side of the window and shows the cookies of whichever tab you're
@@ -1229,21 +1229,21 @@
           back. The keyboard shortcuts work there too.
         </dd>
 
-        <dt>Incognito</dt>
-        <dd>
+        <dt data-i18n="page_helpIncognitoQ">Incognito</dt>
+        <dd data-i18n="page_helpIncognitoA">
           Turn on "Allow in incognito" on cookieZ's Details page in
           chrome://extensions. Incognito cookies are kept separate, and a
           delete in one never touches the other.
         </dd>
       </dl>
 
-      <p class="help-contact">
+      <p class="help-contact" data-i18n="page_helpContact">
         More help at cookiez.uk/support, or email support@cookiez.uk.
       </p>
       <p class="help-review">
-        If cookieZ helps you, a review in the Chrome Web Store helps other
-        people find it.
-        <button id="help-review" class="link-button" type="button">Leave a review</button>
+        <span data-i18n="page_helpReview">If cookieZ helps you, a review in the Chrome Web Store helps other
+        people find it.</span>
+        <button id="help-review" class="link-button" type="button" data-i18n="page_reviewOpen">Leave a review</button>
       </p>
       <p id="help-review-message" class="result" role="status"></p>
     </section>
