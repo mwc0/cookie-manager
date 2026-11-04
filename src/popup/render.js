@@ -17,6 +17,7 @@ import {
 } from "../lib/format.js";
 import { cookieKey } from "../lib/cookies.js";
 import { knownCookie, describeKnownBy } from "../lib/known.js";
+import { t } from "../lib/i18n.js";
 import { copyWithFeedback, copyWithIconFeedback } from "./clipboard.js";
 import { iconButton, setIconContent } from "./icons.js";
 
@@ -143,7 +144,7 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   const embedded = Boolean(handlers.isEmbedded && handlers.isEmbedded(cookie));
 
   const name = textCell(cookie.name, "mono name");
-  name.title = cookie.name + " (" + formatBytes(bytes) + ")";
+  name.title = t("cookie_rowNameTitle", cookie.name, formatBytes(bytes));
   row.appendChild(name);
   row.appendChild(valueCell(cookie, handlers));
   // Only shown when cookieZ is open in a tab. See .size in popup.css.
@@ -154,10 +155,8 @@ function buildRow(cookie, handlers, disarmers, disarmAll) {
   if (embedded) {
     const note = document.createElement("span");
     note.className = "embedded-note";
-    note.textContent = "set in a frame, kept for this site only";
-    note.title =
-      "Set by " + bareDomain(cookie.domain) +
-      " in a frame on this site. It's partitioned, so it's kept for this site only.";
+    note.textContent = t("cookie_rowEmbeddedNote");
+    note.title = t("cookie_rowEmbeddedNoteTitle", bareDomain(cookie.domain));
     domain.appendChild(note);
   }
   row.appendChild(domain);
@@ -190,7 +189,7 @@ function pickCell(cookie, handlers) {
   const box = document.createElement("input");
   box.type = "checkbox";
   box.checked = handlers.isPicked ? handlers.isPicked(cookie) : false;
-  box.setAttribute("aria-label", "Tick " + cookie.name);
+  box.setAttribute("aria-label", t("cookie_rowPickLabel", cookie.name));
   box.addEventListener("change", () => {
     if (handlers.onPick) {
       handlers.onPick(cookie, box.checked);
@@ -216,26 +215,26 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
 
   // For pasting a name into code or a test. The icon turns into a tick for
   // a moment once it's copied.
-  const copy = iconButton("copy", "Copy name");
+  const copy = iconButton("copy", t("cookie_rowCopyName"));
   copy.classList.add("copy-name");
-  copy.title = "Copy the name, " + cookie.name;
+  copy.title = t("cookie_rowCopyNameTitle", cookie.name);
   copy.addEventListener("click", () => {
     disarmAll();
-    copyWithIconFeedback(copy, cookie.name, "copy", "Copy name");
+    copyWithIconFeedback(copy, cookie.name, "copy", t("cookie_rowCopyName"));
   });
 
   // Called "Keep", not "Protect", because it only stops this extension
   // deleting the cookie. See src/lib/protect.js. A kept cookie's bookmark is
   // filled in.
-  const keep = iconButton("keep", protectedNow ? "Kept" : "Keep", { filled: protectedNow });
+  const keep = iconButton("keep", protectedNow ? t("cookie_rowKept") : t("cookie_rowKeep"), { filled: protectedNow });
   keep.classList.add("keep");
   if (protectedNow) {
     keep.classList.add("kept");
   }
   keep.setAttribute("aria-pressed", protectedNow ? "true" : "false");
   keep.title = protectedNow
-    ? "Kept: left out of every delete. Click to stop keeping it."
-    : "Keep: leave this cookie out of every delete made here";
+    ? t("cookie_rowKeptTitle")
+    : t("cookie_rowKeepTitle");
   keep.addEventListener("click", () => {
     disarmAll();
     if (handlers.onProtect) {
@@ -243,9 +242,9 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     }
   });
 
-  const edit = iconButton("edit", "Edit");
+  const edit = iconButton("edit", t("cookie_rowEdit"));
   edit.classList.add("edit");
-  edit.title = "Edit this cookie";
+  edit.title = t("cookie_rowEditTitle");
   edit.addEventListener("click", () => {
     disarmAll();
     if (handlers.onEdit) {
@@ -253,26 +252,26 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     }
   });
 
-  const remove = iconButton("delete", "Delete");
+  const remove = iconButton("delete", t("cookie_rowDelete"));
   remove.classList.add("danger");
 
   // A kept cookie can't be deleted. The button is disabled, not hidden, so
   // its tooltip can say why.
   if (protectedNow) {
     remove.disabled = true;
-    remove.title = "Kept cookies aren't deleted. Click the bookmark to allow it.";
+    remove.title = t("cookie_rowDeleteKeptTitle");
   } else {
-    remove.title = "Delete this cookie";
+    remove.title = t("cookie_rowDeleteTitle");
   }
 
-  const cancel = iconButton("cancel", "Don't delete");
+  const cancel = iconButton("cancel", t("cookie_rowDontDelete"));
   cancel.classList.add("cancel");
   cancel.hidden = true;
 
   let armed = false;
   const disarm = () => {
     armed = false;
-    setIconContent(remove, "delete", "Delete");
+    setIconContent(remove, "delete", t("cookie_rowDelete"));
     remove.classList.remove("armed");
     remove.classList.add("icon-only");
     copy.hidden = false;
@@ -286,7 +285,7 @@ function actionsCell(cookie, handlers, disarmers, disarmAll) {
     if (!armed) {
       disarmAll();
       armed = true;
-      remove.textContent = "Sure?";
+      remove.textContent = t("cookie_rowSure");
       remove.classList.remove("icon-only");
       remove.classList.add("armed");
       copy.hidden = true;
@@ -358,7 +357,7 @@ function valueCell(cookie, handlers) {
   if (!needsToggle) {
     const text = document.createElement("span");
     text.className = "value-text" + (full === "" ? " muted" : "");
-    text.textContent = full === "" ? "(empty)" : full;
+    text.textContent = full === "" ? t("cookie_rowValueEmpty") : full;
     cell.appendChild(text);
     return cell;
   }
@@ -371,15 +370,15 @@ function valueCell(cookie, handlers) {
   const copy = document.createElement("button");
   copy.type = "button";
   copy.className = "row-button copy";
-  copy.textContent = "Copy";
-  copy.title = "Copy the whole value";
+  copy.textContent = t("cookie_rowValueCopy");
+  copy.title = t("cookie_rowValueCopyTitle");
   copy.hidden = true;
   copy.addEventListener("click", () => copyWithFeedback(copy, full));
 
   const show = (expanded) => {
     cell.classList.toggle("expanded", expanded);
     button.textContent = expanded ? full : truncate(full, VALUE_PREVIEW_LENGTH);
-    button.title = expanded ? "Click to collapse" : "Click to show the full value";
+    button.title = expanded ? t("cookie_rowValueCollapse") : t("cookie_rowValueExpand");
     copy.hidden = !expanded;
   };
   show(Boolean(handlers.isExpanded && handlers.isExpanded(cookie)));
@@ -407,28 +406,28 @@ function flagsCell(cookie, bytes, embedded) {
   const host = bareDomain(cookie.domain);
 
   if (cookie.secure) {
-    cell.appendChild(badge("Secure", "Only sent over HTTPS"));
+    cell.appendChild(badge("Secure", t("cookie_badgeSecureTitle")));
   }
   if (cookie.httpOnly) {
-    cell.appendChild(badge("HttpOnly", "Hidden from the page's own JavaScript"));
+    cell.appendChild(badge("HttpOnly", t("cookie_badgeHttpOnlyTitle")));
   }
   if (!cookie.hostOnly) {
-    cell.appendChild(badge("Subdomains", "Also sent to every subdomain of " + host));
+    cell.appendChild(badge(t("cookie_badgeSubdomains"), t("cookie_badgeSubdomainsTitle", host)));
   }
   // Set by another site in a frame on this one. Its row also says so in
   // words, under the domain (see buildRow()).
   if (embedded) {
     cell.appendChild(
-      badge("Partitioned", "Partitioned (CHIPS): set by " + host + " and kept for this site only")
+      badge("Partitioned", t("cookie_badgePartitionedEmbeddedTitle", host))
     );
   } else if (cookie.partitionKey) {
     cell.appendChild(
-      badge("Partitioned", "Partitioned (CHIPS): kept separately for each site it's used on")
+      badge("Partitioned", t("cookie_badgePartitionedTitle"))
     );
   }
   if (cookie.sameSite && cookie.sameSite !== "unspecified") {
     cell.appendChild(
-      badge("SameSite " + formatSameSite(cookie.sameSite), SAME_SITE_MEANING[cookie.sameSite] || "")
+      badge("SameSite " + formatSameSite(cookie.sameSite), SAME_SITE_MEANING[cookie.sameSite] ? t(SAME_SITE_MEANING[cookie.sameSite]) : "")
     );
   }
 
@@ -438,21 +437,18 @@ function flagsCell(cookie, bytes, embedded) {
   const known = knownCookie(cookie.name);
   if (known) {
     const by = describeKnownBy(known);
-    const tip = "Known name, used by " + by + ". A guess from the name only.";
-    const mark = badge("Known", tip);
+    const tip = t("cookie_badgeKnownTitle", by);
+    const mark = badge(t("cookie_badgeKnown"), tip);
     mark.classList.add("known");
     const detail = document.createElement("span");
     detail.className = "visually-hidden";
-    detail.textContent = " name, used by " + by;
+    detail.textContent = " " + t("cookie_badgeKnownHidden", by);
     mark.appendChild(detail);
     cell.appendChild(mark);
   }
 
   if (bytes >= LARGE_COOKIE_BYTES) {
-    const large = badge(
-      "Large",
-      formatBytes(bytes) + ". Chrome won't keep a cookie over 4 KB (name and value together)."
-    );
+    const large = badge(t("cookie_badgeLarge"), t("cookie_badgeLargeTitle", formatBytes(bytes)));
     large.classList.add("large");
     cell.appendChild(large);
   }
@@ -460,10 +456,11 @@ function flagsCell(cookie, bytes, embedded) {
   return cell;
 }
 
+// The key of each one's message.
 const SAME_SITE_MEANING = {
-  strict: "Only sent when you're on this site",
-  lax: "Sent on this site, and when you follow a link to it",
-  no_restriction: "Also sent when another site loads something from this one",
+  strict: "cookie_badgeSameSiteStrictTitle",
+  lax: "cookie_badgeSameSiteLaxTitle",
+  no_restriction: "cookie_badgeSameSiteNoneTitle",
 };
 
 function badge(text, title) {

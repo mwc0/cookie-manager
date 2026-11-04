@@ -1974,5 +1974,481 @@
   "rules_themeSaveFailed": {
     "message": "The theme changed, but couldn't be saved, so it will reset when you reopen the popup: $1",
     "description": "Error when the light or dark theme choice can't be saved. $1 is the browser's error text, in English."
+  },
+  "cookie_expirySession": {
+    "message": "Session",
+    "description": "Short: the Expires column of the cookie table, for a cookie with no expiry date (deleted when the browser closes). One word if possible."
+  },
+  "cookie_expiryUnknown": {
+    "message": "Unknown",
+    "description": "Short: the Expires column of the cookie table, when the expiry date can't be read. One word if possible."
+  },
+  "cookie_expirySessionFull": {
+    "message": "Session cookie - removed when the browser closes",
+    "description": "Tooltip on the Expires cell of a cookie with no expiry date."
+  },
+  "cookie_expiryUnreadable": {
+    "message": "Expiry date could not be read",
+    "description": "Tooltip on the Expires cell when the cookie's expiry date can't be read."
+  },
+  "cookie_expiresOn": {
+    "message": "Expires $1",
+    "description": "Tooltip on the Expires cell of the cookie table. $1 is the date and time, formatted by the browser, possibly followed by how soon, e.g. \"05/11/2026, 14:30:00\" or \"05/11/2026, 14:30:00 (in 3 days)\"."
+  },
+  "cookie_expiryDateAndRelative": {
+    "message": "$1 ($2)",
+    "description": "A cookie's expiry date with how soon that is. $1 is the date and time, e.g. \"05/11/2026, 14:30:00\"; $2 is the browser's own wording for how soon, e.g. \"in 3 days\". Change only the brackets, if your language writes this differently."
+  },
+  "cookie_sameSiteUnset": {
+    "message": "Unset",
+    "description": "Short: a cookie's SameSite setting when none was given. SameSite is a cookie attribute name; this word says it has no value. One word."
+  },
+  "cookie_valueAsDateText": {
+    "message": "$1 (your time)",
+    "description": "In the cookie editor, a cookie value that looks like a timestamp, shown as a date. $1 is the date and time in the browser's format, e.g. \"Thu, 5 Nov 2026, 14:30:00\". \"Your time\" means the user's own time zone."
+  },
+  "cookie_valueAsDate": {
+    "message": "As a date",
+    "description": "Short: label above the cookie editor's readable view of a value that is a timestamp, shown as a date."
+  },
+  "cookie_valueFromBase64": {
+    "message": "Decoded from Base64",
+    "description": "Short: label above the cookie editor's readable view of a value that was Base64 and has been decoded. Base64 is a technical name; keep it."
+  },
+  "cookie_valueDecoded": {
+    "message": "Decoded",
+    "description": "Short: label above the cookie editor's readable view of a value that was URL-encoded (%7B%22) and has been decoded."
+  },
+  "cookie_valueLaidOut": {
+    "message": "Laid out",
+    "description": "Short: label above the cookie editor's readable view of a value that is JSON, shown spread over several indented lines."
+  },
+  "cookie_valueNotJson": {
+    "message": "The value isn't valid JSON: $1.",
+    "description": "Error in the cookie editor when \"Edit as JSON\" is ticked and the value doesn't parse. $1 is the browser's own error message, in English, e.g. \"Unexpected token } in JSON at position 12\"."
+  },
+  "cookie_bytes_one": {
+    "message": "$1 byte",
+    "description": "A size in bytes, in the cookie table and its tooltips. $1 is the number, e.g. \"1\"."
+  },
+  "cookie_bytes_other": {
+    "message": "$1 bytes",
+    "description": "A size in bytes, in the cookie table and its tooltips. $1 is the number, e.g. \"812\". Short: also used in a narrow table column."
+  },
+  "cookie_kilobytes": {
+    "message": "$1 KB",
+    "description": "A size in kilobytes, in the cookie table and its tooltips. $1 is the number, e.g. \"3.1\". KB is the unit; use your language's usual abbreviation."
+  },
+  "cookie_knownByOthers_one": {
+    "message": "$2 and $1 other",
+    "description": "Who a cookie name is known to be used by, when the database lists it under more than one company. $1 is the number of other companies, e.g. \"1\"; $2 is the first company's name, e.g. \"Didomi\". Shown in a tooltip in the cookie table."
+  },
+  "cookie_knownByOthers_other": {
+    "message": "$2 and $1 others",
+    "description": "Who a cookie name is known to be used by, when the database lists it under more than one company. $1 is the number of other companies, e.g. \"3\"; $2 is the first company's name, e.g. \"Didomi\". Shown in a tooltip in the cookie table."
+  },
+  "cookie_kindFunctional": {
+    "message": "functional",
+    "description": "What a known cookie is for, as a word inside the sentence \"Known name: Google, functional.\" (see cookie_knownNameKind). Lower case in English because it's mid-sentence."
+  },
+  "cookie_kindAnalytics": {
+    "message": "analytics",
+    "description": "What a known cookie is for, as a word inside the sentence \"Known name: Google Analytics, analytics.\" (see cookie_knownNameKind). Lower case in English because it's mid-sentence."
+  },
+  "cookie_kindMarketing": {
+    "message": "marketing",
+    "description": "What a known cookie is for, as a word inside the sentence \"Known name: Meta, marketing.\" (see cookie_knownNameKind). Lower case in English because it's mid-sentence."
+  },
+  "cookie_kindSecurity": {
+    "message": "security",
+    "description": "What a known cookie is for, as a word inside the sentence \"Known name: Cloudflare, security.\" (see cookie_knownNameKind). Lower case in English because it's mid-sentence."
+  },
+  "cookie_kindNecessary": {
+    "message": "necessary",
+    "description": "What a known cookie is for (needed for the site to work), as a word inside the sentence \"Known name: Shopify, necessary.\" (see cookie_knownNameKind). Lower case in English because it's mid-sentence."
+  },
+  "cookie_kindPersonalisation": {
+    "message": "personalisation",
+    "description": "What a known cookie is for (remembering a user's choices to tailor the site), as a word inside the sentence \"Known name: Hotjar, personalisation.\" (see cookie_knownNameKind). Lower case in English because it's mid-sentence."
+  },
+  "cookie_knownNameKind": {
+    "message": "Known name: $1, $2.",
+    "description": "In the cookie editor, under the name field, when the cookie's name is in a public database of known cookies. $1 is the company it's listed under, e.g. \"Google Analytics\"; $2 is what it's for, one of the cookie_kind... words, e.g. \"analytics\". An English description from the database may follow."
+  },
+  "cookie_knownName": {
+    "message": "Known name: $1.",
+    "description": "In the cookie editor, under the name field, when the cookie's name is in a public database of known cookies and the database doesn't say what it's for. $1 is the company it's listed under, e.g. \"Google Analytics\"."
+  },
+  "cookie_knownAlsoListed": {
+    "message": "Also listed under $1.",
+    "description": "In the cookie editor, after \"Known name: ...\", when the database lists the name under more companies. $1 is a list of company names, e.g. \"Didomi\" or \"Didomi, Sourcepoint and OneTrust\"."
+  },
+  "cookie_listAnd": {
+    "message": "$1 and $2",
+    "description": "Joins the last name onto a list of names. $1 is one name or several separated by commas, e.g. \"Google, Meta\"; $2 is the last name, e.g. \"TikTok\". Gives \"Google, Meta and TikTok\"."
+  },
+  "cookie_errorNoName": {
+    "message": "A cookie needs a name.",
+    "description": "Error in the cookie editor (or when importing) when the name is empty."
+  },
+  "cookie_errorNameCharacters": {
+    "message": "A cookie name can't contain spaces, semicolons, commas or equals signs.",
+    "description": "Error in the cookie editor (or when importing) when the name has a character cookies don't allow."
+  },
+  "cookie_errorValueSemicolon": {
+    "message": "A cookie value can't contain a semicolon.",
+    "description": "Error in the cookie editor (or when importing) when the value has a semicolon."
+  },
+  "cookie_errorTooBig": {
+    "message": "Chrome won't store a cookie bigger than $1 bytes (name and value together). This one is $2.",
+    "description": "Error in the cookie editor when the cookie is too big. $1 is the limit, e.g. \"4,096\"; $2 is this cookie's size in bytes, e.g. \"5,210\"."
+  },
+  "cookie_errorTooBigImported": {
+    "message": "Chrome won't store a cookie bigger than $1 bytes (name and value together). It is $2.",
+    "description": "Error shown for a cookie in a file being imported, when it's too big. $1 is the limit, e.g. \"4,096\"; $2 is the cookie's size in bytes, e.g. \"5,210\"."
+  },
+  "cookie_errorSecurePrefixImported": {
+    "message": "Its name starts with __Secure- but it isn't Secure, and Chrome won't accept that.",
+    "description": "Error shown for a cookie in a file being imported. __Secure- is a name prefix and Secure a cookie attribute; keep both exactly."
+  },
+  "cookie_errorSecurePrefix": {
+    "message": "A name starting with __Secure- only works on a Secure cookie. Tick Secure, or change the name.",
+    "description": "Error in the cookie editor. __Secure- is a name prefix and Secure a cookie attribute (and the label of a tick box); keep both exactly."
+  },
+  "cookie_hostPrefixSecure": {
+    "message": "Secure",
+    "description": "One of the things a cookie whose name starts with __Host- must be, listed in cookie_errorHostPrefix's $1. Secure is a cookie attribute; normally kept as it is."
+  },
+  "cookie_hostPrefixHostOnly": {
+    "message": "host-only",
+    "description": "One of the things a cookie whose name starts with __Host- must be (sent to this exact host, not its subdomains), listed in cookie_errorHostPrefix's $1."
+  },
+  "cookie_hostPrefixRootPath": {
+    "message": "on the path /",
+    "description": "One of the things a cookie whose name starts with __Host- must be, listed in cookie_errorHostPrefix's $1. \"/\" is the cookie path; keep it."
+  },
+  "cookie_listOr": {
+    "message": "$1 or $2",
+    "description": "Joins two things a cookie isn't, in cookie_errorHostPrefix's $1. Each is one of cookie_hostPrefixSecure, cookie_hostPrefixHostOnly or cookie_hostPrefixRootPath, or an earlier join, e.g. \"Secure or host-only\"."
+  },
+  "cookie_errorHostPrefixImported": {
+    "message": "Its name starts with __Host-, so Chrome only accepts it if it is Secure, host-only and on the path /. It isn't $1.",
+    "description": "Error shown for a cookie in a file being imported. $1 is what it isn't, e.g. \"Secure\" or \"host-only or on the path /\". __Host- is a name prefix; keep it."
+  },
+  "cookie_errorHostPrefix": {
+    "message": "A name starting with __Host- only works on a cookie that is Secure, host-only and on the path /. This one isn't $1.",
+    "description": "Error in the cookie editor. $1 is what this cookie isn't, e.g. \"Secure\" or \"host-only or on the path /\". __Host- is a name prefix; keep it."
+  },
+  "cookie_errorNoDomain": {
+    "message": "A cookie needs a domain.",
+    "description": "Error in the cookie editor (or when importing) when the domain is empty."
+  },
+  "cookie_errorPathSlash": {
+    "message": "The path has to start with a slash.",
+    "description": "Error in the cookie editor (or when importing) when the cookie's path doesn't start with \"/\"."
+  },
+  "cookie_errorSameSiteNoneImported": {
+    "message": "It has SameSite “None” but isn't Secure, and Chrome won't accept that.",
+    "description": "Error shown for a cookie in a file being imported. SameSite, None and Secure are cookie attribute names and values; keep them."
+  },
+  "cookie_errorSameSiteNone": {
+    "message": "SameSite “None” only works on a Secure cookie. Tick Secure, or choose a different SameSite.",
+    "description": "Error in the cookie editor. SameSite, None and Secure are cookie attribute names and values (and labels in the form); keep them."
+  },
+  "cookie_errorPartitionedImported": {
+    "message": "It's partitioned but isn't Secure, and Chrome won't accept that.",
+    "description": "Error shown for a cookie in a file being imported. Partitioned (CHIPS) cookies are kept separately for each site. Secure is a cookie attribute; keep it."
+  },
+  "cookie_errorPartitioned": {
+    "message": "A partitioned cookie only works when it's Secure. Tick Secure.",
+    "description": "Error in the cookie editor. Partitioned (CHIPS) cookies are kept separately for each site. Secure is a cookie attribute and a tick box label; keep it."
+  },
+  "cookie_errorNoExpiryImported": {
+    "message": "It has no expiry date and isn't marked as a session cookie.",
+    "description": "Error shown for a cookie in a file being imported."
+  },
+  "cookie_errorNoExpiry": {
+    "message": "Set an expiry date, or tick “Session cookie”.",
+    "description": "Error in the cookie editor. “Session cookie” is the label of a tick box in the same form; use the same words as that label."
+  },
+  "cookie_errorOriginalNotRemoved": {
+    "message": "The original cookie couldn't be removed, so the change was stopped rather than risk leaving two copies of it behind.",
+    "description": "Error in the cookie editor when saving a cookie whose name, domain or path was changed, which means deleting the old one first, and that failed."
+  },
+  "cookie_errorNotAccepted": {
+    "message": "Chrome didn't accept the cookie, and didn't say why.",
+    "description": "Error in the cookie editor when Chrome refused to save a cookie without giving a reason."
+  },
+  "cookie_errorParseOrSet": {
+    "message": "$1 This usually means the domain doesn't match the cookie, or the name or value contains a character cookies aren't allowed to carry.",
+    "description": "Error in the cookie editor when Chrome refused a cookie. $1 is Chrome's own error, in English, ending with a full stop, e.g. \"Failed to parse or set cookie named \\\"a\\\".\". The rest explains the usual reasons."
+  },
+  "cookie_editTitleEdit": {
+    "message": "Edit cookie",
+    "description": "Short: heading of the cookie editor screen when editing an existing cookie."
+  },
+  "cookie_editTitleNew": {
+    "message": "New cookie",
+    "description": "Short: heading of the cookie editor screen when creating a cookie."
+  },
+  "cookie_editPartitionEmbedded": {
+    "message": "Set by $1 in a frame on this site, and kept for this site only (a partitioned, or CHIPS, cookie). Its partition is kept as it is when you save.",
+    "description": "Note in the cookie editor for a cookie another site set from inside a frame on this one. $1 is that site's domain, e.g. \"widget.example\". CHIPS is a technical name; keep it."
+  },
+  "cookie_editPartitioned": {
+    "message": "This is a partitioned (CHIPS) cookie. Its partition is kept as it is when you save.",
+    "description": "Note in the cookie editor for a partitioned cookie (one kept separately for each site). CHIPS is a technical name; keep it."
+  },
+  "cookie_editValueSize": {
+    "message": "$1 of $2 bytes (name and value together).",
+    "description": "Note under the value in the cookie editor, once the cookie is close to Chrome's size limit. $1 is its size, e.g. \"3,612\"; $2 is the limit, e.g. \"4,096\"."
+  },
+  "cookie_editExpiryShortened": {
+    "message": "Chrome shortened the expiry to $1 It limits how far ahead a cookie is allowed to expire.",
+    "description": "Added after \"Saved changes to ...\" or \"Created ...\" when Chrome moved the expiry date closer. $1 is the date and time it now expires, e.g. \"05/11/2027, 14:30:00\". The English has no full stop after $1; you may add one."
+  },
+  "cookie_editJsonFixIt": {
+    "message": "$1 Fix it, or untick \"Edit as JSON\" to save it as typed.",
+    "description": "Error in the cookie editor when saving a value that doesn't parse as JSON. $1 is cookie_valueNotJson, e.g. \"The value isn't valid JSON: Unexpected end of JSON input.\". \"Edit as JSON\" is the label of a tick box in the same form; use the same words as that label."
+  },
+  "cookie_editSaved": {
+    "message": "Saved changes to $1.",
+    "description": "Status line on the main screen after saving an edited cookie. $1 is the cookie's name, e.g. \"session_id\"."
+  },
+  "cookie_editCreated": {
+    "message": "Created $1.",
+    "description": "Status line on the main screen after creating a cookie. $1 is the cookie's name, e.g. \"session_id\"."
+  },
+  "cookie_rowNameTitle": {
+    "message": "$1 ($2)",
+    "description": "Tooltip on a cookie's name in the table. $1 is the name, e.g. \"_ga\"; $2 is its size, e.g. \"40 bytes\". Change only the brackets, if your language writes this differently."
+  },
+  "cookie_rowEmbeddedNote": {
+    "message": "set in a frame, kept for this site only",
+    "description": "Small note under the domain in the cookie table, for a cookie another site set from inside a frame on this one (a partitioned cookie). Lower case in English. Keep it short."
+  },
+  "cookie_rowEmbeddedNoteTitle": {
+    "message": "Set by $1 in a frame on this site. It's partitioned, so it's kept for this site only.",
+    "description": "Tooltip on cookie_rowEmbeddedNote. $1 is the other site's domain, e.g. \"widget.example\"."
+  },
+  "cookie_rowPickLabel": {
+    "message": "Tick $1",
+    "description": "Screen reader label of the tick box at the start of each table row, used to choose cookies. $1 is the cookie's name, e.g. \"_ga\"."
+  },
+  "cookie_rowCopyName": {
+    "message": "Copy name",
+    "description": "Short: a small icon button on a table row that copies the cookie's name. Read out by screen readers and shown as a tooltip."
+  },
+  "cookie_rowCopyNameTitle": {
+    "message": "Copy the name, $1",
+    "description": "Tooltip on the Copy name button. $1 is the cookie's name, e.g. \"_ga\"."
+  },
+  "cookie_rowKept": {
+    "message": "Kept",
+    "description": "Short: label of a row's Keep button when the cookie is already kept (cookieZ won't delete it). One word, read out by screen readers."
+  },
+  "cookie_rowKeep": {
+    "message": "Keep",
+    "description": "Short: label of a row's Keep button: mark the cookie so cookieZ never deletes it. One word, read out by screen readers."
+  },
+  "cookie_rowKeptTitle": {
+    "message": "Kept: left out of every delete. Click to stop keeping it.",
+    "description": "Tooltip on a row's Keep button when the cookie is kept. Uses the word from cookie_rowKept."
+  },
+  "cookie_rowKeepTitle": {
+    "message": "Keep: leave this cookie out of every delete made here",
+    "description": "Tooltip on a row's Keep button when the cookie isn't kept. Uses the word from cookie_rowKeep."
+  },
+  "cookie_rowEdit": {
+    "message": "Edit",
+    "description": "Short: label of a row's Edit icon button, read out by screen readers. One word."
+  },
+  "cookie_rowEditTitle": {
+    "message": "Edit this cookie",
+    "description": "Tooltip on a row's Edit button."
+  },
+  "cookie_rowDelete": {
+    "message": "Delete",
+    "description": "Short: label of a row's Delete icon button, read out by screen readers. One word."
+  },
+  "cookie_rowDeleteKeptTitle": {
+    "message": "Kept cookies aren't deleted. Click the bookmark to allow it.",
+    "description": "Tooltip on a row's Delete button when it's disabled because the cookie is kept. The bookmark is the Keep button's icon."
+  },
+  "cookie_rowDeleteTitle": {
+    "message": "Delete this cookie",
+    "description": "Tooltip on a row's Delete button."
+  },
+  "cookie_rowDontDelete": {
+    "message": "Don't delete",
+    "description": "Short: label of the cancel (cross) button shown next to \"Sure?\" after Delete is clicked once. Read out by screen readers."
+  },
+  "cookie_rowSure": {
+    "message": "Sure?",
+    "description": "Short: a row's Delete button changes to this after the first click; clicking again deletes the cookie. Very tight space: one or two words."
+  },
+  "cookie_rowValueEmpty": {
+    "message": "(empty)",
+    "description": "Short: shown greyed in the Value column of the table when a cookie's value is empty."
+  },
+  "cookie_rowValueCopy": {
+    "message": "Copy",
+    "description": "Short: a small button under a cookie's value once it's shown in full in the table. One word."
+  },
+  "cookie_rowValueCopyTitle": {
+    "message": "Copy the whole value",
+    "description": "Tooltip on cookie_rowValueCopy."
+  },
+  "cookie_rowValueCollapse": {
+    "message": "Click to collapse",
+    "description": "Tooltip on a long cookie value in the table when it's shown in full."
+  },
+  "cookie_rowValueExpand": {
+    "message": "Click to show the full value",
+    "description": "Tooltip on a long cookie value in the table when it's cut short."
+  },
+  "cookie_badgeSecureTitle": {
+    "message": "Only sent over HTTPS",
+    "description": "Tooltip on the \"Secure\" badge in the table's Flags column. Secure is a cookie attribute and stays in English."
+  },
+  "cookie_badgeHttpOnlyTitle": {
+    "message": "Hidden from the page's own JavaScript",
+    "description": "Tooltip on the \"HttpOnly\" badge in the table's Flags column. HttpOnly is a cookie attribute and stays in English."
+  },
+  "cookie_badgeSubdomains": {
+    "message": "Subdomains",
+    "description": "Short: a badge in the table's narrow Flags column, for a cookie that is also sent to every subdomain. One word."
+  },
+  "cookie_badgeSubdomainsTitle": {
+    "message": "Also sent to every subdomain of $1",
+    "description": "Tooltip on the Subdomains badge. $1 is the cookie's domain, e.g. \"example.com\"."
+  },
+  "cookie_badgePartitionedEmbeddedTitle": {
+    "message": "Partitioned (CHIPS): set by $1 and kept for this site only",
+    "description": "Tooltip on the \"Partitioned\" badge for a cookie another site set from inside a frame on this one. $1 is that site's domain, e.g. \"widget.example\". Partitioned and CHIPS are technical names; keep them."
+  },
+  "cookie_badgePartitionedTitle": {
+    "message": "Partitioned (CHIPS): kept separately for each site it's used on",
+    "description": "Tooltip on the \"Partitioned\" badge in the table's Flags column. Partitioned and CHIPS are technical names; keep them."
+  },
+  "cookie_badgeKnownTitle": {
+    "message": "Known name, used by $1. A guess from the name only.",
+    "description": "Tooltip on the Known badge. $1 is who uses this cookie name, e.g. \"Google Analytics\" or \"Didomi and 2 others\" (cookie_knownByOthers)."
+  },
+  "cookie_badgeKnown": {
+    "message": "Known",
+    "description": "Short: a badge in the table's narrow Flags column, for a cookie whose name is in a public database of known cookies. Not \"tracker\": it's only a guess from the name. One word."
+  },
+  "cookie_badgeKnownHidden": {
+    "message": "name, used by $1",
+    "description": "Read out by screen readers straight after the Known badge (cookie_badgeKnown), so together they say \"Known name, used by Google Analytics\". Not shown on screen. $1 is who uses the name, e.g. \"Google Analytics\"."
+  },
+  "cookie_badgeLarge": {
+    "message": "Large",
+    "description": "Short: a badge in the table's narrow Flags column, for a cookie close to Chrome's 4 KB size limit. One word."
+  },
+  "cookie_badgeLargeTitle": {
+    "message": "$1. Chrome won't keep a cookie over 4 KB (name and value together).",
+    "description": "Tooltip on the Large badge. $1 is the cookie's size, e.g. \"3.6 KB\"."
+  },
+  "cookie_badgeSameSiteStrictTitle": {
+    "message": "Only sent when you're on this site",
+    "description": "Tooltip on the \"SameSite Strict\" badge in the table's Flags column. The badge itself stays in English."
+  },
+  "cookie_badgeSameSiteLaxTitle": {
+    "message": "Sent on this site, and when you follow a link to it",
+    "description": "Tooltip on the \"SameSite Lax\" badge in the table's Flags column. The badge itself stays in English."
+  },
+  "cookie_badgeSameSiteNoneTitle": {
+    "message": "Also sent when another site loads something from this one",
+    "description": "Tooltip on the \"SameSite None\" badge in the table's Flags column. The badge itself stays in English."
+  },
+  "cookie_reportPurposeMarketing": {
+    "message": "Advertising and marketing",
+    "description": "Site report: a row heading in the table of what the site's cookies are for. Keep it short."
+  },
+  "cookie_reportPurposeAnalytics": {
+    "message": "Analytics",
+    "description": "Site report: a row heading in the table of what the site's cookies are for (measuring visits). Keep it short."
+  },
+  "cookie_reportPurposePersonalisation": {
+    "message": "Personalisation",
+    "description": "Site report: a row heading in the table of what the site's cookies are for (remembering choices to tailor the site). Keep it short."
+  },
+  "cookie_reportPurposeFunctional": {
+    "message": "Site features",
+    "description": "Site report: a row heading in the table of what the site's cookies are for (features of the site itself). Keep it short."
+  },
+  "cookie_reportPurposeSecurity": {
+    "message": "Security",
+    "description": "Site report: a row heading in the table of what the site's cookies are for. Keep it short."
+  },
+  "cookie_reportPurposeNecessary": {
+    "message": "Needed to run the site",
+    "description": "Site report: a row heading in the table of what the site's cookies are for. Keep it short."
+  },
+  "cookie_reportCompaniesOthers_one": {
+    "message": "$2 and $1 other",
+    "description": "Site report: the companies behind one row's cookies, when there are more than fit. $1 is how many more, e.g. \"1\"; $2 is the first few names, e.g. \"Google, Meta, TikTok\"."
+  },
+  "cookie_reportCompaniesOthers_other": {
+    "message": "$2 and $1 others",
+    "description": "Site report: the companies behind one row's cookies, when there are more than fit. $1 is how many more, e.g. \"2\"; $2 is the first few names, e.g. \"Google, Meta, TikTok\"."
+  },
+  "cookie_reportNotRecognised": {
+    "message": "Not recognised",
+    "description": "Site report: the row for cookies whose names aren't in the database of known cookies. Keep it short."
+  },
+  "cookie_reportCheckNotSecure": {
+    "message": "Also sent over plain HTTP",
+    "description": "Site report, \"worth checking\" table: a row heading for cookies without the Secure flag."
+  },
+  "cookie_reportCheckNotSecureNote": {
+    "message": "They don't have the Secure flag.",
+    "description": "Site report: the small note under cookie_reportCheckNotSecure. Secure is a cookie attribute; keep it."
+  },
+  "cookie_reportCheckReadable": {
+    "message": "Readable by the page's scripts",
+    "description": "Site report, \"worth checking\" table: a row heading for cookies without the HttpOnly flag."
+  },
+  "cookie_reportCheckReadableNote": {
+    "message": "They don't have the HttpOnly flag.",
+    "description": "Site report: the small note under cookie_reportCheckReadable. HttpOnly is a cookie attribute; keep it."
+  },
+  "cookie_reportCheckSameSiteNone": {
+    "message": "Sent when another site loads this one",
+    "description": "Site report, \"worth checking\" table: a row heading for cookies with SameSite None."
+  },
+  "cookie_reportCheckSameSiteNoneNote": {
+    "message": "They have SameSite None.",
+    "description": "Site report: the small note under cookie_reportCheckSameSiteNone. SameSite and None are a cookie attribute and its value; keep them."
+  },
+  "cookie_reportCheckLarge": {
+    "message": "Close to Chrome's 4 KB limit",
+    "description": "Site report, \"worth checking\" table: a row heading for very large cookies."
+  },
+  "cookie_reportCheckLargeNote": {
+    "message": "A site with too many of these can stop logins working.",
+    "description": "Site report: the small note under cookie_reportCheckLarge."
+  },
+  "cookie_reportCheckSoon": {
+    "message": "Expire within a day",
+    "description": "Site report, \"worth checking\" table: a row heading for cookies that expire within 24 hours."
+  },
+  "cookie_reportCheckSoonNote": {
+    "message": "A sign-in held in one of these won't last.",
+    "description": "Site report: the small note under cookie_reportCheckSoon."
+  },
+  "cookie_reportShowThem": {
+    "message": "Show them",
+    "description": "Short: a button in each row of the site report's \"worth checking\" table; it goes back to the cookie table filtered to those cookies."
+  },
+  "cookie_reportShowThemLabel_one": {
+    "message": "Show the $1 cookie: $2",
+    "description": "Screen reader label of the Show them button. $1 is the number of cookies, e.g. \"1\"; $2 is the row heading, e.g. \"Expire within a day\"."
+  },
+  "cookie_reportShowThemLabel_other": {
+    "message": "Show the $1 cookies: $2",
+    "description": "Screen reader label of the Show them button. $1 is the number of cookies, e.g. \"4\"; $2 is the row heading, e.g. \"Expire within a day\"."
   }
 }
