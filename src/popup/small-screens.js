@@ -226,6 +226,7 @@ export function closeChanges() {
 // has been saved yet, a welcome line shows instead. The lines are in
 // messages.json, one per version.
 const WHATS_NEW = {
+  "2.3.0": "main_whatsNew2_3_0",
   "2.2.1": "main_whatsNew2_2_1",
   "2.2.0": "main_whatsNew2_2_0",
   "2.1.0": "main_whatsNew2_1_0",

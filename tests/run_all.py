@@ -45,6 +45,7 @@ FILES = [
     "test_review.py",
     "test_no_network.py",
     "test_devtools_crosscheck.py",
+    "test_i18n.py",
 ]
 
 

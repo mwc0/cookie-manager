@@ -1,10 +1,1901 @@
 {
   "appName": {
-    "message": "Cookie Editor & Blocker - cookieZ",
-    "description": "The extension's name. The same in every language."
+    "message": "Cookie Editor & Blocker - cookieZ"
   },
   "appDesc": {
-    "message": "Cookie の表示、編集、削除、ブロックができます。広告はなく、操作した内容がパソコンの外に送られることはありません。",
-    "description": "The summary under the name in the Chrome Web Store and on chrome://extensions. 132 characters at most."
+    "message": "Cookie の表示、編集、削除、ブロックができます。広告はなく、操作した内容がパソコンの外に送られることはありません。"
+  },
+  "page_loading": {
+    "message": "Cookie を読み込み中…"
+  },
+  "page_gateHeading": {
+    "message": "初回のみ許可が必要です"
+  },
+  "page_gateIntro": {
+    "message": "Chrome は、拡張機能にサイトへのアクセスを許可しないと、そのサイトの Cookie を見せません。cookieZ が、あなたが開くウェブサイトにアクセスできるようにしてください。"
+  },
+  "page_gateAfter": {
+    "message": "許可すると、どのサイトの Cookie も表示、編集、削除、ブロック、エクスポートできます。"
+  },
+  "page_gatePrivacy": {
+    "message": "アクセスは cookieZ を開いている間だけ使われます。何も外部に送信されません。cookieZ はネットワーク リクエストを行わず、分析もしません。"
+  },
+  "page_gateGrant": {
+    "message": "アクセスを許可"
+  },
+  "page_blockedHeading": {
+    "message": "このページには Cookie がありません"
+  },
+  "page_blockedHint": {
+    "message": "通常のウェブサイトを開いてから、もう一度アイコンをクリックしてください。"
+  },
+  "page_errorHeading": {
+    "message": "問題が発生しました"
+  },
+  "page_retry": {
+    "message": "再試行"
+  },
+  "page_reportOpenTitle": {
+    "message": "このサイトが保存しているものと、確認したほうがよいものを表示"
+  },
+  "page_reportOpen": {
+    "message": "サイトレポート"
+  },
+  "page_changesOpenTitle": {
+    "message": "変更内容を表示"
+  },
+  "page_rulesOpenTitle": {
+    "message": "このサイトが設定できる Cookie を選択"
+  },
+  "page_rulesOpen": {
+    "message": "ブロック"
+  },
+  "page_addTitle": {
+    "message": "新しい Cookie を作成"
+  },
+  "page_add": {
+    "message": "Cookie を追加"
+  },
+  "page_refreshTitle": {
+    "message": "Cookie を再読み込み"
+  },
+  "page_refresh": {
+    "message": "更新"
+  },
+  "page_help": {
+    "message": "ヘルプ"
+  },
+  "page_more": {
+    "message": "その他"
+  },
+  "page_themeGroup": {
+    "message": "カラーテーマ"
+  },
+  "page_themeLightTitle": {
+    "message": "ライトテーマ"
+  },
+  "page_themeLight": {
+    "message": "ライト"
+  },
+  "page_themeDarkTitle": {
+    "message": "ダークテーマ"
+  },
+  "page_themeDark": {
+    "message": "ダーク"
+  },
+  "page_openInSidePanel": {
+    "message": "サイドパネルで開く"
+  },
+  "page_openInTab": {
+    "message": "タブで開く"
+  },
+  "page_whatsNewOk": {
+    "message": "OK"
+  },
+  "page_reviewAsk": {
+    "message": "cookieZ がお役に立てば幸いです。Chrome ウェブストアにレビューを書いていただくと、ほかの方が見つけやすくなります。"
+  },
+  "page_reviewOpen": {
+    "message": "レビューを書く"
+  },
+  "page_reviewLater": {
+    "message": "今はしない"
+  },
+  "page_searchLabel": {
+    "message": "Cookie を検索"
+  },
+  "page_searchPlaceholder": {
+    "message": "検索、または name: や domain: を入力"
+  },
+  "page_filtersGroup": {
+    "message": "絞り込み"
+  },
+  "page_filterSession": {
+    "message": "セッション"
+  },
+  "page_filterKept": {
+    "message": "保持"
+  },
+  "page_filterSoon": {
+    "message": "まもなく期限切れ"
+  },
+  "page_filterLarge": {
+    "message": "大きい"
+  },
+  "page_filterKnownTitle": {
+    "message": "Open Cookie Database にある名前の Cookie。名前だけからの推測です。"
+  },
+  "page_filterKnown": {
+    "message": "既知"
+  },
+  "page_filterNotSecureTitle": {
+    "message": "Secure のない Cookie。通常の HTTP でも送信されます"
+  },
+  "page_filterNotSecure": {
+    "message": "Secure なし"
+  },
+  "page_filterReadableTitle": {
+    "message": "HttpOnly のない Cookie。ページのスクリプトから読み取れます"
+  },
+  "page_filterReadable": {
+    "message": "スクリプトから読める"
+  },
+  "page_filterSameSiteNoneTitle": {
+    "message": "SameSite None の Cookie。ほかのサイトがこのサイトのものを読み込むときに送信されます"
+  },
+  "page_searchClearTitle": {
+    "message": "検索と絞り込みを解除"
+  },
+  "page_searchClear": {
+    "message": "解除"
+  },
+  "page_deletePanelHeading": {
+    "message": "Cookie の削除とエクスポート"
+  },
+  "page_scopesGroup": {
+    "message": "削除する対象"
+  },
+  "page_scopePicked": {
+    "message": "チェックした Cookie のみ"
+  },
+  "page_scopeMatches": {
+    "message": "表示中の Cookie のみ"
+  },
+  "page_scopePage": {
+    "message": "このページ"
+  },
+  "page_scopeDomain": {
+    "message": "このドメインとサブドメイン"
+  },
+  "page_scopeAll": {
+    "message": "すべてのサイト"
+  },
+  "page_scopeAllNote": {
+    "message": "このブラウザ プロファイルのすべて"
+  },
+  "page_scopeCounting": {
+    "message": "数えています…"
+  },
+  "page_delete": {
+    "message": "削除…"
+  },
+  "page_export": {
+    "message": "エクスポート…"
+  },
+  "page_importTitle": {
+    "message": "JSON または cookies.txt のエクスポートから Cookie を追加"
+  },
+  "page_import": {
+    "message": "インポート"
+  },
+  "page_dataTitle": {
+    "message": "ログインできない場合：このサイトの Cookie とそのほかの保存データをすべて消去して、再読み込み"
+  },
+  "page_dataButton": {
+    "message": "消去して再読み込み…"
+  },
+  "page_confirmDelete": {
+    "message": "削除する"
+  },
+  "page_cancel": {
+    "message": "キャンセル"
+  },
+  "page_dataYesReload": {
+    "message": "消去して再読み込み"
+  },
+  "page_dataYes": {
+    "message": "消去のみ"
+  },
+  "page_pickedGroup": {
+    "message": "チェックした Cookie"
+  },
+  "page_pickedKeep": {
+    "message": "保持"
+  },
+  "page_pickedUnkeep": {
+    "message": "保持を解除"
+  },
+  "page_expireIn": {
+    "message": "期限"
+  },
+  "page_expireIn1Hour": {
+    "message": "1 時間後に期限切れにする"
+  },
+  "page_preset1Hour": {
+    "message": "1 時間"
+  },
+  "page_expireIn1Day": {
+    "message": "1 日後に期限切れにする"
+  },
+  "page_preset1Day": {
+    "message": "1 日"
+  },
+  "page_expireIn1Week": {
+    "message": "1 週間後に期限切れにする"
+  },
+  "page_preset1Week": {
+    "message": "1 週間"
+  },
+  "page_expireIn1Year": {
+    "message": "1 年後に期限切れにする"
+  },
+  "page_preset1Year": {
+    "message": "1 年"
+  },
+  "page_pickedClear": {
+    "message": "チェックをすべて外す"
+  },
+  "page_pickAll": {
+    "message": "表示中の Cookie をすべてチェック"
+  },
+  "page_colName": {
+    "message": "名前"
+  },
+  "page_sortBySize": {
+    "message": "サイズで並べ替え"
+  },
+  "page_colValue": {
+    "message": "値"
+  },
+  "page_colSize": {
+    "message": "サイズ"
+  },
+  "page_colDomain": {
+    "message": "ドメイン"
+  },
+  "page_colPath": {
+    "message": "パス"
+  },
+  "page_colExpires": {
+    "message": "有効期限"
+  },
+  "page_colFlags": {
+    "message": "属性"
+  },
+  "page_colActions": {
+    "message": "操作"
+  },
+  "page_emptyTable": {
+    "message": "このサイトには Cookie が設定されていません。"
+  },
+  "page_back": {
+    "message": "戻る"
+  },
+  "page_editRuleNote": {
+    "message": "サイトのルールにより、このサイトの Cookie はブロックされています。ここで保存することはできますが、サイトからは読み取れません。"
+  },
+  "page_fieldName": {
+    "message": "名前"
+  },
+  "page_copyNameTitle": {
+    "message": "名前をコピー"
+  },
+  "page_copy": {
+    "message": "コピー"
+  },
+  "page_nameKnownNote": {
+    "message": "名前だけからの推測です。Open Cookie Database による情報です。"
+  },
+  "page_fieldValue": {
+    "message": "値"
+  },
+  "page_copyValueTitle": {
+    "message": "値をコピー"
+  },
+  "page_editAsJson": {
+    "message": "JSON として編集：ここでは整形して表示し、保存時は 1 行に戻します"
+  },
+  "page_decoded": {
+    "message": "デコード済み"
+  },
+  "page_copyDecodedTitle": {
+    "message": "デコードした値をコピー"
+  },
+  "page_fieldDomain": {
+    "message": "ドメイン"
+  },
+  "page_fieldPath": {
+    "message": "パス"
+  },
+  "page_sameSiteUnset": {
+    "message": "未設定（Chrome が判断）"
+  },
+  "page_sameSiteNone": {
+    "message": "None（Secure が必要）"
+  },
+  "page_fieldExpires": {
+    "message": "有効期限"
+  },
+  "page_sessionCheck": {
+    "message": "セッション Cookie：ブラウザを閉じると削除"
+  },
+  "page_fieldFlags": {
+    "message": "属性"
+  },
+  "page_secureCheck": {
+    "message": "Secure：HTTPS でのみ送信"
+  },
+  "page_httpOnlyCheck": {
+    "message": "HttpOnly：ページの JavaScript から見えない"
+  },
+  "page_hostOnlyCheck": {
+    "message": "ホストのみ：このホストだけ。サブドメインには送信しない"
+  },
+  "page_partitionedCheck": {
+    "message": "Partitioned（CHIPS）：<span id=\"partitioned-site\"></span> 専用として保存。Secure が必要です。"
+  },
+  "page_editChanged": {
+    "message": "編集中にサイトがこの Cookie を変更しました。保存すると上書きされます。"
+  },
+  "page_save": {
+    "message": "保存"
+  },
+  "page_duplicateTitle": {
+    "message": "この内容で新しい Cookie を作成"
+  },
+  "page_duplicate": {
+    "message": "複製"
+  },
+  "page_copySetCookieTitle": {
+    "message": "サーバーが送る Set-Cookie の 1 行としてこの Cookie をコピー"
+  },
+  "page_copySetCookie": {
+    "message": "Set-Cookie としてコピー"
+  },
+  "page_exportHeading": {
+    "message": "Cookie をエクスポート"
+  },
+  "page_formatGroup": {
+    "message": "形式"
+  },
+  "page_formatJsonNote": {
+    "message": "ほかの Cookie エディターと互換性があります。すべての情報を保持します。"
+  },
+  "page_formatPlaywrightNote": {
+    "message": "ログイン済みの状態でテストを始めるための storageState ファイルです。"
+  },
+  "page_formatSeleniumNote": {
+    "message": "テスト用の Python add_cookie() 呼び出しです。パーティションは扱えません。"
+  },
+  "page_formatNetscapeNote": {
+    "message": "curl、wget、yt-dlp などのツール用です。SameSite やパーティションは扱えません。"
+  },
+  "page_formatHeader": {
+    "message": "Cookie ヘッダー"
+  },
+  "page_formatHeaderNote": {
+    "message": "1 つのサイトの名前と値のみ。"
+  },
+  "page_formatCurl": {
+    "message": "curl コマンド"
+  },
+  "page_formatCurlNote": {
+    "message": "これらの Cookie をこのページに送信します。bash または zsh 用です。"
+  },
+  "page_exportOutputLabel": {
+    "message": "エクスポートした Cookie"
+  },
+  "page_exportPasswordLabel": {
+    "message": "パスワード（任意）"
+  },
+  "page_show": {
+    "message": "表示"
+  },
+  "page_exportPasswordNote": {
+    "message": "ファイルをロックし、このパスワードがないとインポートできなくなります。パスワードはどこにも保存されないので、忘れないでください。"
+  },
+  "page_exportWarning": {
+    "message": "このファイルがあれば、誰でもあなたとしてログインできてしまいます。パスワードを付けるか、安全な場所に保管してください。"
+  },
+  "page_download": {
+    "message": "ダウンロード"
+  },
+  "page_importHeading": {
+    "message": "Cookie をインポート"
+  },
+  "page_importIntro": {
+    "message": "JSON（cookieZ やほかの Cookie エディターから）、cookies.txt ファイル、Set-Cookie の行、または curl コマンド（DevTools の「cURL としてコピー」から）の形式でエクスポートした Cookie を貼り付けてください。Cookie ヘッダーだけの場合は、このサイトに追加されます。パスワード付きの cookieZ のエクスポートでは、パスワードを求められます。"
+  },
+  "page_importFileLabel": {
+    "message": "またはファイルを選択："
+  },
+  "page_importFileHint": {
+    "message": "ファイルを選択するには、<button id=\"import-tab\" class=\"link-button\" type=\"button\">cookieZ をタブで開いてください</button>。"
+  },
+  "page_importTextLabel": {
+    "message": "インポートする Cookie"
+  },
+  "page_importPasswordLabel": {
+    "message": "このファイルにはパスワードがあります。入力して「確認」を押してください。"
+  },
+  "page_importCheck": {
+    "message": "確認"
+  },
+  "page_importMove": {
+    "message": "代わりに <span id=\"import-move-site\"></span> に追加する"
+  },
+  "page_importWarning": {
+    "message": "自分で作成した Cookie だけをインポートしてください。他人の Cookie を使うと、相手のアカウントにログインしてしまったり、だまされたりするおそれがあります。"
+  },
+  "page_importCompare": {
+    "message": "比較"
+  },
+  "page_compareHeading": {
+    "message": "ファイルとの比較"
+  },
+  "page_colSite": {
+    "message": "サイト"
+  },
+  "page_colSinceFile": {
+    "message": "ファイルとの差"
+  },
+  "page_reportHeading": {
+    "message": "サイトレポート"
+  },
+  "page_reportIntro": {
+    "message": "<span id=\"report-site\" class=\"mono\"></span> がこのブラウザに保存しているもの。用途は、cookieZ 内のリストを使って Cookie の名前から推測したものです。どのサイトも Cookie に好きな名前を付けられるためです。ここにある内容は保存されません。"
+  },
+  "page_reportNoList": {
+    "message": "既知の Cookie 名のリストを読み込めなかったため、Cookie を判別できませんでした。"
+  },
+  "page_reportEmpty": {
+    "message": "このサイトは Cookie を保存していません。"
+  },
+  "page_colPurpose": {
+    "message": "用途"
+  },
+  "page_colCookies": {
+    "message": "Cookie"
+  },
+  "page_colSetBy": {
+    "message": "主な設定元"
+  },
+  "page_reportChecksHeading": {
+    "message": "確認したい点"
+  },
+  "page_reportChecksNone": {
+    "message": "このサイトで指摘する点はありません。"
+  },
+  "page_colWhat": {
+    "message": "内容"
+  },
+  "page_colAction": {
+    "message": "操作"
+  },
+  "page_changesHeading": {
+    "message": "変更内容"
+  },
+  "page_changesIntro": {
+    "message": "cookieZ を開いてから、このサイトの Cookie に起きたことを新しい順に表示します。サイトによる変更も、あなたによる変更も含みます。ここにある内容は保存されず、cookieZ を閉じると消えます。"
+  },
+  "page_colTime": {
+    "message": "時刻"
+  },
+  "page_colWhatHappened": {
+    "message": "変更"
+  },
+  "page_keptHeading": {
+    "message": "保持した Cookie"
+  },
+  "page_keptIntro": {
+    "message": "cookieZ はこれらをどの削除からも除外します。すべてのサイトについて保存されている一覧で、名前のみ、値は含みません。"
+  },
+  "page_colStopKeeping": {
+    "message": "保持を解除"
+  },
+  "page_keptEmpty": {
+    "message": "保持している Cookie はありません。"
+  },
+  "page_keptClear": {
+    "message": "すべての保持を解除…"
+  },
+  "page_keptConfirmYes": {
+    "message": "解除する"
+  },
+  "page_rulesHeading": {
+    "message": "Cookie をブロック"
+  },
+  "page_rulesIntro": {
+    "message": "Cookie を設定できるサイトを選びます。Chrome はこのルールに常に従うので、cookieZ を閉じていても有効です。何も外部に送信されません。"
+  },
+  "page_rulesGate": {
+    "message": "ルールを設定するには、cookieZ にサイトの設定を変更する Chrome の許可が必要です。Chrome の確認には、カメラ、マイク、位置情報も表示されます。1 つの許可がすべてのサイト設定をまとめているためです。cookieZ が変更するのは Cookie の設定だけです。"
+  },
+  "page_rulesGateSaved": {
+    "message": "保存したルールは下に表示されていますが、もう一度許可するまで Chrome はそれに従いません。"
+  },
+  "page_rulesGrant": {
+    "message": "ルールの設定を許可"
+  },
+  "page_rulesIncognito": {
+    "message": "ルールは通常のウィンドウから設定します。シークレット ウィンドウにも適用されます。"
+  },
+  "page_rulesSiteHeading": {
+    "message": "<span id=\"rules-site-name\"></span> の設定"
+  },
+  "page_ruleAllowAll": {
+    "message": "すべての Cookie を許可"
+  },
+  "page_ruleAllowAllNote": {
+    "message": "ページ上のほかの会社の Cookie も含みます。"
+  },
+  "page_ruleSession": {
+    "message": "Chrome を閉じたら消去"
+  },
+  "page_ruleSessionNote": {
+    "message": "サイトは通常どおり使えますが、Chrome を閉じるたびに、このサイトの Cookie と、ページ上のほかの会社の Cookie が削除されます。"
+  },
+  "page_ruleOwnOnly": {
+    "message": "他社の Cookie をブロック"
+  },
+  "page_ruleOwnOnlyNote": {
+    "message": "サイト自身の Cookie は保持されるので、ログインは引き続き使えます。ほかの会社の埋め込み動画、地図、「〜でログイン」ボタンは動かなくなることがあります。"
+  },
+  "page_ruleBlockAll": {
+    "message": "すべての Cookie をブロック"
+  },
+  "page_ruleBlockAllNote": {
+    "message": "サイトは Cookie を設定も読み取りもできません。ログアウトされ、サイトがまったく動かなくなることもあります。"
+  },
+  "page_rulesDeleteOnBlock": {
+    "message": "Cookie をブロックするとき、保存済みの Cookie を確認せずに削除する"
+  },
+  "page_cleanupYes": {
+    "message": "削除する"
+  },
+  "page_cleanupNo": {
+    "message": "残す"
+  },
+  "page_rulesEverywhereHeading": {
+    "message": "そのほかのすべてのサイト"
+  },
+  "page_everywhereAllow": {
+    "message": "Cookie を許可"
+  },
+  "page_everywhereAllowNote": {
+    "message": "Chrome の通常の動作です。"
+  },
+  "page_everywhereOwnOnlyNote": {
+    "message": "どのサイトも自身の Cookie は保持され、他社の Cookie は Chrome 自身のスイッチでブロックされます。サイト間であなたを追跡できないパーティション化された Cookie や、Chrome が例外とする一部の Cookie は引き続き動作します。"
+  },
+  "page_everywhereBlockNote": {
+    "message": "許可に設定したサイトだけが Cookie を使えます。それ以外のサイトではログインできません。"
+  },
+  "page_everywhereConfirm": {
+    "message": "個別のルールがないすべてのサイトで Cookie をブロックしますか？"
+  },
+  "page_everywhereConfirmYes": {
+    "message": "ブロックする"
+  },
+  "page_trackersGroup": {
+    "message": "既知のトラッカー"
+  },
+  "page_trackersName": {
+    "message": "すべてのサイトで既知のトラッカーの Cookie をブロック"
+  },
+  "page_trackersNote": {
+    "message": "<span id=\"rules-trackers-count\">約 130</span> 社の広告・分析会社の Cookie が対象です。cookieZ に組み込まれたリストを使い、cookieZ の更新とともに更新されます。すべての Cookie を許可に設定したサイトでは、引き続き受け取れます。ブロックするのはトラッカーの Cookie で、トラッカー自体ではありません。"
+  },
+  "page_rulesListHeading": {
+    "message": "個別のルールがあるサイト"
+  },
+  "page_colRule": {
+    "message": "ルール"
+  },
+  "page_colCookiesNow": {
+    "message": "現在の Cookie"
+  },
+  "page_colRemove": {
+    "message": "削除"
+  },
+  "page_rulesEmpty": {
+    "message": "個別のルールがあるサイトはありません。"
+  },
+  "page_rulesClear": {
+    "message": "すべてのルールをオフ…"
+  },
+  "page_rulesConfirm": {
+    "message": "すべてのルールをオフにしますか？ Chrome はすべてのサイトで Cookie を許可する状態に戻ります。"
+  },
+  "page_rulesConfirmYes": {
+    "message": "オフにする"
+  },
+  "page_rulesBackup": {
+    "message": "コピーを保存"
+  },
+  "page_rulesLoad": {
+    "message": "コピーを読み込み…"
+  },
+  "page_rulesLoadYes": {
+    "message": "ルールを置き換える"
+  },
+  "page_helpScopeQ": {
+    "message": "どの削除オプションを選べばよいですか？"
+  },
+  "page_helpScopeA": {
+    "message": "<strong>このページ</strong>は、このページが受け取る Cookie を削除します。<strong>このドメインとサブドメイン</strong>は、login.example.com のようなサブドメインにも及びます。<strong>すべてのサイト</strong>は、このブラウザ プロファイルのすべての Cookie を削除します。削除の前に、件数とサイトが必ず表示されます。"
+  },
+  "page_helpReportQ": {
+    "message": "サイトは自分についてどんな情報を保存していますか？"
+  },
+  "page_helpReportA": {
+    "message": "Cookie の件数の横にある<strong>サイトレポート</strong>では、サイトの Cookie を用途別にまとめ、確認したほうがよい点を一覧にします。用途は Cookie の名前からの推測です。"
+  },
+  "page_helpLoginQ": {
+    "message": "Cookie を削除してもログインできません"
+  },
+  "page_helpLoginA": {
+    "message": "削除オプションの下にある<strong>消去して再読み込み</strong>を押し、続けて<strong>消去して再読み込み</strong>を選んでください。サイトの Cookie に加えて、ローカル ストレージ、データベース、キャッシュ ストレージ、オフライン ファイルなど、サイトが保存したほかのデータも消去します。保持した Cookie は残ります。元に戻す操作で Cookie は戻せますが、それ以外のデータは戻せません。"
+  },
+  "page_helpUndoQ": {
+    "message": "違う Cookie を削除または変更してしまいました"
+  },
+  "page_helpUndoA": {
+    "message": "上部のメッセージにある<strong>元に戻す</strong>をクリックしてください。削除、インポート、「保存」のあと 10 分間、cookieZ を閉じても使えますが、直前の 1 回分だけです。"
+  },
+  "page_helpLiveQ": {
+    "message": "行が光ったのはなぜですか？"
+  },
+  "page_helpLiveA": {
+    "message": "サイトまたは cookieZ が、その Cookie を追加または変更したところです。表は変更をすぐに反映するので、更新を押す必要はありません。Cookie の件数の横にある<strong>変更</strong>をクリックすると、cookieZ を開いてから追加、変更、削除、期限切れになった Cookie の一覧を見られます。"
+  },
+  "page_helpKeptQ": {
+    "message": "ブックマークのアイコンは何ですか？"
+  },
+  "page_helpKeptA": {
+    "message": "Cookie を<strong>保持</strong>にして、「すべてのサイト」を含むどの削除からも除外します。ウェブサイト自身がその Cookie を変更したり削除したりするのは防げません。保持した Cookie をすべてのサイト分まとめて見るには、削除オプションの下の<strong>保持した Cookie</strong>をクリックしてください。"
+  },
+  "page_helpBlockQ": {
+    "message": "サイトが Cookie を設定しないようにできますか？"
+  },
+  "page_helpBlockA": {
+    "message": "できます。上部の<strong>ブロック</strong>をクリックしてください。サイトごとに、すべての Cookie を許可、Chrome を閉じたら消去、他社の Cookie をブロック、すべての Cookie をブロック、から選べます。すべてのサイトで他社の Cookie をブロックしたり、許可したサイト以外のすべての Cookie をブロックしたりすることもできます。ブロックは Chrome が行うので cookieZ を閉じていても有効で、cookieZ を削除するとルールも消えます。Chrome にも、すべてのサイトで他社の Cookie をブロックする設定がありますが、cookieZ はそれを変更しません。"
+  },
+  "page_helpBrokenQ": {
+    "message": "ルールを設定したらサイトが動かなくなりました"
+  },
+  "page_helpBrokenA": {
+    "message": "そのサイトで<strong>ブロック</strong>をクリックし、<strong>すべての Cookie を許可</strong>を選ぶか、一覧からそのサイトのルールを削除してください。そのあと、ページを再読み込みしてください。"
+  },
+  "page_helpBadgesQ": {
+    "message": "バッジは何を表していますか？"
+  },
+  "page_helpBadgesA": {
+    "message": "<strong>Secure</strong>：HTTPS でのみ送信。<strong>HttpOnly</strong>：ページ自身の JavaScript から見えない。<strong>サブドメイン</strong>：すべてのサブドメインにも送信。<strong>Partitioned</strong>：使われるサイトごとに別々に保存。<strong>SameSite</strong>：ほかのサイトから送信できる条件。<strong>大きい</strong>：1 つの Cookie に対する Chrome の 4 KB の上限に近い。"
+  },
+  "page_helpSizeQ": {
+    "message": "Cookie の件数の横にあるサイズは何ですか？"
+  },
+  "page_helpSizeA": {
+    "message": "このサイトの Cookie が、リクエストのたびにおよそどれだけ追加されるかを表します。多くのサーバーは約 8 KB を超えると拒否し、ログインできなくなることがあるため、cookieZ は 6 KB を超えると警告します。"
+  },
+  "page_helpKeysQ": {
+    "message": "キーボード"
+  },
+  "page_keyOpen": {
+    "message": "cookieZ を開きます。変更は chrome://extensions/shortcuts で行えます。"
+  },
+  "page_keySearch": {
+    "message": "Cookie を検索します。name:、value:、domain:、path: で始めると、その項目だけを検索します。"
+  },
+  "page_keyAdd": {
+    "message": "新しい Cookie を追加します。"
+  },
+  "page_keyMove": {
+    "message": "Cookie 間を移動します。<kbd>Home</kbd> と <kbd>End</kbd> で最初と最後に移動します。"
+  },
+  "page_keyEdit": {
+    "message": "Cookie を編集します。"
+  },
+  "page_keyTick": {
+    "message": "チェックを付けます。"
+  },
+  "page_keyKeep": {
+    "message": "保持にする、または保持を解除します。"
+  },
+  "page_keyDelete": {
+    "message": "削除します。先に「よろしいですか？」と確認されるので、<kbd>Enter</kbd> を押すと削除されます。"
+  },
+  "page_keyEsc": {
+    "message": "この画面、エディター、エクスポート、インポート、サイトのルールから戻ります。削除などの確認をキャンセルします。"
+  },
+  "page_helpPanelQ": {
+    "message": "ブラウジング中も cookieZ を開いたままにできますか？"
+  },
+  "page_helpPanelA": {
+    "message": "できます。上部の「その他」（点が 3 つのアイコン）をクリックし、「サイドパネルで開く」を選んでください。cookieZ がウィンドウの横に開き、表示中のタブの Cookie を表示します。編集中は更新を待ち、戻ると追いつきます。キーボード ショートカットもそこで使えます。"
+  },
+  "page_helpIncognitoQ": {
+    "message": "シークレット モード"
+  },
+  "page_helpIncognitoA": {
+    "message": "chrome://extensions にある cookieZ の「詳細」ページで、「シークレット モードでの実行を許可」をオンにしてください。シークレット モードの Cookie は通常の Cookie とは分けて保持され、片方で削除してももう片方には影響しません。"
+  },
+  "page_helpContact": {
+    "message": "さらにヘルプが必要な場合は cookiez.uk/support をご覧いただくか、support@cookiez.uk までメールでご連絡ください。"
+  },
+  "page_helpReview": {
+    "message": "cookieZ がお役に立てば、Chrome ウェブストアにレビューを書いていただくと、ほかの方が見つけやすくなります。"
+  },
+  "main_blockedTabClosed": {
+    "message": "このタブを開いた元のタブは閉じられました。"
+  },
+  "main_blockedNoAddress": {
+    "message": "Chrome がこのタブのアドレスを返しませんでした。"
+  },
+  "main_blockedBadAddress": {
+    "message": "このタブのアドレスを読み取れませんでした：$1"
+  },
+  "main_blockedProtocol": {
+    "message": "$1 で提供されるページには、拡張機能が読み取れる Cookie がありません。"
+  },
+  "main_tabTitle": {
+    "message": "cookieZ - $1"
+  },
+  "main_cookieCount_other": {
+    "message": "$1 件の Cookie"
+  },
+  "main_cookieCountFiltered_other": {
+    "message": "$2のうち $1 件"
+  },
+  "main_cookieCountWithSize": {
+    "message": "$1 · 約 $2"
+  },
+  "main_sizeWarning": {
+    "message": "このサイトの Cookie は合計で約 $1 あります。多くのサーバーは 8 KB を超えると拒否し、ログインできなくなることがあります。このサイトの Cookie を削除すると、たいてい直ります。"
+  },
+  "main_matchCount_other": {
+    "message": "$1 件一致"
+  },
+  "main_emptyBlocked": {
+    "message": "このサイトには Cookie が設定されていません。サイトのルールでブロックしています。"
+  },
+  "main_empty": {
+    "message": "このサイトには Cookie が設定されていません。"
+  },
+  "main_emptyFilters": {
+    "message": "これらの絞り込みに一致する Cookie はありません。"
+  },
+  "main_emptyQueryAndFilters": {
+    "message": "「$1」とこれらの絞り込みに一致する Cookie はありません。"
+  },
+  "main_emptyQuery": {
+    "message": "「$1」に一致する Cookie はありません。"
+  },
+  "main_keyKeptNoDelete": {
+    "message": "$1 は保持されているため、削除できません。K キーを押すと保持を解除できます。"
+  },
+  "main_keyKeptNoDeleteUnnamed": {
+    "message": "この Cookie は保持されているため、削除できません。K キーを押すと保持を解除できます。"
+  },
+  "main_liveAdded_other": {
+    "message": "Cookie が $1 件追加されました。"
+  },
+  "main_liveChanged_other": {
+    "message": "Cookie が $1 件変更されました。"
+  },
+  "main_liveRemoved_other": {
+    "message": "Cookie が $1 件削除されました。"
+  },
+  "main_liveAddedChanged_other": {
+    "message": "Cookie が $1 件追加、$2 件変更されました。"
+  },
+  "main_liveAddedRemoved_other": {
+    "message": "Cookie が $1 件追加、$2 件削除されました。"
+  },
+  "main_liveChangedRemoved_other": {
+    "message": "Cookie が $1 件変更、$2 件削除されました。"
+  },
+  "main_liveAddedChangedRemoved_other": {
+    "message": "Cookie が $1 件追加、$2 件変更、$3 件削除されました。"
+  },
+  "main_pickedCount_other": {
+    "message": "チェックした Cookie：$1 件"
+  },
+  "main_counting": {
+    "message": "数えています…"
+  },
+  "main_scopeCountFailed": {
+    "message": "この対象の Cookie を数えられませんでした：$1"
+  },
+  "main_scopeKeptNote_other": {
+    "message": "保持している Cookie $1 件は削除されません。"
+  },
+  "main_scopeNothing": {
+    "message": "この対象に削除する Cookie はありません。"
+  },
+  "main_scopeWillDeleteFrom_other": {
+    "message": "$2 から Cookie を $1 件削除します。"
+  },
+  "main_scopeWillDeleteAcross_other": {
+    "message": "$2 サイトにわたる Cookie を $1 件削除します。"
+  },
+  "main_scopeShowSites": {
+    "message": "対象の $1 サイトを表示"
+  },
+  "main_confirmDeleteFrom_other": {
+    "message": "$2 から Cookie を $1 件削除しますか？"
+  },
+  "main_confirmDeleteAcross_other": {
+    "message": "$2 サイトにわたる Cookie を $1 件削除しますか？"
+  },
+  "main_deleting": {
+    "message": "削除しています…"
+  },
+  "main_deleted_other": {
+    "message": "Cookie を $1 件削除しました。"
+  },
+  "main_deleteSomeFailed_other": {
+    "message": "$1 件の Cookie は削除できませんでした。ブラウザに保護されている可能性があります。"
+  },
+  "main_deleteFailed": {
+    "message": "削除に失敗しました：$1"
+  },
+  "main_deleteOneKept": {
+    "message": "$1 は保持されているため、削除されませんでした。削除するには、先に「保持中」をクリックして解除してください。"
+  },
+  "main_deletedOne": {
+    "message": "$1 を削除しました。"
+  },
+  "main_deleteOneFailed": {
+    "message": "$1 を削除できませんでした。ブラウザに保護されている可能性があります。"
+  },
+  "main_keeping": {
+    "message": "$1 を保持しました。解除するまで、ここからは削除されません。"
+  },
+  "main_notKeeping": {
+    "message": "$1 の保持を解除しました。"
+  },
+  "main_keepingPicked_other": {
+    "message": "Cookie $1 件を保持しました。"
+  },
+  "main_notKeepingPicked_other": {
+    "message": "Cookie $1 件の保持を解除しました。"
+  },
+  "main_expiresHour_other": {
+    "message": "Cookie $1 件の有効期限を 1 時間後にしました。"
+  },
+  "main_expiresDay_other": {
+    "message": "Cookie $1 件の有効期限を 1 日後にしました。"
+  },
+  "main_expiresWeek_other": {
+    "message": "Cookie $1 件の有効期限を 1 週間後にしました。"
+  },
+  "main_expiresYear_other": {
+    "message": "Cookie $1 件の有効期限を 1 年後にしました。"
+  },
+  "main_expireRefused": {
+    "message": "Chrome が拒否しました：$1"
+  },
+  "main_noTab": {
+    "message": "どのタブ用か判別できませんでした。"
+  },
+  "main_panelNeedsClick": {
+    "message": "Chrome は、クリックから直接でないとサイドパネルを開けません。もう一度ボタンをクリックしてください。"
+  },
+  "main_panelFailed": {
+    "message": "サイドパネルを開けませんでした：$1"
+  },
+  "main_accessDeclined": {
+    "message": "アクセスが許可されなかったため、Cookie を一覧表示できません。「アクセスを許可」をクリックして、もう一度お試しください。"
+  },
+  "main_undoButton": {
+    "message": "元に戻す"
+  },
+  "main_reloadButton": {
+    "message": "サイトを再読み込み"
+  },
+  "main_reloaded": {
+    "message": "再読み込みしました"
+  },
+  "main_reloadFailed": {
+    "message": "再読み込みできませんでした：$1"
+  },
+  "main_changeEdit": {
+    "message": "$1 の変更を保存"
+  },
+  "main_changeCreate": {
+    "message": "$1 を作成"
+  },
+  "main_changeExpiry_other": {
+    "message": "Cookie $1 件の有効期限を変更"
+  },
+  "main_changeDeletedOne": {
+    "message": "$2 から $1 を削除"
+  },
+  "main_changeDeletedFrom_other": {
+    "message": "$2 から Cookie を $1 件削除"
+  },
+  "main_changeDeletedAcross_other": {
+    "message": "$2 サイトにわたる Cookie を $1 件削除"
+  },
+  "main_changeImportedOne": {
+    "message": "$2 から $1 をインポート"
+  },
+  "main_changeImportedFrom_other": {
+    "message": "$2 から Cookie を $1 件インポート"
+  },
+  "main_changeImportedAcross_other": {
+    "message": "$2 サイトにわたる Cookie を $1 件インポート"
+  },
+  "main_undoOffer": {
+    "message": "$1（$2）。"
+  },
+  "main_undoRestored_other": {
+    "message": "Cookie を $1 件復元しました。"
+  },
+  "main_undoPutBackOne": {
+    "message": "$1 を元の状態に戻しました。"
+  },
+  "main_undoRemovedOne": {
+    "message": "$1 を削除しました。"
+  },
+  "main_undoRemovedAndPutBack_other": {
+    "message": "Cookie を $1 件削除し、$2 を元に戻しました。"
+  },
+  "main_undoRemoved_other": {
+    "message": "Cookie を $1 件削除しました。"
+  },
+  "main_undoPutBack_other": {
+    "message": "Cookie を $1 件元に戻しました。"
+  },
+  "main_undoNothing": {
+    "message": "変更はありませんでした。"
+  },
+  "main_undoTooLate": {
+    "message": "元に戻せるものはありません。元に戻せるのは、変更から 10 分間のみです。"
+  },
+  "main_undoing": {
+    "message": "元に戻しています…"
+  },
+  "main_undoKeptLeft_other": {
+    "message": "$1 件の Cookie は保持されているため、そのままにしました。"
+  },
+  "main_undoExpiredSince_other": {
+    "message": "$1 件の Cookie はその後期限切れになったため、元に戻しませんでした。"
+  },
+  "main_undoRefused_other": {
+    "message": "Chrome が Cookie $1 件を拒否しました：$2"
+  },
+  "main_keptLink": {
+    "message": "保持した Cookie：$1"
+  },
+  "main_keptPartitionedFor": {
+    "message": "$1 専用として別に保存"
+  },
+  "main_keptPartitionedForOther": {
+    "message": "ほかのサイト専用として別に保存"
+  },
+  "main_keptStopButton": {
+    "message": "保持を解除"
+  },
+  "main_keptStoppedOne": {
+    "message": "$2 の $1 の保持を解除しました。"
+  },
+  "main_keptConfirmOne": {
+    "message": "この Cookie の保持を解除しますか？"
+  },
+  "main_keptConfirmAll": {
+    "message": "$1 件の Cookie すべての保持を解除しますか？"
+  },
+  "main_keptStoppedAll_other": {
+    "message": "Cookie $1 件の保持を解除しました。"
+  },
+  "main_eventChanged": {
+    "message": "変更"
+  },
+  "main_eventAdded": {
+    "message": "追加"
+  },
+  "main_eventExpired": {
+    "message": "期限切れ"
+  },
+  "main_eventExpiredOverwrite": {
+    "message": "過去の日付を設定して削除"
+  },
+  "main_eventEvicted": {
+    "message": "空きを作るため Chrome が削除"
+  },
+  "main_eventRemoved": {
+    "message": "削除"
+  },
+  "main_changesLink_other": {
+    "message": "$1 件の変更"
+  },
+  "main_whatsNew2_3_0": {
+    "message": "新機能：cookieZ が日本語に対応しました（Chrome の言語設定に合わせて表示されます）。新しいアイコンになりました。"
+  },
+  "main_whatsNew2_2_1": {
+    "message": "不具合を修正しました。"
+  },
+  "main_whatsNew2_2_0": {
+    "message": "新機能：より多くの Cookie を表示できるすっきりしたメイン画面と、Cookie の件数の横にサイトレポートを追加しました。"
+  },
+  "main_whatsNew2_1_0": {
+    "message": "新機能：Chrome のサイドパネルで、ページの横に cookieZ を開いたままにできます。ログインできないサイト向けに「消去して再読み込み」も追加しました。"
+  },
+  "main_whatsNew2_0_0": {
+    "message": "新機能：name:session のように 1 つの項目を検索できます。インポートから、サイトの Cookie を以前のエクスポートと比較することもできます。"
+  },
+  "main_whatsNew1_9_0": {
+    "message": "新機能：「ブロック」から既知のトラッカーの Cookie をブロックできます。エクスポートにパスワードを設定でき、変更後にサイトを再読み込みできます。"
+  },
+  "main_whatsNew1_8_0": {
+    "message": "新機能：「ブロック」から、すべてのサイトで既知のトラッカーの Cookie をブロックできます。よく知られた名前の Cookie には、設定元が表示されます。"
+  },
+  "main_whatsNew1_7_0": {
+    "message": "新機能：上部に「ブロック」ボタンを追加しました。すべてのサイトで他社の Cookie をブロックでき、Cookie に加えてサイトの保存データも消去できます。"
+  },
+  "main_welcome": {
+    "message": "ようこそ。Cookie をクリックすると編集できます。サイトにログインできないときは、たいてい「消去して再読み込み」で直ります。そのほかの使い方はヘルプ（?）をご覧ください。"
+  },
+  "main_welcomePin": {
+    "message": "ようこそ。Cookie をクリックすると編集できます。サイトにログインできないときは、たいてい「消去して再読み込み」で直ります。そのほかの使い方はヘルプ（?）をご覧ください。cookieZ をすぐ開けるようにするには、Chrome のツールバーにあるパズルのピースのアイコンからピン留めしてください。"
+  },
+  "main_reviewNotNow": {
+    "message": "今はしない"
+  },
+  "main_reviewNoThanks": {
+    "message": "しない"
+  },
+  "main_reviewOpenFailed": {
+    "message": "レビュー ページを開けませんでした：$1"
+  },
+  "main_copied": {
+    "message": "コピーしました"
+  },
+  "main_copyFailed": {
+    "message": "コピーできません"
+  },
+  "rules_nameAllow": {
+    "message": "すべての Cookie を許可"
+  },
+  "rules_nameSession": {
+    "message": "Chrome を閉じたら消去"
+  },
+  "rules_nameOwnOnly": {
+    "message": "他社の Cookie をブロック"
+  },
+  "rules_nameBlock": {
+    "message": "すべての Cookie をブロック"
+  },
+  "rules_lostCouldNotReapply": {
+    "message": "Chrome がサイトのルールに従わなくなり、cookieZ も再設定できませんでした。$1"
+  },
+  "rules_lostReapplied": {
+    "message": "Chrome がサイトのルールに従わなくなっていたため、cookieZ が再設定しました。"
+  },
+  "rules_linkBlock": {
+    "message": "ブロック"
+  },
+  "rules_linkBlockTitle": {
+    "message": "このサイトが設定できる Cookie を選択"
+  },
+  "rules_linkSession": {
+    "message": "終了時に消去"
+  },
+  "rules_linkSessionTitle": {
+    "message": "Chrome は、閉じるときにこのサイトの Cookie を削除します"
+  },
+  "rules_linkOwnOnly": {
+    "message": "他社をブロック中"
+  },
+  "rules_linkOwnOnlyTitle": {
+    "message": "このサイトでは他社の Cookie がブロックされています"
+  },
+  "rules_linkBlocked": {
+    "message": "ブロック中"
+  },
+  "rules_linkBlockedTitle": {
+    "message": "このサイトではすべての Cookie がブロックされています"
+  },
+  "rules_linkTrackers": {
+    "message": "トラッカーをブロック中"
+  },
+  "rules_linkTrackersTitle": {
+    "message": "このサイトでは既知のトラッカーの Cookie がブロックされています"
+  },
+  "rules_linkLitAriaLabel": {
+    "message": "$1：このサイトが設定できる Cookie を選択"
+  },
+  "rules_saving": {
+    "message": "保存しています…"
+  },
+  "rules_statsNoneCleared": {
+    "message": "cookieZ はまだ Cookie を消去していません。"
+  },
+  "rules_statsCleared_other": {
+    "message": "cookieZ はこれまでに Cookie を $1 件消去しました。"
+  },
+  "rules_statsBlockingSitesAndTrackers_other": {
+    "message": "$1 サイトと既知の $2 社のトラッカーの Cookie をブロック中です。"
+  },
+  "rules_statsBlockingSites_other": {
+    "message": "$1 サイトの Cookie をブロック中です。"
+  },
+  "rules_statsBlockingTrackers_other": {
+    "message": "既知の $1 社のトラッカーの Cookie をブロック中です。"
+  },
+  "rules_siteNote": {
+    "message": "このルールは $1 に設定されており、$2 にも適用されます。"
+  },
+  "rules_removeButton": {
+    "message": "削除"
+  },
+  "rules_removeAriaLabel": {
+    "message": "$1 のルールを削除"
+  },
+  "rules_thirdPartyControlled": {
+    "message": "他社の Cookie をブロックするかどうかは、別の拡張機能または管理者が管理しているため、cookieZ では変更できません。"
+  },
+  "rules_thirdPartyChromeBlocking": {
+    "message": "Chrome はすでに、Chrome 自身の設定で、すべてのサイトの他社の Cookie をブロックしています。"
+  },
+  "rules_permissionRefused": {
+    "message": "Chrome の許可が得られなかったため、何も変更していません。cookieZ のそのほかの機能はこれまでどおり使えます。"
+  },
+  "rules_permissionGivenReopen": {
+    "message": "許可されました。cookieZ を閉じてからもう一度開くと完了します。"
+  },
+  "rules_siteBlocked": {
+    "message": "$1 のすべての Cookie をブロックしました。"
+  },
+  "rules_siteOwnOnly": {
+    "message": "$1 の他社の Cookie をブロックしました。"
+  },
+  "rules_siteSession": {
+    "message": "Chrome は、閉じるたびに $1 の Cookie を削除します。"
+  },
+  "rules_siteAllowed": {
+    "message": "$1 はどの Cookie も設定できます。"
+  },
+  "rules_siteAllowedTrackersToo": {
+    "message": "$1 は、既知のトラッカーの Cookie を含め、どの Cookie も設定できます。"
+  },
+  "rules_cleanupSiteHas_other": {
+    "message": "まだ Cookie が $1 件保存されています。"
+  },
+  "rules_keptLeftAlone_other": {
+    "message": "保持している Cookie $1 件は削除されません。"
+  },
+  "rules_cleanupTrackersHave_other": {
+    "message": "これらの会社の Cookie がすでに $1 件保存されています。"
+  },
+  "rules_cleanupDeleted_other": {
+    "message": "Cookie を $1 件削除しました。"
+  },
+  "rules_cleanupFailed_other": {
+    "message": "$1 件の Cookie は削除できませんでした。ブラウザに保護されている可能性があります。"
+  },
+  "rules_trackersOn": {
+    "message": "すべてのサイトで既知のトラッカーの Cookie をブロックしました。"
+  },
+  "rules_trackersOff": {
+    "message": "すべてのサイトでの既知のトラッカーの Cookie のブロックをやめました。"
+  },
+  "rules_everywherePermissionRefused": {
+    "message": "Chrome の許可が得られなかったため、何も変更していません。そのほかのルールはこれまでどおり動作します。"
+  },
+  "rules_everywherePermissionGivenReopen": {
+    "message": "許可されました。cookieZ を閉じてからもう一度開き、もう一度この項目を選んでください。"
+  },
+  "rules_everywhereBlocked": {
+    "message": "個別のルールがないすべてのサイトで Cookie をブロックしました。"
+  },
+  "rules_everywhereOwnOnly": {
+    "message": "個別のルールがないすべてのサイトで他社の Cookie をブロックしました。"
+  },
+  "rules_everywhereAllowed": {
+    "message": "個別のルールがないすべてのサイトで Cookie を再び許可しました。"
+  },
+  "rules_siteDataPermissionRefused": {
+    "message": "Chrome の許可が得られなかったため、何も消去していません。"
+  },
+  "rules_siteDataCountFailed": {
+    "message": "このサイトの Cookie を数えられませんでした：$1"
+  },
+  "rules_siteDataConfirmCookies_other": {
+    "message": "$2 から Cookie を $1 件削除し、$2 が保存しているそのほかのデータ（ローカル ストレージ、データベース、キャッシュ ストレージ、オフライン ファイル）もすべて消去しますか？"
+  },
+  "rules_siteDataConfirmNoCookies": {
+    "message": "$1 が保存している Cookie 以外のデータ（ローカル ストレージ、データベース、キャッシュ ストレージ、オフライン ファイル）をすべて消去しますか？"
+  },
+  "rules_siteDataUndoNote": {
+    "message": "元に戻す操作で Cookie は戻せますが、それ以外のデータは戻せません。"
+  },
+  "rules_siteDataDeleted_other": {
+    "message": "Cookie を $1 件削除し、$2 のそのほかの保存データを消去しました。"
+  },
+  "rules_siteDataCleared": {
+    "message": "$1 のそのほかの保存データを消去しました。"
+  },
+  "rules_siteDataFailed_other": {
+    "message": "$1 件の Cookie は削除できませんでした。"
+  },
+  "rules_siteDataError": {
+    "message": "Chrome は残りを消去できませんでした：$1"
+  },
+  "rules_siteReloaded": {
+    "message": "サイトを再読み込みしました。"
+  },
+  "rules_siteReloadFailed": {
+    "message": "サイトを再読み込みできませんでした：$1"
+  },
+  "rules_backupSaving": {
+    "message": "ルールを $1 として保存しています。"
+  },
+  "rules_backupReadFailed": {
+    "message": "そのファイルを読み取れませんでした：$1"
+  },
+  "rules_backupNoteOwnOnly": {
+    "message": "このファイルでは、すべてのサイトで他社の Cookie をブロックしていました。読み込んだあとで、もう一度その項目を選んでください。"
+  },
+  "rules_backupNoteTrackers": {
+    "message": "既知のトラッカーの Cookie もブロックします。"
+  },
+  "rules_backupReplaceSites_other": {
+    "message": "ルールを、このファイルの $1 サイト分に置き換えますか？"
+  },
+  "rules_backupReplaceNoSites": {
+    "message": "ルールを、このファイルの内容に置き換えますか？ このファイルにサイトはありません。"
+  },
+  "rules_backupLoaded_other": {
+    "message": "サイトのルールを $1 件読み込みました。"
+  },
+  "rules_removed": {
+    "message": "$1 のルールを削除しました。"
+  },
+  "rules_allOff": {
+    "message": "すべてのルールがオフです。Chrome はすべてのサイトで Cookie を再び許可しています。"
+  },
+  "rules_loadFailed": {
+    "message": "サイトのルールを読み取れませんでした：$1"
+  },
+  "rules_saveFailed": {
+    "message": "サイトのルールを保存できませんでした：$1"
+  },
+  "rules_noRulesPermission": {
+    "message": "Chrome が cookieZ にルールの設定を許可していません。"
+  },
+  "rules_noEverywherePermission": {
+    "message": "Chrome が cookieZ に、すべてのサイトで他社の Cookie をブロックすることを許可していません。"
+  },
+  "rules_chromeRefused": {
+    "message": "Chrome がルールを受け付けませんでした：$1"
+  },
+  "rules_backupNotJson": {
+    "message": "このファイルは cookieZ のルールのバックアップではありません。JSON ではありません。"
+  },
+  "rules_backupWrongKind": {
+    "message": "このファイルは cookieZ のルールのバックアップではありません。"
+  },
+  "rules_permissionNeedsClick": {
+    "message": "Chrome は、クリックから直接でないと許可の確認を開けません。もう一度ボタンをクリックしてください。"
+  },
+  "rules_permissionPromptFailed": {
+    "message": "Chrome が許可の確認を表示できませんでした：$1"
+  },
+  "rules_keptLoadFailed": {
+    "message": "保護の一覧を読み取れなかったため、現在は何も保護されていません：$1"
+  },
+  "rules_keptSaveFailed": {
+    "message": "保護の一覧を保存できませんでした：$1"
+  },
+  "rules_undoUnavailable": {
+    "message": "この変更は元に戻せません：$1"
+  },
+  "rules_undoCookie": {
+    "message": "$1（$2）"
+  },
+  "rules_undoRestoreFailed": {
+    "message": "$1：$2"
+  },
+  "rules_undoRemoveFailed": {
+    "message": "$1：削除できませんでした。"
+  },
+  "rules_ageJustNow": {
+    "message": "たった今"
+  },
+  "rules_ageMinutes_other": {
+    "message": "$1 分前"
+  },
+  "rules_themeLoadFailed": {
+    "message": "保存したテーマを読み取れなかったため、システムのテーマを使っています：$1"
+  },
+  "rules_themeSaveFailed": {
+    "message": "テーマは変更されましたが保存できなかったため、ポップアップを開き直すと元に戻ります：$1"
+  },
+  "cookie_expirySession": {
+    "message": "セッション"
+  },
+  "cookie_expiryUnknown": {
+    "message": "不明"
+  },
+  "cookie_expirySessionFull": {
+    "message": "セッション Cookie - ブラウザを閉じると削除されます"
+  },
+  "cookie_expiryUnreadable": {
+    "message": "有効期限を読み取れませんでした"
+  },
+  "cookie_expiresOn": {
+    "message": "有効期限：$1"
+  },
+  "cookie_expiryDateAndRelative": {
+    "message": "$1（$2）"
+  },
+  "cookie_sameSiteUnset": {
+    "message": "未設定"
+  },
+  "cookie_valueAsDateText": {
+    "message": "$1（お使いのタイムゾーン）"
+  },
+  "cookie_valueAsDate": {
+    "message": "日付として"
+  },
+  "cookie_valueFromBase64": {
+    "message": "Base64 からデコード"
+  },
+  "cookie_valueDecoded": {
+    "message": "デコード済み"
+  },
+  "cookie_valueLaidOut": {
+    "message": "整形済み"
+  },
+  "cookie_valueNotJson": {
+    "message": "値が有効な JSON ではありません：$1"
+  },
+  "cookie_bytes_other": {
+    "message": "$1 バイト"
+  },
+  "cookie_kilobytes": {
+    "message": "$1 KB"
+  },
+  "cookie_knownByOthers_other": {
+    "message": "$2 ほか $1 社"
+  },
+  "cookie_kindFunctional": {
+    "message": "機能"
+  },
+  "cookie_kindAnalytics": {
+    "message": "分析"
+  },
+  "cookie_kindMarketing": {
+    "message": "マーケティング"
+  },
+  "cookie_kindSecurity": {
+    "message": "セキュリティ"
+  },
+  "cookie_kindNecessary": {
+    "message": "必須"
+  },
+  "cookie_kindPersonalisation": {
+    "message": "パーソナライズ"
+  },
+  "cookie_knownNameKind": {
+    "message": "既知の名前：$1（$2）。"
+  },
+  "cookie_knownName": {
+    "message": "既知の名前：$1。"
+  },
+  "cookie_knownAlsoListed": {
+    "message": "$1 にも登録されています。"
+  },
+  "cookie_listAnd": {
+    "message": "$1、$2"
+  },
+  "cookie_errorNoName": {
+    "message": "Cookie には名前が必要です。"
+  },
+  "cookie_errorNameCharacters": {
+    "message": "Cookie の名前には、空白、セミコロン、カンマ、等号は使えません。"
+  },
+  "cookie_errorValueSemicolon": {
+    "message": "Cookie の値にセミコロンは使えません。"
+  },
+  "cookie_errorTooBig": {
+    "message": "Chrome は $1 バイトを超える Cookie（名前と値の合計）を保存しません。この Cookie は $2 バイトです。"
+  },
+  "cookie_errorTooBigImported": {
+    "message": "Chrome は $1 バイトを超える Cookie（名前と値の合計）を保存しません。この Cookie は $2 バイトです。"
+  },
+  "cookie_errorSecurePrefixImported": {
+    "message": "名前が __Secure- で始まっていますが Secure ではなく、Chrome はこれを受け付けません。"
+  },
+  "cookie_errorSecurePrefix": {
+    "message": "名前が __Secure- で始まる Cookie は、Secure の場合にのみ使えます。Secure にチェックを付けるか、名前を変更してください。"
+  },
+  "cookie_hostPrefixSecure": {
+    "message": "Secure"
+  },
+  "cookie_hostPrefixHostOnly": {
+    "message": "ホストのみ"
+  },
+  "cookie_hostPrefixRootPath": {
+    "message": "パスが /"
+  },
+  "cookie_listOr": {
+    "message": "$1、$2"
+  },
+  "cookie_errorHostPrefixImported": {
+    "message": "名前が __Host- で始まるため、Chrome は Secure で、ホストのみで、パスが / の場合にのみ受け付けます。満たしていない条件：$1。"
+  },
+  "cookie_errorHostPrefix": {
+    "message": "名前が __Host- で始まる Cookie は、Secure で、ホストのみで、パスが / の場合にのみ使えます。この Cookie が満たしていない条件：$1。"
+  },
+  "cookie_errorNoDomain": {
+    "message": "Cookie にはドメインが必要です。"
+  },
+  "cookie_errorPathSlash": {
+    "message": "パスはスラッシュで始める必要があります。"
+  },
+  "cookie_errorSameSiteNoneImported": {
+    "message": "SameSite が「None」ですが Secure ではなく、Chrome はこれを受け付けません。"
+  },
+  "cookie_errorSameSiteNone": {
+    "message": "SameSite の「None」は、Secure の Cookie でのみ使えます。Secure にチェックを付けるか、別の SameSite を選んでください。"
+  },
+  "cookie_errorPartitionedImported": {
+    "message": "パーティション化されていますが Secure ではなく、Chrome はこれを受け付けません。"
+  },
+  "cookie_errorPartitioned": {
+    "message": "パーティション化された Cookie は、Secure の場合にのみ使えます。Secure にチェックを付けてください。"
+  },
+  "cookie_errorNoExpiryImported": {
+    "message": "有効期限がなく、セッション Cookie にもなっていません。"
+  },
+  "cookie_errorNoExpiry": {
+    "message": "有効期限を設定するか、「セッション Cookie」にチェックを付けてください。"
+  },
+  "cookie_errorOriginalNotRemoved": {
+    "message": "元の Cookie を削除できなかったため、2 つのコピーが残ることがないよう、変更を中止しました。"
+  },
+  "cookie_errorNotAccepted": {
+    "message": "Chrome は理由を示さずに、この Cookie を受け付けませんでした。"
+  },
+  "cookie_errorParseOrSet": {
+    "message": "$1 多くの場合、ドメインが Cookie と一致しないか、名前または値に Cookie で使えない文字が含まれています。"
+  },
+  "cookie_editTitleEdit": {
+    "message": "Cookie を編集"
+  },
+  "cookie_editTitleNew": {
+    "message": "新しい Cookie"
+  },
+  "cookie_editPartitionEmbedded": {
+    "message": "$1 がこのサイト内のフレームで設定した Cookie で、このサイト専用に保存されています（パーティション化された Cookie、CHIPS）。保存してもパーティションはそのままです。"
+  },
+  "cookie_editPartitioned": {
+    "message": "これはパーティション化された（CHIPS）Cookie です。保存してもパーティションはそのままです。"
+  },
+  "cookie_editValueSize": {
+    "message": "名前と値の合計 $2 バイトのうち $1 バイト。"
+  },
+  "cookie_editExpiryShortened": {
+    "message": "Chrome は有効期限を $1 に短縮しました。Chrome は Cookie の有効期限の上限を決めています。"
+  },
+  "cookie_editJsonFixIt": {
+    "message": "$1 修正するか、「JSON として編集」のチェックを外して、入力したまま保存してください。"
+  },
+  "cookie_editSaved": {
+    "message": "$1 の変更を保存しました。"
+  },
+  "cookie_editCreated": {
+    "message": "$1 を作成しました。"
+  },
+  "cookie_rowNameTitle": {
+    "message": "$1（$2）"
+  },
+  "cookie_rowEmbeddedNote": {
+    "message": "フレーム内で設定、このサイト専用"
+  },
+  "cookie_rowEmbeddedNoteTitle": {
+    "message": "$1 がこのサイト内のフレームで設定しました。パーティション化されているため、このサイト専用です。"
+  },
+  "cookie_rowPickLabel": {
+    "message": "$1 にチェックを付ける"
+  },
+  "cookie_rowCopyName": {
+    "message": "名前をコピー"
+  },
+  "cookie_rowCopyNameTitle": {
+    "message": "名前「$1」をコピー"
+  },
+  "cookie_rowKept": {
+    "message": "保持中"
+  },
+  "cookie_rowKeep": {
+    "message": "保持"
+  },
+  "cookie_rowKeptTitle": {
+    "message": "保持中：どの削除からも除外されます。クリックすると保持を解除します。"
+  },
+  "cookie_rowKeepTitle": {
+    "message": "保持：この Cookie を、ここで行うどの削除からも除外します"
+  },
+  "cookie_rowEdit": {
+    "message": "編集"
+  },
+  "cookie_rowEditTitle": {
+    "message": "この Cookie を編集"
+  },
+  "cookie_rowDelete": {
+    "message": "削除"
+  },
+  "cookie_rowDeleteKeptTitle": {
+    "message": "保持中の Cookie は削除されません。ブックマークをクリックすると削除できるようになります。"
+  },
+  "cookie_rowDeleteTitle": {
+    "message": "この Cookie を削除"
+  },
+  "cookie_rowDontDelete": {
+    "message": "削除しない"
+  },
+  "cookie_rowSure": {
+    "message": "削除？"
+  },
+  "cookie_rowValueEmpty": {
+    "message": "（空）"
+  },
+  "cookie_rowValueCopy": {
+    "message": "コピー"
+  },
+  "cookie_rowValueCopyTitle": {
+    "message": "値全体をコピー"
+  },
+  "cookie_rowValueCollapse": {
+    "message": "クリックして折りたたむ"
+  },
+  "cookie_rowValueExpand": {
+    "message": "クリックして値全体を表示"
+  },
+  "cookie_badgeSecureTitle": {
+    "message": "HTTPS でのみ送信されます"
+  },
+  "cookie_badgeHttpOnlyTitle": {
+    "message": "ページ自身の JavaScript から見えません"
+  },
+  "cookie_badgeSubdomains": {
+    "message": "サブドメイン"
+  },
+  "cookie_badgeSubdomainsTitle": {
+    "message": "$1 のすべてのサブドメインにも送信されます"
+  },
+  "cookie_badgePartitionedEmbeddedTitle": {
+    "message": "Partitioned（CHIPS）：$1 が設定し、このサイト専用に保存されています"
+  },
+  "cookie_badgePartitionedTitle": {
+    "message": "Partitioned（CHIPS）：使われるサイトごとに別々に保存されています"
+  },
+  "cookie_badgeKnownTitle": {
+    "message": "既知の名前で、$1 が使用。名前だけからの推測です。"
+  },
+  "cookie_badgeKnown": {
+    "message": "既知"
+  },
+  "cookie_badgeKnownHidden": {
+    "message": "の名前で、$1 が使用"
+  },
+  "cookie_badgeLarge": {
+    "message": "大きい"
+  },
+  "cookie_badgeLargeTitle": {
+    "message": "$1。Chrome は 4 KB（名前と値の合計）を超える Cookie を保持しません。"
+  },
+  "cookie_badgeSameSiteStrictTitle": {
+    "message": "このサイトを開いているときだけ送信されます"
+  },
+  "cookie_badgeSameSiteLaxTitle": {
+    "message": "このサイトで、またこのサイトへのリンクをたどったときに送信されます"
+  },
+  "cookie_badgeSameSiteNoneTitle": {
+    "message": "ほかのサイトがこのサイトのものを読み込むときにも送信されます"
+  },
+  "cookie_reportPurposeMarketing": {
+    "message": "広告とマーケティング"
+  },
+  "cookie_reportPurposeAnalytics": {
+    "message": "分析"
+  },
+  "cookie_reportPurposePersonalisation": {
+    "message": "パーソナライズ"
+  },
+  "cookie_reportPurposeFunctional": {
+    "message": "サイトの機能"
+  },
+  "cookie_reportPurposeSecurity": {
+    "message": "セキュリティ"
+  },
+  "cookie_reportPurposeNecessary": {
+    "message": "サイトの動作に必要"
+  },
+  "cookie_reportCompaniesOthers_other": {
+    "message": "$2 ほか $1 社"
+  },
+  "cookie_reportNotRecognised": {
+    "message": "未判別"
+  },
+  "cookie_reportCheckNotSecure": {
+    "message": "通常の HTTP でも送信される"
+  },
+  "cookie_reportCheckNotSecureNote": {
+    "message": "Secure が付いていません。"
+  },
+  "cookie_reportCheckReadable": {
+    "message": "ページのスクリプトから読める"
+  },
+  "cookie_reportCheckReadableNote": {
+    "message": "HttpOnly が付いていません。"
+  },
+  "cookie_reportCheckSameSiteNone": {
+    "message": "ほかのサイトがこのサイトを読み込むときに送信される"
+  },
+  "cookie_reportCheckSameSiteNoneNote": {
+    "message": "SameSite None です。"
+  },
+  "cookie_reportCheckLarge": {
+    "message": "Chrome の 4 KB の上限に近い"
+  },
+  "cookie_reportCheckLargeNote": {
+    "message": "これが多すぎるサイトでは、ログインできなくなることがあります。"
+  },
+  "cookie_reportCheckSoon": {
+    "message": "1 日以内に期限切れ"
+  },
+  "cookie_reportCheckSoonNote": {
+    "message": "これらに保存されたログインは長続きしません。"
+  },
+  "cookie_reportShowThem": {
+    "message": "表示"
+  },
+  "cookie_reportShowThemLabel_other": {
+    "message": "Cookie $1 件を表示：$2"
+  },
+  "transfer_nothingToImport": {
+    "message": "インポートするものがありません。先に Cookie を貼り付けてください。"
+  },
+  "transfer_hasPassword": {
+    "message": "このファイルにはパスワードがあります。中身を見るにはパスワードを入力してください。"
+  },
+  "transfer_jsonUnreadable": {
+    "message": "JSON のようですが、読み取れませんでした：$1"
+  },
+  "transfer_jsonNotList": {
+    "message": "この JSON は Cookie の一覧ではありません。"
+  },
+  "transfer_jsonItemNotCookie": {
+    "message": "Cookie $1：Cookie ではありません。"
+  },
+  "transfer_jsonItemNoName": {
+    "message": "Cookie $1：名前がありません。"
+  },
+  "transfer_jsonItemNoDomain": {
+    "message": "Cookie $1：$2 にドメインがありません。"
+  },
+  "transfer_netscapeColumns": {
+    "message": "$1 行目は、タブで区切った 7 列の cookies.txt 形式ではありません。"
+  },
+  "transfer_netscapeExpiry": {
+    "message": "$1 行目：有効期限が数値ではありません。"
+  },
+  "transfer_noCookiesFound": {
+    "message": "Cookie が見つかりませんでした。JSON のエクスポート、または cookies.txt ファイルの内容を貼り付けてください。"
+  },
+  "transfer_noSetCookieLines": {
+    "message": "Set-Cookie の行が見つかりませんでした。"
+  },
+  "transfer_setCookieNoName": {
+    "message": "$1 行目：Cookie の名前と値で始まっていません。"
+  },
+  "transfer_setCookiePartitioned": {
+    "message": "$1 行目：$2 はパーティション化されていますが、Set-Cookie の行には埋め込み元のサイトが書かれていません。代わりに JSON のエクスポートからインポートしてください。"
+  },
+  "transfer_setCookieNoDomain": {
+    "message": "$1 行目：$2 に Domain がなく、追加先のページもありません。"
+  },
+  "transfer_notAPair": {
+    "message": "「$1」は name=value の形式ではないため、スキップします。"
+  },
+  "transfer_headerNoSite": {
+    "message": "Cookie ヘッダーには対象のサイトが書かれておらず、追加先のページもありません。"
+  },
+  "transfer_headerEmpty": {
+    "message": "Cookie ヘッダーに Cookie が見つかりませんでした。"
+  },
+  "transfer_curlWindows": {
+    "message": "これは「cURL としてコピー」の Windows（cmd）版です。代わりに bash 版をコピーして、貼り付けてください。"
+  },
+  "transfer_curlUnclosedQuote": {
+    "message": "引用符が閉じていないため、この curl コマンドを読み取れませんでした。"
+  },
+  "transfer_curlCookieFile": {
+    "message": "この curl コマンドは Cookie をファイル（$1）から読み込みますが、cookieZ はそれを開けません。代わりに Cookie そのものを貼り付けてください。"
+  },
+  "transfer_curlNoAddress": {
+    "message": "この curl コマンドにはウェブ アドレスがないため、どのサイトの Cookie か判別できません。"
+  },
+  "transfer_curlNoCookies": {
+    "message": "この curl コマンドは Cookie を送信しません。"
+  },
+  "transfer_cantMovePartitioned": {
+    "message": "$1（$2）はパーティション化されているため、ほかのサイトに移せません。"
+  },
+  "transfer_differenceValue": {
+    "message": "値"
+  },
+  "transfer_differenceExpiry": {
+    "message": "有効期限"
+  },
+  "transfer_lockedDamaged": {
+    "message": "このパスワード付きファイルは壊れているため、開けません。Cookie がまだ手元にある場合は、もう一度エクスポートしてください。"
+  },
+  "transfer_lockedNewerVersion": {
+    "message": "このファイルは、より新しいバージョンの cookieZ で作成されました。開くには cookieZ を更新してください。"
+  },
+  "transfer_unlockFailed": {
+    "message": "ファイルを開けませんでした：$1"
+  },
+  "transfer_wrongPassword": {
+    "message": "このパスワードではファイルを開けません。確認してもう一度お試しください。正しいと確信できる場合は、保存後にファイルが変更されたか、壊れています。"
+  },
+  "transfer_typePassword": {
+    "message": "ファイルのパスワードを入力して、「確認」を押してください。"
+  },
+  "transfer_opening": {
+    "message": "ファイルを開いています…"
+  },
+  "transfer_cantReadCurrent": {
+    "message": "比較するための現在の Cookie を読み取れませんでした：$1"
+  },
+  "transfer_nothingCanBeImported": {
+    "message": "インポートできるものがありません。"
+  },
+  "transfer_willAddForSite_other": {
+    "message": "$2 に Cookie を $1 件追加します。"
+  },
+  "transfer_willAddAcrossSites_other": {
+    "message": "$2 にわたって Cookie を $1 件追加します。"
+  },
+  "transfer_siteCount_other": {
+    "message": "$1 サイト"
+  },
+  "transfer_replaces_other": {
+    "message": "そのうち $1 件は、すでにある Cookie を置き換えます。"
+  },
+  "transfer_onlyValueChanges_other": {
+    "message": "変わるのは値のみです。"
+  },
+  "transfer_newSessionCookies_other": {
+    "message": "新しい Cookie $1 件はセッション Cookie になり、Chrome を閉じると削除されます。"
+  },
+  "transfer_keptInImport_other": {
+    "message": "そのうち $1 件は保持している Cookie です。"
+  },
+  "transfer_alreadyExpired_other": {
+    "message": "$1 件の Cookie はすでに期限切れのため、スキップします。"
+  },
+  "transfer_duplicates_other": {
+    "message": "ファイル内の重複 $1 件はスキップします。"
+  },
+  "transfer_showSites_other": {
+    "message": "対象の $1 サイトを表示"
+  },
+  "transfer_willBeSkipped": {
+    "message": "スキップされます：$1"
+  },
+  "transfer_importButton_other": {
+    "message": "Cookie $1 件をインポート"
+  },
+  "transfer_compareSame_other": {
+    "message": "差はありません。ファイル内の Cookie $1 件はすべて現在と同じです。"
+  },
+  "transfer_compareNew": {
+    "message": "ファイル以降に追加 $1 件、同じ $4 件。"
+  },
+  "transfer_compareNewGone": {
+    "message": "ファイル以降に追加 $1 件、なくなったもの $2 件、同じ $4 件。"
+  },
+  "transfer_compareNewGoneChanged": {
+    "message": "ファイル以降に追加 $1 件、なくなったもの $2 件、変更 $3 件、同じ $4 件。"
+  },
+  "transfer_compareNewChanged": {
+    "message": "ファイル以降に追加 $1 件、変更 $3 件、同じ $4 件。"
+  },
+  "transfer_compareGone": {
+    "message": "なくなったもの $2 件、同じ $4 件。"
+  },
+  "transfer_compareGoneChanged": {
+    "message": "なくなったもの $2 件、変更 $3 件、同じ $4 件。"
+  },
+  "transfer_compareChanged": {
+    "message": "変更 $3 件、同じ $4 件。"
+  },
+  "transfer_rowNewSince": {
+    "message": "追加"
+  },
+  "transfer_rowGone": {
+    "message": "なくなった"
+  },
+  "transfer_rowChanged": {
+    "message": "変更：$1"
+  },
+  "transfer_importing": {
+    "message": "インポートしています…"
+  },
+  "transfer_imported_other": {
+    "message": "Cookie を $1 件インポートしました。"
+  },
+  "transfer_importedReplaced_other": {
+    "message": "Cookie を $1 件インポートしました（$2 件は置き換え）。"
+  },
+  "transfer_expiryShortened_other": {
+    "message": "Chrome は Cookie の有効期限の上限を決めているため、$1 件の Cookie の有効期限を短縮しました。"
+  },
+  "transfer_chromeRefused_other": {
+    "message": "Chrome が Cookie $1 件を拒否しました："
+  },
+  "transfer_cantReadFile": {
+    "message": "$1 を読み取れませんでした：$2"
+  },
+  "transfer_passwordNote": {
+    "message": "ファイルをロックし、このパスワードがないとインポートできなくなります。パスワードはどこにも保存されないので、忘れないでください。"
+  },
+  "transfer_seleniumNoPassword": {
+    "message": "Selenium のコードにはパスワードを付けられません。実行するには読める状態でなければならないためです。ファイルをロックするには、別の形式を選んでください。"
+  },
+  "transfer_encrypting": {
+    "message": "暗号化しています…"
+  },
+  "transfer_lockedNote": {
+    "message": "パスワードでロックしました。インポートするにはパスワードが必要です。パスワードはどこにも保存されません。"
+  },
+  "transfer_cantLock": {
+    "message": "エクスポートをロックできませんでした：$1"
+  },
+  "transfer_exportFromSite_other": {
+    "message": "$2 の Cookie $1 件。"
+  },
+  "transfer_exportAcrossSites_other": {
+    "message": "$2 にわたる Cookie $1 件。"
+  },
+  "transfer_keptCookieCount_other": {
+    "message": "保持している Cookie $1 件"
+  },
+  "transfer_exportFromSiteKept_other": {
+    "message": "$2 の Cookie $1 件（$3 を含む）。"
+  },
+  "transfer_exportAcrossSitesKept_other": {
+    "message": "$2 にわたる Cookie $1 件（$3 を含む）。"
+  },
+  "transfer_headerNote": {
+    "message": "このページにブラウザが送るのと同じ、名前と値のみ。"
+  },
+  "transfer_curlNote": {
+    "message": "これらの Cookie をこのページに送信します。bash または zsh 用です。"
+  },
+  "transfer_onePageOnly": {
+    "message": "1 ページの Cookie のみ対象です。使うには「このページ」を選んでください。"
+  },
+  "transfer_savingAs": {
+    "message": "$1 として保存しています。"
   }
 }

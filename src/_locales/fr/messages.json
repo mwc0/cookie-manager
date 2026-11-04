@@ -1,10 +1,2135 @@
 {
   "appName": {
-    "message": "Cookie Editor & Blocker - cookieZ",
-    "description": "The extension's name. The same in every language."
+    "message": "Cookie Editor & Blocker - cookieZ"
   },
   "appDesc": {
-    "message": "Affichez, modifiez, supprimez et bloquez les cookies. Aucune publicité, et rien de ce que vous faites ne quitte votre ordinateur.",
-    "description": "The summary under the name in the Chrome Web Store and on chrome://extensions. 132 characters at most."
+    "message": "Affichez, modifiez, supprimez et bloquez les cookies. Aucune publicité, et rien de ce que vous faites ne quitte votre ordinateur."
+  },
+  "page_loading": {
+    "message": "Lecture des cookies…"
+  },
+  "page_gateHeading": {
+    "message": "Autorisation unique requise"
+  },
+  "page_gateIntro": {
+    "message": "Chrome n’affiche les cookies d’un site à une extension que si elle a accès à ce site. cookieZ a besoin d’accéder aux sites web que vous visitez."
+  },
+  "page_gateAfter": {
+    "message": "Vous pourrez alors afficher, modifier, supprimer, bloquer et exporter les cookies de n’importe quel site."
+  },
+  "page_gatePrivacy": {
+    "message": "L’accès n’est utilisé que lorsque cookieZ est ouvert. Rien n’est envoyé nulle part : cookieZ n’effectue aucune requête réseau et n’a aucun outil d’analyse."
+  },
+  "page_gateGrant": {
+    "message": "Autoriser l’accès"
+  },
+  "page_blockedHeading": {
+    "message": "Aucun cookie sur cette page"
+  },
+  "page_blockedHint": {
+    "message": "Ouvrez un site web ordinaire, puis cliquez de nouveau sur l’icône."
+  },
+  "page_errorHeading": {
+    "message": "Un problème est survenu"
+  },
+  "page_retry": {
+    "message": "Réessayer"
+  },
+  "page_reportOpenTitle": {
+    "message": "Voir ce que ce site a stocké et ce qui mérite d’être vérifié"
+  },
+  "page_reportOpen": {
+    "message": "Rapport du site"
+  },
+  "page_changesOpenTitle": {
+    "message": "Voir ce qui a changé"
+  },
+  "page_rulesOpenTitle": {
+    "message": "Choisir quels cookies ce site peut déposer"
+  },
+  "page_rulesOpen": {
+    "message": "Bloquer"
+  },
+  "page_addTitle": {
+    "message": "Créer un cookie"
+  },
+  "page_add": {
+    "message": "Ajouter un cookie"
+  },
+  "page_refreshTitle": {
+    "message": "Relire les cookies"
+  },
+  "page_refresh": {
+    "message": "Actualiser"
+  },
+  "page_help": {
+    "message": "Aide"
+  },
+  "page_more": {
+    "message": "Plus"
+  },
+  "page_themeGroup": {
+    "message": "Thème de couleurs"
+  },
+  "page_themeLightTitle": {
+    "message": "Thème clair"
+  },
+  "page_themeLight": {
+    "message": "Clair"
+  },
+  "page_themeDarkTitle": {
+    "message": "Thème sombre"
+  },
+  "page_themeDark": {
+    "message": "Sombre"
+  },
+  "page_openInSidePanel": {
+    "message": "Ouvrir dans le panneau latéral"
+  },
+  "page_openInTab": {
+    "message": "Ouvrir dans un onglet"
+  },
+  "page_whatsNewOk": {
+    "message": "OK"
+  },
+  "page_reviewAsk": {
+    "message": "Content que cookieZ vous soit utile. Un avis sur le Chrome Web Store aide d’autres personnes à le trouver."
+  },
+  "page_reviewOpen": {
+    "message": "Donner un avis"
+  },
+  "page_reviewLater": {
+    "message": "Pas maintenant"
+  },
+  "page_searchLabel": {
+    "message": "Rechercher des cookies"
+  },
+  "page_searchPlaceholder": {
+    "message": "Rechercher, ou essayer name: ou domain:"
+  },
+  "page_filtersGroup": {
+    "message": "Afficher seulement"
+  },
+  "page_filterSession": {
+    "message": "Session"
+  },
+  "page_filterKept": {
+    "message": "Conservés"
+  },
+  "page_filterSoon": {
+    "message": "Expire bientôt"
+  },
+  "page_filterLarge": {
+    "message": "Volumineux"
+  },
+  "page_filterKnownTitle": {
+    "message": "Cookies dont le nom figure dans l’Open Cookie Database. Simple supposition d’après le nom."
+  },
+  "page_filterKnown": {
+    "message": "Connus"
+  },
+  "page_filterNotSecureTitle": {
+    "message": "Cookies sans Secure, donc aussi envoyés en HTTP non chiffré"
+  },
+  "page_filterNotSecure": {
+    "message": "Sans Secure"
+  },
+  "page_filterReadableTitle": {
+    "message": "Cookies sans HttpOnly, donc lisibles par les scripts de la page"
+  },
+  "page_filterReadable": {
+    "message": "Lisibles par scripts"
+  },
+  "page_filterSameSiteNoneTitle": {
+    "message": "Cookies avec SameSite None, envoyés quand un autre site charge quelque chose depuis celui-ci"
+  },
+  "page_searchClearTitle": {
+    "message": "Effacer la recherche et les filtres"
+  },
+  "page_searchClear": {
+    "message": "Effacer"
+  },
+  "page_deletePanelHeading": {
+    "message": "Supprimer ou exporter des cookies"
+  },
+  "page_scopesGroup": {
+    "message": "Quoi supprimer"
+  },
+  "page_scopePicked": {
+    "message": "Seulement les cookies cochés"
+  },
+  "page_scopeMatches": {
+    "message": "Seulement les cookies affichés"
+  },
+  "page_scopePage": {
+    "message": "Cette page"
+  },
+  "page_scopeDomain": {
+    "message": "Ce domaine et ses sous-domaines"
+  },
+  "page_scopeAll": {
+    "message": "Tous les sites"
+  },
+  "page_scopeAllNote": {
+    "message": "tout ce que contient ce profil du navigateur"
+  },
+  "page_scopeCounting": {
+    "message": "Comptage…"
+  },
+  "page_delete": {
+    "message": "Supprimer…"
+  },
+  "page_export": {
+    "message": "Exporter…"
+  },
+  "page_importTitle": {
+    "message": "Ajouter des cookies depuis un export JSON ou cookies.txt"
+  },
+  "page_import": {
+    "message": "Importer"
+  },
+  "page_dataTitle": {
+    "message": "Impossible de vous connecter ? Supprimez les cookies de ce site, effacez tout ce qu’il a stocké d’autre, puis rechargez-le"
+  },
+  "page_dataButton": {
+    "message": "Effacer et recharger…"
+  },
+  "page_confirmDelete": {
+    "message": "Oui, supprimer"
+  },
+  "page_cancel": {
+    "message": "Annuler"
+  },
+  "page_dataYesReload": {
+    "message": "Effacer et recharger"
+  },
+  "page_dataYes": {
+    "message": "Effacer sans recharger"
+  },
+  "page_pickedGroup": {
+    "message": "Cookies cochés"
+  },
+  "page_pickedKeep": {
+    "message": "Conserver"
+  },
+  "page_pickedUnkeep": {
+    "message": "Ne plus conserver"
+  },
+  "page_expireIn": {
+    "message": "Expire dans"
+  },
+  "page_expireIn1Hour": {
+    "message": "Expire dans 1 heure"
+  },
+  "page_preset1Hour": {
+    "message": "1 heure"
+  },
+  "page_expireIn1Day": {
+    "message": "Expire dans 1 jour"
+  },
+  "page_preset1Day": {
+    "message": "1 jour"
+  },
+  "page_expireIn1Week": {
+    "message": "Expire dans 1 semaine"
+  },
+  "page_preset1Week": {
+    "message": "1 semaine"
+  },
+  "page_expireIn1Year": {
+    "message": "Expire dans 1 an"
+  },
+  "page_preset1Year": {
+    "message": "1 an"
+  },
+  "page_pickedClear": {
+    "message": "Tout décocher"
+  },
+  "page_pickAll": {
+    "message": "Cocher tous les cookies affichés"
+  },
+  "page_colName": {
+    "message": "Nom"
+  },
+  "page_sortBySize": {
+    "message": "Trier par taille"
+  },
+  "page_colValue": {
+    "message": "Valeur"
+  },
+  "page_colSize": {
+    "message": "Taille"
+  },
+  "page_colDomain": {
+    "message": "Domaine"
+  },
+  "page_colPath": {
+    "message": "Chemin"
+  },
+  "page_colExpires": {
+    "message": "Expiration"
+  },
+  "page_colFlags": {
+    "message": "Attributs"
+  },
+  "page_colActions": {
+    "message": "Actions"
+  },
+  "page_emptyTable": {
+    "message": "Aucun cookie n’est défini pour ce site."
+  },
+  "page_back": {
+    "message": "Retour"
+  },
+  "page_editRuleNote": {
+    "message": "Vos règles de site bloquent les cookies sur ce site. Vous pouvez quand même en enregistrer un ici, mais le site ne pourra pas le lire."
+  },
+  "page_fieldName": {
+    "message": "Nom"
+  },
+  "page_copyNameTitle": {
+    "message": "Copier le nom"
+  },
+  "page_copy": {
+    "message": "Copier"
+  },
+  "page_nameKnownNote": {
+    "message": "Simple supposition d’après le nom. Source : Open Cookie Database."
+  },
+  "page_fieldValue": {
+    "message": "Valeur"
+  },
+  "page_copyValueTitle": {
+    "message": "Copier la valeur"
+  },
+  "page_editAsJson": {
+    "message": "Modifier comme JSON : mis en forme ici, enregistré sur une ligne"
+  },
+  "page_decoded": {
+    "message": "Décodée"
+  },
+  "page_copyDecodedTitle": {
+    "message": "Copier la valeur décodée"
+  },
+  "page_fieldDomain": {
+    "message": "Domaine"
+  },
+  "page_fieldPath": {
+    "message": "Chemin"
+  },
+  "page_sameSiteUnset": {
+    "message": "Non défini (Chrome décide)"
+  },
+  "page_sameSiteNone": {
+    "message": "None (nécessite Secure)"
+  },
+  "page_fieldExpires": {
+    "message": "Expiration"
+  },
+  "page_sessionCheck": {
+    "message": "Cookie de session : supprimé à la fermeture du navigateur"
+  },
+  "page_fieldFlags": {
+    "message": "Attributs"
+  },
+  "page_secureCheck": {
+    "message": "Secure : envoyé uniquement en HTTPS"
+  },
+  "page_httpOnlyCheck": {
+    "message": "HttpOnly : invisible pour le JavaScript de la page"
+  },
+  "page_hostOnlyCheck": {
+    "message": "Hôte seul : cet hôte exact, pas ses sous-domaines"
+  },
+  "page_partitionedCheck": {
+    "message": "Partitioned (CHIPS) : conservé uniquement pour <span id=\"partitioned-site\"></span>. Nécessite Secure."
+  },
+  "page_editChanged": {
+    "message": "Le site a modifié ce cookie pendant que vous le modifiiez. Enregistrer l’écrasera."
+  },
+  "page_save": {
+    "message": "Enregistrer"
+  },
+  "page_duplicateTitle": {
+    "message": "Commencer un nouveau cookie avec ces détails"
+  },
+  "page_duplicate": {
+    "message": "Dupliquer"
+  },
+  "page_copySetCookieTitle": {
+    "message": "Copier ce cookie sous la forme de la ligne Set-Cookie qu’enverrait un serveur"
+  },
+  "page_copySetCookie": {
+    "message": "Copier en Set-Cookie"
+  },
+  "page_exportHeading": {
+    "message": "Exporter les cookies"
+  },
+  "page_formatGroup": {
+    "message": "Format"
+  },
+  "page_formatJsonNote": {
+    "message": "Compatible avec d’autres éditeurs de cookies. Conserve tous les détails."
+  },
+  "page_formatPlaywrightNote": {
+    "message": "Un fichier storageState, pour démarrer un test déjà connecté."
+  },
+  "page_formatSeleniumNote": {
+    "message": "Appels Python add_cookie(), pour un test. Ne gère pas les partitions."
+  },
+  "page_formatNetscapeNote": {
+    "message": "Pour curl, wget, yt-dlp et d’autres outils. Ne gère ni SameSite ni les partitions."
+  },
+  "page_formatHeader": {
+    "message": "En-tête Cookie"
+  },
+  "page_formatHeaderNote": {
+    "message": "Noms et valeurs seulement, pour un seul site."
+  },
+  "page_formatCurl": {
+    "message": "Commande curl"
+  },
+  "page_formatCurlNote": {
+    "message": "Envoie ces cookies à cette page, pour bash ou zsh."
+  },
+  "page_exportOutputLabel": {
+    "message": "Cookies exportés"
+  },
+  "page_exportPasswordLabel": {
+    "message": "Mot de passe (facultatif)"
+  },
+  "page_show": {
+    "message": "Afficher"
+  },
+  "page_exportPasswordNote": {
+    "message": "Verrouille le fichier : il ne pourra être importé qu’avec ce mot de passe. Le mot de passe n’est enregistré nulle part, ne le perdez donc pas."
+  },
+  "page_exportWarning": {
+    "message": "Toute personne ayant ce fichier peut se connecter à votre place. Ajoutez un mot de passe, ou gardez-le dans un endroit privé."
+  },
+  "page_download": {
+    "message": "Télécharger"
+  },
+  "page_importHeading": {
+    "message": "Importer des cookies"
+  },
+  "page_importIntro": {
+    "message": "Collez des cookies exportés en JSON (depuis cookieZ ou un autre éditeur de cookies), un fichier cookies.txt, des lignes Set-Cookie ou une commande curl (depuis « Copier au format cURL » dans les DevTools). Un en-tête Cookie seul est appliqué à ce site. Un export cookieZ protégé par mot de passe le demande."
+  },
+  "page_importFileLabel": {
+    "message": "Ou choisissez un fichier :"
+  },
+  "page_importFileHint": {
+    "message": "Pour choisir un fichier à la place, <button id=\"import-tab\" class=\"link-button\" type=\"button\">ouvrez cookieZ dans un onglet</button>."
+  },
+  "page_importTextLabel": {
+    "message": "Cookies à importer"
+  },
+  "page_importPasswordLabel": {
+    "message": "Ce fichier est protégé par un mot de passe. Saisissez-le, puis appuyez sur Vérifier."
+  },
+  "page_importCheck": {
+    "message": "Vérifier"
+  },
+  "page_importMove": {
+    "message": "Les mettre sur <span id=\"import-move-site\"></span> à la place"
+  },
+  "page_importWarning": {
+    "message": "N’importez que des cookies que vous avez créés vous-même. Ceux d’une autre personne peuvent vous connecter à son compte ou servir à vous piéger."
+  },
+  "page_importCompare": {
+    "message": "Comparer"
+  },
+  "page_compareHeading": {
+    "message": "Comparé à votre fichier"
+  },
+  "page_colSite": {
+    "message": "Site"
+  },
+  "page_colSinceFile": {
+    "message": "Depuis votre fichier"
+  },
+  "page_reportHeading": {
+    "message": "Rapport du site"
+  },
+  "page_reportIntro": {
+    "message": "Ce que <span id=\"report-site\" class=\"mono\"></span> a stocké dans ce navigateur. Les finalités sont une supposition d’après le nom de chaque cookie, à partir d’une liste intégrée à cookieZ, car n’importe quel site peut donner n’importe quel nom à un cookie. Rien n’est enregistré ici."
+  },
+  "page_reportNoList": {
+    "message": "La liste des noms de cookies connus n’a pas pu être chargée, donc aucun cookie n’a pu être reconnu."
+  },
+  "page_reportEmpty": {
+    "message": "Ce site n’a stocké aucun cookie."
+  },
+  "page_colPurpose": {
+    "message": "Finalité"
+  },
+  "page_colCookies": {
+    "message": "Cookies"
+  },
+  "page_colSetBy": {
+    "message": "Déposé par"
+  },
+  "page_reportChecksHeading": {
+    "message": "À vérifier"
+  },
+  "page_reportChecksNone": {
+    "message": "Rien à signaler sur ce site."
+  },
+  "page_colWhat": {
+    "message": "Quoi"
+  },
+  "page_colAction": {
+    "message": "Action"
+  },
+  "page_changesHeading": {
+    "message": "Ce qui a changé"
+  },
+  "page_changesIntro": {
+    "message": "Ce qui est arrivé aux cookies de ce site depuis l’ouverture de cookieZ, du plus récent au plus ancien, que ce soit le site ou vous qui l’ayez fait. Rien n’est enregistré : la liste disparaît quand cookieZ se ferme."
+  },
+  "page_colTime": {
+    "message": "Heure"
+  },
+  "page_colWhatHappened": {
+    "message": "Événement"
+  },
+  "page_keptHeading": {
+    "message": "Cookies conservés"
+  },
+  "page_keptIntro": {
+    "message": "cookieZ les exclut de toute suppression. Voici toute la liste qu’il a enregistrée, pour tous les sites : des noms, jamais des valeurs."
+  },
+  "page_colStopKeeping": {
+    "message": "Ne plus conserver"
+  },
+  "page_keptEmpty": {
+    "message": "Aucun cookie n’est marqué comme conservé."
+  },
+  "page_keptClear": {
+    "message": "Ne plus rien conserver…"
+  },
+  "page_keptConfirmYes": {
+    "message": "Oui, ne plus conserver"
+  },
+  "page_rulesHeading": {
+    "message": "Bloquer les cookies"
+  },
+  "page_rulesIntro": {
+    "message": "Choisissez quels sites peuvent déposer des cookies. Chrome applique ces règles en permanence, même quand cookieZ est fermé. Rien n’est envoyé nulle part."
+  },
+  "page_rulesGate": {
+    "message": "Pour définir des règles, cookieZ a besoin que Chrome l’autorise à modifier les paramètres des sites. La demande de Chrome mentionne aussi la caméra, le micro et la position, car une seule autorisation couvre tous les paramètres des sites. cookieZ ne modifie jamais que le paramètre des cookies."
+  },
+  "page_rulesGateSaved": {
+    "message": "Vos règles enregistrées sont listées ci-dessous, mais Chrome ne les applique plus tant que vous ne l’autorisez pas de nouveau."
+  },
+  "page_rulesGrant": {
+    "message": "Autoriser cookieZ à définir des règles"
+  },
+  "page_rulesIncognito": {
+    "message": "Les règles se définissent depuis une fenêtre normale. Elles s’appliquent aussi aux fenêtres de navigation privée."
+  },
+  "page_rulesSiteHeading": {
+    "message": "Sur <span id=\"rules-site-name\"></span>"
+  },
+  "page_ruleAllowAll": {
+    "message": "Autoriser tous les cookies"
+  },
+  "page_ruleAllowAllNote": {
+    "message": "Y compris ceux des autres entreprises sur ses pages."
+  },
+  "page_ruleSession": {
+    "message": "Effacer à la fermeture de Chrome"
+  },
+  "page_ruleSessionNote": {
+    "message": "Le site fonctionne normalement, mais Chrome supprime ses cookies, et ceux des autres entreprises sur ses pages, à chaque fermeture."
+  },
+  "page_ruleOwnOnly": {
+    "message": "Bloquer les cookies des autres entreprises"
+  },
+  "page_ruleOwnOnlyNote": {
+    "message": "Le site garde ses propres cookies, la connexion fonctionne donc toujours. Les vidéos intégrées, les cartes et les boutons « se connecter avec » d’autres entreprises peuvent cesser de fonctionner."
+  },
+  "page_ruleBlockAll": {
+    "message": "Bloquer tous les cookies"
+  },
+  "page_ruleBlockAllNote": {
+    "message": "Le site ne peut déposer ni lire aucun cookie. Vous serez déconnecté et il risque de ne plus fonctionner du tout."
+  },
+  "page_rulesDeleteOnBlock": {
+    "message": "Quand je bloque des cookies, supprimer sans demander ceux déjà enregistrés"
+  },
+  "page_cleanupYes": {
+    "message": "Les supprimer"
+  },
+  "page_cleanupNo": {
+    "message": "Les laisser"
+  },
+  "page_rulesEverywhereHeading": {
+    "message": "Sur tous les autres sites"
+  },
+  "page_everywhereAllow": {
+    "message": "Autoriser les cookies"
+  },
+  "page_everywhereAllowNote": {
+    "message": "Le comportement habituel de Chrome."
+  },
+  "page_everywhereOwnOnlyNote": {
+    "message": "Chaque site garde ses propres cookies et ceux des autres entreprises sont bloqués, grâce au réglage de Chrome lui-même. Les cookies partitionnés, qui ne peuvent pas vous suivre d’un site à l’autre, fonctionnent toujours, comme quelques exceptions que Chrome prévoit."
+  },
+  "page_everywhereBlockNote": {
+    "message": "Seuls les sites que vous avez autorisés peuvent utiliser des cookies. Vous ne pourrez vous connecter nulle part ailleurs."
+  },
+  "page_everywhereConfirm": {
+    "message": "Bloquer les cookies sur tous les sites qui n’ont pas de règle propre ?"
+  },
+  "page_everywhereConfirmYes": {
+    "message": "Oui, les bloquer"
+  },
+  "page_trackersGroup": {
+    "message": "Traceurs connus"
+  },
+  "page_trackersName": {
+    "message": "Bloquer les cookies des traceurs connus sur tous les sites"
+  },
+  "page_trackersNote": {
+    "message": "Les cookies de <span id=\"rules-trackers-count\">environ 130</span> entreprises de publicité et d’analyse, d’après une liste intégrée à cookieZ qui se met à jour avec lui. Les sites pour lesquels vous avez choisi d’autoriser tous les cookies les reçoivent quand même. Cela bloque les cookies des traceurs, pas les traceurs eux-mêmes."
+  },
+  "page_rulesListHeading": {
+    "message": "Sites ayant une règle propre"
+  },
+  "page_colRule": {
+    "message": "Règle"
+  },
+  "page_colCookiesNow": {
+    "message": "Cookies actuels"
+  },
+  "page_colRemove": {
+    "message": "Retirer"
+  },
+  "page_rulesEmpty": {
+    "message": "Aucun site n’a de règle propre."
+  },
+  "page_rulesClear": {
+    "message": "Désactiver toutes les règles…"
+  },
+  "page_rulesConfirm": {
+    "message": "Désactiver toutes les règles ? Chrome autorisera de nouveau les cookies partout."
+  },
+  "page_rulesConfirmYes": {
+    "message": "Oui, les désactiver"
+  },
+  "page_rulesBackup": {
+    "message": "Enregistrer une copie"
+  },
+  "page_rulesLoad": {
+    "message": "Charger une copie…"
+  },
+  "page_rulesLoadYes": {
+    "message": "Remplacer mes règles"
+  },
+  "page_helpScopeQ": {
+    "message": "Quelle option de suppression choisir ?"
+  },
+  "page_helpScopeA": {
+    "message": "<strong>Cette page</strong> supprime les cookies que reçoit cette page. <strong>Ce domaine et ses sous-domaines</strong> touche aussi les sous-domaines, comme login.example.com. <strong>Tous les sites</strong> supprime tous les cookies de ce profil du navigateur. Le nombre de cookies et la liste des sites s’affichent toujours avant."
+  },
+  "page_helpReportQ": {
+    "message": "Que stocke un site sur moi ?"
+  },
+  "page_helpReportA": {
+    "message": "<strong>Rapport du site</strong>, à côté du nombre de cookies, regroupe les cookies d’un site par finalité et liste ce qui mérite d’être vérifié. Chaque finalité est une supposition d’après le nom du cookie."
+  },
+  "page_helpLoginQ": {
+    "message": "Effacer les cookies ne m’a pas permis de me connecter"
+  },
+  "page_helpLoginA": {
+    "message": "Essayez <strong>Effacer et recharger</strong> sous les options de suppression, puis <strong>Effacer et recharger</strong>. En plus des cookies du site, cela efface tout ce que le site a stocké d’autre : stockage local, bases de données, stockage du cache et fichiers hors connexion. Les cookies conservés sont laissés intacts, et Annuler peut remettre les cookies, mais pas le reste."
+  },
+  "page_helpUndoQ": {
+    "message": "J’ai supprimé ou modifié les mauvais cookies"
+  },
+  "page_helpUndoA": {
+    "message": "Cliquez sur <strong>Annuler</strong> dans le message en haut. Cela fonctionne pendant 10 minutes après une suppression, une importation ou un Enregistrement, même si vous fermez cookieZ, et seulement pour la plus récente."
+  },
+  "page_helpLiveQ": {
+    "message": "Pourquoi une ligne s’est-elle illuminée ?"
+  },
+  "page_helpLiveA": {
+    "message": "Le site, ou cookieZ, vient d’ajouter ou de modifier ce cookie. Le tableau suit les changements en direct, inutile d’appuyer sur Actualiser. Cliquez sur <strong>changements</strong> à côté du nombre de cookies pour voir la liste de ce qui a été ajouté, modifié, supprimé ou a expiré depuis l’ouverture de cookieZ."
+  },
+  "page_helpKeptQ": {
+    "message": "À quoi sert le marque-page ?"
+  },
+  "page_helpKeptA": {
+    "message": "Il marque un cookie comme <strong>conservé</strong> : cookieZ l’exclut de toute suppression, même « Tous les sites ». Cela n’empêche pas le site de modifier ou de supprimer lui-même le cookie. Pour voir tous les cookies que vous conservez, sur n’importe quel site, cliquez sur <strong>Cookies conservés</strong> sous les options de suppression."
+  },
+  "page_helpBlockQ": {
+    "message": "Puis-je empêcher un site de déposer des cookies ?"
+  },
+  "page_helpBlockA": {
+    "message": "Oui. Cliquez sur <strong>Bloquer</strong> en haut. Pour chaque site, vous pouvez autoriser tous les cookies, les faire effacer à la fermeture de Chrome, bloquer ceux des autres entreprises ou bloquer tous les cookies. Vous pouvez aussi bloquer les cookies des autres entreprises sur tous les sites, ou tous les cookies sur tous les sites sauf ceux que vous autorisez. C’est Chrome qui bloque : cela fonctionne quand cookieZ est fermé, et désinstaller cookieZ retire les règles. Chrome a son propre réglage pour bloquer partout les cookies des autres entreprises, dans ses paramètres ; cookieZ ne le modifie pas."
+  },
+  "page_helpBrokenQ": {
+    "message": "Un site ne fonctionne plus depuis que j’ai défini une règle"
+  },
+  "page_helpBrokenA": {
+    "message": "Cliquez sur <strong>Bloquer</strong> sur ce site et choisissez <strong>Autoriser tous les cookies</strong>, ou retirez sa règle de la liste. Rechargez ensuite la page."
+  },
+  "page_helpBadgesQ": {
+    "message": "Que signifient les badges ?"
+  },
+  "page_helpBadgesA": {
+    "message": "<strong>Secure</strong> : envoyé uniquement en HTTPS. <strong>HttpOnly</strong> : invisible pour le JavaScript de la page. <strong>Sous-domaines</strong> : aussi envoyé à chaque sous-domaine. <strong>Partitioned</strong> : conservé séparément pour chaque site où il est utilisé. <strong>SameSite</strong> : quand d’autres sites peuvent l’envoyer. <strong>Volumineux</strong> : proche de la limite de Chrome de 4 Ko pour un cookie."
+  },
+  "page_helpSizeQ": {
+    "message": "Que signifie la taille à côté du nombre de cookies ?"
+  },
+  "page_helpSizeA": {
+    "message": "Environ ce que les cookies de ce site ajoutent à chaque requête. Beaucoup de serveurs refusent plus d’environ 8 Ko, ce qui peut vous empêcher de vous connecter ; cookieZ vous prévient donc au-delà de 6 Ko."
+  },
+  "page_helpKeysQ": {
+    "message": "Clavier"
+  },
+  "page_keyOpen": {
+    "message": "Ouvrir cookieZ. Modifiez-le sur chrome://extensions/shortcuts."
+  },
+  "page_keySearch": {
+    "message": "Rechercher dans les cookies. Commencez par name:, value:, domain: ou path: pour ne chercher que dans cette partie."
+  },
+  "page_keyAdd": {
+    "message": "Ajouter un cookie."
+  },
+  "page_keyMove": {
+    "message": "Passer d’un cookie à l’autre. <kbd>Home</kbd> et <kbd>End</kbd> vont au premier et au dernier."
+  },
+  "page_keyEdit": {
+    "message": "Modifier le cookie."
+  },
+  "page_keyTick": {
+    "message": "Le cocher."
+  },
+  "page_keyKeep": {
+    "message": "Le conserver, ou ne plus le conserver."
+  },
+  "page_keyDelete": {
+    "message": "Le supprimer. Il demande d’abord « Sûr ? » : appuyez sur <kbd>Enter</kbd> pour supprimer."
+  },
+  "page_keyEsc": {
+    "message": "Revenir en arrière depuis cet écran, l’éditeur, l’export, l’import ou les règles du site, ou annuler une suppression ou une autre question."
+  },
+  "page_helpPanelQ": {
+    "message": "cookieZ peut-il rester ouvert pendant que je navigue ?"
+  },
+  "page_helpPanelA": {
+    "message": "Oui. Cliquez sur Plus (les trois points en haut), puis sur Ouvrir dans le panneau latéral. cookieZ s’ouvre sur le côté de la fenêtre et affiche les cookies de l’onglet où vous êtes. Il attend pendant que vous modifiez, et se met à jour à votre retour. Les raccourcis clavier y fonctionnent aussi."
+  },
+  "page_helpIncognitoQ": {
+    "message": "Navigation privée"
+  },
+  "page_helpIncognitoA": {
+    "message": "Activez « Autoriser en navigation privée » sur la page Détails de cookieZ dans chrome://extensions. Les cookies de la navigation privée sont séparés, et une suppression dans l’une n’affecte jamais l’autre."
+  },
+  "page_helpContact": {
+    "message": "Plus d’aide sur cookiez.uk/support, ou par e-mail à support@cookiez.uk."
+  },
+  "page_helpReview": {
+    "message": "Si cookieZ vous aide, un avis sur le Chrome Web Store aide d’autres personnes à le trouver."
+  },
+  "main_blockedTabClosed": {
+    "message": "L’onglet depuis lequel cookieZ a été ouvert a été fermé."
+  },
+  "main_blockedNoAddress": {
+    "message": "Chrome n’a pas indiqué d’adresse pour cet onglet."
+  },
+  "main_blockedBadAddress": {
+    "message": "L’adresse de cet onglet n’a pas pu être lue : $1"
+  },
+  "main_blockedProtocol": {
+    "message": "Les pages servies en $1 n’ont pas de cookies qu’une extension puisse lire."
+  },
+  "main_tabTitle": {
+    "message": "cookieZ - $1"
+  },
+  "main_cookieCount_one": {
+    "message": "$1 cookie"
+  },
+  "main_cookieCount_other": {
+    "message": "$1 cookies"
+  },
+  "main_cookieCountFiltered_one": {
+    "message": "$1 cookie sur $2"
+  },
+  "main_cookieCountFiltered_other": {
+    "message": "$1 cookies sur $2"
+  },
+  "main_cookieCountWithSize": {
+    "message": "$1 · environ $2"
+  },
+  "main_sizeWarning": {
+    "message": "Les cookies de ce site représentent environ $1. Beaucoup de serveurs refusent plus de 8 Ko, ce qui peut vous empêcher de vous connecter. Supprimer les cookies de ce site règle généralement le problème."
+  },
+  "main_matchCount_one": {
+    "message": "$1 résultat"
+  },
+  "main_matchCount_other": {
+    "message": "$1 résultats"
+  },
+  "main_emptyBlocked": {
+    "message": "Aucun cookie n’est défini pour ce site. Vos règles de site les bloquent."
+  },
+  "main_empty": {
+    "message": "Aucun cookie n’est défini pour ce site."
+  },
+  "main_emptyFilters": {
+    "message": "Aucun cookie ne correspond à ces filtres."
+  },
+  "main_emptyQueryAndFilters": {
+    "message": "Aucun cookie ne correspond à « $1 » et à ces filtres."
+  },
+  "main_emptyQuery": {
+    "message": "Aucun cookie ne correspond à « $1 »."
+  },
+  "main_keyKeptNoDelete": {
+    "message": "$1 est conservé, il ne peut donc pas être supprimé. Appuyez sur K pour ne plus le conserver."
+  },
+  "main_keyKeptNoDeleteUnnamed": {
+    "message": "Ce cookie est conservé, il ne peut donc pas être supprimé. Appuyez sur K pour ne plus le conserver."
+  },
+  "main_liveAdded_one": {
+    "message": "$1 cookie ajouté."
+  },
+  "main_liveAdded_other": {
+    "message": "$1 cookies ajoutés."
+  },
+  "main_liveChanged_one": {
+    "message": "$1 cookie modifié."
+  },
+  "main_liveChanged_other": {
+    "message": "$1 cookies modifiés."
+  },
+  "main_liveRemoved_one": {
+    "message": "$1 cookie supprimé."
+  },
+  "main_liveRemoved_other": {
+    "message": "$1 cookies supprimés."
+  },
+  "main_liveAddedChanged_one": {
+    "message": "Cookies ajoutés : $1, modifiés : $2."
+  },
+  "main_liveAddedChanged_other": {
+    "message": "Cookies ajoutés : $1, modifiés : $2."
+  },
+  "main_liveAddedRemoved_one": {
+    "message": "Cookies ajoutés : $1, supprimés : $2."
+  },
+  "main_liveAddedRemoved_other": {
+    "message": "Cookies ajoutés : $1, supprimés : $2."
+  },
+  "main_liveChangedRemoved_one": {
+    "message": "Cookies modifiés : $1, supprimés : $2."
+  },
+  "main_liveChangedRemoved_other": {
+    "message": "Cookies modifiés : $1, supprimés : $2."
+  },
+  "main_liveAddedChangedRemoved_one": {
+    "message": "Cookies ajoutés : $1, modifiés : $2, supprimés : $3."
+  },
+  "main_liveAddedChangedRemoved_other": {
+    "message": "Cookies ajoutés : $1, modifiés : $2, supprimés : $3."
+  },
+  "main_pickedCount_one": {
+    "message": "$1 cookie coché :"
+  },
+  "main_pickedCount_other": {
+    "message": "$1 cookies cochés :"
+  },
+  "main_counting": {
+    "message": "Comptage…"
+  },
+  "main_scopeCountFailed": {
+    "message": "Impossible de compter les cookies de cette portée : $1"
+  },
+  "main_scopeKeptNote_one": {
+    "message": "$1 cookie conservé sera laissé intact."
+  },
+  "main_scopeKeptNote_other": {
+    "message": "$1 cookies conservés seront laissés intacts."
+  },
+  "main_scopeNothing": {
+    "message": "Rien à supprimer dans cette portée."
+  },
+  "main_scopeWillDeleteFrom_one": {
+    "message": "$1 cookie de $2 sera supprimé."
+  },
+  "main_scopeWillDeleteFrom_other": {
+    "message": "$1 cookies de $2 seront supprimés."
+  },
+  "main_scopeWillDeleteAcross_one": {
+    "message": "$1 cookie sur $2 sites sera supprimé."
+  },
+  "main_scopeWillDeleteAcross_other": {
+    "message": "$1 cookies sur $2 sites seront supprimés."
+  },
+  "main_scopeShowSites": {
+    "message": "Voir les $1 sites concernés"
+  },
+  "main_confirmDeleteFrom_one": {
+    "message": "Supprimer $1 cookie de $2 ?"
+  },
+  "main_confirmDeleteFrom_other": {
+    "message": "Supprimer $1 cookies de $2 ?"
+  },
+  "main_confirmDeleteAcross_one": {
+    "message": "Supprimer $1 cookie sur $2 sites ?"
+  },
+  "main_confirmDeleteAcross_other": {
+    "message": "Supprimer $1 cookies sur $2 sites ?"
+  },
+  "main_deleting": {
+    "message": "Suppression…"
+  },
+  "main_deleted_one": {
+    "message": "$1 cookie supprimé."
+  },
+  "main_deleted_other": {
+    "message": "$1 cookies supprimés."
+  },
+  "main_deleteSomeFailed_one": {
+    "message": "$1 cookie n’a pas pu être supprimé et est peut-être protégé par le navigateur."
+  },
+  "main_deleteSomeFailed_other": {
+    "message": "$1 cookies n’ont pas pu être supprimés et sont peut-être protégés par le navigateur."
+  },
+  "main_deleteFailed": {
+    "message": "La suppression a échoué : $1"
+  },
+  "main_deleteOneKept": {
+    "message": "$1 est conservé, il n’a donc pas été supprimé. Cliquez d’abord sur Conservé si vous voulez le supprimer."
+  },
+  "main_deletedOne": {
+    "message": "$1 supprimé."
+  },
+  "main_deleteOneFailed": {
+    "message": "Impossible de supprimer $1. Il est peut-être protégé par le navigateur."
+  },
+  "main_keeping": {
+    "message": "$1 est conservé. Il ne sera pas supprimé d’ici tant que vous ne dites pas le contraire."
+  },
+  "main_notKeeping": {
+    "message": "$1 n’est plus conservé."
+  },
+  "main_keepingPicked_one": {
+    "message": "$1 cookie conservé."
+  },
+  "main_keepingPicked_other": {
+    "message": "$1 cookies conservés."
+  },
+  "main_notKeepingPicked_one": {
+    "message": "$1 cookie n’est plus conservé."
+  },
+  "main_notKeepingPicked_other": {
+    "message": "$1 cookies ne sont plus conservés."
+  },
+  "main_expiresHour_one": {
+    "message": "$1 cookie expire désormais dans 1 heure."
+  },
+  "main_expiresHour_other": {
+    "message": "$1 cookies expirent désormais dans 1 heure."
+  },
+  "main_expiresDay_one": {
+    "message": "$1 cookie expire désormais dans 1 jour."
+  },
+  "main_expiresDay_other": {
+    "message": "$1 cookies expirent désormais dans 1 jour."
+  },
+  "main_expiresWeek_one": {
+    "message": "$1 cookie expire désormais dans 1 semaine."
+  },
+  "main_expiresWeek_other": {
+    "message": "$1 cookies expirent désormais dans 1 semaine."
+  },
+  "main_expiresYear_one": {
+    "message": "$1 cookie expire désormais dans 1 an."
+  },
+  "main_expiresYear_other": {
+    "message": "$1 cookies expirent désormais dans 1 an."
+  },
+  "main_expireRefused": {
+    "message": "Chrome a refusé $1"
+  },
+  "main_noTab": {
+    "message": "Impossible de savoir pour quel onglet c’est."
+  },
+  "main_panelNeedsClick": {
+    "message": "Chrome n’ouvre le panneau latéral qu’à partir d’un clic. Cliquez de nouveau sur le bouton."
+  },
+  "main_panelFailed": {
+    "message": "Impossible d’ouvrir le panneau latéral : $1"
+  },
+  "main_accessDeclined": {
+    "message": "L’accès a été refusé, les cookies ne peuvent donc pas être listés. Cliquez sur Autoriser l’accès pour réessayer."
+  },
+  "main_undoButton": {
+    "message": "Annuler"
+  },
+  "main_reloadButton": {
+    "message": "Recharger le site"
+  },
+  "main_reloaded": {
+    "message": "Rechargé"
+  },
+  "main_reloadFailed": {
+    "message": "Impossible de recharger : $1"
+  },
+  "main_changeEdit": {
+    "message": "Modifications enregistrées pour $1"
+  },
+  "main_changeCreate": {
+    "message": "$1 créé"
+  },
+  "main_changeExpiry_one": {
+    "message": "Expiration modifiée pour $1 cookie"
+  },
+  "main_changeExpiry_other": {
+    "message": "Expiration modifiée pour $1 cookies"
+  },
+  "main_changeDeletedOne": {
+    "message": "$1 supprimé de $2"
+  },
+  "main_changeDeletedFrom_one": {
+    "message": "$1 cookie supprimé de $2"
+  },
+  "main_changeDeletedFrom_other": {
+    "message": "$1 cookies supprimés de $2"
+  },
+  "main_changeDeletedAcross_one": {
+    "message": "$1 cookie supprimé sur $2 sites"
+  },
+  "main_changeDeletedAcross_other": {
+    "message": "$1 cookies supprimés sur $2 sites"
+  },
+  "main_changeImportedOne": {
+    "message": "$1 importé depuis $2"
+  },
+  "main_changeImportedFrom_one": {
+    "message": "$1 cookie importé depuis $2"
+  },
+  "main_changeImportedFrom_other": {
+    "message": "$1 cookies importés depuis $2"
+  },
+  "main_changeImportedAcross_one": {
+    "message": "$1 cookie importé sur $2 sites"
+  },
+  "main_changeImportedAcross_other": {
+    "message": "$1 cookies importés sur $2 sites"
+  },
+  "main_undoOffer": {
+    "message": "$1 $2."
+  },
+  "main_undoRestored_one": {
+    "message": "$1 cookie restauré."
+  },
+  "main_undoRestored_other": {
+    "message": "$1 cookies restaurés."
+  },
+  "main_undoPutBackOne": {
+    "message": "$1 remis tel qu’il était."
+  },
+  "main_undoRemovedOne": {
+    "message": "$1 retiré."
+  },
+  "main_undoRemovedAndPutBack_one": {
+    "message": "$1 cookie retiré et $2 remis en place."
+  },
+  "main_undoRemovedAndPutBack_other": {
+    "message": "$1 cookies retirés et $2 remis en place."
+  },
+  "main_undoRemoved_one": {
+    "message": "$1 cookie retiré."
+  },
+  "main_undoRemoved_other": {
+    "message": "$1 cookies retirés."
+  },
+  "main_undoPutBack_one": {
+    "message": "$1 cookie remis en place."
+  },
+  "main_undoPutBack_other": {
+    "message": "$1 cookies remis en place."
+  },
+  "main_undoNothing": {
+    "message": "Rien n’a été modifié."
+  },
+  "main_undoTooLate": {
+    "message": "Il n’y a rien à annuler. Annuler ne fonctionne que pendant 10 minutes après une modification."
+  },
+  "main_undoing": {
+    "message": "Annulation…"
+  },
+  "main_undoKeptLeft_one": {
+    "message": "$1 cookie est marqué comme conservé, il a donc été laissé intact."
+  },
+  "main_undoKeptLeft_other": {
+    "message": "$1 cookies sont marqués comme conservés, ils ont donc été laissés intacts."
+  },
+  "main_undoExpiredSince_one": {
+    "message": "$1 cookie a expiré entre-temps, il n’a donc pas été remis en place."
+  },
+  "main_undoExpiredSince_other": {
+    "message": "$1 cookies ont expiré entre-temps, ils n’ont donc pas été remis en place."
+  },
+  "main_undoRefused_one": {
+    "message": "Chrome a refusé $1 cookie : $2"
+  },
+  "main_undoRefused_other": {
+    "message": "Chrome a refusé $1 cookies : $2"
+  },
+  "main_keptLink": {
+    "message": "Cookies conservés : $1"
+  },
+  "main_keptPartitionedFor": {
+    "message": "Conservé séparément pour $1"
+  },
+  "main_keptPartitionedForOther": {
+    "message": "Conservé séparément pour un autre site"
+  },
+  "main_keptStopButton": {
+    "message": "Ne plus conserver"
+  },
+  "main_keptStoppedOne": {
+    "message": "$1 n’est plus conservé sur $2."
+  },
+  "main_keptConfirmOne": {
+    "message": "Ne plus conserver ce cookie ?"
+  },
+  "main_keptConfirmAll": {
+    "message": "Ne plus conserver les $1 cookies ?"
+  },
+  "main_keptStoppedAll_one": {
+    "message": "$1 cookie n’est plus conservé."
+  },
+  "main_keptStoppedAll_other": {
+    "message": "$1 cookies ne sont plus conservés."
+  },
+  "main_eventChanged": {
+    "message": "Modifié"
+  },
+  "main_eventAdded": {
+    "message": "Ajouté"
+  },
+  "main_eventExpired": {
+    "message": "Expiré"
+  },
+  "main_eventExpiredOverwrite": {
+    "message": "Supprimé, par une date dans le passé"
+  },
+  "main_eventEvicted": {
+    "message": "Supprimé par Chrome pour faire de la place"
+  },
+  "main_eventRemoved": {
+    "message": "Supprimé"
+  },
+  "main_changesLink_one": {
+    "message": "$1 changement"
+  },
+  "main_changesLink_other": {
+    "message": "$1 changements"
+  },
+  "main_whatsNew2_3_0": {
+    "message": "Nouveau : cookieZ est désormais en français, selon la langue de Chrome, et a une nouvelle icône."
+  },
+  "main_whatsNew2_2_1": {
+    "message": "Corrections de bugs."
+  },
+  "main_whatsNew2_2_0": {
+    "message": "Nouveau : un écran principal plus net avec plus de place pour les cookies, et un Rapport du site à côté du nombre de cookies."
+  },
+  "main_whatsNew2_1_0": {
+    "message": "Nouveau : gardez cookieZ ouvert à côté de la page dans le panneau latéral de Chrome, et Effacer et recharger pour un site où vous ne pouvez pas vous connecter."
+  },
+  "main_whatsNew2_0_0": {
+    "message": "Nouveau : cherchez dans un seul champ, par exemple name:session, et comparez les cookies d’un site avec un export antérieur, depuis Importer."
+  },
+  "main_whatsNew1_9_0": {
+    "message": "Nouveau : bloquez les cookies des traceurs connus depuis Bloquer, protégez un export par un mot de passe et rechargez le site après une modification."
+  },
+  "main_whatsNew1_8_0": {
+    "message": "Nouveau : bloquez les cookies des traceurs connus sur tous les sites, depuis Bloquer. Les cookies au nom bien connu indiquent maintenant d’où ils viennent."
+  },
+  "main_whatsNew1_7_0": {
+    "message": "Nouveau : le bouton Bloquer en haut. Vous pouvez désormais bloquer les cookies des autres entreprises sur tous les sites, et effacer les données stockées d’un site en plus de ses cookies."
+  },
+  "main_welcome": {
+    "message": "Bienvenue. Cliquez sur un cookie pour le modifier. Impossible de vous connecter à un site ? Effacer et recharger règle souvent le problème. L’aide (?) explique le reste."
+  },
+  "main_welcomePin": {
+    "message": "Bienvenue. Cliquez sur un cookie pour le modifier. Impossible de vous connecter à un site ? Effacer et recharger règle souvent le problème. L’aide (?) explique le reste. Pour garder cookieZ à portée de main, épinglez-le depuis le puzzle de la barre d’outils de Chrome."
+  },
+  "main_reviewNotNow": {
+    "message": "Pas maintenant"
+  },
+  "main_reviewNoThanks": {
+    "message": "Non merci"
+  },
+  "main_reviewOpenFailed": {
+    "message": "Impossible d’ouvrir la page d’avis : $1"
+  },
+  "main_copied": {
+    "message": "Copié"
+  },
+  "main_copyFailed": {
+    "message": "Copie impossible"
+  },
+  "rules_nameAllow": {
+    "message": "Autoriser tous les cookies"
+  },
+  "rules_nameSession": {
+    "message": "Effacer à la fermeture de Chrome"
+  },
+  "rules_nameOwnOnly": {
+    "message": "Bloquer les cookies des autres entreprises"
+  },
+  "rules_nameBlock": {
+    "message": "Bloquer tous les cookies"
+  },
+  "rules_lostCouldNotReapply": {
+    "message": "Chrome a cessé d’appliquer vos règles de site, et cookieZ n’a pas pu les rétablir. $1"
+  },
+  "rules_lostReapplied": {
+    "message": "Chrome avait cessé d’appliquer vos règles de site, cookieZ les a donc rétablies."
+  },
+  "rules_linkBlock": {
+    "message": "Bloquer"
+  },
+  "rules_linkBlockTitle": {
+    "message": "Choisir quels cookies ce site peut déposer"
+  },
+  "rules_linkSession": {
+    "message": "Effacés à la fin"
+  },
+  "rules_linkSessionTitle": {
+    "message": "Chrome supprime les cookies de ce site à sa fermeture"
+  },
+  "rules_linkOwnOnly": {
+    "message": "Autres bloqués"
+  },
+  "rules_linkOwnOnlyTitle": {
+    "message": "Les cookies des autres entreprises sont bloqués sur ce site"
+  },
+  "rules_linkBlocked": {
+    "message": "Bloqué"
+  },
+  "rules_linkBlockedTitle": {
+    "message": "Tous les cookies sont bloqués sur ce site"
+  },
+  "rules_linkTrackers": {
+    "message": "Traceurs bloqués"
+  },
+  "rules_linkTrackersTitle": {
+    "message": "Les cookies des traceurs connus sont bloqués sur ce site"
+  },
+  "rules_linkLitAriaLabel": {
+    "message": "$1 : choisir quels cookies ce site peut déposer"
+  },
+  "rules_saving": {
+    "message": "Enregistrement…"
+  },
+  "rules_statsNoneCleared": {
+    "message": "cookieZ n’a encore effacé aucun cookie."
+  },
+  "rules_statsCleared_one": {
+    "message": "cookieZ a effacé $1 cookie jusqu’ici."
+  },
+  "rules_statsCleared_other": {
+    "message": "cookieZ a effacé $1 cookies jusqu’ici."
+  },
+  "rules_statsBlockingSitesAndTrackers_one": {
+    "message": "Cookies bloqués sur $1 site et pour $2 traceurs connus."
+  },
+  "rules_statsBlockingSitesAndTrackers_other": {
+    "message": "Cookies bloqués sur $1 sites et pour $2 traceurs connus."
+  },
+  "rules_statsBlockingSites_one": {
+    "message": "Cookies bloqués sur $1 site."
+  },
+  "rules_statsBlockingSites_other": {
+    "message": "Cookies bloqués sur $1 sites."
+  },
+  "rules_statsBlockingTrackers_one": {
+    "message": "Cookies bloqués pour $1 traceur connu."
+  },
+  "rules_statsBlockingTrackers_other": {
+    "message": "Cookies bloqués pour $1 traceurs connus."
+  },
+  "rules_siteNote": {
+    "message": "Cette règle a été définie pour $1, qui couvre aussi $2."
+  },
+  "rules_removeButton": {
+    "message": "Retirer"
+  },
+  "rules_removeAriaLabel": {
+    "message": "Retirer la règle de $1"
+  },
+  "rules_thirdPartyControlled": {
+    "message": "Une autre extension ou votre administrateur contrôle le blocage des cookies des autres entreprises, cookieZ ne peut donc pas le modifier."
+  },
+  "rules_thirdPartyChromeBlocking": {
+    "message": "Chrome bloque déjà les cookies des autres entreprises sur tous les sites, dans ses propres paramètres."
+  },
+  "rules_permissionRefused": {
+    "message": "Chrome n’a pas donné l’autorisation, rien n’a donc changé. Le reste de cookieZ fonctionne comme avant."
+  },
+  "rules_permissionGivenReopen": {
+    "message": "Autorisation accordée. Fermez cookieZ puis rouvrez-le pour terminer."
+  },
+  "rules_siteBlocked": {
+    "message": "Tous les cookies sont désormais bloqués sur $1."
+  },
+  "rules_siteOwnOnly": {
+    "message": "Les cookies des autres entreprises sont désormais bloqués sur $1."
+  },
+  "rules_siteSession": {
+    "message": "Chrome supprimera les cookies de $1 à chaque fermeture."
+  },
+  "rules_siteAllowed": {
+    "message": "$1 peut déposer n’importe quel cookie."
+  },
+  "rules_siteAllowedTrackersToo": {
+    "message": "$1 peut déposer n’importe quel cookie, y compris ceux des traceurs connus."
+  },
+  "rules_cleanupSiteHas_one": {
+    "message": "Il a encore $1 cookie enregistré."
+  },
+  "rules_cleanupSiteHas_other": {
+    "message": "Il a encore $1 cookies enregistrés."
+  },
+  "rules_keptLeftAlone_one": {
+    "message": "$1 cookie conservé sera laissé intact."
+  },
+  "rules_keptLeftAlone_other": {
+    "message": "$1 cookies conservés seront laissés intacts."
+  },
+  "rules_cleanupTrackersHave_one": {
+    "message": "Ces entreprises ont déjà $1 cookie enregistré."
+  },
+  "rules_cleanupTrackersHave_other": {
+    "message": "Ces entreprises ont déjà $1 cookies enregistrés."
+  },
+  "rules_cleanupDeleted_one": {
+    "message": "$1 cookie supprimé."
+  },
+  "rules_cleanupDeleted_other": {
+    "message": "$1 cookies supprimés."
+  },
+  "rules_cleanupFailed_one": {
+    "message": "$1 cookie n’a pas pu être supprimé et est peut-être protégé par le navigateur."
+  },
+  "rules_cleanupFailed_other": {
+    "message": "$1 cookies n’ont pas pu être supprimés et sont peut-être protégés par le navigateur."
+  },
+  "rules_trackersOn": {
+    "message": "Les cookies des traceurs connus sont désormais bloqués sur tous les sites."
+  },
+  "rules_trackersOff": {
+    "message": "Les cookies des traceurs connus ne sont plus bloqués sur tous les sites."
+  },
+  "rules_everywherePermissionRefused": {
+    "message": "Chrome n’a pas donné l’autorisation, rien n’a donc changé. Vos autres règles fonctionnent comme avant."
+  },
+  "rules_everywherePermissionGivenReopen": {
+    "message": "Autorisation accordée. Fermez cookieZ puis rouvrez-le, et choisissez de nouveau cette option."
+  },
+  "rules_everywhereBlocked": {
+    "message": "Les cookies sont désormais bloqués sur tous les sites qui n’ont pas de règle propre."
+  },
+  "rules_everywhereOwnOnly": {
+    "message": "Les cookies des autres entreprises sont désormais bloqués sur tous les sites qui n’ont pas de règle propre."
+  },
+  "rules_everywhereAllowed": {
+    "message": "Les cookies sont de nouveau autorisés sur tous les sites qui n’ont pas de règle propre."
+  },
+  "rules_siteDataPermissionRefused": {
+    "message": "Chrome n’a pas donné l’autorisation, rien n’a donc été effacé."
+  },
+  "rules_siteDataCountFailed": {
+    "message": "Impossible de compter les cookies de ce site : $1"
+  },
+  "rules_siteDataConfirmCookies_one": {
+    "message": "Supprimer $1 cookie de $2 et effacer tout ce que $2 a stocké d’autre : stockage local, bases de données, stockage du cache et fichiers hors connexion ?"
+  },
+  "rules_siteDataConfirmCookies_other": {
+    "message": "Supprimer $1 cookies de $2 et effacer tout ce que $2 a stocké d’autre : stockage local, bases de données, stockage du cache et fichiers hors connexion ?"
+  },
+  "rules_siteDataConfirmNoCookies": {
+    "message": "Effacer tout ce que $1 a stocké d’autre : stockage local, bases de données, stockage du cache et fichiers hors connexion ?"
+  },
+  "rules_siteDataUndoNote": {
+    "message": "Annuler peut remettre les cookies, mais pas le reste."
+  },
+  "rules_siteDataDeleted_one": {
+    "message": "$1 cookie supprimé et autres données stockées de $2 effacées."
+  },
+  "rules_siteDataDeleted_other": {
+    "message": "$1 cookies supprimés et autres données stockées de $2 effacées."
+  },
+  "rules_siteDataCleared": {
+    "message": "Autres données stockées de $1 effacées."
+  },
+  "rules_siteDataFailed_one": {
+    "message": "$1 cookie n’a pas pu être supprimé."
+  },
+  "rules_siteDataFailed_other": {
+    "message": "$1 cookies n’ont pas pu être supprimés."
+  },
+  "rules_siteDataError": {
+    "message": "Chrome n’a pas pu effacer le reste : $1"
+  },
+  "rules_siteReloaded": {
+    "message": "Site rechargé."
+  },
+  "rules_siteReloadFailed": {
+    "message": "Impossible de recharger le site : $1"
+  },
+  "rules_backupSaving": {
+    "message": "Enregistrement de vos règles sous $1."
+  },
+  "rules_backupReadFailed": {
+    "message": "Impossible de lire ce fichier : $1"
+  },
+  "rules_backupNoteOwnOnly": {
+    "message": "Il bloquait les cookies des autres entreprises sur tous les sites ; choisissez de nouveau cette option après le chargement."
+  },
+  "rules_backupNoteTrackers": {
+    "message": "Il bloque aussi les cookies des traceurs connus."
+  },
+  "rules_backupReplaceSites_one": {
+    "message": "Remplacer vos règles par celles de ce fichier ($1 site) ?"
+  },
+  "rules_backupReplaceSites_other": {
+    "message": "Remplacer vos règles par celles de ce fichier ($1 sites) ?"
+  },
+  "rules_backupReplaceNoSites": {
+    "message": "Remplacer vos règles par celles de ce fichier ? Il ne contient aucun site."
+  },
+  "rules_backupLoaded_one": {
+    "message": "$1 règle de site chargée."
+  },
+  "rules_backupLoaded_other": {
+    "message": "$1 règles de site chargées."
+  },
+  "rules_removed": {
+    "message": "Règle de $1 retirée."
+  },
+  "rules_allOff": {
+    "message": "Toutes les règles sont désactivées. Chrome autorise de nouveau les cookies partout."
+  },
+  "rules_loadFailed": {
+    "message": "Impossible de lire vos règles de site : $1"
+  },
+  "rules_saveFailed": {
+    "message": "Impossible d’enregistrer vos règles de site : $1"
+  },
+  "rules_noRulesPermission": {
+    "message": "Chrome n’a pas donné à cookieZ l’autorisation de définir des règles."
+  },
+  "rules_noEverywherePermission": {
+    "message": "Chrome n’a pas donné à cookieZ l’autorisation de bloquer les cookies des autres entreprises sur tous les sites."
+  },
+  "rules_chromeRefused": {
+    "message": "Chrome n’a pas accepté les règles : $1"
+  },
+  "rules_backupNotJson": {
+    "message": "Ce fichier n’est pas une copie de règles cookieZ : ce n’est pas du JSON."
+  },
+  "rules_backupWrongKind": {
+    "message": "Ce fichier n’est pas une copie de règles cookieZ."
+  },
+  "rules_permissionNeedsClick": {
+    "message": "Chrome n’autorise l’ouverture de la demande d’autorisation qu’à partir d’un clic direct. Cliquez de nouveau sur le bouton."
+  },
+  "rules_permissionPromptFailed": {
+    "message": "Chrome n’a pas pu afficher la demande d’autorisation : $1"
+  },
+  "rules_keptLoadFailed": {
+    "message": "Impossible de lire la liste des cookies conservés, rien n’est donc considéré comme protégé pour le moment : $1"
+  },
+  "rules_keptSaveFailed": {
+    "message": "Impossible d’enregistrer la liste des cookies conservés : $1"
+  },
+  "rules_undoUnavailable": {
+    "message": "Annuler n’est pas disponible pour cette modification : $1"
+  },
+  "rules_undoCookie": {
+    "message": "$1 ($2)"
+  },
+  "rules_undoRestoreFailed": {
+    "message": "$1 : $2"
+  },
+  "rules_undoRemoveFailed": {
+    "message": "$1 : n’a pas pu être retiré."
+  },
+  "rules_ageJustNow": {
+    "message": "à l’instant"
+  },
+  "rules_ageMinutes_one": {
+    "message": "il y a $1 minute"
+  },
+  "rules_ageMinutes_other": {
+    "message": "il y a $1 minutes"
+  },
+  "rules_themeLoadFailed": {
+    "message": "Impossible de lire votre thème enregistré, le thème du système est donc utilisé : $1"
+  },
+  "rules_themeSaveFailed": {
+    "message": "Le thème a changé, mais n’a pas pu être enregistré ; il sera réinitialisé à la réouverture de la fenêtre : $1"
+  },
+  "cookie_expirySession": {
+    "message": "Session"
+  },
+  "cookie_expiryUnknown": {
+    "message": "Inconnue"
+  },
+  "cookie_expirySessionFull": {
+    "message": "Cookie de session - supprimé à la fermeture du navigateur"
+  },
+  "cookie_expiryUnreadable": {
+    "message": "La date d’expiration n’a pas pu être lue"
+  },
+  "cookie_expiresOn": {
+    "message": "Expire le $1"
+  },
+  "cookie_expiryDateAndRelative": {
+    "message": "$1 ($2)"
+  },
+  "cookie_sameSiteUnset": {
+    "message": "Non défini"
+  },
+  "cookie_valueAsDateText": {
+    "message": "$1 (votre heure)"
+  },
+  "cookie_valueAsDate": {
+    "message": "Sous forme de date"
+  },
+  "cookie_valueFromBase64": {
+    "message": "Décodée depuis Base64"
+  },
+  "cookie_valueDecoded": {
+    "message": "Décodée"
+  },
+  "cookie_valueLaidOut": {
+    "message": "Mise en forme"
+  },
+  "cookie_valueNotJson": {
+    "message": "La valeur n’est pas du JSON valide : $1."
+  },
+  "cookie_bytes_one": {
+    "message": "$1 octet"
+  },
+  "cookie_bytes_other": {
+    "message": "$1 octets"
+  },
+  "cookie_kilobytes": {
+    "message": "$1 Ko"
+  },
+  "cookie_knownByOthers_one": {
+    "message": "$2 et $1 autre"
+  },
+  "cookie_knownByOthers_other": {
+    "message": "$2 et $1 autres"
+  },
+  "cookie_kindFunctional": {
+    "message": "fonctionnel"
+  },
+  "cookie_kindAnalytics": {
+    "message": "analytique"
+  },
+  "cookie_kindMarketing": {
+    "message": "marketing"
+  },
+  "cookie_kindSecurity": {
+    "message": "sécurité"
+  },
+  "cookie_kindNecessary": {
+    "message": "nécessaire"
+  },
+  "cookie_kindPersonalisation": {
+    "message": "personnalisation"
+  },
+  "cookie_knownNameKind": {
+    "message": "Nom connu : $1, $2."
+  },
+  "cookie_knownName": {
+    "message": "Nom connu : $1."
+  },
+  "cookie_knownAlsoListed": {
+    "message": "Aussi listé sous $1."
+  },
+  "cookie_listAnd": {
+    "message": "$1 et $2"
+  },
+  "cookie_errorNoName": {
+    "message": "Un cookie a besoin d’un nom."
+  },
+  "cookie_errorNameCharacters": {
+    "message": "Le nom d’un cookie ne peut contenir ni espace, ni point-virgule, ni virgule, ni signe égal."
+  },
+  "cookie_errorValueSemicolon": {
+    "message": "La valeur d’un cookie ne peut pas contenir de point-virgule."
+  },
+  "cookie_errorTooBig": {
+    "message": "Chrome n’enregistre pas un cookie de plus de $1 octets (nom et valeur ensemble). Celui-ci fait $2."
+  },
+  "cookie_errorTooBigImported": {
+    "message": "Chrome n’enregistre pas un cookie de plus de $1 octets (nom et valeur ensemble). Il fait $2."
+  },
+  "cookie_errorSecurePrefixImported": {
+    "message": "Son nom commence par __Secure- mais il n’est pas Secure, et Chrome ne l’accepte pas."
+  },
+  "cookie_errorSecurePrefix": {
+    "message": "Un nom commençant par __Secure- ne fonctionne que sur un cookie Secure. Cochez Secure, ou changez le nom."
+  },
+  "cookie_hostPrefixSecure": {
+    "message": "Secure"
+  },
+  "cookie_hostPrefixHostOnly": {
+    "message": "limité à l’hôte"
+  },
+  "cookie_hostPrefixRootPath": {
+    "message": "sur le chemin /"
+  },
+  "cookie_listOr": {
+    "message": "$1 ou $2"
+  },
+  "cookie_errorHostPrefixImported": {
+    "message": "Son nom commence par __Host-, donc Chrome ne l’accepte que s’il est Secure, limité à l’hôte et sur le chemin /. Il n’est pas $1."
+  },
+  "cookie_errorHostPrefix": {
+    "message": "Un nom commençant par __Host- ne fonctionne que sur un cookie Secure, limité à l’hôte et sur le chemin /. Celui-ci n’est pas $1."
+  },
+  "cookie_errorNoDomain": {
+    "message": "Un cookie a besoin d’un domaine."
+  },
+  "cookie_errorPathSlash": {
+    "message": "Le chemin doit commencer par une barre oblique."
+  },
+  "cookie_errorSameSiteNoneImported": {
+    "message": "Il a SameSite « None » mais n’est pas Secure, et Chrome ne l’accepte pas."
+  },
+  "cookie_errorSameSiteNone": {
+    "message": "SameSite « None » ne fonctionne que sur un cookie Secure. Cochez Secure, ou choisissez un autre SameSite."
+  },
+  "cookie_errorPartitionedImported": {
+    "message": "Il est partitionné mais n’est pas Secure, et Chrome ne l’accepte pas."
+  },
+  "cookie_errorPartitioned": {
+    "message": "Un cookie partitionné ne fonctionne que s’il est Secure. Cochez Secure."
+  },
+  "cookie_errorNoExpiryImported": {
+    "message": "Il n’a pas de date d’expiration et n’est pas marqué comme cookie de session."
+  },
+  "cookie_errorNoExpiry": {
+    "message": "Définissez une date d’expiration, ou cochez « Cookie de session »."
+  },
+  "cookie_errorOriginalNotRemoved": {
+    "message": "Le cookie d’origine n’a pas pu être retiré, la modification a donc été arrêtée pour éviter de laisser deux copies."
+  },
+  "cookie_errorNotAccepted": {
+    "message": "Chrome n’a pas accepté le cookie, sans dire pourquoi."
+  },
+  "cookie_errorParseOrSet": {
+    "message": "$1 Cela signifie généralement que le domaine ne correspond pas au cookie, ou que le nom ou la valeur contient un caractère interdit dans un cookie."
+  },
+  "cookie_editTitleEdit": {
+    "message": "Modifier le cookie"
+  },
+  "cookie_editTitleNew": {
+    "message": "Nouveau cookie"
+  },
+  "cookie_editPartitionEmbedded": {
+    "message": "Déposé par $1 dans un cadre de ce site, et conservé pour ce site uniquement (un cookie partitionné, ou CHIPS). Sa partition reste telle quelle à l’enregistrement."
+  },
+  "cookie_editPartitioned": {
+    "message": "Ceci est un cookie partitionné (CHIPS). Sa partition reste telle quelle à l’enregistrement."
+  },
+  "cookie_editValueSize": {
+    "message": "$1 sur $2 octets (nom et valeur ensemble)."
+  },
+  "cookie_editExpiryShortened": {
+    "message": "Chrome a raccourci l’expiration à $1. Il limite la durée d’expiration d’un cookie."
+  },
+  "cookie_editJsonFixIt": {
+    "message": "$1 Corrigez-la, ou décochez « Modifier comme JSON » pour l’enregistrer telle quelle."
+  },
+  "cookie_editSaved": {
+    "message": "Modifications enregistrées pour $1."
+  },
+  "cookie_editCreated": {
+    "message": "$1 créé."
+  },
+  "cookie_rowNameTitle": {
+    "message": "$1 ($2)"
+  },
+  "cookie_rowEmbeddedNote": {
+    "message": "défini dans un cadre, conservé pour ce site uniquement"
+  },
+  "cookie_rowEmbeddedNoteTitle": {
+    "message": "Déposé par $1 dans un cadre de ce site. Il est partitionné, donc conservé pour ce site uniquement."
+  },
+  "cookie_rowPickLabel": {
+    "message": "Cocher $1"
+  },
+  "cookie_rowCopyName": {
+    "message": "Copier le nom"
+  },
+  "cookie_rowCopyNameTitle": {
+    "message": "Copier le nom, $1"
+  },
+  "cookie_rowKept": {
+    "message": "Conservé"
+  },
+  "cookie_rowKeep": {
+    "message": "Conserver"
+  },
+  "cookie_rowKeptTitle": {
+    "message": "Conservé : exclu de toute suppression. Cliquez pour ne plus le conserver."
+  },
+  "cookie_rowKeepTitle": {
+    "message": "Conserver : exclure ce cookie de toute suppression faite ici"
+  },
+  "cookie_rowEdit": {
+    "message": "Modifier"
+  },
+  "cookie_rowEditTitle": {
+    "message": "Modifier ce cookie"
+  },
+  "cookie_rowDelete": {
+    "message": "Supprimer"
+  },
+  "cookie_rowDeleteKeptTitle": {
+    "message": "Les cookies conservés ne sont pas supprimés. Cliquez sur le marque-page pour l’autoriser."
+  },
+  "cookie_rowDeleteTitle": {
+    "message": "Supprimer ce cookie"
+  },
+  "cookie_rowDontDelete": {
+    "message": "Ne pas supprimer"
+  },
+  "cookie_rowSure": {
+    "message": "Sûr ?"
+  },
+  "cookie_rowValueEmpty": {
+    "message": "(vide)"
+  },
+  "cookie_rowValueCopy": {
+    "message": "Copier"
+  },
+  "cookie_rowValueCopyTitle": {
+    "message": "Copier la valeur entière"
+  },
+  "cookie_rowValueCollapse": {
+    "message": "Cliquez pour réduire"
+  },
+  "cookie_rowValueExpand": {
+    "message": "Cliquez pour afficher la valeur entière"
+  },
+  "cookie_badgeSecureTitle": {
+    "message": "Envoyé uniquement en HTTPS"
+  },
+  "cookie_badgeHttpOnlyTitle": {
+    "message": "Invisible pour le JavaScript de la page"
+  },
+  "cookie_badgeSubdomains": {
+    "message": "Sous-domaines"
+  },
+  "cookie_badgeSubdomainsTitle": {
+    "message": "Aussi envoyé à chaque sous-domaine de $1"
+  },
+  "cookie_badgePartitionedEmbeddedTitle": {
+    "message": "Partitioned (CHIPS) : déposé par $1 et conservé pour ce site uniquement"
+  },
+  "cookie_badgePartitionedTitle": {
+    "message": "Partitioned (CHIPS) : conservé séparément pour chaque site où il est utilisé"
+  },
+  "cookie_badgeKnownTitle": {
+    "message": "Nom connu, utilisé par $1. Simple supposition d’après le nom."
+  },
+  "cookie_badgeKnown": {
+    "message": "Connu"
+  },
+  "cookie_badgeKnownHidden": {
+    "message": "nom, utilisé par $1"
+  },
+  "cookie_badgeLarge": {
+    "message": "Volumineux"
+  },
+  "cookie_badgeLargeTitle": {
+    "message": "$1. Chrome ne conserve pas un cookie de plus de 4 Ko (nom et valeur ensemble)."
+  },
+  "cookie_badgeSameSiteStrictTitle": {
+    "message": "Envoyé uniquement quand vous êtes sur ce site"
+  },
+  "cookie_badgeSameSiteLaxTitle": {
+    "message": "Envoyé sur ce site, et quand vous suivez un lien vers lui"
+  },
+  "cookie_badgeSameSiteNoneTitle": {
+    "message": "Aussi envoyé quand un autre site charge quelque chose depuis celui-ci"
+  },
+  "cookie_reportPurposeMarketing": {
+    "message": "Publicité et marketing"
+  },
+  "cookie_reportPurposeAnalytics": {
+    "message": "Analyse"
+  },
+  "cookie_reportPurposePersonalisation": {
+    "message": "Personnalisation"
+  },
+  "cookie_reportPurposeFunctional": {
+    "message": "Fonctions du site"
+  },
+  "cookie_reportPurposeSecurity": {
+    "message": "Sécurité"
+  },
+  "cookie_reportPurposeNecessary": {
+    "message": "Nécessaires au fonctionnement du site"
+  },
+  "cookie_reportCompaniesOthers_one": {
+    "message": "$2 et $1 autre"
+  },
+  "cookie_reportCompaniesOthers_other": {
+    "message": "$2 et $1 autres"
+  },
+  "cookie_reportNotRecognised": {
+    "message": "Non reconnus"
+  },
+  "cookie_reportCheckNotSecure": {
+    "message": "Aussi envoyés en HTTP non chiffré"
+  },
+  "cookie_reportCheckNotSecureNote": {
+    "message": "Ils n’ont pas l’attribut Secure."
+  },
+  "cookie_reportCheckReadable": {
+    "message": "Lisibles par les scripts de la page"
+  },
+  "cookie_reportCheckReadableNote": {
+    "message": "Ils n’ont pas l’attribut HttpOnly."
+  },
+  "cookie_reportCheckSameSiteNone": {
+    "message": "Envoyés quand un autre site charge celui-ci"
+  },
+  "cookie_reportCheckSameSiteNoneNote": {
+    "message": "Ils ont SameSite None."
+  },
+  "cookie_reportCheckLarge": {
+    "message": "Proches de la limite de 4 Ko de Chrome"
+  },
+  "cookie_reportCheckLargeNote": {
+    "message": "Un site qui en a trop peut empêcher les connexions de fonctionner."
+  },
+  "cookie_reportCheckSoon": {
+    "message": "Expirent dans la journée"
+  },
+  "cookie_reportCheckSoonNote": {
+    "message": "Une connexion stockée dans l’un d’eux ne durera pas."
+  },
+  "cookie_reportShowThem": {
+    "message": "Les afficher"
+  },
+  "cookie_reportShowThemLabel_one": {
+    "message": "Afficher le $1 cookie : $2"
+  },
+  "cookie_reportShowThemLabel_other": {
+    "message": "Afficher les $1 cookies : $2"
+  },
+  "transfer_nothingToImport": {
+    "message": "Il n’y a rien à importer. Collez d’abord des cookies."
+  },
+  "transfer_hasPassword": {
+    "message": "Ce fichier est protégé par un mot de passe. Saisissez-le pour voir son contenu."
+  },
+  "transfer_jsonUnreadable": {
+    "message": "Cela ressemble à du JSON, mais n’a pas pu être lu : $1"
+  },
+  "transfer_jsonNotList": {
+    "message": "Ce JSON n’est pas une liste de cookies."
+  },
+  "transfer_jsonItemNotCookie": {
+    "message": "Cookie $1 : ce n’est pas un cookie."
+  },
+  "transfer_jsonItemNoName": {
+    "message": "Cookie $1 : il n’a pas de nom."
+  },
+  "transfer_jsonItemNoDomain": {
+    "message": "Cookie $1 : $2 n’a pas de domaine."
+  },
+  "transfer_netscapeColumns": {
+    "message": "La ligne $1 n’est pas au format cookies.txt, qui compte 7 colonnes séparées par des tabulations."
+  },
+  "transfer_netscapeExpiry": {
+    "message": "Ligne $1 : l’expiration n’est pas un nombre."
+  },
+  "transfer_noCookiesFound": {
+    "message": "Aucun cookie trouvé. Collez un export JSON ou le contenu d’un fichier cookies.txt."
+  },
+  "transfer_noSetCookieLines": {
+    "message": "Aucune ligne Set-Cookie trouvée."
+  },
+  "transfer_setCookieNoName": {
+    "message": "Ligne $1 : elle ne commence pas par le nom et la valeur d’un cookie."
+  },
+  "transfer_setCookiePartitioned": {
+    "message": "Ligne $1 : $2 est partitionné, et une ligne Set-Cookie n’indique pas dans quel site il était intégré. Importez-le plutôt depuis un export JSON."
+  },
+  "transfer_setCookieNoDomain": {
+    "message": "Ligne $1 : $2 n’a pas de Domain, et il n’y a pas de page où le mettre."
+  },
+  "transfer_notAPair": {
+    "message": "« $1 » n’est pas une paire name=value, il est donc ignoré."
+  },
+  "transfer_headerNoSite": {
+    "message": "Un en-tête Cookie n’indique pas pour quel site il est fait, et il n’y a pas de page où le mettre."
+  },
+  "transfer_headerEmpty": {
+    "message": "Aucun cookie trouvé dans l’en-tête Cookie."
+  },
+  "transfer_curlWindows": {
+    "message": "Ceci est la version Windows (cmd) de « Copier au format cURL ». Copiez plutôt la version bash, et collez-la."
+  },
+  "transfer_curlUnclosedQuote": {
+    "message": "Cette commande curl n’a pas pu être lue, car un guillemet n’est pas fermé."
+  },
+  "transfer_curlCookieFile": {
+    "message": "Cette commande curl lit ses cookies dans un fichier ($1), que cookieZ ne peut pas ouvrir. Collez plutôt les cookies eux-mêmes."
+  },
+  "transfer_curlNoAddress": {
+    "message": "Cette commande curl n’a pas d’adresse web, impossible donc de savoir pour quel site sont ses cookies."
+  },
+  "transfer_curlNoCookies": {
+    "message": "Cette commande curl n’envoie aucun cookie."
+  },
+  "transfer_cantMovePartitioned": {
+    "message": "$1 ($2) est partitionné, il ne peut donc pas être déplacé vers un autre site."
+  },
+  "transfer_differenceValue": {
+    "message": "valeur"
+  },
+  "transfer_differenceExpiry": {
+    "message": "expiration"
+  },
+  "transfer_lockedDamaged": {
+    "message": "Ce fichier protégé par un mot de passe est endommagé, il ne peut donc pas être ouvert. Si vous avez toujours les cookies, exportez-les de nouveau."
+  },
+  "transfer_lockedNewerVersion": {
+    "message": "Ce fichier a été créé par une version plus récente de cookieZ. Mettez cookieZ à jour pour l’ouvrir."
+  },
+  "transfer_unlockFailed": {
+    "message": "Le fichier n’a pas pu être ouvert : $1"
+  },
+  "transfer_wrongPassword": {
+    "message": "Ce mot de passe n’ouvre pas ce fichier. Vérifiez-le et réessayez. Si vous êtes sûr qu’il est correct, le fichier a été modifié ou endommagé depuis son enregistrement."
+  },
+  "transfer_typePassword": {
+    "message": "Saisissez le mot de passe du fichier, puis appuyez sur Vérifier."
+  },
+  "transfer_opening": {
+    "message": "Ouverture du fichier…"
+  },
+  "transfer_cantReadCurrent": {
+    "message": "Impossible de lire vos cookies actuels pour les comparer : $1"
+  },
+  "transfer_nothingCanBeImported": {
+    "message": "Rien ne peut être importé."
+  },
+  "transfer_willAddForSite_one": {
+    "message": "$1 cookie sera ajouté pour $2."
+  },
+  "transfer_willAddForSite_other": {
+    "message": "$1 cookies seront ajoutés pour $2."
+  },
+  "transfer_willAddAcrossSites_one": {
+    "message": "$1 cookie sera ajouté sur $2."
+  },
+  "transfer_willAddAcrossSites_other": {
+    "message": "$1 cookies seront ajoutés sur $2."
+  },
+  "transfer_siteCount_one": {
+    "message": "$1 site"
+  },
+  "transfer_siteCount_other": {
+    "message": "$1 sites"
+  },
+  "transfer_replaces_one": {
+    "message": "$1 d’entre eux remplace un cookie que vous avez déjà."
+  },
+  "transfer_replaces_other": {
+    "message": "$1 d’entre eux remplacent des cookies que vous avez déjà."
+  },
+  "transfer_onlyValueChanges_one": {
+    "message": "Seule sa valeur change."
+  },
+  "transfer_onlyValueChanges_other": {
+    "message": "Seules leurs valeurs changent."
+  },
+  "transfer_newSessionCookies_one": {
+    "message": "$1 nouveau cookie sera un cookie de session, donc Chrome le supprime à sa fermeture."
+  },
+  "transfer_newSessionCookies_other": {
+    "message": "$1 nouveaux cookies seront des cookies de session, donc Chrome les supprime à sa fermeture."
+  },
+  "transfer_keptInImport_one": {
+    "message": "$1 d’entre eux est un cookie conservé."
+  },
+  "transfer_keptInImport_other": {
+    "message": "$1 d’entre eux sont des cookies conservés."
+  },
+  "transfer_alreadyExpired_one": {
+    "message": "$1 cookie a déjà expiré et sera ignoré."
+  },
+  "transfer_alreadyExpired_other": {
+    "message": "$1 cookies ont déjà expiré et seront ignorés."
+  },
+  "transfer_duplicates_one": {
+    "message": "$1 doublon dans le fichier sera ignoré."
+  },
+  "transfer_duplicates_other": {
+    "message": "$1 doublons dans le fichier seront ignorés."
+  },
+  "transfer_showSites_one": {
+    "message": "Voir $1 site"
+  },
+  "transfer_showSites_other": {
+    "message": "Voir les $1 sites"
+  },
+  "transfer_willBeSkipped": {
+    "message": "Sera ignoré : $1"
+  },
+  "transfer_importButton_one": {
+    "message": "Importer $1 cookie"
+  },
+  "transfer_importButton_other": {
+    "message": "Importer $1 cookies"
+  },
+  "transfer_compareSame_one": {
+    "message": "Aucune différence. Le cookie de votre fichier est identique à présent."
+  },
+  "transfer_compareSame_other": {
+    "message": "Aucune différence. Les $1 cookies de votre fichier sont identiques à présent."
+  },
+  "transfer_compareNew": {
+    "message": "$1 nouveaux depuis, $4 identiques."
+  },
+  "transfer_compareNewGone": {
+    "message": "$1 nouveaux depuis, $2 disparus, $4 identiques."
+  },
+  "transfer_compareNewGoneChanged": {
+    "message": "$1 nouveaux depuis, $2 disparus, $3 modifiés, $4 identiques."
+  },
+  "transfer_compareNewChanged": {
+    "message": "$1 nouveaux depuis, $3 modifiés, $4 identiques."
+  },
+  "transfer_compareGone": {
+    "message": "$2 disparus, $4 identiques."
+  },
+  "transfer_compareGoneChanged": {
+    "message": "$2 disparus, $3 modifiés, $4 identiques."
+  },
+  "transfer_compareChanged": {
+    "message": "$3 modifiés, $4 identiques."
+  },
+  "transfer_rowNewSince": {
+    "message": "Nouveau"
+  },
+  "transfer_rowGone": {
+    "message": "Disparu"
+  },
+  "transfer_rowChanged": {
+    "message": "Modifié : $1"
+  },
+  "transfer_importing": {
+    "message": "Importation…"
+  },
+  "transfer_imported_one": {
+    "message": "$1 cookie importé."
+  },
+  "transfer_imported_other": {
+    "message": "$1 cookies importés."
+  },
+  "transfer_importedReplaced_one": {
+    "message": "$1 cookie importé ($2 remplacé)."
+  },
+  "transfer_importedReplaced_other": {
+    "message": "$1 cookies importés ($2 remplacés)."
+  },
+  "transfer_expiryShortened_one": {
+    "message": "Chrome a raccourci l’expiration de $1 cookie, car il limite la durée d’expiration d’un cookie."
+  },
+  "transfer_expiryShortened_other": {
+    "message": "Chrome a raccourci l’expiration de $1 cookies, car il limite la durée d’expiration d’un cookie."
+  },
+  "transfer_chromeRefused_one": {
+    "message": "Chrome a refusé $1 cookie :"
+  },
+  "transfer_chromeRefused_other": {
+    "message": "Chrome a refusé $1 cookies :"
+  },
+  "transfer_cantReadFile": {
+    "message": "Impossible de lire $1 : $2"
+  },
+  "transfer_passwordNote": {
+    "message": "Verrouille le fichier : il ne pourra être importé qu’avec ce mot de passe. Le mot de passe n’est enregistré nulle part, ne le perdez donc pas."
+  },
+  "transfer_seleniumNoPassword": {
+    "message": "Le code Selenium ne peut pas avoir de mot de passe : il doit rester lisible pour s’exécuter. Choisissez un autre format pour verrouiller le fichier."
+  },
+  "transfer_encrypting": {
+    "message": "Chiffrement…"
+  },
+  "transfer_lockedNote": {
+    "message": "Verrouillé par votre mot de passe. Il vous le faudra pour l’importer, et il n’est enregistré nulle part."
+  },
+  "transfer_cantLock": {
+    "message": "Impossible de verrouiller l’export : $1"
+  },
+  "transfer_exportFromSite_one": {
+    "message": "$1 cookie de $2."
+  },
+  "transfer_exportFromSite_other": {
+    "message": "$1 cookies de $2."
+  },
+  "transfer_exportAcrossSites_one": {
+    "message": "$1 cookie sur $2."
+  },
+  "transfer_exportAcrossSites_other": {
+    "message": "$1 cookies sur $2."
+  },
+  "transfer_keptCookieCount_one": {
+    "message": "$1 cookie conservé"
+  },
+  "transfer_keptCookieCount_other": {
+    "message": "$1 cookies conservés"
+  },
+  "transfer_exportFromSiteKept_one": {
+    "message": "$1 cookie de $2, dont $3."
+  },
+  "transfer_exportFromSiteKept_other": {
+    "message": "$1 cookies de $2, dont $3."
+  },
+  "transfer_exportAcrossSitesKept_one": {
+    "message": "$1 cookie sur $2, dont $3."
+  },
+  "transfer_exportAcrossSitesKept_other": {
+    "message": "$1 cookies sur $2, dont $3."
+  },
+  "transfer_headerNote": {
+    "message": "Noms et valeurs seulement, tels qu’un navigateur les envoie à cette page."
+  },
+  "transfer_curlNote": {
+    "message": "Envoie ces cookies à cette page, pour bash ou zsh."
+  },
+  "transfer_onePageOnly": {
+    "message": "Uniquement pour les cookies d’une page. Choisissez « Cette page » pour l’utiliser."
+  },
+  "transfer_savingAs": {
+    "message": "Enregistrement sous $1."
   }
 }

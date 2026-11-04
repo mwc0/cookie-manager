@@ -1515,6 +1515,10 @@
     "message": "$1 changes",
     "description": "Short: a link next to the cookie count that opens the What changed list. $1 is a number such as 3."
   },
+  "main_whatsNew2_3_0": {
+    "message": "New: cookieZ is now in German, Spanish, French, Japanese and Brazilian Portuguese, following Chrome's own language, and it has a new icon.",
+    "description": "The What's new line for version 2.3.0, shown once after updating. In a translation, say simply that cookieZ is now in this language (following Chrome's language) and has a new icon; there's no need to list the other languages."
+  },
   "main_whatsNew2_2_1": {
     "message": "Bug fixes.",
     "description": "The What's new line, shown once at the top of the main screen the first time cookieZ opens after updating to version 2.2.1. Button and screen names in it (Block, Import, Site report, Clear and reload) should match those buttons' labels. name:session is search syntax and stays as it is."
