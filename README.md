@@ -74,6 +74,9 @@ A cookie editor and blocker for Chrome. It asks for only `cookies`,
   what's worth checking. It's a guess from each name, and says so.
 - Stays open beside the page in Chrome's side panel, and follows the tab
   you're on, for when the popup closing every time gets in the way.
+- Speaks English, German, Spanish, French, Japanese and Brazilian
+  Portuguese, following Chrome's own language. The descriptions of known
+  cookie names stay in English.
 - Exports and imports cookies in several formats, including Python code
   for your own test scripts. An export can be locked with a password, using
   the browser's own encryption (AES-GCM, with the key made from the
