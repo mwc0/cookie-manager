@@ -123,6 +123,7 @@ TEMPLATE = """<!DOCTYPE html>
         <li><a href="./">Extension privacy</a></li>
         <li><a href="../website-privacy/">Website privacy</a></li>
         <li><a href="../support/">Support</a></li>
+        <li><a href="../support/#guides">Guides</a></li>
         <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
       </ul>
     </div>

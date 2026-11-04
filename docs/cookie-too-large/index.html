@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <!-- Applies the theme the visitor picked, before the page is drawn, so it
+       doesn't flash. It's inline and not deferred for that reason. See theme.js. -->
+  <script>
+    try {
+      const saved = localStorage.getItem("color-scheme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.classList.add(saved);
+        document.querySelector('meta[name="color-scheme"]').content = saved;
+      }
+    } catch (e) {}
+  </script>
+  <title>Fix “Request Header Or Cookie Too Large” - cookieZ</title>
+  <meta name="description" content="What “400 Bad Request: Request Header Or Cookie Too Large” and “431 Request Header Fields Too Large” mean, how to fix them in Chrome in a minute, and how to stop them if you run the site.">
+  <link rel="canonical" href="https://cookiez.uk/cookie-too-large/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="cookieZ">
+  <meta property="og:title" content="Fix “Request Header Or Cookie Too Large” - cookieZ">
+  <meta property="og:description" content="What “400 Bad Request: Request Header Or Cookie Too Large” and “431 Request Header Fields Too Large” mean, how to fix them in Chrome in a minute, and how to stop them if you run the site.">
+  <meta property="og:url" content="https://cookiez.uk/cookie-too-large/">
+  <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
+  <!-- The heading uses this font, so fetch it straight away. -->
+  <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../style.css?v=2.2.0">
+  <script src="../theme.js?v=2.2.0" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../#features">Features</a></li>
+          <li><a href="../privacy/">Privacy</a></li>
+          <li><a href="../support/">Support</a></li>
+        </ul>
+      </nav>
+      <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
+      <div class="header-end">
+        <a class="pill" href="https://github.com/mwc0/cookie-manager">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 8-4 4 4 4m6-8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Source code
+        </a>
+        <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="1.5" x2="12" y2="3.6"/>
+              <line x1="12" y1="20.4" x2="12" y2="22.5"/>
+              <line x1="1.5" y1="12" x2="3.6" y2="12"/>
+              <line x1="20.4" y1="12" x2="22.5" y2="12"/>
+              <line x1="4.6" y1="4.6" x2="6.1" y2="6.1"/>
+              <line x1="17.9" y1="17.9" x2="19.4" y2="19.4"/>
+              <line x1="4.6" y1="19.4" x2="6.1" y2="17.9"/>
+              <line x1="17.9" y1="6.1" x2="19.4" y2="4.6"/>
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <div class="wrap prose">
+      <h1>Fix “Request Header Or Cookie Too Large”</h1>
+      <p class="updated">The error means a site has saved too many cookies on you. Deleting them fixes it.</p>
+
+      <p>You may see one of these instead of the page:</p>
+      <ul>
+        <li><strong>400 Bad Request: Request Header Or Cookie Too Large</strong></li>
+        <li><strong>431 Request Header Fields Too Large</strong></li>
+        <li><strong>Bad Request: Your browser sent a request that this server could not understand. Size of a request header field exceeds server limit.</strong></li>
+      </ul>
+      <p>Every time Chrome asks a site for a page, it sends that site's cookies along with the request. Many servers refuse a request whose headers are bigger than about 8 KB. A site that has piled up cookies over time, often from analytics or ads, can push you past that limit, and then every page fails, including the login page.</p>
+
+      <h2>Fix it</h2>
+      <ol>
+        <li>Stay on the error page.</li>
+        <li>Click the cookieZ icon. Next to the cookie count it shows roughly how big the site's cookies are, and it warns you above 6 KB.</li>
+        <li>Under the delete options, choose <strong>This page</strong>. That's every cookie Chrome sends to this address, including ones set for the whole domain.</li>
+        <li>Click <strong>Delete</strong>, then <strong>Yes, delete</strong>, then reload.</li>
+      </ol>
+      <p>You'll be signed out of that site, but not any other. If you'd rather keep your login, sort the table by size, delete the biggest cookies first and mark your login cookie as Kept. If other parts of the site still fail, repeat with <strong>This domain and its subdomains</strong>.</p>
+      <p>Without an extension, you can clear the site in Chrome's own settings instead. See <a href="../clear-cookies-for-one-site/">Clear cookies for one site in Chrome</a>.</p>
+
+      <h2>If it keeps coming back</h2>
+      <p>The site, or something on it, keeps adding cookies. cookieZ's <strong>Block</strong> button can block other companies' cookies on that site, which keeps its own cookies so signing in still works. See <a href="../block-cookies-on-one-site/">Block cookies on one site</a>.</p>
+
+      <h2>If you run the site</h2>
+      <p>Every cookie set for your domain is sent with every request to it, including requests for images and scripts. Some ways to stay under the limit:</p>
+      <ul>
+        <li>Set cookies on the narrowest domain and path that needs them, rather than the whole domain.</li>
+        <li>Keep session data on the server and put only an ID in the cookie.</li>
+        <li>Check what third-party scripts set on your domain. Analytics and testing tools often add several cookies each.</li>
+        <li>Raise the server's limit if you have to: <code>large_client_header_buffers</code> in nginx, <code>LimitRequestFieldSize</code> in Apache, or <code>--max-http-header-size</code> in Node.js.</li>
+      </ul>
+      <p>To see where the bytes go, open cookieZ on your site and sort by size. The <strong>Large</strong> badge marks cookies close to Chrome's 4 KB limit for a single cookie.</p>
+
+      <div class="actions"><a class="button" href="https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb">Add cookieZ to Chrome</a></div>
+      <p>cookieZ is free, has no ads and makes no network requests. <a href="https://github.com/mwc0/cookie-manager">Its code is public.</a></p>
+
+      <p class="aside">Guides: <a href="../clear-cookies-for-one-site/">Clear cookies for one site</a> · <a href="../block-cookies-on-one-site/">Block cookies on one site</a> · <a href="../export-cookies/">Export cookies from Chrome</a> · <a href="../yt-dlp-cookies/">cookies.txt for yt-dlp</a></p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; 2026 cookieZ</span>
+      <ul>
+        <li><a href="../privacy/">Extension privacy</a></li>
+        <li><a href="../website-privacy/">Website privacy</a></li>
+        <li><a href="../support/">Support</a></li>
+        <li><a href="../support/#guides">Guides</a></li>
+        <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>
