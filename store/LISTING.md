@@ -13,22 +13,16 @@ and the one wording decision worth making deliberately before submitting.
 
 *Limit: 75 characters. Roughly the first 45 show in search results.*
 
-Not typed into the dashboard: the store takes it from `appName` in
-`src/_locales/en_GB/messages.json`. It leads with the words people search
-for ("cookie editor", "cookie blocker") and ends with the brand.
-
 ```
-Cookie Editor & Blocker - cookieZ
+cookieZ - Cookie Editor
 ```
 
 ## Summary
 
 *Limit: 132 characters. Shown under the name in search results.*
 
-Also from the manifest, `appDesc` in `src/_locales/en_GB/messages.json`.
-
 ```
-View, edit, delete and block cookies. There are no ads, and nothing you do leaves your computer.
+View, create, edit and delete cookies. No ads, no tracking, no network requests.
 ```
 
 ## Category
@@ -49,19 +43,15 @@ Written in the same plain style as the better-rated listings in this category
 intro, a plain feature list, a warning, and where to get help.*
 
 ```
-View, edit, delete and block the cookies on any website. Clear cookies for one site without signing out of everything else. When you delete everything, it actually deletes everything.
+View, edit and delete the cookies on any website. When you delete everything, it actually deletes everything.
 
-cookieZ is a cookie editor and cookie blocker for Chrome. It's useful if a site won't let you log in and you've been told to clear its cookies, if you see "Request Header Or Cookie Too Large", if you want to stop one site or other companies' trackers setting cookies, or if you build or test websites and need to edit, export or import cookies.
+cookieZ is a cookie editor for Chrome. It's useful if you build or test websites, or if a site won't let you log in and you've been told to clear its cookies.
 
 Before you delete anything, cookieZ shows you how many cookies will go and which sites they come from. Some cookie editors say they've cleared everything but only clear the site you're on. This one deletes what it says it will, including partitioned cookies, which are often missed.
 
 Features:
 - See every cookie for the current site: name, value, domain, path, expiry and flags
 - Delete cookies for this page, this site and its subdomains, every site, or just the ones you tick
-- Clear and reload: when clearing cookies isn't enough to log in, also clear the site's local storage, databases and cache, then reload it
-- Block cookies per site: allow all, clear when Chrome closes, block other companies' (third-party) cookies, or block every cookie. Or block third-party cookies on every site, or known trackers' cookies. Chrome does the blocking, so it works while cookieZ is closed
-- Site report: see what a site stored on you, grouped by purpose and the company that usually sets each cookie
-- "Known" label and explanation for well-known cookies such as _ga, from the Open Cookie Database, looked up on your computer
 - Undo a delete, an import or an edit for 10 minutes afterwards
 - Click a cookie to edit any field, or create a new one. URL-encoded and JSON values are shown decoded
 - Set an expiry in one click (1 hour, 1 day, 1 week, 1 year), and duplicate a cookie
@@ -69,34 +59,32 @@ Features:
 - Delete a single cookie
 - Search by name, value, domain or path, then delete only the results
 - Filter in one click: Secure, HttpOnly, Session, Kept, Expiring soon, Large or Partitioned
-- Export cookies as JSON, cookies.txt (Netscape), a Playwright storageState file, Selenium code, a Cookie header or a curl command, then copy or download. Lock an export with a password if you like
+- Export cookies as JSON, cookies.txt (Netscape), a Playwright storageState file, a Cookie header or a curl command, then copy or download
 - Import JSON (from cookieZ or another cookie editor), cookies.txt, Set-Cookie lines, a Cookie header or a curl command (from Copy as cURL in DevTools), with a preview before anything is added
 - Copy cookies from one site to another, such as from a staging site to localhost
 - Copy a cookie's value in one click
 - Sort by name, size, domain or expiry, and see at a glance which cookies expire soon
 - The table updates by itself when a site sets or changes a cookie, and marks what changed
 - See a list of what the site added, changed, removed or let expire while cookieZ was open
-- See how big each site's cookies are, with a warning when they get big enough to stop logins ("Request Header Or Cookie Too Large")
+- See how big each site's cookies are, with a warning when they get big enough to stop logins
 - Open it with Alt+Shift+K, press / to search, move through cookies with the arrow keys, and press Esc to go back
 - Built-in help that works offline
-- Open cookieZ in a full tab for long lists and long values, or keep it open beside the page in Chrome's side panel
+- Open cookieZ in a full tab for long lists and long values
 - Mark cookies as "Kept" so cookieZ never deletes them, and see every kept cookie in one list
 - Works in incognito, kept separate from your normal cookies
 - Tells you when Chrome changes what you set (for example, Chrome caps expiry at about 400 days)
 - Light and dark mode
-- In English, German, Spanish, French, Japanese and Brazilian Portuguese, following Chrome's own language
 
 Privacy:
 cookieZ makes no network requests. No ads, no analytics, no tracking, and nothing you do leaves your computer. You can check this yourself in the Network tab of Chrome's DevTools.
 
-When you install it, it asks for three permissions: cookies, storage to remember your settings, and the side panel so it can stay open beside the page. Chrome shows no warning for the side panel. It asks for access to websites the first time you open it, and you can say no. Blocking and Clear and reload each ask for one more permission, only the first time you use them.
+When you install it, it asks for three permissions: cookies, storage to remember your settings, and the side panel so it can stay open beside the page. Chrome shows no warning for the side panel. It asks for access to websites the first time you open it, and you can say no.
 
 The code is open source, so you can read all of it:
 https://github.com/mwc0/cookie-manager
 
 Be careful: cookies can hold your logins. Don't paste a cookie's value or an export anywhere you don't trust, or someone could sign in as you.
 
-Guides: https://cookiez.uk/support/#guides
 Help and bug reports: https://cookiez.uk/support/ or support@cookiez.uk
 Privacy policy: https://cookiez.uk/privacy/
 ```
