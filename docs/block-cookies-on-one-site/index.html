@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <!-- Applies the theme the visitor picked, before the page is drawn, so it
+       doesn't flash. It's inline and not deferred for that reason. See theme.js. -->
+  <script>
+    try {
+      const saved = localStorage.getItem("color-scheme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.classList.add(saved);
+        document.querySelector('meta[name="color-scheme"]').content = saved;
+      }
+    } catch (e) {}
+  </script>
+  <title>Block cookies on one site in Chrome - cookieZ</title>
+  <meta name="description" content="How to stop one website setting cookies in Chrome, block only other companies&#x27; cookies on it, or have its cookies cleared every time Chrome closes.">
+  <link rel="canonical" href="https://cookiez.uk/block-cookies-on-one-site/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="cookieZ">
+  <meta property="og:title" content="Block cookies on one site in Chrome - cookieZ">
+  <meta property="og:description" content="How to stop one website setting cookies in Chrome, block only other companies&#x27; cookies on it, or have its cookies cleared every time Chrome closes.">
+  <meta property="og:url" content="https://cookiez.uk/block-cookies-on-one-site/">
+  <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
+  <!-- The heading uses this font, so fetch it straight away. -->
+  <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../style.css?v=2.2.0">
+  <script src="../theme.js?v=2.2.0" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../#features">Features</a></li>
+          <li><a href="../privacy/">Privacy</a></li>
+          <li><a href="../support/">Support</a></li>
+        </ul>
+      </nav>
+      <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
+      <div class="header-end">
+        <a class="pill" href="https://github.com/mwc0/cookie-manager">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 8-4 4 4 4m6-8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Source code
+        </a>
+        <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="1.5" x2="12" y2="3.6"/>
+              <line x1="12" y1="20.4" x2="12" y2="22.5"/>
+              <line x1="1.5" y1="12" x2="3.6" y2="12"/>
+              <line x1="20.4" y1="12" x2="22.5" y2="12"/>
+              <line x1="4.6" y1="4.6" x2="6.1" y2="6.1"/>
+              <line x1="17.9" y1="17.9" x2="19.4" y2="19.4"/>
+              <line x1="4.6" y1="19.4" x2="6.1" y2="17.9"/>
+              <line x1="17.9" y1="6.1" x2="19.4" y2="4.6"/>
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <div class="wrap prose">
+      <h1>Block cookies on one site in Chrome</h1>
+      <p class="updated">Choose what one site may store, and leave every other site alone.</p>
+
+      <p>Blocking every cookie on every site breaks most logins. Usually you want something narrower: one site that can't save anything, or a site that keeps your login but not the tracking cookies other companies put on its pages.</p>
+
+      <h2>With cookieZ</h2>
+      <ol>
+        <li>Open the site in Chrome and click the cookieZ icon.</li>
+        <li>Click <strong>Block</strong> at the top. The first time, Chrome asks to let cookieZ change your cookie settings.</li>
+        <li>Under <strong>On</strong> and the site's name, choose one:
+          <ul>
+            <li><strong>Allow all cookies</strong>: what Chrome normally does.</li>
+            <li><strong>Clear when Chrome closes</strong>: the site works as normal, but Chrome deletes its cookies every time it closes.</li>
+            <li><strong>Block other companies' cookies</strong>: the site keeps its own cookies, so signing in still works. Embedded videos, maps and "sign in with" buttons from other companies may stop working.</li>
+            <li><strong>Block all cookies</strong>: the site can't set or read any cookie. You'll be signed out, and it may not work at all.</li>
+          </ul>
+        </li>
+        <li>Blocking doesn't remove cookies the site already has, so cookieZ offers to delete them. Click <strong>Delete them</strong> or <strong>Leave them</strong>.</li>
+      </ol>
+      <p>Chrome does the blocking, not cookieZ, so the rule keeps working while cookieZ is closed and applies in incognito windows too. Uninstalling cookieZ removes its rules.</p>
+
+      <h2>Every site at once</h2>
+      <p>The same screen has a section for every other site: block other companies' cookies everywhere, or block every cookie except on the sites you allow. There's also a switch to block about 130 known trackers' cookies on every site, from a list inside cookieZ that's never downloaded.</p>
+
+      <h2>A site stopped working</h2>
+      <p>Click <strong>Block</strong> on that site, choose <strong>Allow all cookies</strong> or remove its rule from the list, then reload the page.</p>
+
+      <h2>Chrome's own way</h2>
+      <p>Type <code>chrome://settings/content/siteData</code> into the address bar and add the site under the list of sites not allowed to save data. That blocks everything the site stores, not just cookies.</p>
+
+      <div class="actions"><a class="button" href="https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb">Add cookieZ to Chrome</a></div>
+      <p>cookieZ is free, has no ads and makes no network requests. <a href="https://github.com/mwc0/cookie-manager">Its code is public.</a></p>
+
+      <p class="aside">Guides: <a href="../clear-cookies-for-one-site/">Clear cookies for one site</a> · <a href="../cookie-too-large/">Fix “Cookie Too Large”</a> · <a href="../export-cookies/">Export cookies from Chrome</a> · <a href="../yt-dlp-cookies/">cookies.txt for yt-dlp</a></p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; 2026 cookieZ</span>
+      <ul>
+        <li><a href="../privacy/">Extension privacy</a></li>
+        <li><a href="../website-privacy/">Website privacy</a></li>
+        <li><a href="../support/">Support</a></li>
+        <li><a href="../support/#guides">Guides</a></li>
+        <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

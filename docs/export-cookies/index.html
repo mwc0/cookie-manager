@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <!-- Applies the theme the visitor picked, before the page is drawn, so it
+       doesn't flash. It's inline and not deferred for that reason. See theme.js. -->
+  <script>
+    try {
+      const saved = localStorage.getItem("color-scheme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.classList.add(saved);
+        document.querySelector('meta[name="color-scheme"]').content = saved;
+      }
+    } catch (e) {}
+  </script>
+  <title>Export cookies from Chrome - cookieZ</title>
+  <meta name="description" content="How to export Chrome cookies as JSON, cookies.txt, a Playwright storageState file, a Cookie header or a curl command, for curl, wget, yt-dlp, tests and other browsers.">
+  <link rel="canonical" href="https://cookiez.uk/export-cookies/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="cookieZ">
+  <meta property="og:title" content="Export cookies from Chrome - cookieZ">
+  <meta property="og:description" content="How to export Chrome cookies as JSON, cookies.txt, a Playwright storageState file, a Cookie header or a curl command, for curl, wget, yt-dlp, tests and other browsers.">
+  <meta property="og:url" content="https://cookiez.uk/export-cookies/">
+  <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
+  <!-- The heading uses this font, so fetch it straight away. -->
+  <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../style.css?v=2.2.0">
+  <script src="../theme.js?v=2.2.0" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../#features">Features</a></li>
+          <li><a href="../privacy/">Privacy</a></li>
+          <li><a href="../support/">Support</a></li>
+        </ul>
+      </nav>
+      <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
+      <div class="header-end">
+        <a class="pill" href="https://github.com/mwc0/cookie-manager">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 8-4 4 4 4m6-8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Source code
+        </a>
+        <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="1.5" x2="12" y2="3.6"/>
+              <line x1="12" y1="20.4" x2="12" y2="22.5"/>
+              <line x1="1.5" y1="12" x2="3.6" y2="12"/>
+              <line x1="20.4" y1="12" x2="22.5" y2="12"/>
+              <line x1="4.6" y1="4.6" x2="6.1" y2="6.1"/>
+              <line x1="17.9" y1="17.9" x2="19.4" y2="19.4"/>
+              <line x1="4.6" y1="19.4" x2="6.1" y2="17.9"/>
+              <line x1="17.9" y1="6.1" x2="19.4" y2="4.6"/>
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <div class="wrap prose">
+      <h1>Export cookies from Chrome</h1>
+      <p class="updated">Take your cookies to curl, wget, a test script or another browser, without them going anywhere else.</p>
+
+      <p>Chrome has no export button for cookies. A cookie editor can make one, but an export holds your logins, so pick one you can check. cookieZ makes no network requests and <a href="https://github.com/mwc0/cookie-manager">its code is public</a>.</p>
+
+      <h2>Make the export</h2>
+      <ol>
+        <li>Open the site in Chrome and click the cookieZ icon.</li>
+        <li>Under the delete options, choose which cookies: <strong>This page</strong>, <strong>This domain and its subdomains</strong> or <strong>All sites</strong>. Nothing is deleted: export uses the same choice. To export only some, search or tick them first.</li>
+        <li>Click <strong>Export</strong> and choose a format.</li>
+        <li>Add a password if you like, then click <strong>Copy</strong> or <strong>Download</strong>.</li>
+      </ol>
+
+      <h2>Which format?</h2>
+      <ul>
+        <li><strong>JSON</strong>: keeps every detail. Imports back into cookieZ and other cookie editors.</li>
+        <li><strong>cookies.txt</strong>: the Netscape format, for curl (<code>curl -b cookies.txt</code>), wget (<code>wget --load-cookies cookies.txt</code>), yt-dlp and similar tools. It can't hold SameSite or partitions. For yt-dlp, see <a href="../yt-dlp-cookies/">Export cookies.txt for yt-dlp</a>.</li>
+        <li><strong>Playwright</strong>: a storageState file, for starting a test already logged in.</li>
+        <li><strong>Selenium</strong>: Python <code>add_cookie()</code> calls for a test script.</li>
+        <li><strong>Cookie header</strong>: names and values for one site, to paste into a request.</li>
+        <li><strong>curl command</strong>: a ready-to-run command that sends these cookies to the page.</li>
+      </ul>
+
+      <h2>Import them again</h2>
+      <p>Click <strong>Import</strong> and paste, or open cookieZ in a tab to choose a file. It reads its own JSON, other cookie editors' JSON, cookies.txt, Set-Cookie lines, a Cookie header and a curl command from "Copy as cURL" in DevTools. You see what will be added before anything changes. To copy cookies from a staging site to localhost, open cookieZ on localhost and tick <strong>Put them on localhost instead</strong>.</p>
+
+      <h2>Keep it safe</h2>
+      <p>Anyone with an export can sign in as you until those logins expire. Don't paste one into a website, a chat or a bug report. With a password, the file is locked on your computer using the browser's own encryption, and only cookieZ can open it again. The password isn't saved, so don't lose it.</p>
+
+      <div class="actions"><a class="button" href="https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb">Add cookieZ to Chrome</a></div>
+      <p>cookieZ is free, has no ads and makes no network requests. <a href="https://github.com/mwc0/cookie-manager">Its code is public.</a></p>
+
+      <p class="aside">Guides: <a href="../clear-cookies-for-one-site/">Clear cookies for one site</a> · <a href="../cookie-too-large/">Fix “Cookie Too Large”</a> · <a href="../block-cookies-on-one-site/">Block cookies on one site</a> · <a href="../yt-dlp-cookies/">cookies.txt for yt-dlp</a></p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; 2026 cookieZ</span>
+      <ul>
+        <li><a href="../privacy/">Extension privacy</a></li>
+        <li><a href="../website-privacy/">Website privacy</a></li>
+        <li><a href="../support/">Support</a></li>
+        <li><a href="../support/#guides">Guides</a></li>
+        <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>
