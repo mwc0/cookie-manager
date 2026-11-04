@@ -3,7 +3,8 @@
 
 import { cookieKey } from "../lib/cookies.js";
 import { listProtected, unprotectKeys } from "../lib/protect.js";
-import { pluralise, formatCount, describeError, bareDomain } from "../lib/format.js";
+import { formatCount, describeError, bareDomain } from "../lib/format.js";
+import { t, tn } from "../lib/i18n.js";
 import { noteJob, STORE_REVIEWS_URL } from "../lib/review.js";
 import { state } from "./state.js";
 import { el, showState } from "./ui.js";
@@ -16,7 +17,7 @@ import { drawTable, refreshScope } from "./popup.js";
 export function showKeptLink() {
   const link = el("kept-open");
   link.hidden = state.protectedKeys.size === 0;
-  link.textContent = "Kept cookies: " + formatCount(state.protectedKeys.size);
+  link.textContent = t("main_keptLink", formatCount(state.protectedKeys.size));
 }
 
 export async function openKept() {
@@ -53,7 +54,9 @@ async function drawKept() {
       const badge = document.createElement("span");
       badge.className = "badge";
       badge.textContent = "Partitioned";
-      badge.title = "Kept separately for " + (entry.partitionKey.topLevelSite || "another site");
+      badge.title = entry.partitionKey.topLevelSite
+        ? t("main_keptPartitionedFor", entry.partitionKey.topLevelSite)
+        : t("main_keptPartitionedForOther");
       site.appendChild(document.createTextNode(" "));
       site.appendChild(badge);
     }
@@ -69,8 +72,8 @@ async function drawKept() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "row-button kept-stop";
-    button.textContent = "Stop keeping";
-    button.addEventListener("click", () => stopKeeping([entry], entry.name + " on " + entry.domain));
+    button.textContent = t("main_keptStopButton");
+    button.addEventListener("click", () => stopKeeping([entry], t("main_keptStoppedOne", entry.name, entry.domain)));
     action.appendChild(button);
     row.appendChild(action);
 
@@ -89,7 +92,9 @@ function showKeptMessage(text, isError) {
   message.className = isError ? "result error" : "result";
 }
 
-async function stopKeeping(entries, described) {
+// `done` is what to say once it has worked, such as "No longer keeping sid
+// on example.com."
+async function stopKeeping(entries, done) {
   const { keys, error } = await unprotectKeys(entries.map((entry) => entry.key));
   state.protectedKeys = keys;
   cancelKeptConfirm();
@@ -97,7 +102,7 @@ async function stopKeeping(entries, described) {
   if (error) {
     showKeptMessage(error, true);
   } else {
-    showKeptMessage("No longer keeping " + described + ".", false);
+    showKeptMessage(done, false);
   }
 }
 
@@ -105,7 +110,7 @@ async function stopKeeping(entries, described) {
 export async function startKeptConfirm() {
   const { entries } = await listProtected();
   el("kept-confirm-text").textContent =
-    "Stop keeping " + (entries.length === 1 ? "this cookie" : "all " + formatCount(entries.length) + " cookies") + "?";
+    entries.length === 1 ? t("main_keptConfirmOne") : t("main_keptConfirmAll", formatCount(entries.length));
   el("kept-clear").hidden = true;
   el("kept-confirm").hidden = false;
   el("kept-confirm-no").focus();
@@ -118,7 +123,7 @@ export function cancelKeptConfirm() {
 
 export async function stopKeepingAll() {
   const { entries } = await listProtected();
-  await stopKeeping(entries, pluralise(entries.length, "cookie", "cookies"));
+  await stopKeeping(entries, tn("main_keptStoppedAll", entries.length));
 }
 
 // Back to the table, redrawn, since what's kept may have changed.
@@ -141,18 +146,18 @@ const CHANGE_LOG_LIMIT = 200;
 // cookie was set, and true when one went away.
 function describeCookieEvent(key, removed, cause) {
   if (!removed) {
-    return state.overwritten.delete(key) ? "Changed" : "Added";
+    return state.overwritten.delete(key) ? t("main_eventChanged") : t("main_eventAdded");
   }
   if (cause === "expired") {
-    return "Expired";
+    return t("main_eventExpired");
   }
   if (cause === "expired_overwrite") {
-    return "Removed, by setting a date in the past";
+    return t("main_eventExpiredOverwrite");
   }
   if (cause === "evicted") {
-    return "Removed by Chrome to make room";
+    return t("main_eventEvicted");
   }
-  return "Removed";
+  return t("main_eventRemoved");
 }
 
 // Adds one change to the list. Returns false for the first half of a
@@ -177,7 +182,7 @@ export function logChange(cookie, removed, cause) {
 // "3 changes" next to the cookie count, once there's something to list.
 export function showChangesLink() {
   el("changes-link").hidden = state.changeLog.length === 0;
-  el("changes-open").textContent = pluralise(state.changeLog.length, "change", "changes");
+  el("changes-open").textContent = tn("main_changesLink", state.changeLog.length);
 }
 
 export function drawChanges() {
@@ -218,33 +223,17 @@ export function closeChanges() {
 
 // One line, shown the first time cookieZ opens on a new version. Only the
 // version number last seen is saved. On a fresh install, when no version
-// has been saved yet, a welcome line shows instead.
+// has been saved yet, a welcome line shows instead. The lines are in
+// messages.json, one per version.
 const WHATS_NEW = {
-  "2.2.1": "Bug fixes.",
-  "2.2.0":
-    "New: a tidier main screen with room for more cookies, and a Site report " +
-    "beside the cookie count.",
-  "2.1.0":
-    "New: keep cookieZ open beside the page in Chrome's side panel, and Clear and reload " +
-    "for a site you can't log in to.",
-  "2.0.0":
-    "New: search one field, such as name:session, and compare a site's cookies " +
-    "with an earlier export, from Import.",
-  "1.9.0":
-    "New: block known trackers' cookies from Block, lock an export with a password, " +
-    "and reload the site after a change.",
-  "1.8.0":
-    "New: block known trackers' cookies on every site, from Block. Cookies with a well-known name " +
-    "now say who they're from.",
-  "1.7.0":
-    "New: the Block button at the top. You can now block other companies' cookies on every site, " +
-    "and clear a site's stored data as well as its cookies.",
+  "2.2.1": "main_whatsNew2_2_1",
+  "2.2.0": "main_whatsNew2_2_0",
+  "2.1.0": "main_whatsNew2_1_0",
+  "2.0.0": "main_whatsNew2_0_0",
+  "1.9.0": "main_whatsNew1_9_0",
+  "1.8.0": "main_whatsNew1_8_0",
+  "1.7.0": "main_whatsNew1_7_0",
 };
-
-const WELCOME =
-  "Welcome. Click a cookie to edit it. Can't log in to a site? Clear and reload usually " +
-  "fixes it. Help (?) explains the rest.";
-const PIN_HINT = " To keep cookieZ in reach, pin it from the puzzle piece in Chrome's toolbar.";
 
 // Whether the What's new or welcome line showed on this open. The review
 // line waits for another open rather than appear alongside it.
@@ -258,10 +247,12 @@ export async function showWhatsNew() {
     if (stored.seenVersion === version) {
       return;
     }
-    text = stored.seenVersion === undefined ? WELCOME : WHATS_NEW[version];
     if (stored.seenVersion === undefined) {
+      // The welcome adds how to pin cookieZ when it isn't on the toolbar.
       const { isOnToolbar } = await chrome.action.getUserSettings();
-      text += isOnToolbar ? "" : PIN_HINT;
+      text = t(isOnToolbar ? "main_welcome" : "main_welcomePin");
+    } else if (WHATS_NEW[version]) {
+      text = t(WHATS_NEW[version]);
     }
     await chrome.storage.local.set({ seenVersion: version });
   } catch (error) {
@@ -288,7 +279,7 @@ export async function countJob(message) {
   if (!ask) {
     return;
   }
-  el("review-later").textContent = ask === "first" ? "Not now" : "No thanks";
+  el("review-later").textContent = ask === "first" ? t("main_reviewNotNow") : t("main_reviewNoThanks");
   el("review-later").dataset.answer = ask === "first" ? "later" : "done";
   el("review-ask").hidden = false;
 }
@@ -301,7 +292,7 @@ export async function openReviewPage(message) {
     return true;
   } catch (error) {
     message.className = "result error";
-    message.textContent = "Couldn't open the review page: " + describeError(error);
+    message.textContent = t("main_reviewOpenFailed", describeError(error));
     message.hidden = false;
     return false;
   }
