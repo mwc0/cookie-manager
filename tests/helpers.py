@@ -121,13 +121,20 @@ def launch(playwright, name, extra_args=(), extension=None, **context_options):
 
     return playwright.chromium.launch_persistent_context(
         str(profile),
-        # Not headless. Extensions work more reliably in a real window, and
-        # the tests are quick anyway.
-        headless=False,
+        # No window, so the tests don't take over the screen. channel
+        # "chromium" is the full browser in Chrome's new headless mode, which
+        # loads extensions; plain headless uses a cut-down shell that can't.
+        # To watch a test, set headless=False and drop the channel.
+        headless=True,
+        channel="chromium",
         args=[
             f"--disable-extensions-except={source}",
             f"--load-extension={source}",
             "--no-first-run",
+            # Headless draws on the CPU otherwise, which made test_stress.py's
+            # big table miss its time limit. With the GPU it's faster than a window.
+            "--enable-gpu",
+            "--use-angle=d3d11",
             *extra_args,
         ],
         **context_options,

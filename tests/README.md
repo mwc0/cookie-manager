@@ -29,9 +29,10 @@ python run_all.py          # everything
 python test_editor.py      # or just one file
 ```
 
-A browser window opens and clicks through the popup. That's expected: the
-tests aren't headless, because extension pages are more reliably available in
-a real window.
+No browser window appears: the tests run headless, in the full Chromium's new
+headless mode with the GPU on, so you can keep working while they run. To
+watch one, set `headless=False` and drop `channel` in `launch()` in
+`helpers.py`.
 
 ## What's covered
 
