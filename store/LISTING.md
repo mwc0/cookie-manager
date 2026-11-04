@@ -84,6 +84,7 @@ Features:
 - Works in incognito, kept separate from your normal cookies
 - Tells you when Chrome changes what you set (for example, Chrome caps expiry at about 400 days)
 - Light and dark mode
+- In English, German, Spanish, French, Japanese and Brazilian Portuguese, following Chrome's own language
 
 Privacy:
 cookieZ makes no network requests. No ads, no analytics, no tracking, and nothing you do leaves your computer. You can check this yourself in the Network tab of Chrome's DevTools.
