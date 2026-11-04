@@ -6,5 +6,409 @@
   "appDesc": {
     "message": "View, edit, delete and block cookies. There are no ads, and nothing you do leaves your computer.",
     "description": "The summary under the name in the Chrome Web Store and on chrome://extensions. 132 characters at most."
+  },
+  "rules_nameAllow": {
+    "message": "Allow all cookies",
+    "description": "One of the four choices for which cookies a site may set, on the Block cookies screen. Shown in the list of site rules and in messages. Short: a radio button label. This one lets the site set any cookie."
+  },
+  "rules_nameSession": {
+    "message": "Clear when Chrome closes",
+    "description": "One of the four choices for which cookies a site may set, on the Block cookies screen. Shown in the list of site rules and in messages. Short: a radio button label. This one lets the site set cookies, and Chrome deletes them when the browser closes."
+  },
+  "rules_nameOwnOnly": {
+    "message": "Block other companies' cookies",
+    "description": "One of the four choices for which cookies a site may set, on the Block cookies screen. Shown in the list of site rules and in messages. Short: a radio button label. This one blocks third-party cookies: cookies from other companies (ad networks, trackers) on this site's pages. The site's own cookies are allowed."
+  },
+  "rules_nameBlock": {
+    "message": "Block all cookies",
+    "description": "One of the four choices for which cookies a site may set, on the Block cookies screen. Shown in the list of site rules and in messages. Short: a radio button label. This one blocks every cookie on the site."
+  },
+  "rules_lostCouldNotReapply": {
+    "message": "Chrome has stopped following your site rules, and cookieZ couldn't set them again. $1",
+    "description": "Error on the main screen when the popup opens and finds Chrome has lost the saved site rules, and setting them again failed. $1 is the error sentence that follows, for example \"Chrome wouldn't accept the rules: Invalid pattern.\""
+  },
+  "rules_lostReapplied": {
+    "message": "Chrome had stopped following your site rules, so cookieZ has set them again.",
+    "description": "Status line on the main screen when the popup opens and finds Chrome had lost the saved site rules, and has put them back."
+  },
+  "rules_linkBlock": {
+    "message": "Block",
+    "description": "Short: the label of the button in the popup's header that opens the Block cookies screen (about 16 characters). Shown when nothing is blocked on this site; it's an action: open the screen to block cookies."
+  },
+  "rules_linkBlockTitle": {
+    "message": "Choose which cookies this site may set",
+    "description": "Tooltip on the Block cookies button in the popup's header. Shown when nothing is blocked on this site."
+  },
+  "rules_linkSession": {
+    "message": "Clears on close",
+    "description": "Short: the label of the button in the popup's header that opens the Block cookies screen (about 16 characters). Shown when this site's cookies are deleted when Chrome closes. Describes the state, not an action."
+  },
+  "rules_linkSessionTitle": {
+    "message": "Chrome deletes this site's cookies when it closes",
+    "description": "Tooltip on the Block cookies button in the popup's header. Shown when this site's cookies are deleted when Chrome closes."
+  },
+  "rules_linkOwnOnly": {
+    "message": "Blocking others",
+    "description": "Short: the label of the button in the popup's header that opens the Block cookies screen (about 16 characters). Shown when other companies' (third-party) cookies are blocked on this site. Describes the state, not an action."
+  },
+  "rules_linkOwnOnlyTitle": {
+    "message": "Other companies' cookies are blocked on this site",
+    "description": "Tooltip on the Block cookies button in the popup's header. Shown when third-party cookies are blocked on this site."
+  },
+  "rules_linkBlocked": {
+    "message": "Blocked",
+    "description": "Short: the label of the button in the popup's header that opens the Block cookies screen (about 16 characters). Shown when every cookie is blocked on this site. Describes the state."
+  },
+  "rules_linkBlockedTitle": {
+    "message": "Every cookie is blocked on this site",
+    "description": "Tooltip on the Block cookies button in the popup's header. Shown when every cookie is blocked on this site."
+  },
+  "rules_linkTrackers": {
+    "message": "Blocking trackers",
+    "description": "Short: the label of the button in the popup's header that opens the Block cookies screen (about 16 characters). Shown when known trackers' cookies are blocked on this site. Describes the state."
+  },
+  "rules_linkTrackersTitle": {
+    "message": "Known trackers' cookies are blocked on this site",
+    "description": "Tooltip on the Block cookies button in the popup's header. Shown when known trackers' cookies are blocked on this site."
+  },
+  "rules_linkLitAriaLabel": {
+    "message": "$1: choose which cookies this site may set",
+    "description": "Screen reader label for the Block cookies button while something is blocked. $1 is the button's visible label, for example \"Blocked\" or \"Clears on close\"."
+  },
+  "rules_saving": {
+    "message": "Saving…",
+    "description": "Status line while Chrome takes in a change to the site rules, which can take a few seconds. Short."
+  },
+  "rules_statsNoneCleared": {
+    "message": "cookieZ hasn't cleared any cookies yet.",
+    "description": "Line at the top of the Block cookies screen, when cookieZ has never deleted a cookie. cookieZ is the product name."
+  },
+  "rules_statsCleared_one": {
+    "message": "cookieZ has cleared $1 cookie so far.",
+    "description": "Line at the top of the Block cookies screen: how many cookies cookieZ has deleted, ever. $1 is the number, for example 1."
+  },
+  "rules_statsCleared_other": {
+    "message": "cookieZ has cleared $1 cookies so far.",
+    "description": "Line at the top of the Block cookies screen: how many cookies cookieZ has deleted, ever. $1 is the number, for example 1,204."
+  },
+  "rules_statsBlockingSitesAndTrackers_one": {
+    "message": "Blocking cookies on $1 site and from $2 known trackers.",
+    "description": "Second sentence of the line at the top of the Block cookies screen. $1 is the number of sites with a blocking rule (here 1). $2 is the number of known trackers on cookieZ's built-in list, for example 130; it is always large."
+  },
+  "rules_statsBlockingSitesAndTrackers_other": {
+    "message": "Blocking cookies on $1 sites and from $2 known trackers.",
+    "description": "Second sentence of the line at the top of the Block cookies screen. $1 is the number of sites with a blocking rule, for example 3. $2 is the number of known trackers on cookieZ's built-in list, for example 130; it is always large."
+  },
+  "rules_statsBlockingSites_one": {
+    "message": "Blocking cookies on $1 site.",
+    "description": "Second sentence of the line at the top of the Block cookies screen. $1 is the number of sites with a blocking rule, here 1."
+  },
+  "rules_statsBlockingSites_other": {
+    "message": "Blocking cookies on $1 sites.",
+    "description": "Second sentence of the line at the top of the Block cookies screen. $1 is the number of sites with a blocking rule, for example 3."
+  },
+  "rules_statsBlockingTrackers_one": {
+    "message": "Blocking cookies from $1 known tracker.",
+    "description": "Second sentence of the line at the top of the Block cookies screen. $1 is the number of known trackers on cookieZ's built-in list."
+  },
+  "rules_statsBlockingTrackers_other": {
+    "message": "Blocking cookies from $1 known trackers.",
+    "description": "Second sentence of the line at the top of the Block cookies screen. $1 is the number of known trackers on cookieZ's built-in list, for example 130."
+  },
+  "rules_siteNote": {
+    "message": "This rule was set for $1, which covers $2 too.",
+    "description": "Note under the site's name on the Block cookies screen, when the rule shown belongs to a parent site. $1 is the site with the rule, for example example.com. $2 is the site of the open page, for example shop.example.com."
+  },
+  "rules_removeButton": {
+    "message": "Remove",
+    "description": "Short: button in each row of the site rules table, removing that site's rule."
+  },
+  "rules_removeAriaLabel": {
+    "message": "Remove the rule for $1",
+    "description": "Screen reader label for the Remove button in the site rules table. $1 is the site, for example example.com."
+  },
+  "rules_thirdPartyControlled": {
+    "message": "Another extension or your administrator controls whether other companies' cookies are blocked, so cookieZ can't change it.",
+    "description": "Note under \"On every other site\" on the Block cookies screen, when Chrome's third-party cookie setting is locked by another extension or by policy."
+  },
+  "rules_thirdPartyChromeBlocking": {
+    "message": "Chrome is already blocking other companies' cookies on every site, in its own settings.",
+    "description": "Note under \"On every other site\" on the Block cookies screen, when Chrome's own settings already block third-party cookies."
+  },
+  "rules_permissionRefused": {
+    "message": "Chrome didn't give permission, so nothing has changed. The rest of cookieZ works as before.",
+    "description": "Status line on the Block cookies screen after the user said no to Chrome's permission prompt for site rules."
+  },
+  "rules_permissionGivenReopen": {
+    "message": "Permission given. Close cookieZ and open it again to finish.",
+    "description": "Status line after the user gave a permission in Chrome's prompt, but Chrome needs the popup reopened before the feature works. Shown on the Block cookies screen and on the main screen."
+  },
+  "rules_siteBlocked": {
+    "message": "All cookies are now blocked on $1.",
+    "description": "Status line on the Block cookies screen after choosing \"Block all cookies\" for a site. $1 is the site, for example example.com."
+  },
+  "rules_siteOwnOnly": {
+    "message": "Other companies' cookies are now blocked on $1.",
+    "description": "Status line on the Block cookies screen after choosing \"Block other companies' cookies\" for a site. $1 is the site, for example example.com."
+  },
+  "rules_siteSession": {
+    "message": "Chrome will delete $1's cookies every time it closes.",
+    "description": "Status line on the Block cookies screen after choosing \"Clear when Chrome closes\" for a site. $1 is the site, for example example.com."
+  },
+  "rules_siteAllowed": {
+    "message": "$1 may set any cookie.",
+    "description": "Status line on the Block cookies screen after choosing \"Allow all cookies\" for a site. $1 is the site, for example example.com."
+  },
+  "rules_siteAllowedTrackersToo": {
+    "message": "$1 may set any cookie, known trackers' included.",
+    "description": "Status line on the Block cookies screen after choosing \"Allow all cookies\" for a site while known trackers are blocked everywhere else. $1 is the site, for example example.com."
+  },
+  "rules_cleanupSiteHas_one": {
+    "message": "It still has $1 cookie saved.",
+    "description": "Question text on the Block cookies screen after blocking a site, before buttons offering to delete the cookies it already has. \"It\" is the site just blocked. $1 is the number of cookies, here 1."
+  },
+  "rules_cleanupSiteHas_other": {
+    "message": "It still has $1 cookies saved.",
+    "description": "Question text on the Block cookies screen after blocking a site, before buttons offering to delete the cookies it already has. \"It\" is the site just blocked. $1 is the number of cookies, for example 12."
+  },
+  "rules_keptLeftAlone_one": {
+    "message": "$1 kept cookie will be left alone.",
+    "description": "Sentence added after a delete offer or question. A kept cookie is one the user marked Keep, so no delete removes it. $1 is the number, here 1."
+  },
+  "rules_keptLeftAlone_other": {
+    "message": "$1 kept cookies will be left alone.",
+    "description": "Sentence added after a delete offer or question. A kept cookie is one the user marked Keep, so no delete removes it. $1 is the number, for example 2."
+  },
+  "rules_cleanupTrackersHave_one": {
+    "message": "These companies already have $1 cookie saved.",
+    "description": "Question text on the Block cookies screen after turning on blocking of known trackers, before buttons offering to delete the trackers' cookies already saved. $1 is the number, here 1."
+  },
+  "rules_cleanupTrackersHave_other": {
+    "message": "These companies already have $1 cookies saved.",
+    "description": "Question text on the Block cookies screen after turning on blocking of known trackers, before buttons offering to delete the trackers' cookies already saved. $1 is the number, for example 40."
+  },
+  "rules_cleanupDeleted_one": {
+    "message": "Deleted $1 cookie.",
+    "description": "Status line on the Block cookies screen after deleting a blocked site's or trackers' cookies. $1 is the number, here 1."
+  },
+  "rules_cleanupDeleted_other": {
+    "message": "Deleted $1 cookies.",
+    "description": "Status line on the Block cookies screen after deleting a blocked site's or trackers' cookies. $1 is the number, for example 12."
+  },
+  "rules_cleanupFailed_one": {
+    "message": "$1 cookie could not be deleted, and may be protected by the browser.",
+    "description": "Error sentence after \"Deleted 12 cookies.\" on the Block cookies screen, when some couldn't be deleted. $1 is the number, here 1."
+  },
+  "rules_cleanupFailed_other": {
+    "message": "$1 cookies could not be deleted, and may be protected by the browser.",
+    "description": "Error sentence after \"Deleted 12 cookies.\" on the Block cookies screen, when some couldn't be deleted. $1 is the number, for example 3."
+  },
+  "rules_trackersOn": {
+    "message": "Known trackers' cookies are now blocked on every site.",
+    "description": "Status line on the Block cookies screen after turning on the known trackers switch."
+  },
+  "rules_trackersOff": {
+    "message": "Known trackers' cookies are no longer blocked on every site.",
+    "description": "Status line on the Block cookies screen after turning off the known trackers switch."
+  },
+  "rules_everywherePermissionRefused": {
+    "message": "Chrome didn't give permission, so nothing has changed. Your other rules work as before.",
+    "description": "Status line on the Block cookies screen after the user said no to Chrome's permission prompt for blocking other companies' cookies on every site."
+  },
+  "rules_everywherePermissionGivenReopen": {
+    "message": "Permission given. Close cookieZ and open it again, then choose this again.",
+    "description": "Status line on the Block cookies screen after the user gave the permission for blocking other companies' cookies on every site, but Chrome needs the popup reopened first. \"This\" is the choice they just clicked."
+  },
+  "rules_everywhereBlocked": {
+    "message": "Cookies are now blocked on every site without a rule of its own.",
+    "description": "Status line on the Block cookies screen after choosing \"Block all cookies\" under \"On every other site\"."
+  },
+  "rules_everywhereOwnOnly": {
+    "message": "Other companies' cookies are now blocked on every site without a rule of its own.",
+    "description": "Status line on the Block cookies screen after choosing \"Block other companies' cookies\" under \"On every other site\"."
+  },
+  "rules_everywhereAllowed": {
+    "message": "Cookies are allowed again on every site without a rule of its own.",
+    "description": "Status line on the Block cookies screen after choosing \"Allow all cookies\" under \"On every other site\"."
+  },
+  "rules_siteDataPermissionRefused": {
+    "message": "Chrome didn't give permission, so nothing was cleared.",
+    "description": "Status line on the main screen after the user said no to Chrome's permission prompt for Clear site data."
+  },
+  "rules_siteDataCountFailed": {
+    "message": "Couldn't count this site's cookies: $1",
+    "description": "Error on the main screen when Clear site data can't read the site's cookies. $1 is the browser's error text, in English."
+  },
+  "rules_siteDataConfirmCookies_one": {
+    "message": "Delete $1 cookie from $2 and clear everything else $2 has stored: local storage, databases, cache storage and offline files?",
+    "description": "Question before Clear site data runs, on the main screen. $1 is the number of cookies, here 1. $2 is the site, for example example.com. Local storage, databases, cache storage and offline files are the kinds of browser storage a website can use."
+  },
+  "rules_siteDataConfirmCookies_other": {
+    "message": "Delete $1 cookies from $2 and clear everything else $2 has stored: local storage, databases, cache storage and offline files?",
+    "description": "Question before Clear site data runs, on the main screen. $1 is the number of cookies, for example 12. $2 is the site, for example example.com. Local storage, databases, cache storage and offline files are the kinds of browser storage a website can use."
+  },
+  "rules_siteDataConfirmNoCookies": {
+    "message": "Clear everything else $1 has stored: local storage, databases, cache storage and offline files?",
+    "description": "Question before Clear site data runs, when the site has no cookies to delete. \"Everything else\" means everything besides cookies. $1 is the site, for example example.com."
+  },
+  "rules_siteDataUndoNote": {
+    "message": "Undo can put the cookies back, but not the rest.",
+    "description": "Last sentence of the question before Clear site data runs. Undo is the button that reverses the last change; it can't restore the site's other stored data."
+  },
+  "rules_siteDataDeleted_one": {
+    "message": "Deleted $1 cookie and cleared $2's other stored data.",
+    "description": "Status line on the main screen after Clear site data. $1 is the number of cookies deleted, here 1. $2 is the site, for example example.com."
+  },
+  "rules_siteDataDeleted_other": {
+    "message": "Deleted $1 cookies and cleared $2's other stored data.",
+    "description": "Status line on the main screen after Clear site data. $1 is the number of cookies deleted, for example 12. $2 is the site, for example example.com."
+  },
+  "rules_siteDataCleared": {
+    "message": "Cleared $1's other stored data.",
+    "description": "Status line on the main screen after Clear site data, when the site had no cookies to delete. $1 is the site, for example example.com."
+  },
+  "rules_siteDataFailed_one": {
+    "message": "$1 cookie could not be deleted.",
+    "description": "Error sentence added after the Clear site data result. $1 is the number, here 1."
+  },
+  "rules_siteDataFailed_other": {
+    "message": "$1 cookies could not be deleted.",
+    "description": "Error sentence added after the Clear site data result. $1 is the number, for example 3."
+  },
+  "rules_siteDataError": {
+    "message": "Chrome couldn't clear the rest: $1",
+    "description": "Error sentence added after the Clear site data result, when Chrome failed to clear the site's non-cookie data. $1 is the browser's error text, in English."
+  },
+  "rules_siteReloaded": {
+    "message": "Reloaded the site.",
+    "description": "Sentence added after the Clear site data result, after \"Clear and reload\"."
+  },
+  "rules_siteReloadFailed": {
+    "message": "Couldn't reload the site: $1",
+    "description": "Error sentence added after the Clear site data result, when the tab couldn't be reloaded. $1 is the browser's error text, in English."
+  },
+  "rules_backupSaving": {
+    "message": "Saving your rules as $1.",
+    "description": "Status line on the Block cookies screen after clicking Save a copy. $1 is the file name, cookiez-site-rules.json."
+  },
+  "rules_backupReadFailed": {
+    "message": "Couldn't read that file: $1",
+    "description": "Error on the Block cookies screen when a chosen rules backup file can't be read. $1 is the browser's error text, in English."
+  },
+  "rules_backupNoteOwnOnly": {
+    "message": "It blocked other companies' cookies on every site; choose that again after loading.",
+    "description": "Sentence added to the question before loading a rules backup. \"It\" is the backup file. That choice needs a permission that can only be asked for from a click, so it isn't loaded."
+  },
+  "rules_backupNoteTrackers": {
+    "message": "It also blocks known trackers' cookies.",
+    "description": "Sentence added to the question before loading a rules backup. \"It\" is the backup file."
+  },
+  "rules_backupReplaceSites_one": {
+    "message": "Replace your rules with the $1 site in this file?",
+    "description": "Question on the Block cookies screen before loading a rules backup. $1 is the number of sites with rules in the file, here 1."
+  },
+  "rules_backupReplaceSites_other": {
+    "message": "Replace your rules with the $1 sites in this file?",
+    "description": "Question on the Block cookies screen before loading a rules backup. $1 is the number of sites with rules in the file, for example 8."
+  },
+  "rules_backupReplaceNoSites": {
+    "message": "Replace your rules with the ones in this file? It has no sites in it.",
+    "description": "Question on the Block cookies screen before loading a rules backup that has no per-site rules (only the every-site settings)."
+  },
+  "rules_backupLoaded_one": {
+    "message": "Loaded $1 site rule.",
+    "description": "Status line on the Block cookies screen after loading a rules backup. $1 is the number of site rules, here 1."
+  },
+  "rules_backupLoaded_other": {
+    "message": "Loaded $1 site rules.",
+    "description": "Status line on the Block cookies screen after loading a rules backup. $1 is the number of site rules, for example 8 (or 0)."
+  },
+  "rules_removed": {
+    "message": "Removed the rule for $1.",
+    "description": "Status line on the Block cookies screen after removing a site's rule. $1 is the site, for example example.com."
+  },
+  "rules_allOff": {
+    "message": "Every rule is off. Chrome is allowing cookies everywhere again.",
+    "description": "Status line on the Block cookies screen after Turn off all rules."
+  },
+  "rules_loadFailed": {
+    "message": "Couldn't read your site rules: $1",
+    "description": "Error when cookieZ's saved site rules can't be read from storage. $1 is the browser's error text, in English."
+  },
+  "rules_saveFailed": {
+    "message": "Couldn't save your site rules: $1",
+    "description": "Error when cookieZ's site rules can't be saved. $1 is the browser's error text, in English."
+  },
+  "rules_noRulesPermission": {
+    "message": "Chrome hasn't given cookieZ permission to set rules.",
+    "description": "Error on the Block cookies screen when the permission for site rules is missing."
+  },
+  "rules_noEverywherePermission": {
+    "message": "Chrome hasn't given cookieZ permission to block other companies' cookies on every site.",
+    "description": "Error on the Block cookies screen when the permission for blocking third-party cookies on every site is missing."
+  },
+  "rules_chromeRefused": {
+    "message": "Chrome wouldn't accept the rules: $1",
+    "description": "Error on the Block cookies screen when Chrome refuses the site rules. $1 is the browser's error text, in English."
+  },
+  "rules_backupNotJson": {
+    "message": "That file isn't a cookieZ rules backup: it isn't JSON.",
+    "description": "Error on the Block cookies screen when the chosen file can't be read as a rules backup. JSON is a file format name; don't translate it."
+  },
+  "rules_backupWrongKind": {
+    "message": "That file isn't a cookieZ rules backup.",
+    "description": "Error on the Block cookies screen when the chosen file is JSON but not a cookieZ rules backup."
+  },
+  "rules_permissionNeedsClick": {
+    "message": "Chrome only allows the permission prompt to open from a direct click. Please click the button again.",
+    "description": "Error when Chrome refused to show its permission prompt because the request didn't come straight from a click."
+  },
+  "rules_permissionPromptFailed": {
+    "message": "Chrome couldn't show the permission prompt: $1",
+    "description": "Error when Chrome couldn't show its permission prompt. $1 is the browser's error text, in English."
+  },
+  "rules_keptLoadFailed": {
+    "message": "Couldn't read the protected list, so nothing is being treated as protected right now: $1",
+    "description": "Error when the list of kept (protected) cookies can't be read from storage, so a delete could remove them. $1 is the browser's error text, in English."
+  },
+  "rules_keptSaveFailed": {
+    "message": "Couldn't save the protected list: $1",
+    "description": "Error when the list of kept (protected) cookies can't be saved. $1 is the browser's error text, in English."
+  },
+  "rules_undoUnavailable": {
+    "message": "Undo isn't available for this change: $1",
+    "description": "Error after a change when its Undo can't be stored. $1 is the browser's error text, in English."
+  },
+  "rules_undoCookie": {
+    "message": "$1 ($2)",
+    "description": "How one cookie is named in a list of Undo failures. $1 is the cookie's name, for example sid. $2 is its site, for example example.com."
+  },
+  "rules_undoRestoreFailed": {
+    "message": "$1: $2",
+    "description": "One line in a list of cookies Undo couldn't put back. $1 is the cookie, for example \"sid (example.com)\". $2 is the reason, a sentence."
+  },
+  "rules_undoRemoveFailed": {
+    "message": "$1: couldn't be removed.",
+    "description": "One line in a list of cookies Undo couldn't take away. $1 is the cookie, for example \"sid (example.com)\"."
+  },
+  "rules_ageJustNow": {
+    "message": "just now",
+    "description": "Ends the sentence offering Undo for an earlier change: \"Deleted 5 cookies just now.\" The code adds the full stop. Lower case, since it follows the start of the sentence."
+  },
+  "rules_ageMinutes_one": {
+    "message": "$1 minute ago",
+    "description": "Ends the sentence offering Undo for an earlier change: \"Deleted 5 cookies 1 minute ago.\" The code adds the full stop. $1 is the number of minutes, here 1."
+  },
+  "rules_ageMinutes_other": {
+    "message": "$1 minutes ago",
+    "description": "Ends the sentence offering Undo for an earlier change: \"Deleted 5 cookies 4 minutes ago.\" The code adds the full stop. $1 is the number of minutes, 2 to 10."
+  },
+  "rules_themeLoadFailed": {
+    "message": "Couldn't read your saved theme, so the system theme is being used: $1",
+    "description": "Error when the saved light or dark theme choice can't be read. $1 is the browser's error text, in English."
+  },
+  "rules_themeSaveFailed": {
+    "message": "The theme changed, but couldn't be saved, so it will reset when you reopen the popup: $1",
+    "description": "Error when the light or dark theme choice can't be saved. $1 is the browser's error text, in English."
   }
 }

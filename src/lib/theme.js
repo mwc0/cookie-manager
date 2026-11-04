@@ -8,6 +8,7 @@
 // rather than in CSS, so popup.css only needs the dark colours once.
 
 import { describeError } from "./format.js";
+import { t } from "./i18n.js";
 
 export const THEME_KEY = "theme";
 
@@ -69,9 +70,7 @@ export async function loadTheme() {
   } catch (error) {
     return {
       choice: null,
-      error:
-        "Couldn't read your saved theme, so the system theme is being used: " +
-        describeError(error),
+      error: t("rules_themeLoadFailed", describeError(error)),
     };
   }
 }
@@ -94,9 +93,7 @@ export async function saveTheme(theme) {
     return { error: null };
   } catch (error) {
     return {
-      error:
-        "The theme changed, but couldn't be saved, so it will reset when you " +
-        "reopen the popup: " + describeError(error),
+      error: t("rules_themeSaveFailed", describeError(error)),
     };
   }
 }

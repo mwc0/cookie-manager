@@ -31,6 +31,7 @@
 // screen. See permissions.js.
 
 import { describeError } from "./format.js";
+import { t } from "./i18n.js";
 import { baseHostOf } from "./cookies.js";
 import { TRACKER_DOMAINS } from "../lists/trackers.js";
 
@@ -90,7 +91,7 @@ export async function loadRules() {
     const stored = await chrome.storage.local.get(STORAGE_KEY);
     return { rules: tidy(stored && stored[STORAGE_KEY]), error: null };
   } catch (error) {
-    return { rules: emptyRules(), error: "Couldn't read your site rules: " + describeError(error) };
+    return { rules: emptyRules(), error: t("rules_loadFailed", describeError(error)) };
   }
 }
 
@@ -100,7 +101,7 @@ async function saveRules(rules) {
     await chrome.storage.local.set({ [STORAGE_KEY]: rules });
     return null;
   } catch (error) {
-    return "Couldn't save your site rules: " + describeError(error);
+    return t("rules_saveFailed", describeError(error));
   }
 }
 
@@ -274,14 +275,14 @@ export async function thirdPartyStatus() {
 // Makes Chrome match `rules`. Returns an error message, or null.
 export async function applyRules(rules) {
   if (!rulesAvailable()) {
-    return "Chrome hasn't given cookieZ permission to set rules.";
+    return t("rules_noRulesPermission");
   }
   try {
     // Chrome's own third-party switch: set for "block other companies'
     // cookies" on every site, and handed back to the user otherwise.
     if (rules.everywhere === OWN_ONLY) {
       if (!everywhereAvailable()) {
-        return "Chrome hasn't given cookieZ permission to block other companies' cookies on every site.";
+        return t("rules_noEverywherePermission");
       }
       await thirdPartySetting().set({ value: false });
     } else if (everywhereAvailable()) {
@@ -298,11 +299,11 @@ export async function applyRules(rules) {
     );
     const refused = results.find((result) => result.status === "rejected");
     if (refused) {
-      return "Chrome wouldn't accept the rules: " + describeError(refused.reason);
+      return t("rules_chromeRefused", describeError(refused.reason));
     }
     return null;
   } catch (error) {
-    return "Chrome wouldn't accept the rules: " + describeError(error);
+    return t("rules_chromeRefused", describeError(error));
   }
 }
 
@@ -502,10 +503,10 @@ export function rulesFromBackup(text) {
   try {
     data = JSON.parse(text);
   } catch (error) {
-    return { rules: null, error: "That file isn't a cookieZ rules backup: it isn't JSON." };
+    return { rules: null, error: t("rules_backupNotJson") };
   }
   if (!data || data.kind !== BACKUP_KIND) {
-    return { rules: null, error: "That file isn't a cookieZ rules backup." };
+    return { rules: null, error: t("rules_backupWrongKind") };
   }
   return { rules: tidy(data), error: null };
 }

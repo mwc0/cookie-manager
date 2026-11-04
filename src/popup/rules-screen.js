@@ -45,7 +45,8 @@ import {
   cookieKey,
 } from "../lib/cookies.js";
 import { loadProtected, partitionByProtection } from "../lib/protect.js";
-import { pluralise, formatCount, describeError } from "../lib/format.js";
+import { formatCount, describeError } from "../lib/format.js";
+import { t, tn } from "../lib/i18n.js";
 import { loadCleared } from "../lib/stats.js";
 import { state } from "./state.js";
 import { el, showState, showMainMessage, currentState } from "./ui.js";
@@ -79,10 +80,10 @@ const incognito = Boolean(chrome.extension && chrome.extension.inIncognitoContex
 
 // What each choice is called, in the list and in the messages.
 const RULE_NAMES = {
-  [ALLOW]: "Allow all cookies",
-  [SESSION]: "Clear when Chrome closes",
-  [OWN_ONLY]: "Block other companies' cookies",
-  [BLOCK]: "Block all cookies",
+  [ALLOW]: t("rules_nameAllow"),
+  [SESSION]: t("rules_nameSession"),
+  [OWN_ONLY]: t("rules_nameOwnOnly"),
+  [BLOCK]: t("rules_nameBlock"),
 };
 
 // The backup chosen with "Load a copy", waiting for "Replace my rules".
@@ -125,8 +126,8 @@ export async function loadSiteRules() {
     const error = await applyRules(rules);
     showMainMessage(
       error
-        ? "Chrome has stopped following your site rules, and cookieZ couldn't set them again. " + error
-        : "Chrome had stopped following your site rules, so cookieZ has set them again.",
+        ? t("rules_lostCouldNotReapply", error)
+        : t("rules_lostReapplied"),
       Boolean(error)
     );
   }
@@ -137,10 +138,10 @@ export async function loadSiteRules() {
 export function showRulesLink() {
   const rule = pageRule();
   const labels = {
-    [ALLOW]: ["Block", "Choose which cookies this site may set"],
-    [SESSION]: ["Clears on close", "Chrome deletes this site's cookies when it closes"],
-    [OWN_ONLY]: ["Blocking others", "Other companies' cookies are blocked on this site"],
-    [BLOCK]: ["Blocked", "Every cookie is blocked on this site"],
+    [ALLOW]: [t("rules_linkBlock"), t("rules_linkBlockTitle")],
+    [SESSION]: [t("rules_linkSession"), t("rules_linkSessionTitle")],
+    [OWN_ONLY]: [t("rules_linkOwnOnly"), t("rules_linkOwnOnlyTitle")],
+    [BLOCK]: [t("rules_linkBlocked"), t("rules_linkBlockedTitle")],
   };
   let [label, title] = labels[rule] || labels[ALLOW];
 
@@ -150,8 +151,8 @@ export function showRulesLink() {
   const trackersHere =
     rule === ALLOW && rulesAllowed && rules.trackers && !rules.sites[siteFor(rules, state.page.hostname)];
   if (trackersHere) {
-    label = "Blocking trackers";
-    title = "Known trackers' cookies are blocked on this site";
+    label = t("rules_linkTrackers");
+    title = t("rules_linkTrackersTitle");
   }
 
   const lit = rule !== ALLOW || trackersHere;
@@ -162,7 +163,7 @@ export function showRulesLink() {
   // button does, so a screen reader is told both. Unlit, "Block" already
   // says it, and the tip is read after it.
   if (lit) {
-    el("rules-open").setAttribute("aria-label", label + ": choose which cookies this site may set");
+    el("rules-open").setAttribute("aria-label", t("rules_linkLitAriaLabel", label));
   } else {
     el("rules-open").removeAttribute("aria-label");
   }
@@ -186,7 +187,7 @@ function showRulesMessage(text, isError) {
   message.className = isError ? "result error" : "result";
 }
 
-const SAVING = "Saving…";
+const SAVING = t("rules_saving");
 
 // Every change to the rules goes through here. Chrome can take a few
 // seconds to take in every rule now there are trackers, so the screen says
@@ -297,18 +298,20 @@ async function showStats() {
   const cleared = await loadCleared();
   const sentences = [
     cleared === 0
-      ? "cookieZ hasn't cleared any cookies yet."
-      : "cookieZ has cleared " + pluralise(cleared, "cookie", "cookies") + " so far.",
+      ? t("rules_statsNoneCleared")
+      : tn("rules_statsCleared", cleared),
   ];
 
   // Only claimed while Chrome is actually following the rules.
   if (rulesAllowed) {
     const sites = listRules(rules).filter((entry) => entry.rule === OWN_ONLY || entry.rule === BLOCK).length;
-    const onSites = sites > 0 ? "on " + pluralise(sites, "site", "sites") : "";
-    const fromTrackers = rules.trackers ? "from " + pluralise(TRACKER_DOMAINS.length, "known tracker", "known trackers") : "";
-    const blocking = [onSites, fromTrackers].filter(Boolean).join(" and ");
-    if (blocking) {
-      sentences.push("Blocking cookies " + blocking + ".");
+    const trackers = TRACKER_DOMAINS.length;
+    if (sites > 0 && rules.trackers) {
+      sentences.push(tn("rules_statsBlockingSitesAndTrackers", sites, formatCount(trackers)));
+    } else if (sites > 0) {
+      sentences.push(tn("rules_statsBlockingSites", sites));
+    } else if (rules.trackers) {
+      sentences.push(tn("rules_statsBlockingTrackers", trackers));
     }
   }
   el("rules-stats").textContent = sentences.join(" ");
@@ -342,7 +345,7 @@ async function drawRules() {
   el("rules-site-name").textContent = site;
   el("rules-site-note").hidden = site === own;
   el("rules-site-note").textContent =
-    site === own ? "" : "This rule was set for " + site + ", which covers " + own + " too.";
+    site === own ? "" : t("rules_siteNote", site, own);
 
   // With trackers blocked, a site without a rule of its own isn't getting
   // "Allow all cookies", so none of its choices is ticked. Choosing that
@@ -386,8 +389,8 @@ async function drawRules() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "row-button rules-remove";
-    button.textContent = "Remove";
-    button.setAttribute("aria-label", "Remove the rule for " + entry.site);
+    button.textContent = t("rules_removeButton");
+    button.setAttribute("aria-label", t("rules_removeAriaLabel", entry.site));
     button.disabled = !canChange;
     button.addEventListener("click", () => removeRule(entry.site));
     action.appendChild(button);
@@ -433,10 +436,10 @@ async function showThirdPartyNote(canChange) {
   const status = await thirdPartyStatus();
   let text = "";
   if (status && !status.canChange) {
-    text = "Another extension or your administrator controls whether other companies' cookies are blocked, so cookieZ can't change it.";
+    text = t("rules_thirdPartyControlled");
     option.disabled = true;
   } else if (status && !status.allowed && !status.ours) {
-    text = "Chrome is already blocking other companies' cookies on every site, in its own settings.";
+    text = t("rules_thirdPartyChromeBlocking");
   }
   option.disabled = option.disabled || !canChange;
   note.textContent = text;
@@ -451,14 +454,11 @@ export async function grantRules() {
     return;
   }
   if (!granted) {
-    showRulesMessage(
-      "Chrome didn't give permission, so nothing has changed. The rest of cookieZ works as before.",
-      false
-    );
+    showRulesMessage(t("rules_permissionRefused"), false);
     return;
   }
   if (!rulesAvailable()) {
-    showRulesMessage("Permission given. Close cookieZ and open it again to finish.", false);
+    showRulesMessage(t("rules_permissionGivenReopen"), false);
     return;
   }
 
@@ -491,12 +491,12 @@ export async function chooseSiteRule(choice) {
 
   showRulesMessage(
     choice === BLOCK
-      ? "All cookies are now blocked on " + site + "."
+      ? t("rules_siteBlocked", site)
       : choice === OWN_ONLY
-        ? "Other companies' cookies are now blocked on " + site + "."
+        ? t("rules_siteOwnOnly", site)
         : choice === SESSION
-          ? "Chrome will delete " + site + "'s cookies every time it closes."
-          : site + " may set any cookie" + (rules.trackers ? ", known trackers' included." : "."),
+          ? t("rules_siteSession", site)
+          : rules.trackers ? t("rules_siteAllowedTrackersToo", site) : t("rules_siteAllowed", site),
     false
   );
   if (choice === BLOCK) {
@@ -530,12 +530,8 @@ async function offerCleanup(site) {
   }
 
   el("rules-cleanup-text").textContent =
-    "It still has " +
-    pluralise(deletable.length, "cookie", "cookies") +
-    " saved." +
-    (kept.length > 0
-      ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
-      : "");
+    tn("rules_cleanupSiteHas", deletable.length) +
+    (kept.length > 0 ? " " + tn("rules_keptLeftAlone", kept.length) : "");
   el("rules-cleanup").hidden = false;
   // Like every other "are you sure?" in cookieZ, the focus goes to the
   // safe answer, so a screen reader reads the question.
@@ -579,12 +575,8 @@ async function offerTrackerCleanup() {
   }
 
   el("rules-trackers-cleanup-text").textContent =
-    "These companies already have " +
-    pluralise(deletable.length, "cookie", "cookies") +
-    " saved." +
-    (kept.length > 0
-      ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
-      : "");
+    tn("rules_cleanupTrackersHave", deletable.length) +
+    (kept.length > 0 ? " " + tn("rules_keptLeftAlone", kept.length) : "");
   el("rules-trackers-cleanup").hidden = false;
   el("rules-trackers-cleanup-no").focus();
 }
@@ -604,13 +596,8 @@ export async function runCleanup(before = "") {
   const { removed, removedCookies, failed } = await removeCookies(cookies);
   showRulesMessage(
     (typeof before === "string" ? before : "") +
-    (failed.length === 0
-      ? "Deleted " + pluralise(removed, "cookie", "cookies") + "."
-      : "Deleted " +
-          pluralise(removed, "cookie", "cookies") +
-          ". " +
-          pluralise(failed.length, "cookie", "cookies") +
-          " could not be deleted, and may be protected by the browser."),
+    tn("rules_cleanupDeleted", removed) +
+    (failed.length === 0 ? "" : " " + tn("rules_cleanupFailed", failed.length)),
     failed.length > 0
   );
   await offerUndo(el("rules-message"), { kind: "delete", restore: removedCookies });
@@ -641,8 +628,8 @@ export async function toggleTrackers() {
   }
   showRulesMessage(
     on
-      ? "Known trackers' cookies are now blocked on every site."
-      : "Known trackers' cookies are no longer blocked on every site.",
+      ? t("rules_trackersOn")
+      : t("rules_trackersOff"),
     false
   );
   if (on) {
@@ -668,14 +655,14 @@ export async function askEverywhere(choice) {
     if (!granted) {
       setRadio("everywhere-rule", rules.everywhere, false);
       showRulesMessage(
-        error || "Chrome didn't give permission, so nothing has changed. Your other rules work as before.",
+        error || t("rules_everywherePermissionRefused"),
         Boolean(error)
       );
       return;
     }
     if (!everywhereAvailable()) {
       setRadio("everywhere-rule", rules.everywhere, false);
-      showRulesMessage("Permission given. Close cookieZ and open it again, then choose this again.", false);
+      showRulesMessage(t("rules_everywherePermissionGivenReopen"), false);
       return;
     }
   }
@@ -701,10 +688,10 @@ export async function chooseEverywhere(choice) {
   }
   showRulesMessage(
     choice === BLOCK
-      ? "Cookies are now blocked on every site without a rule of its own."
+      ? t("rules_everywhereBlocked")
       : choice === OWN_ONLY
-        ? "Other companies' cookies are now blocked on every site without a rule of its own."
-        : "Cookies are allowed again on every site without a rule of its own.",
+        ? t("rules_everywhereOwnOnly")
+        : t("rules_everywhereAllowed"),
     false
   );
 }
@@ -743,12 +730,12 @@ export async function startSiteDataClear() {
     const { granted, error } = await requestPermission(SITE_DATA_PERMISSION);
     siteDataAllowed = granted;
     if (!granted) {
-      showMainMessage(error || "Chrome didn't give permission, so nothing was cleared.", Boolean(error));
+      showMainMessage(error || t("rules_siteDataPermissionRefused"), Boolean(error));
       return;
     }
   }
   if (!chrome.browsingData) {
-    showMainMessage("Permission given. Close cookieZ and open it again to finish.", false);
+    showMainMessage(t("rules_permissionGivenReopen"), false);
     return;
   }
 
@@ -758,7 +745,7 @@ export async function startSiteDataClear() {
     // as much this site's data as the rest.
     found = await getCookiesForScope("domain", state.page, { embedded: true });
   } catch (error) {
-    showMainMessage("Couldn't count this site's cookies: " + describeError(error), true);
+    showMainMessage(t("rules_siteDataCountFailed", describeError(error)), true);
     return;
   }
   const { deletable, kept } = partitionByProtection(state.protectedKeys, found);
@@ -767,11 +754,10 @@ export async function startSiteDataClear() {
   const site = baseHostOf(state.page.hostname);
   el("data-confirm-text").textContent =
     (deletable.length > 0
-      ? "Delete " + pluralise(deletable.length, "cookie", "cookies") + " from " + site + " and clear"
-      : "Clear") +
-    " everything else " + site + " has stored: local storage, databases, cache storage and offline files?" +
-    (kept.length > 0 ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone." : "") +
-    " Undo can put the cookies back, but not the rest.";
+      ? tn("rules_siteDataConfirmCookies", deletable.length, site)
+      : t("rules_siteDataConfirmNoCookies", site)) +
+    (kept.length > 0 ? " " + tn("rules_keptLeftAlone", kept.length) : "") +
+    " " + t("rules_siteDataUndoNote");
 
   el("main-message").textContent = "";
   el("delete-button").hidden = true;
@@ -804,10 +790,9 @@ export async function runSiteDataClear(reload) {
   }
 
   showMainMessage(
-    (cookies.length > 0 ? "Deleted " + pluralise(removed, "cookie", "cookies") + " and cleared " : "Cleared ") +
-      site + "'s other stored data." +
-      (failed.length > 0 ? " " + pluralise(failed.length, "cookie", "cookies") + " could not be deleted." : "") +
-      (dataError ? " Chrome couldn't clear the rest: " + dataError : ""),
+    (cookies.length > 0 ? tn("rules_siteDataDeleted", removed, site) : t("rules_siteDataCleared", site)) +
+      (failed.length > 0 ? " " + tn("rules_siteDataFailed", failed.length) : "") +
+      (dataError ? " " + t("rules_siteDataError", dataError) : ""),
     failed.length > 0 || Boolean(dataError)
   );
   await offerUndo(el("main-message"), { kind: "delete", restore: removedCookies });
@@ -815,9 +800,9 @@ export async function runSiteDataClear(reload) {
   if (reload && typeof state.page.tabId === "number") {
     try {
       await chrome.tabs.reload(state.page.tabId);
-      el("main-message").append(" Reloaded the site.");
+      el("main-message").append(" " + t("rules_siteReloaded"));
     } catch (error) {
-      el("main-message").append(" Couldn't reload the site: " + describeError(error));
+      el("main-message").append(" " + t("rules_siteReloadFailed", describeError(error)));
     }
   } else if (!reload) {
     appendReloadButton(el("main-message"));
@@ -837,7 +822,7 @@ export function saveRulesBackup() {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 30000);
-  showRulesMessage("Saving your rules as cookiez-site-rules.json.", false);
+  showRulesMessage(t("rules_backupSaving", link.download), false);
 }
 
 // Reads a chosen file and asks before replacing anything.
@@ -853,7 +838,7 @@ export async function readRulesBackup() {
   try {
     text = await file.text();
   } catch (error) {
-    showRulesMessage("Couldn't read that file: " + describeError(error), true);
+    showRulesMessage(t("rules_backupReadFailed", describeError(error)), true);
     return;
   }
 
@@ -868,18 +853,18 @@ export async function readRulesBackup() {
   let note = "";
   if (incoming.everywhere === OWN_ONLY && !everywhereAllowed) {
     incoming.everywhere = ALLOW;
-    note = " It blocked other companies' cookies on every site; choose that again after loading.";
+    note = " " + t("rules_backupNoteOwnOnly");
   }
 
   if (incoming.trackers) {
-    note = " It also blocks known trackers' cookies." + note;
+    note = " " + t("rules_backupNoteTrackers") + note;
   }
 
   loadedBackup = incoming;
   const count = Object.keys(incoming.sites).length;
   el("rules-load-text").textContent = count > 0
-    ? "Replace your rules with the " + pluralise(count, "site", "sites") + " in this file?" + note
-    : "Replace your rules with the ones in this file? It has no sites in it." + note;
+    ? tn("rules_backupReplaceSites", count) + note
+    : t("rules_backupReplaceNoSites") + note;
   el("rules-load-confirm").hidden = false;
   el("rules-load-no").focus();
 }
@@ -901,7 +886,7 @@ export async function loadRulesBackup() {
   // The buttons that had the focus are gone, so it goes back to Load.
   el("rules-load").focus();
   showRulesMessage(
-    result.error || "Loaded " + pluralise(Object.keys(incoming.sites).length, "site rule", "site rules") + ".",
+    result.error || tn("rules_backupLoaded", Object.keys(incoming.sites).length),
     Boolean(result.error)
   );
 }
@@ -916,7 +901,7 @@ async function removeRule(site) {
   // button that took its place, or the one above, or Load if none is left.
   const buttons = el("rules-rows").querySelectorAll(".rules-remove");
   (buttons[Math.min(index, buttons.length - 1)] || el("rules-load")).focus();
-  showRulesMessage(result.error || "Removed the rule for " + site + ".", Boolean(result.error));
+  showRulesMessage(result.error || t("rules_removed", site), Boolean(result.error));
 }
 
 // "Turn off all rules" asks first, like the delete panel.
@@ -940,7 +925,7 @@ export async function clearAllRules() {
   // "Turn off all rules" is hidden once there are none to turn off.
   (el("rules-clear").hidden ? el("rules-load") : el("rules-clear")).focus();
   showRulesMessage(
-    result.error || "Every rule is off. Chrome is allowing cookies everywhere again.",
+    result.error || t("rules_allOff"),
     Boolean(result.error)
   );
 }
