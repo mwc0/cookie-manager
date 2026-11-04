@@ -369,8 +369,3 @@ export function bareDomain(domain) {
 export function describeError(error) {
   return error && error.message ? error.message : String(error);
 }
-
-// "1 cookie", "14 cookies"
-export function pluralise(count, singular, plural) {
-  return formatCount(count) + " " + (count === 1 ? singular : plural);
-}

@@ -2,7 +2,7 @@
 // screens, the status line under the header, and whether the popup is open
 // in a tab of its own or in the side panel.
 
-import { pluralise, describeError } from "../lib/format.js";
+import { describeError } from "../lib/format.js";
 
 export const el = (id) => document.getElementById(id);
 
@@ -46,11 +46,6 @@ export function showMainMessage(text, isError) {
   // It's a live region that stays on the page (see popup.html), but a few
   // screens still hide it as they open. See showState().
   message.hidden = false;
-}
-
-// " from example.com" for one site, " across 3 sites" for more.
-export function describeSites(sites) {
-  return sites.length === 1 ? " from " + sites[0] : " across " + pluralise(sites.length, "site", "sites");
 }
 
 // The screen showing now, such as "main" or "edit".
