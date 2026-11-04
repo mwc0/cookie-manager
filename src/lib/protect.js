@@ -5,6 +5,7 @@
 // "protected": it would be promising more than it does.
 
 import { describeError, bareDomain } from "./format.js";
+import { t } from "./i18n.js";
 
 const STORAGE_KEY = "protectedCookies";
 
@@ -32,9 +33,7 @@ export async function loadProtected() {
   } catch (error) {
     return {
       keys: new Set(),
-      error:
-        "Couldn't read the protected list, so nothing is being treated as " +
-        "protected right now: " + describeError(error),
+      error: t("rules_keptLoadFailed", describeError(error)),
     };
   }
 }
@@ -59,9 +58,10 @@ export async function setProtected(cookie, shouldProtect) {
   } catch (storageError) {
     return {
       keys,
-      error:
-        "Couldn't save the protected list: " +
-        (storageError && storageError.message ? storageError.message : String(storageError)),
+      error: t(
+        "rules_keptSaveFailed",
+        storageError && storageError.message ? storageError.message : String(storageError)
+      ),
     };
   }
 }
@@ -167,9 +167,10 @@ export async function protectCookies(cookies) {
   } catch (storageError) {
     return {
       keys,
-      error:
-        "Couldn't save the protected list: " +
-        (storageError && storageError.message ? storageError.message : String(storageError)),
+      error: t(
+        "rules_keptSaveFailed",
+        storageError && storageError.message ? storageError.message : String(storageError)
+      ),
     };
   }
 }
@@ -192,9 +193,10 @@ export async function unprotectKeys(keysToRemove) {
   } catch (storageError) {
     return {
       keys,
-      error:
-        "Couldn't save the protected list: " +
-        (storageError && storageError.message ? storageError.message : String(storageError)),
+      error: t(
+        "rules_keptSaveFailed",
+        storageError && storageError.message ? storageError.message : String(storageError)
+      ),
     };
   }
 }

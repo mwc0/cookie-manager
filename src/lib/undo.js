@@ -19,6 +19,7 @@
 // has both: the cookies it replaced, and the ones it added.
 
 import { describeError, bareDomain } from "./format.js";
+import { t, tn } from "./i18n.js";
 import { writeCookie, removeCookies } from "./cookies.js";
 
 const MAX_AGE_SECONDS = 10 * 60;
@@ -45,7 +46,7 @@ export async function saveLastChange(change, now = Date.now() / 1000) {
     });
     return { error: null };
   } catch (error) {
-    return { error: "Undo isn't available for this change: " + describeError(error) };
+    return { error: t("rules_undoUnavailable", describeError(error)) };
   }
 }
 
@@ -105,7 +106,7 @@ export function valuesOf(cookie) {
 }
 
 function describe(cookie) {
-  return cookie.name + " (" + bareDomain(cookie.domain) + ")";
+  return t("rules_undoCookie", cookie.name, bareDomain(cookie.domain));
 }
 
 // Writes the cookies back. Each goes through writeCookie(), so every write
@@ -132,7 +133,7 @@ export async function restoreCookies(cookies, now = Date.now() / 1000) {
 
   const failures = outcomes
     .filter((outcome) => !outcome.ok)
-    .map((outcome) => describe(outcome.cookie) + ": " + outcome.error);
+    .map((outcome) => t("rules_undoRestoreFailed", describe(outcome.cookie), outcome.error));
   return { restored: outcomes.length - failures.length, expired, failures };
 }
 
@@ -144,7 +145,7 @@ export async function undoChange(change, isKept, now = Date.now() / 1000) {
   const toRemove = change.remove.filter((cookie) => !isKept(cookie));
   const kept = change.remove.length - toRemove.length;
   const { removed, failed } = await removeCookies(toRemove);
-  const failures = failed.map((cookie) => describe(cookie) + ": couldn't be removed.");
+  const failures = failed.map((cookie) => t("rules_undoRemoveFailed", describe(cookie)));
 
   // Only once every removal has finished: an import can replace a cookie
   // with one of the same name, and putting the old one back mustn't race
@@ -163,7 +164,7 @@ export async function undoChange(change, isKept, now = Date.now() / 1000) {
 export function describeAge(seconds) {
   const minutes = Math.floor(seconds / 60);
   if (minutes < 1) {
-    return "just now";
+    return t("rules_ageJustNow");
   }
-  return minutes === 1 ? "1 minute ago" : minutes + " minutes ago";
+  return tn("rules_ageMinutes", minutes);
 }

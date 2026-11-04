@@ -7,6 +7,7 @@
 // cookies". So always check hasHostAccess() before reading cookies.
 
 import { describeError } from "./format.js";
+import { t } from "./i18n.js";
 
 export const ALL_SITES = "*://*/*";
 
@@ -95,7 +96,7 @@ function describeRequestFailure(error) {
   const message = describeError(error);
 
   if (message.includes("user gesture")) {
-    return "Chrome only allows the permission prompt to open from a direct click. Please click the button again.";
+    return t("rules_permissionNeedsClick");
   }
-  return "Chrome couldn't show the permission prompt: " + message;
+  return t("rules_permissionPromptFailed", message);
 }
