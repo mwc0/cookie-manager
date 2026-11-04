@@ -13,10 +13,11 @@ import {
 } from "../lib/transfer.js";
 import { lockText } from "../lib/crypto.js";
 import { copyWithFeedback } from "./clipboard.js";
-import { pluralise, describeError } from "../lib/format.js";
+import { describeError } from "../lib/format.js";
+import { t, tn } from "../lib/i18n.js";
 import { knownCookie } from "../lib/known.js";
 import { state } from "./state.js";
-import { el, showState, describeSites } from "./ui.js";
+import { el, showState } from "./ui.js";
 import { selectedScope } from "./popup.js";
 
 // --- export ----------------------------------------------------------------
@@ -79,15 +80,12 @@ function showExportPassword() {
     box.value = "";
   }
   el("export-password-note").textContent = lockable
-    ? "Locks the file, so it can only be imported with this password. The password isn't saved anywhere, so don't lose it."
-    : "Selenium code can't have a password: it has to stay readable to run. Choose another format to lock the file.";
+    ? t("transfer_passwordNote")
+    : t("transfer_seleniumNoPassword");
 
   const signIns = state.scopeAll.some((cookie) => looksLikeSignIn(cookie, knownCookie(cookie.name)));
   el("export-warning").hidden = !signIns || box.value !== "";
 }
-
-const LOCKED_NOTE =
-  "Locked with your password. You'll need the password to import it, and it isn't saved anywhere.";
 
 // The export as it will be copied or saved. With a password, it's locked
 // first, which takes a moment, so "Encrypting…" shows meanwhile. Then the
@@ -104,14 +102,14 @@ async function finishExport() {
   for (const button of buttons) {
     button.disabled = true;
   }
-  showExportResult("Encrypting…", false);
+  showExportResult(t("transfer_encrypting"), false);
   try {
     const locked = await lockText(built.text, password);
     el("export-password").value = "";
     showExportPassword();
     // Shows what was copied or saved.
     el("export-output").value = locked;
-    showExportResult(LOCKED_NOTE, false);
+    showExportResult(t("transfer_lockedNote"), false);
     return {
       text: locked,
       filename: built.filename.replace(/\.[a-z]+$/, "") + "-locked.json",
@@ -119,7 +117,7 @@ async function finishExport() {
       locked: true,
     };
   } catch (error) {
-    showExportResult("Couldn't lock the export: " + describeError(error), true);
+    showExportResult(t("transfer_cantLock", describeError(error)), true);
     return null;
   } finally {
     for (const button of buttons) {
@@ -152,25 +150,35 @@ export function openExport() {
   const sites = sitesOf(state.scopeAll);
   const kept = state.scopeAll.length - state.scopeCookies.length;
 
-  el("export-summary").textContent =
-    pluralise(state.scopeAll.length, "cookie", "cookies") +
-    describeSites(sites) +
-    (kept > 0 ? ", including " + pluralise(kept, "kept cookie", "kept cookies") : "") +
-    ".";
+  // "from example.com" for one site, "across 3 sites" for more.
+  const count = state.scopeAll.length;
+  const where = sites.length === 1 ? sites[0] : tn("transfer_siteCount", sites.length);
+  const keptCookies = tn("transfer_keptCookieCount", kept);
+  if (sites.length === 1) {
+    el("export-summary").textContent =
+      kept > 0
+        ? tn("transfer_exportFromSiteKept", count, where, keptCookies)
+        : tn("transfer_exportFromSite", count, where);
+  } else {
+    el("export-summary").textContent =
+      kept > 0
+        ? tn("transfer_exportAcrossSitesKept", count, where, keptCookies)
+        : tn("transfer_exportAcrossSites", count, where);
+  }
 
   // The Cookie header and curl both send cookies to one page, so they're
   // only offered when the cookies are one page's.
   const onePage = exportIsOnePage(sites);
   const onePageFormats = [
-    ["header", "Names and values only, as a browser sends them to this page."],
-    ["curl", "Sends these cookies to this page, for bash or zsh."],
+    ["header", t("transfer_headerNote")],
+    ["curl", t("transfer_curlNote")],
   ];
   for (const [format, note] of onePageFormats) {
     const radio = document.querySelector('input[name="format"][value="' + format + '"]');
     radio.disabled = !onePage;
     el(format + "-note").textContent = onePage
       ? note
-      : "Only for the cookies of one page. Choose “This page” to use it.";
+      : t("transfer_onePageOnly");
     if (!onePage && radio.checked) {
       document.querySelector('input[name="format"][value="json"]').checked = true;
     }
@@ -222,7 +230,7 @@ export async function downloadExport() {
   setTimeout(() => URL.revokeObjectURL(url), 30000);
 
   showExportResult(
-    "Saving as " + filename + "." + (locked ? " " + LOCKED_NOTE : ""),
+    t("transfer_savingAs", filename) + (locked ? " " + t("transfer_lockedNote") : ""),
     false
   );
 }
