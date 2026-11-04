@@ -3,7 +3,8 @@
 
 import { sitesOf } from "../lib/cookies.js";
 import { loadProtected, isProtected } from "../lib/protect.js";
-import { pluralise, describeError } from "../lib/format.js";
+import { formatCount, describeError } from "../lib/format.js";
+import { t, tn } from "../lib/i18n.js";
 import { changeCleared } from "../lib/stats.js";
 import {
   saveLastChange,
@@ -13,7 +14,7 @@ import {
   describeAge,
 } from "../lib/undo.js";
 import { state } from "./state.js";
-import { el, showMainMessage, describeSites } from "./ui.js";
+import { el, showMainMessage } from "./ui.js";
 import { refresh } from "./popup.js";
 import { refreshStats } from "./rules-screen.js";
 import { countJob } from "./small-screens.js";
@@ -46,7 +47,7 @@ function appendUndoButton(message) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "row-button undo-button";
-  button.textContent = "Undo";
+  button.textContent = t("main_undoButton");
   button.addEventListener("click", () => runUndo(message, button));
   message.append(" ", button);
 }
@@ -62,14 +63,14 @@ export function appendReloadButton(message) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "row-button reload-button";
-  button.textContent = "Reload the site";
+  button.textContent = t("main_reloadButton");
   button.addEventListener("click", async () => {
     button.disabled = true;
     try {
       await chrome.tabs.reload(tabId);
-      button.textContent = "Reloaded";
+      button.textContent = t("main_reloaded");
     } catch (error) {
-      button.textContent = "Couldn't reload it: " + describeError(error);
+      button.textContent = t("main_reloadFailed", describeError(error));
     }
   });
   message.append(" ", button);
@@ -79,20 +80,24 @@ export function appendReloadButton(message) {
 // sites", "Saved changes to sid", "Created theme".
 function describeChange(change) {
   if (change.kind === "edit") {
-    return "Saved changes to " + change.restore[0].name;
+    return t("main_changeEdit", change.restore[0].name);
   }
   if (change.kind === "create") {
-    return "Created " + change.remove[0].name;
+    return t("main_changeCreate", change.remove[0].name);
   }
   if (change.kind === "expiry") {
-    return "Changed when " + pluralise(change.restore.length, "cookie expires", "cookies expire");
+    return tn("main_changeExpiry", change.restore.length);
   }
 
   const affected = [...change.restore, ...change.remove];
-  const what =
-    affected.length === 1 ? affected[0].name : pluralise(affected.length, "cookie", "cookies");
-  const where = describeSites(sitesOf(affected));
-  return (change.kind === "import" ? "Imported " : "Deleted ") + what + where;
+  const sites = sitesOf(affected);
+  const verb = change.kind === "import" ? "main_changeImported" : "main_changeDeleted";
+  if (affected.length === 1) {
+    return t(verb + "One", affected[0].name, sites[0]);
+  }
+  return sites.length === 1
+    ? tn(verb + "From", affected.length, sites[0])
+    : tn(verb + "Across", affected.length, formatCount(sites.length));
 }
 
 // On opening, offer to undo a change made in the last 10 minutes, unless
@@ -102,10 +107,7 @@ export async function offerStoredUndo() {
   if (!last || el("main-message").textContent !== "") {
     return;
   }
-  showMainMessage(
-    describeChange(last) + " " + describeAge(Date.now() / 1000 - last.at) + ".",
-    false
-  );
+  showMainMessage(t("main_undoOffer", describeChange(last), describeAge(Date.now() / 1000 - last.at)), false);
   appendUndoButton(el("main-message"));
 }
 
@@ -115,27 +117,25 @@ export async function offerStoredUndo() {
 function describeUndone(change, result) {
   const { removed, restored, failures } = result;
   if (change.kind === "delete") {
-    return "Restored " + pluralise(restored, "cookie", "cookies") + ".";
+    return tn("main_undoRestored", restored);
   }
   if (change.kind === "edit" && restored === 1 && failures.length === 0) {
-    return "Put " + change.restore[0].name + " back as it was.";
+    return t("main_undoPutBackOne", change.restore[0].name);
   }
   if (change.kind === "create" && removed === 1) {
-    return "Removed " + change.remove[0].name + ".";
+    return t("main_undoRemovedOne", change.remove[0].name);
   }
 
-  const done = [];
+  if (removed > 0 && restored > 0) {
+    return tn("main_undoRemovedAndPutBack", removed, tn("main_cookieCount", restored));
+  }
   if (removed > 0) {
-    done.push("removed " + pluralise(removed, "cookie", "cookies"));
+    return tn("main_undoRemoved", removed);
   }
   if (restored > 0) {
-    done.push("put back " + pluralise(restored, "cookie", "cookies"));
+    return tn("main_undoPutBack", restored);
   }
-  if (done.length === 0) {
-    return "Nothing was changed.";
-  }
-  const sentence = done.join(" and ") + ".";
-  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+  return t("main_undoNothing");
 }
 
 async function runUndo(message, button) {
@@ -144,12 +144,12 @@ async function runUndo(message, button) {
   const last = await loadLastChange();
   if (!last) {
     message.className = "result error";
-    message.textContent = "There's nothing to undo. Undo only lasts 10 minutes after a change.";
+    message.textContent = t("main_undoTooLate");
     return;
   }
 
   message.className = "result";
-  message.textContent = "Undoing…";
+  message.textContent = t("main_undoing");
 
   // Read the Kept list fresh, so Undo never removes a cookie kept since.
   const { keys } = await loadProtected();
@@ -163,28 +163,13 @@ async function runUndo(message, button) {
 
   const parts = [describeUndone(last, result)];
   if (result.kept > 0) {
-    parts.push(
-      pluralise(result.kept, "cookie is", "cookies are") +
-        " marked Kept, so " +
-        (result.kept === 1 ? "it was" : "they were") +
-        " left alone."
-    );
+    parts.push(tn("main_undoKeptLeft", result.kept));
   }
   if (result.expired > 0) {
-    parts.push(
-      pluralise(result.expired, "cookie has", "cookies have") +
-        " expired since, so " +
-        (result.expired === 1 ? "it wasn't" : "they weren't") +
-        " put back."
-    );
+    parts.push(tn("main_undoExpiredSince", result.expired));
   }
   if (result.failures.length > 0) {
-    parts.push(
-      "Chrome refused " +
-        pluralise(result.failures.length, "cookie", "cookies") +
-        ": " +
-        result.failures.join(" ")
-    );
+    parts.push(tn("main_undoRefused", result.failures.length, result.failures.join(" ")));
   }
   message.className = result.failures.length > 0 ? "result error" : "result";
   message.textContent = parts.join(" ");

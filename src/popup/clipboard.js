@@ -1,4 +1,5 @@
 import { describeError } from "../lib/format.js";
+import { t } from "../lib/i18n.js";
 import { setIconContent } from "./icons.js";
 
 // Copies text and says so on the button that was clicked, then puts the
@@ -9,9 +10,9 @@ export async function copyWithFeedback(button, text) {
 
   try {
     await navigator.clipboard.writeText(text);
-    button.textContent = "Copied";
+    button.textContent = t("main_copied");
   } catch (error) {
-    button.textContent = "Couldn't copy";
+    button.textContent = t("main_copyFailed");
     button.title = describeError(error);
   }
 
@@ -27,9 +28,9 @@ export async function copyWithFeedback(button, text) {
 export async function copyWithIconFeedback(button, text, icon, label) {
   try {
     await navigator.clipboard.writeText(text);
-    setIconContent(button, "done", "Copied");
+    setIconContent(button, "done", t("main_copied"));
   } catch (error) {
-    setIconContent(button, "cancel", "Couldn't copy");
+    setIconContent(button, "cancel", t("main_copyFailed"));
     button.title = describeError(error);
   }
 

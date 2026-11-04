@@ -30,8 +30,8 @@ import {
   protectCookies,
   protectionKeyOf,
 } from "../lib/protect.js";
+import { t, tn } from "../lib/i18n.js";
 import {
-  pluralise,
   formatCount,
   headerBytes,
   formatBytes,
@@ -60,7 +60,6 @@ import {
   showError,
   showBlocked,
   showMainMessage,
-  describeSites,
   currentState,
 } from "./ui.js";
 import {
@@ -212,11 +211,11 @@ async function loadCurrentPage() {
   const tab = await getTargetTab();
 
   if (!tab && inTab) {
-    showBlocked("The tab this was opened from has been closed.");
+    showBlocked(t("main_blockedTabClosed"));
     return;
   }
   if (!tab || !tab.url) {
-    showBlocked("Chrome didn't report an address for this tab.");
+    showBlocked(t("main_blockedNoAddress"));
     return;
   }
 
@@ -224,16 +223,14 @@ async function loadCurrentPage() {
   try {
     url = new URL(tab.url);
   } catch (error) {
-    showBlocked("This tab's address couldn't be read: " + tab.url);
+    showBlocked(t("main_blockedBadAddress", tab.url));
     return;
   }
 
   // Pages like chrome:// and the Web Store can't have their cookies read.
   // Say so, instead of showing an empty table that looks broken.
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    showBlocked(
-      "Pages served over " + url.protocol + " don't have cookies an extension can read."
-    );
+    showBlocked(t("main_blockedProtocol", url.protocol));
     return;
   }
 
@@ -256,7 +253,7 @@ async function loadCurrentPage() {
 
   el("site-name").textContent = url.hostname;
   if (inTab) {
-    document.title = "cookieZ - " + url.hostname;
+    document.title = t("main_tabTitle", url.hostname);
   }
   el("scope-target-page").textContent = url.hostname;
   el("scope-target-domain").textContent = baseHostOf(url.hostname);
@@ -435,12 +432,11 @@ export function drawTable() {
   // which a browser only sends on those paths. Cookies other companies keep
   // for this site are left out: they're only sent to those companies.
   const bytes = headerBytes(pageCookies.filter((cookie) => !setByOtherSite(cookie, state.page.hostname)));
+  const countText = filtering
+    ? tn("main_cookieCountFiltered", shownCookies.length, tn("main_cookieCount", pageCookies.length))
+    : tn("main_cookieCount", pageCookies.length);
   el("cookie-count").textContent =
-    (filtering
-      ? pluralise(shownCookies.length, "cookie", "cookies") +
-        " of " + pluralise(pageCookies.length, "cookie", "cookies")
-      : pluralise(pageCookies.length, "cookie", "cookies")) +
-    (bytes > 0 ? " · about " + formatBytes(bytes) : "");
+    bytes > 0 ? t("main_cookieCountWithSize", countText, formatBytes(bytes)) : countText;
 
   // Many servers refuse requests with more than 8 KB of headers, and a site
   // that has piled up cookies is a common reason someone can't log in.
@@ -449,10 +445,7 @@ export function drawTable() {
   const warning = el("size-warning");
   const warningText = bytes <= SIZE_WARNING_BYTES
     ? ""
-    : "This site's cookies add up to about " +
-      formatBytes(bytes) +
-      ". Many servers refuse more than 8 KB, which can stop you logging in. " +
-      "Deleting this site's cookies usually fixes it.";
+    : t("main_sizeWarning", formatBytes(bytes));
   if (warning.textContent !== warningText) {
     warning.textContent = warningText;
   }
@@ -460,7 +453,7 @@ export function drawTable() {
   // "Just the cookies shown" only appears while searching or filtering.
   el("scope-matches-row").hidden = !filtering;
   el("scope-target-matches").textContent = filtering
-    ? pluralise(shownCookies.length, "match", "matches")
+    ? tn("main_matchCount", shownCookies.length)
     : "";
 
   if (!filtering && selectedScope() === "matches") {
@@ -472,13 +465,13 @@ export function drawTable() {
 
   el("empty-message").textContent = !nothingMatched
     ? pageRule() === BLOCK
-      ? "No cookies are set for this site. Your site rules are blocking them."
-      : "No cookies are set for this site."
+      ? t("main_emptyBlocked")
+      : t("main_empty")
     : query.trim() === ""
-      ? "No cookies here match those filters."
+      ? t("main_emptyFilters")
       : activeFilters.size > 0
-        ? "No cookies here match “" + query.trim() + "” and those filters."
-        : "No cookies here match “" + query.trim() + "”.";
+        ? t("main_emptyQueryAndFilters", query.trim())
+        : t("main_emptyQuery", query.trim());
   el("empty-message").hidden = !(nothingAtAll || nothingMatched);
   el("cookie-table").hidden = nothingAtAll || nothingMatched;
 }
@@ -637,8 +630,7 @@ function onTableKey(event) {
     if (remove.disabled) {
       const cookie = cookieForRow(row);
       showMainMessage(
-        (cookie ? cookie.name : "This cookie") +
-          " is being kept, so it can't be deleted. Press K to stop keeping it.",
+        cookie ? t("main_keyKeptNoDelete", cookie.name) : t("main_keyKeptNoDeleteUnnamed"),
         true
       );
     } else {
@@ -712,20 +704,20 @@ async function runLiveRedraw() {
   announceChanges();
 }
 
-// "1 cookie added, 2 changed." for screen readers.
+// "1 cookie added, 2 changed." for screen readers. Each mix of added, changed
+// and removed is a message of its own, such as main_liveAddedChanged.
 function announceChanges() {
   const parts = [
-    [lastChange.added, "added"],
-    [lastChange.changed, "changed"],
-    [lastChange.removed, "removed"],
+    [lastChange.added, "Added"],
+    [lastChange.changed, "Changed"],
+    [lastChange.removed, "Removed"],
   ].filter(([count]) => count > 0);
   if (parts.length === 0) {
     return;
   }
-  el("live-note").textContent =
-    parts
-      .map(([count, what], i) => (i === 0 ? pluralise(count, "cookie", "cookies") : formatCount(count)) + " " + what)
-      .join(", ") + ".";
+  const key = "main_live" + parts.map(([, what]) => what).join("");
+  const others = parts.slice(1).map(([count]) => formatCount(count));
+  el("live-note").textContent = tn(key, parts[0][0], ...others);
 }
 
 function sameCookie(a, b) {
@@ -805,9 +797,9 @@ function showPicked() {
 
   const count = pickedCookies().length;
   el("picked-bar").hidden = count === 0;
-  el("picked-count").textContent = pluralise(count, "cookie", "cookies") + " ticked:";
+  el("picked-count").textContent = tn("main_pickedCount", count);
   el("scope-picked-row").hidden = count === 0;
-  el("scope-target-picked").textContent = count > 0 ? pluralise(count, "cookie", "cookies") : "";
+  el("scope-target-picked").textContent = count > 0 ? tn("main_cookieCount", count) : "";
   if (count === 0 && selectedScope() === "picked") {
     document.querySelector('input[name="scope"][value="page"]').checked = true;
   }
@@ -824,7 +816,7 @@ export async function refreshScope() {
   const summaryLine = el("scope-summary");
   const details = el("scope-domains");
 
-  summaryLine.textContent = "Counting…";
+  summaryLine.textContent = t("main_counting");
   details.hidden = true;
   el("delete-button").disabled = true;
   el("export-button").disabled = true;
@@ -852,7 +844,7 @@ export async function refreshScope() {
   } catch (error) {
     state.scopeCookies = [];
     state.scopeAll = [];
-    summaryLine.textContent = "Couldn't count the cookies in this scope: " + describeError(error);
+    summaryLine.textContent = t("main_scopeCountFailed", describeError(error));
     return;
   }
 
@@ -866,22 +858,18 @@ export async function refreshScope() {
 
   const count = state.scopeCookies.length;
   const sites = sitesOf(state.scopeCookies);
-  const keptNote =
-    kept.length > 0
-      ? " " + pluralise(kept.length, "kept cookie", "kept cookies") + " will be left alone."
-      : "";
+  const keptNote = kept.length > 0 ? " " + tn("main_scopeKeptNote", kept.length) : "";
 
   if (count === 0) {
-    summaryLine.textContent =
-      kept.length > 0
-        ? "Nothing to delete in this scope." + keptNote
-        : "Nothing to delete in this scope.";
+    summaryLine.textContent = t("main_scopeNothing") + keptNote;
     el("delete-button").disabled = true;
     return;
   }
 
   summaryLine.textContent =
-    "Will delete " + pluralise(count, "cookie", "cookies") + describeSites(sites) + "." + keptNote;
+    (sites.length === 1
+      ? tn("main_scopeWillDeleteFrom", count, sites[0])
+      : tn("main_scopeWillDeleteAcross", count, formatCount(sites.length))) + keptNote;
 
   // List every site, so the user sees exactly what will go first.
   if (sites.length > 1) {
@@ -892,8 +880,7 @@ export async function refreshScope() {
       item.textContent = site; // comes from websites, so never innerHTML
       list.appendChild(item);
     }
-    el("scope-domains-summary").textContent =
-      "Show the " + formatCount(sites.length) + " sites affected";
+    el("scope-domains-summary").textContent = t("main_scopeShowSites", formatCount(sites.length));
     details.open = false;
     details.hidden = false;
   }
@@ -914,8 +901,12 @@ export function cancelConfirm() {
 }
 
 function startConfirm() {
+  const count = state.scopeCookies.length;
+  const sites = sitesOf(state.scopeCookies);
   el("confirm-text").textContent =
-    "Delete " + pluralise(state.scopeCookies.length, "cookie", "cookies") + describeSites(sitesOf(state.scopeCookies)) + "?";
+    sites.length === 1
+      ? tn("main_confirmDeleteFrom", count, sites[0])
+      : tn("main_confirmDeleteAcross", count, formatCount(sites.length));
 
   el("main-message").textContent = "";
   el("delete-button").hidden = true;
@@ -935,21 +926,16 @@ async function runDelete() {
   yes.disabled = true;
   no.disabled = true;
   result.className = "result";
-  result.textContent = "Deleting…";
+  result.textContent = t("main_deleting");
 
   try {
     const { removed, removedCookies, failed } = await removeCookies(state.scopeCookies);
 
     if (failed.length === 0) {
-      result.textContent = "Deleted " + pluralise(removed, "cookie", "cookies") + ".";
+      result.textContent = tn("main_deleted", removed);
     } else {
       result.className = "result error";
-      result.textContent =
-        "Deleted " +
-        pluralise(removed, "cookie", "cookies") +
-        ". " +
-        pluralise(failed.length, "cookie", "cookies") +
-        " could not be deleted, and may be protected by the browser.";
+      result.textContent = tn("main_deleted", removed) + " " + tn("main_deleteSomeFailed", failed.length);
     }
     await offerUndo(result, { kind: "delete", restore: removedCookies });
     if (removedCookies.length > 0) {
@@ -957,7 +943,7 @@ async function runDelete() {
     }
   } catch (error) {
     result.className = "result error";
-    result.textContent = "The delete failed: " + describeError(error);
+    result.textContent = t("main_deleteFailed", describeError(error));
   } finally {
     yes.disabled = false;
     no.disabled = false;
@@ -978,7 +964,7 @@ async function deleteOne(cookie) {
   // table is out of date.
   if (isProtected(state.protectedKeys, cookie)) {
     showMainMessage(
-      cookie.name + " is being kept, so it wasn't deleted. Click Kept first if you want it gone.",
+      t("main_deleteOneKept", cookie.name),
       true
     );
     return;
@@ -988,8 +974,8 @@ async function deleteOne(cookie) {
 
   showMainMessage(
     ok
-      ? "Deleted " + cookie.name + "."
-      : "Couldn't delete " + cookie.name + ". It may be protected by the browser.",
+      ? t("main_deletedOne", cookie.name)
+      : t("main_deleteOneFailed", cookie.name),
     !ok
   );
   if (ok) {
@@ -1012,8 +998,8 @@ async function toggleProtected(cookie, shouldKeep) {
 
   showMainMessage(
     shouldKeep
-      ? "Keeping " + cookie.name + ". It won't be deleted from here until you say otherwise."
-      : "No longer keeping " + cookie.name + ".",
+      ? t("main_keeping", cookie.name)
+      : t("main_notKeeping", cookie.name),
     false
   );
 
@@ -1035,7 +1021,7 @@ async function keepPicked(shouldKeep) {
     return;
   }
   showMainMessage(
-    (shouldKeep ? "Keeping " : "No longer keeping ") + pluralise(cookies.length, "cookie", "cookies") + ".",
+    tn(shouldKeep ? "main_keepingPicked" : "main_notKeepingPicked", cookies.length),
     false
   );
   drawTable();
@@ -1064,10 +1050,15 @@ async function expirePicked(seconds) {
     state.saving = false;
   }
 
-  const when = { 3600: "1 hour", 86400: "1 day", 604800: "1 week", 31536000: "1 year" }[seconds];
+  const key = {
+    3600: "main_expiresHour",
+    86400: "main_expiresDay",
+    604800: "main_expiresWeek",
+    31536000: "main_expiresYear",
+  }[seconds];
   showMainMessage(
-    pluralise(changed.length, "cookie now expires", "cookies now expire") + " in " + when + "." +
-      (failures.length > 0 ? " Chrome refused " + failures.join(" ") : ""),
+    tn(key, changed.length) +
+      (failures.length > 0 ? " " + t("main_expireRefused", failures.join(" ")) : ""),
     failures.length > 0
   );
   await offerUndo(el("main-message"), { kind: "expiry", restore: changed });
@@ -1079,7 +1070,7 @@ async function expirePicked(seconds) {
 async function openInTab() {
   const tab = await getActiveTab();
   if (!tab) {
-    showMainMessage("Couldn't tell which tab this is for.", true);
+    showMainMessage(t("main_noTab"), true);
     return;
   }
   await chrome.tabs.create({
@@ -1117,8 +1108,8 @@ async function openInPanel() {
     const message = describeError(openError);
     showMainMessage(
       message.includes("user gesture")
-        ? "Chrome only opens the side panel straight from a click. Please click the button again."
-        : "Couldn't open the side panel: " + message,
+        ? t("main_panelNeedsClick")
+        : t("main_panelFailed", message),
       true
     );
     return;
@@ -1235,8 +1226,7 @@ el("grant-button").addEventListener("click", async () => {
   }
 
   if (!granted) {
-    message.textContent =
-      "Access was declined, so cookies can't be listed. Click Grant access to try again.";
+    message.textContent = t("main_accessDeclined");
     return;
   }
 

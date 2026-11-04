@@ -6,5 +6,593 @@
   "appDesc": {
     "message": "View, edit, delete and block cookies. There are no ads, and nothing you do leaves your computer.",
     "description": "The summary under the name in the Chrome Web Store and on chrome://extensions. 132 characters at most."
+  },
+  "main_blockedTabClosed": {
+    "message": "The tab this was opened from has been closed.",
+    "description": "Message on the screen shown instead of the cookie table, when cookieZ is open in a tab of its own and the tab it was opened from has since been closed."
+  },
+  "main_blockedNoAddress": {
+    "message": "Chrome didn't report an address for this tab.",
+    "description": "Message on the screen shown instead of the cookie table, when Chrome gives no web address for the current tab."
+  },
+  "main_blockedBadAddress": {
+    "message": "This tab's address couldn't be read: $1",
+    "description": "Message on the screen shown instead of the cookie table, when the tab's web address can't be understood. $1 is the address as Chrome reported it, such as about:blank."
+  },
+  "main_blockedProtocol": {
+    "message": "Pages served over $1 don't have cookies an extension can read.",
+    "description": "Message on the screen shown instead of the cookie table, on pages such as chrome://settings. $1 is the address scheme with its colon, such as chrome: or file:. Keep $1 as it is."
+  },
+  "main_tabTitle": {
+    "message": "cookieZ - $1",
+    "description": "The browser tab's title when cookieZ is opened in a tab of its own. $1 is the site, such as www.example.com. cookieZ is the product name and stays as it is."
+  },
+  "main_cookieCount_one": {
+    "message": "$1 cookie",
+    "description": "How many cookies, when $1 is 1. Used in the count above the cookie table, in the delete options (\"Just the ticked cookies: 1 cookie\") and inside other sentences. Short."
+  },
+  "main_cookieCount_other": {
+    "message": "$1 cookies",
+    "description": "How many cookies, when $1 is a number other than 1, such as 14. Used in the count above the cookie table, in the delete options and inside other sentences. Short."
+  },
+  "main_cookieCountFiltered_one": {
+    "message": "$1 cookie of $2",
+    "description": "The count above the cookie table while a search or filter is on, when $1 (the cookies shown) is 1. $2 is the site's total, already worded, such as \"14 cookies\". Short: a line above the table."
+  },
+  "main_cookieCountFiltered_other": {
+    "message": "$1 cookies of $2",
+    "description": "The count above the cookie table while a search or filter is on. $1 is the cookies shown, such as 3. $2 is the site's total, already worded, such as \"14 cookies\". Short: a line above the table."
+  },
+  "main_cookieCountWithSize": {
+    "message": "$1 · about $2",
+    "description": "The count above the cookie table with the cookies' total size. $1 is the count, already worded, such as \"14 cookies\" or \"3 cookies of 14 cookies\". $2 is the size, such as \"3.1 KB\" or \"812 bytes\". Short: a line above the table."
+  },
+  "main_sizeWarning": {
+    "message": "This site's cookies add up to about $1. Many servers refuse more than 8 KB, which can stop you logging in. Deleting this site's cookies usually fixes it.",
+    "description": "Warning above the cookie table when a site's cookies are large. $1 is the size, such as \"6.4 KB\". KB is kilobytes."
+  },
+  "main_matchCount_one": {
+    "message": "$1 match",
+    "description": "Next to the delete option \"Just the cookies shown\" while searching, when $1 is 1: how many cookies match the search. Short."
+  },
+  "main_matchCount_other": {
+    "message": "$1 matches",
+    "description": "Next to the delete option \"Just the cookies shown\" while searching: how many cookies match the search. $1 is a number such as 4. Short."
+  },
+  "main_emptyBlocked": {
+    "message": "No cookies are set for this site. Your site rules are blocking them.",
+    "description": "Shown in place of the cookie table when the site has no cookies and the user has chosen to block this site's cookies."
+  },
+  "main_empty": {
+    "message": "No cookies are set for this site.",
+    "description": "Shown in place of the cookie table when the site has no cookies."
+  },
+  "main_emptyFilters": {
+    "message": "No cookies here match those filters.",
+    "description": "Shown in place of the cookie table when the quick filters (such as Secure or Kept) that are switched on match no cookie."
+  },
+  "main_emptyQueryAndFilters": {
+    "message": "No cookies here match “$1” and those filters.",
+    "description": "Shown in place of the cookie table when a search and the switched-on filters match no cookie. $1 is what the user typed in the search box, such as session. Use the quotation marks your language uses."
+  },
+  "main_emptyQuery": {
+    "message": "No cookies here match “$1”.",
+    "description": "Shown in place of the cookie table when a search matches no cookie. $1 is what the user typed in the search box, such as session. Use the quotation marks your language uses."
+  },
+  "main_keyKeptNoDelete": {
+    "message": "$1 is being kept, so it can't be deleted. Press K to stop keeping it.",
+    "description": "Error under the header when the user presses the Delete key on a cookie marked Kept. $1 is the cookie's name, such as session_id. K is the keyboard key and stays K."
+  },
+  "main_keyKeptNoDeleteUnnamed": {
+    "message": "This cookie is being kept, so it can't be deleted. Press K to stop keeping it.",
+    "description": "The same error as main_keyKeptNoDelete, for when the cookie's name can't be found. K is the keyboard key and stays K."
+  },
+  "main_liveAdded_one": {
+    "message": "$1 cookie added.",
+    "description": "Cookies the site added. $1 is 1. Read aloud by screen readers when the site changes its cookies while cookieZ is open; not shown on screen."
+  },
+  "main_liveAdded_other": {
+    "message": "$1 cookies added.",
+    "description": "Cookies the site added. $1 is a number other than 1, such as 4. Read aloud by screen readers; not shown on screen."
+  },
+  "main_liveChanged_one": {
+    "message": "$1 cookie changed.",
+    "description": "Cookies the site changed. $1 is 1. Read aloud by screen readers when the site changes its cookies while cookieZ is open; not shown on screen."
+  },
+  "main_liveChanged_other": {
+    "message": "$1 cookies changed.",
+    "description": "Cookies the site changed. $1 is a number other than 1, such as 4. Read aloud by screen readers; not shown on screen."
+  },
+  "main_liveRemoved_one": {
+    "message": "$1 cookie removed.",
+    "description": "Cookies the site removed. $1 is 1. Read aloud by screen readers when the site changes its cookies while cookieZ is open; not shown on screen."
+  },
+  "main_liveRemoved_other": {
+    "message": "$1 cookies removed.",
+    "description": "Cookies the site removed. $1 is a number other than 1, such as 4. Read aloud by screen readers; not shown on screen."
+  },
+  "main_liveAddedChanged_one": {
+    "message": "$1 cookie added, $2 changed.",
+    "description": "Cookies the site added ($1) and changed ($2, a number such as 2). $1 is 1. Read aloud by screen readers when the site changes its cookies while cookieZ is open; not shown on screen."
+  },
+  "main_liveAddedChanged_other": {
+    "message": "$1 cookies added, $2 changed.",
+    "description": "Cookies the site added ($1) and changed ($2, a number such as 2). $1 is a number other than 1, such as 4. Read aloud by screen readers; not shown on screen."
+  },
+  "main_liveAddedRemoved_one": {
+    "message": "$1 cookie added, $2 removed.",
+    "description": "Cookies the site added ($1) and removed ($2, a number such as 2). $1 is 1. Read aloud by screen readers when the site changes its cookies while cookieZ is open; not shown on screen."
+  },
+  "main_liveAddedRemoved_other": {
+    "message": "$1 cookies added, $2 removed.",
+    "description": "Cookies the site added ($1) and removed ($2, a number such as 2). $1 is a number other than 1, such as 4. Read aloud by screen readers; not shown on screen."
+  },
+  "main_liveChangedRemoved_one": {
+    "message": "$1 cookie changed, $2 removed.",
+    "description": "Cookies the site changed ($1) and removed ($2, a number such as 2). $1 is 1. Read aloud by screen readers when the site changes its cookies while cookieZ is open; not shown on screen."
+  },
+  "main_liveChangedRemoved_other": {
+    "message": "$1 cookies changed, $2 removed.",
+    "description": "Cookies the site changed ($1) and removed ($2, a number such as 2). $1 is a number other than 1, such as 4. Read aloud by screen readers; not shown on screen."
+  },
+  "main_liveAddedChangedRemoved_one": {
+    "message": "$1 cookie added, $2 changed, $3 removed.",
+    "description": "Cookies the site added ($1), changed ($2, a number such as 2) and removed ($3, a number such as 1). $1 is 1. Read aloud by screen readers when the site changes its cookies while cookieZ is open; not shown on screen."
+  },
+  "main_liveAddedChangedRemoved_other": {
+    "message": "$1 cookies added, $2 changed, $3 removed.",
+    "description": "Cookies the site added ($1), changed ($2, a number such as 2) and removed ($3, a number such as 1). $1 is a number other than 1, such as 4. Read aloud by screen readers; not shown on screen."
+  },
+  "main_pickedCount_one": {
+    "message": "$1 cookie ticked:",
+    "description": "Start of the bar that appears when cookies are ticked in the table, when $1 is 1. Buttons such as Keep and Expire follow it. Short."
+  },
+  "main_pickedCount_other": {
+    "message": "$1 cookies ticked:",
+    "description": "Start of the bar that appears when cookies are ticked in the table. $1 is a number such as 3. Buttons such as Keep and Expire follow it. Short."
+  },
+  "main_counting": {
+    "message": "Counting…",
+    "description": "Status line in the delete panel while cookieZ counts the cookies the chosen option would delete. Short."
+  },
+  "main_scopeCountFailed": {
+    "message": "Couldn't count the cookies in this scope: $1",
+    "description": "Error in the delete panel when the cookies couldn't be counted. $1 is Chrome's own error text, in English."
+  },
+  "main_scopeKeptNote_one": {
+    "message": "$1 kept cookie will be left alone.",
+    "description": "Sentence added after the delete panel's summary when 1 cookie the user marked Kept is in the chosen scope and won't be deleted. $1 is 1."
+  },
+  "main_scopeKeptNote_other": {
+    "message": "$1 kept cookies will be left alone.",
+    "description": "Sentence added after the delete panel's summary when cookies the user marked Kept are in the chosen scope and won't be deleted. $1 is a number such as 2."
+  },
+  "main_scopeNothing": {
+    "message": "Nothing to delete in this scope.",
+    "description": "Summary in the delete panel when the chosen option (such as This page or This domain) has no cookies to delete."
+  },
+  "main_scopeWillDeleteFrom_one": {
+    "message": "Will delete $1 cookie from $2.",
+    "description": "Summary in the delete panel of what Delete will remove, when $1 is 1. $2 is the site, such as example.com."
+  },
+  "main_scopeWillDeleteFrom_other": {
+    "message": "Will delete $1 cookies from $2.",
+    "description": "Summary in the delete panel of what Delete will remove. $1 is a number such as 12. $2 is the site, such as example.com."
+  },
+  "main_scopeWillDeleteAcross_one": {
+    "message": "Will delete $1 cookie across $2 sites.",
+    "description": "Summary in the delete panel of what Delete will remove, when $1 is 1 and the cookies are on several sites. $2 is the number of sites, always 2 or more. (In practice $1 is never 1 here; the form is needed for languages that count differently.)"
+  },
+  "main_scopeWillDeleteAcross_other": {
+    "message": "Will delete $1 cookies across $2 sites.",
+    "description": "Summary in the delete panel of what Delete will remove, when the cookies are on several sites. $1 is a number such as 12. $2 is the number of sites, always 2 or more."
+  },
+  "main_scopeShowSites": {
+    "message": "Show the $1 sites affected",
+    "description": "Label of a fold-out list in the delete panel listing every site whose cookies will be deleted. $1 is the number of sites, always 2 or more."
+  },
+  "main_confirmDeleteFrom_one": {
+    "message": "Delete $1 cookie from $2?",
+    "description": "Question asked before deleting, with Yes and No buttons next to it, when $1 is 1. $2 is the site, such as example.com."
+  },
+  "main_confirmDeleteFrom_other": {
+    "message": "Delete $1 cookies from $2?",
+    "description": "Question asked before deleting, with Yes and No buttons next to it. $1 is a number such as 12. $2 is the site, such as example.com."
+  },
+  "main_confirmDeleteAcross_one": {
+    "message": "Delete $1 cookie across $2 sites?",
+    "description": "Question asked before deleting cookies on several sites, when $1 is 1. $2 is the number of sites, always 2 or more."
+  },
+  "main_confirmDeleteAcross_other": {
+    "message": "Delete $1 cookies across $2 sites?",
+    "description": "Question asked before deleting cookies on several sites. $1 is a number such as 12. $2 is the number of sites, always 2 or more."
+  },
+  "main_deleting": {
+    "message": "Deleting…",
+    "description": "Status line under the header while cookies are being deleted. Short."
+  },
+  "main_deleted_one": {
+    "message": "Deleted $1 cookie.",
+    "description": "Status line under the header after deleting, when $1 is 1. An Undo button follows it."
+  },
+  "main_deleted_other": {
+    "message": "Deleted $1 cookies.",
+    "description": "Status line under the header after deleting. $1 is a number such as 12. An Undo button follows it."
+  },
+  "main_deleteSomeFailed_one": {
+    "message": "$1 cookie could not be deleted, and may be protected by the browser.",
+    "description": "Sentence added after \"Deleted 12 cookies.\" when 1 cookie couldn't be deleted. $1 is 1."
+  },
+  "main_deleteSomeFailed_other": {
+    "message": "$1 cookies could not be deleted, and may be protected by the browser.",
+    "description": "Sentence added after \"Deleted 12 cookies.\" when some cookies couldn't be deleted. $1 is a number such as 2."
+  },
+  "main_deleteFailed": {
+    "message": "The delete failed: $1",
+    "description": "Error under the header when deleting failed. $1 is Chrome's own error text, in English."
+  },
+  "main_deleteOneKept": {
+    "message": "$1 is being kept, so it wasn't deleted. Click Kept first if you want it gone.",
+    "description": "Error under the header when a cookie marked Kept is deleted from its row. $1 is the cookie's name, such as session_id. Kept is the name of the row's button: use the same word as that button."
+  },
+  "main_deletedOne": {
+    "message": "Deleted $1.",
+    "description": "Status line under the header after deleting one cookie from its row. $1 is the cookie's name, such as session_id. An Undo button follows it."
+  },
+  "main_deleteOneFailed": {
+    "message": "Couldn't delete $1. It may be protected by the browser.",
+    "description": "Error under the header when one cookie couldn't be deleted. $1 is the cookie's name, such as session_id."
+  },
+  "main_keeping": {
+    "message": "Keeping $1. It won't be deleted from here until you say otherwise.",
+    "description": "Status line under the header after the user marks a cookie Kept, which stops cookieZ deleting it. $1 is the cookie's name, such as session_id."
+  },
+  "main_notKeeping": {
+    "message": "No longer keeping $1.",
+    "description": "Status line under the header after the user stops keeping a cookie. $1 is the cookie's name, such as session_id."
+  },
+  "main_keepingPicked_one": {
+    "message": "Keeping $1 cookie.",
+    "description": "Status line under the header after marking the ticked cookies Kept, when $1 is 1."
+  },
+  "main_keepingPicked_other": {
+    "message": "Keeping $1 cookies.",
+    "description": "Status line under the header after marking the ticked cookies Kept. $1 is a number such as 3."
+  },
+  "main_notKeepingPicked_one": {
+    "message": "No longer keeping $1 cookie.",
+    "description": "Status line under the header after stopping keeping the ticked cookies, when $1 is 1."
+  },
+  "main_notKeepingPicked_other": {
+    "message": "No longer keeping $1 cookies.",
+    "description": "Status line under the header after stopping keeping the ticked cookies. $1 is a number such as 3."
+  },
+  "main_expiresHour_one": {
+    "message": "$1 cookie now expires in 1 hour.",
+    "description": "Status line under the header after the user sets the ticked cookies to expire in 1 hour, when $1 is 1. An Undo button follows it."
+  },
+  "main_expiresHour_other": {
+    "message": "$1 cookies now expire in 1 hour.",
+    "description": "Status line under the header after the user sets the ticked cookies to expire in 1 hour. $1 is a number such as 3. An Undo button follows it."
+  },
+  "main_expiresDay_one": {
+    "message": "$1 cookie now expires in 1 day.",
+    "description": "Status line under the header after the user sets the ticked cookies to expire in 1 day, when $1 is 1. An Undo button follows it."
+  },
+  "main_expiresDay_other": {
+    "message": "$1 cookies now expire in 1 day.",
+    "description": "Status line under the header after the user sets the ticked cookies to expire in 1 day. $1 is a number such as 3. An Undo button follows it."
+  },
+  "main_expiresWeek_one": {
+    "message": "$1 cookie now expires in 1 week.",
+    "description": "Status line under the header after the user sets the ticked cookies to expire in 1 week, when $1 is 1. An Undo button follows it."
+  },
+  "main_expiresWeek_other": {
+    "message": "$1 cookies now expire in 1 week.",
+    "description": "Status line under the header after the user sets the ticked cookies to expire in 1 week. $1 is a number such as 3. An Undo button follows it."
+  },
+  "main_expiresYear_one": {
+    "message": "$1 cookie now expires in 1 year.",
+    "description": "Status line under the header after the user sets the ticked cookies to expire in 1 year, when $1 is 1. An Undo button follows it."
+  },
+  "main_expiresYear_other": {
+    "message": "$1 cookies now expire in 1 year.",
+    "description": "Status line under the header after the user sets the ticked cookies to expire in 1 year. $1 is a number such as 3. An Undo button follows it."
+  },
+  "main_expireRefused": {
+    "message": "Chrome refused $1",
+    "description": "Sentence added after \"3 cookies now expire in 1 day.\" when Chrome refused some. $1 is a list of each cookie's name and Chrome's error in English, such as \"sid: Failed to parse or set cookie named \"sid\".\""
+  },
+  "main_noTab": {
+    "message": "Couldn't tell which tab this is for.",
+    "description": "Error under the header when Open in a tab is clicked but Chrome doesn't say which tab is active."
+  },
+  "main_panelNeedsClick": {
+    "message": "Chrome only opens the side panel straight from a click. Please click the button again.",
+    "description": "Error under the header when Chrome refused to open its side panel. The side panel is the strip Chrome can show beside a page."
+  },
+  "main_panelFailed": {
+    "message": "Couldn't open the side panel: $1",
+    "description": "Error under the header when Chrome's side panel didn't open. $1 is Chrome's own error text, in English."
+  },
+  "main_accessDeclined": {
+    "message": "Access was declined, so cookies can't be listed. Click Grant access to try again.",
+    "description": "Message on the first-run screen when the user declined Chrome's request to let cookieZ read sites. Grant access is the button's label on that screen: use the same words as that button."
+  },
+  "main_undoButton": {
+    "message": "Undo",
+    "description": "Short: a small button after a status line, which reverses the change just made."
+  },
+  "main_reloadButton": {
+    "message": "Reload the site",
+    "description": "Short: a small button after a status line, which reloads the web page so it notices the change."
+  },
+  "main_reloaded": {
+    "message": "Reloaded",
+    "description": "Short: the Reload the site button's label once the page has been reloaded."
+  },
+  "main_reloadFailed": {
+    "message": "Couldn't reload it: $1",
+    "description": "The Reload the site button's label when the page couldn't be reloaded. $1 is Chrome's own error text, in English."
+  },
+  "main_changeEdit": {
+    "message": "Saved changes to $1",
+    "description": "Describes the last change, so it can be undone when cookieZ opens again. $1 is the cookie's name, such as session_id. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeCreate": {
+    "message": "Created $1",
+    "description": "Describes the last change: a new cookie was created. $1 is the cookie's name, such as theme. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeExpiry_one": {
+    "message": "Changed when $1 cookie expires",
+    "description": "Describes the last change: the user changed when cookies expire. $1 is 1. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeExpiry_other": {
+    "message": "Changed when $1 cookies expire",
+    "description": "Describes the last change: the user changed when cookies expire. $1 is a number such as 3. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeDeletedOne": {
+    "message": "Deleted $1 from $2",
+    "description": "Describes the last change: one cookie was deleted. $1 is its name, such as session_id. $2 is the site, such as example.com. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeDeletedFrom_one": {
+    "message": "Deleted $1 cookie from $2",
+    "description": "Describes the last change: cookies were deleted from one site. $1 is 1 (in practice main_changeDeletedOne is used then). $2 is the site, such as example.com. No full stop."
+  },
+  "main_changeDeletedFrom_other": {
+    "message": "Deleted $1 cookies from $2",
+    "description": "Describes the last change: cookies were deleted from one site. $1 is a number such as 5. $2 is the site, such as example.com. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeDeletedAcross_one": {
+    "message": "Deleted $1 cookie across $2 sites",
+    "description": "Describes the last change: cookies were deleted on several sites. $1 is 1 (in practice never). $2 is the number of sites, always 2 or more. No full stop."
+  },
+  "main_changeDeletedAcross_other": {
+    "message": "Deleted $1 cookies across $2 sites",
+    "description": "Describes the last change: cookies were deleted on several sites. $1 is a number such as 12. $2 is the number of sites, always 2 or more. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeImportedOne": {
+    "message": "Imported $1 from $2",
+    "description": "Describes the last change: one cookie was imported. $1 is its name, such as session_id. $2 is the site, such as example.com. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeImportedFrom_one": {
+    "message": "Imported $1 cookie from $2",
+    "description": "Describes the last change: cookies were imported from one site. $1 is 1 (in practice main_changeImportedOne is used then). $2 is the site, such as example.com. No full stop."
+  },
+  "main_changeImportedFrom_other": {
+    "message": "Imported $1 cookies from $2",
+    "description": "Describes the last change: cookies were imported from one site. $1 is a number such as 5. $2 is the site, such as example.com. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_changeImportedAcross_one": {
+    "message": "Imported $1 cookie across $2 sites",
+    "description": "Describes the last change: cookies were imported on several sites. $1 is 1 (in practice never). $2 is the number of sites, always 2 or more. No full stop."
+  },
+  "main_changeImportedAcross_other": {
+    "message": "Imported $1 cookies across $2 sites",
+    "description": "Describes the last change: cookies were imported on several sites. $1 is a number such as 12. $2 is the number of sites, always 2 or more. No full stop: main_undoOffer adds when it happened."
+  },
+  "main_undoOffer": {
+    "message": "$1 $2.",
+    "description": "Status line when cookieZ opens within 10 minutes of a change, with an Undo button after it. $1 is the change, such as \"Deleted 5 cookies from example.com\". $2 is when, such as \"4 minutes ago\" or \"just now\". Reorder if your language needs to."
+  },
+  "main_undoRestored_one": {
+    "message": "Restored $1 cookie.",
+    "description": "Status line after Undo put back a deleted cookie. $1 is 1."
+  },
+  "main_undoRestored_other": {
+    "message": "Restored $1 cookies.",
+    "description": "Status line after Undo put back deleted cookies. $1 is a number such as 5."
+  },
+  "main_undoPutBackOne": {
+    "message": "Put $1 back as it was.",
+    "description": "Status line after Undo reversed an edit to one cookie. $1 is the cookie's name, such as session_id."
+  },
+  "main_undoRemovedOne": {
+    "message": "Removed $1.",
+    "description": "Status line after Undo removed a cookie the user had just created. $1 is the cookie's name, such as theme."
+  },
+  "main_undoRemovedAndPutBack_one": {
+    "message": "Removed $1 cookie and put back $2.",
+    "description": "Status line after Undo reversed an import: it removed cookies the import added and put back ones it replaced. $1 is 1. $2 is the cookies put back, already worded, such as \"3 cookies\"."
+  },
+  "main_undoRemovedAndPutBack_other": {
+    "message": "Removed $1 cookies and put back $2.",
+    "description": "Status line after Undo reversed an import. $1 is the cookies removed, such as 9. $2 is the cookies put back, already worded, such as \"3 cookies\"."
+  },
+  "main_undoRemoved_one": {
+    "message": "Removed $1 cookie.",
+    "description": "Status line after Undo removed cookies an import had added. $1 is 1."
+  },
+  "main_undoRemoved_other": {
+    "message": "Removed $1 cookies.",
+    "description": "Status line after Undo removed cookies an import had added. $1 is a number such as 9."
+  },
+  "main_undoPutBack_one": {
+    "message": "Put back $1 cookie.",
+    "description": "Status line after Undo put back cookies a change had replaced. $1 is 1."
+  },
+  "main_undoPutBack_other": {
+    "message": "Put back $1 cookies.",
+    "description": "Status line after Undo put back cookies a change had replaced. $1 is a number such as 3."
+  },
+  "main_undoNothing": {
+    "message": "Nothing was changed.",
+    "description": "Status line after Undo when there turned out to be nothing to reverse."
+  },
+  "main_undoTooLate": {
+    "message": "There's nothing to undo. Undo only lasts 10 minutes after a change.",
+    "description": "Error after clicking Undo when the change is too old or has already been undone."
+  },
+  "main_undoing": {
+    "message": "Undoing…",
+    "description": "Status line while Undo is working. Short."
+  },
+  "main_undoKeptLeft_one": {
+    "message": "$1 cookie is marked Kept, so it was left alone.",
+    "description": "Sentence added after the Undo result when 1 cookie wasn't touched because the user marked it Kept. $1 is 1. Kept is the name of a cookie's button and badge: use the same word."
+  },
+  "main_undoKeptLeft_other": {
+    "message": "$1 cookies are marked Kept, so they were left alone.",
+    "description": "Sentence added after the Undo result when cookies weren't touched because the user marked them Kept. $1 is a number such as 2. Kept is the name of a cookie's button and badge: use the same word."
+  },
+  "main_undoExpiredSince_one": {
+    "message": "$1 cookie has expired since, so it wasn't put back.",
+    "description": "Sentence added after the Undo result when 1 cookie wasn't restored because its expiry date has passed. $1 is 1."
+  },
+  "main_undoExpiredSince_other": {
+    "message": "$1 cookies have expired since, so they weren't put back.",
+    "description": "Sentence added after the Undo result when cookies weren't restored because their expiry date has passed. $1 is a number such as 2."
+  },
+  "main_undoRefused_one": {
+    "message": "Chrome refused $1 cookie: $2",
+    "description": "Error added after the Undo result when Chrome wouldn't write a cookie back. $1 is 1. $2 is the cookie's name and Chrome's error in English."
+  },
+  "main_undoRefused_other": {
+    "message": "Chrome refused $1 cookies: $2",
+    "description": "Error added after the Undo result when Chrome wouldn't write cookies back. $1 is a number such as 2. $2 is each cookie's name and Chrome's error in English."
+  },
+  "main_keptLink": {
+    "message": "Kept cookies: $1",
+    "description": "Short: a link in the delete panel that opens the list of cookies the user marked Kept. $1 is how many, such as 3."
+  },
+  "main_keptPartitionedFor": {
+    "message": "Kept separately for $1",
+    "description": "Tooltip on the Partitioned badge in the list of kept cookies: the cookie is stored separately for one top-level site. $1 is that site, such as https://example.com."
+  },
+  "main_keptPartitionedForOther": {
+    "message": "Kept separately for another site",
+    "description": "Tooltip on the Partitioned badge in the list of kept cookies, when Chrome doesn't say which site."
+  },
+  "main_keptStopButton": {
+    "message": "Stop keeping",
+    "description": "Short: a button on each row of the list of kept cookies. It removes the Kept mark, so the cookie can be deleted again."
+  },
+  "main_keptStoppedOne": {
+    "message": "No longer keeping $1 on $2.",
+    "description": "Status line on the kept cookies list after Stop keeping. $1 is the cookie's name, such as session_id. $2 is its domain, such as .example.com."
+  },
+  "main_keptConfirmOne": {
+    "message": "Stop keeping this cookie?",
+    "description": "Question asked before removing the Kept mark from the only kept cookie, with Yes and No buttons."
+  },
+  "main_keptConfirmAll": {
+    "message": "Stop keeping all $1 cookies?",
+    "description": "Question asked before removing the Kept mark from every kept cookie, with Yes and No buttons. $1 is how many, always 2 or more."
+  },
+  "main_keptStoppedAll_one": {
+    "message": "No longer keeping $1 cookie.",
+    "description": "Status line on the kept cookies list after Stop keeping all, when $1 is 1."
+  },
+  "main_keptStoppedAll_other": {
+    "message": "No longer keeping $1 cookies.",
+    "description": "Status line on the kept cookies list after Stop keeping all. $1 is a number such as 3."
+  },
+  "main_eventChanged": {
+    "message": "Changed",
+    "description": "Short: a table cell in the What changed list. The site changed this cookie while cookieZ was open."
+  },
+  "main_eventAdded": {
+    "message": "Added",
+    "description": "Short: a table cell in the What changed list. The site added this cookie while cookieZ was open."
+  },
+  "main_eventExpired": {
+    "message": "Expired",
+    "description": "Short: a table cell in the What changed list. The cookie reached its expiry date and Chrome removed it."
+  },
+  "main_eventExpiredOverwrite": {
+    "message": "Removed, by setting a date in the past",
+    "description": "A table cell in the What changed list. The site removed the cookie by giving it an expiry date that has already passed."
+  },
+  "main_eventEvicted": {
+    "message": "Removed by Chrome to make room",
+    "description": "A table cell in the What changed list. Chrome removed the cookie because the site had too many."
+  },
+  "main_eventRemoved": {
+    "message": "Removed",
+    "description": "Short: a table cell in the What changed list. The cookie was removed."
+  },
+  "main_changesLink_one": {
+    "message": "$1 change",
+    "description": "Short: a link next to the cookie count that opens the What changed list, when $1 is 1."
+  },
+  "main_changesLink_other": {
+    "message": "$1 changes",
+    "description": "Short: a link next to the cookie count that opens the What changed list. $1 is a number such as 3."
+  },
+  "main_whatsNew2_2_1": {
+    "message": "Bug fixes.",
+    "description": "The What's new line, shown once at the top of the main screen the first time cookieZ opens after updating to version 2.2.1. Button and screen names in it (Block, Import, Site report, Clear and reload) should match those buttons' labels. name:session is search syntax and stays as it is."
+  },
+  "main_whatsNew2_2_0": {
+    "message": "New: a tidier main screen with room for more cookies, and a Site report beside the cookie count.",
+    "description": "The What's new line, shown once at the top of the main screen the first time cookieZ opens after updating to version 2.2.0. Button and screen names in it (Block, Import, Site report, Clear and reload) should match those buttons' labels. name:session is search syntax and stays as it is."
+  },
+  "main_whatsNew2_1_0": {
+    "message": "New: keep cookieZ open beside the page in Chrome's side panel, and Clear and reload for a site you can't log in to.",
+    "description": "The What's new line, shown once at the top of the main screen the first time cookieZ opens after updating to version 2.1.0. Button and screen names in it (Block, Import, Site report, Clear and reload) should match those buttons' labels. name:session is search syntax and stays as it is."
+  },
+  "main_whatsNew2_0_0": {
+    "message": "New: search one field, such as name:session, and compare a site's cookies with an earlier export, from Import.",
+    "description": "The What's new line, shown once at the top of the main screen the first time cookieZ opens after updating to version 2.0.0. Button and screen names in it (Block, Import, Site report, Clear and reload) should match those buttons' labels. name:session is search syntax and stays as it is."
+  },
+  "main_whatsNew1_9_0": {
+    "message": "New: block known trackers' cookies from Block, lock an export with a password, and reload the site after a change.",
+    "description": "The What's new line, shown once at the top of the main screen the first time cookieZ opens after updating to version 1.9.0. Button and screen names in it (Block, Import, Site report, Clear and reload) should match those buttons' labels. name:session is search syntax and stays as it is."
+  },
+  "main_whatsNew1_8_0": {
+    "message": "New: block known trackers' cookies on every site, from Block. Cookies with a well-known name now say who they're from.",
+    "description": "The What's new line, shown once at the top of the main screen the first time cookieZ opens after updating to version 1.8.0. Button and screen names in it (Block, Import, Site report, Clear and reload) should match those buttons' labels. name:session is search syntax and stays as it is."
+  },
+  "main_whatsNew1_7_0": {
+    "message": "New: the Block button at the top. You can now block other companies' cookies on every site, and clear a site's stored data as well as its cookies.",
+    "description": "The What's new line, shown once at the top of the main screen the first time cookieZ opens after updating to version 1.7.0. Button and screen names in it (Block, Import, Site report, Clear and reload) should match those buttons' labels. name:session is search syntax and stays as it is."
+  },
+  "main_welcome": {
+    "message": "Welcome. Click a cookie to edit it. Can't log in to a site? Clear and reload usually fixes it. Help (?) explains the rest.",
+    "description": "Welcome line shown once at the top of the main screen after installing. Clear and reload is a button's label, and Help (?) is the ? button in the header: use the same words as those."
+  },
+  "main_welcomePin": {
+    "message": "Welcome. Click a cookie to edit it. Can't log in to a site? Clear and reload usually fixes it. Help (?) explains the rest. To keep cookieZ in reach, pin it from the puzzle piece in Chrome's toolbar.",
+    "description": "The same welcome line as main_welcome, with a last sentence added when cookieZ isn't pinned to Chrome's toolbar. The puzzle piece is Chrome's Extensions button."
+  },
+  "main_reviewNotNow": {
+    "message": "Not now",
+    "description": "Short: a button on the line that asks for a store review, the first time it asks."
+  },
+  "main_reviewNoThanks": {
+    "message": "No thanks",
+    "description": "Short: a button on the line that asks for a store review, the second and last time it asks."
+  },
+  "main_reviewOpenFailed": {
+    "message": "Couldn't open the review page: $1",
+    "description": "Error when the Chrome Web Store review page wouldn't open. $1 is Chrome's own error text, in English."
+  },
+  "main_copied": {
+    "message": "Copied",
+    "description": "Short: replaces a copy button's label (or is read out by screen readers on an icon button) for a moment after copying worked."
+  },
+  "main_copyFailed": {
+    "message": "Couldn't copy",
+    "description": "Short: replaces a copy button's label for a moment when copying failed."
   }
 }
