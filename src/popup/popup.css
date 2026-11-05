@@ -2113,7 +2113,11 @@ textarea.output:focus {
     column-gap: 7px;
   }
 
-  .scope-target {
+  /* .scope-note too: the export formats' descriptions are only that, and
+     without this they fell into the radio's column, which widened it and
+     pushed the radio into the middle of the row. */
+  .scope-target,
+  .scope-note {
     grid-column: 2;
   }
 
