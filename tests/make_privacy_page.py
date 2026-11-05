@@ -59,8 +59,8 @@ TEMPLATE = """<!DOCTYPE html>
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
   <!-- The heading uses this font, so fetch it straight away. -->
   <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../style.css?v=2.2.0">
-  <script src="../theme.js?v=2.2.0" defer></script>
+  <link rel="stylesheet" href="../style.css?v=2.3.0">
+  <script src="../theme.js?v=2.3.0" defer></script>
 </head>
 <body>
   <!-- Generated from store/PRIVACY.md by tests/make_privacy_page.py.
@@ -74,6 +74,7 @@ TEMPLATE = """<!DOCTYPE html>
           <li><a href="../#features">Features</a></li>
           <li><a href="./" aria-current="page">Privacy</a></li>
           <li><a href="../support/">Support</a></li>
+          <li><a href="../guides/">Guides</a></li>
         </ul>
       </nav>
       <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
@@ -123,7 +124,7 @@ TEMPLATE = """<!DOCTYPE html>
         <li><a href="./">Extension privacy</a></li>
         <li><a href="../website-privacy/">Website privacy</a></li>
         <li><a href="../support/">Support</a></li>
-        <li><a href="../support/#guides">Guides</a></li>
+        <li><a href="../guides/">Guides</a></li>
         <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
       </ul>
     </div>

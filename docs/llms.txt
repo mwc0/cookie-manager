@@ -38,6 +38,7 @@ Facts that are easy to get wrong:
 - [Chrome Web Store](https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb): install it
 - [Home](https://cookiez.uk/): what it does and how it handles privacy
 - [Support](https://cookiez.uk/support/): common questions and how to report a problem
+- [Guides](https://cookiez.uk/guides/): every how-to guide on the site, in one list
 - [Extension privacy policy](https://cookiez.uk/privacy/): what the extension collects, sends and stores
 - [Clear cookies for one site in Chrome](https://cookiez.uk/clear-cookies-for-one-site/): with cookieZ, and with Chrome's own settings
 - [Fix "Request Header Or Cookie Too Large"](https://cookiez.uk/cookie-too-large/): what the 400 and 431 errors mean and how to fix them
