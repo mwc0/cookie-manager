@@ -39,6 +39,10 @@ Facts that are easy to get wrong:
 - [Home](https://cookiez.uk/): what it does and how it handles privacy
 - [Support](https://cookiez.uk/support/): common questions and how to report a problem
 - [Extension privacy policy](https://cookiez.uk/privacy/): what the extension collects, sends and stores
+- [Clear cookies for one site in Chrome](https://cookiez.uk/clear-cookies-for-one-site/): with cookieZ, and with Chrome's own settings
+- [Fix "Request Header Or Cookie Too Large"](https://cookiez.uk/cookie-too-large/): what the 400 and 431 errors mean and how to fix them
+- [Block cookies on one site in Chrome](https://cookiez.uk/block-cookies-on-one-site/): per-site cookie rules, enforced by Chrome
+- [Export cookies from Chrome](https://cookiez.uk/export-cookies/): JSON, cookies.txt, Playwright, Selenium, Cookie header and curl
 - [Website privacy policy](https://cookiez.uk/website-privacy/): what this website does with visitor data
 
 ## Source

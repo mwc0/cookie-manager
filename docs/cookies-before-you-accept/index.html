@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <!-- Applies the theme the visitor picked, before the page is drawn, so it
+       doesn't flash. It's inline and not deferred for that reason. See theme.js. -->
+  <script>
+    try {
+      const saved = localStorage.getItem("color-scheme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.classList.add(saved);
+        document.querySelector('meta[name="color-scheme"]').content = saved;
+      }
+    } catch (e) {}
+  </script>
+  <title>See which cookies a site sets before you accept - cookieZ</title>
+  <meta name="description" content="How to see which cookies a site sets before you click Accept on its cookie banner, and which ones arrive after, using Chrome and cookieZ.">
+  <link rel="canonical" href="https://cookiez.uk/cookies-before-you-accept/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="cookieZ">
+  <meta property="og:title" content="See which cookies a site sets before you accept - cookieZ">
+  <meta property="og:description" content="How to see which cookies a site sets before you click Accept on its cookie banner, and which ones arrive after, using Chrome and cookieZ.">
+  <meta property="og:url" content="https://cookiez.uk/cookies-before-you-accept/">
+  <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png">
+  <!-- The heading uses this font, so fetch it straight away. -->
+  <link rel="preload" href="../fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../style.css?v=2.2.0">
+  <script src="../theme.js?v=2.2.0" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../#features">Features</a></li>
+          <li><a href="../privacy/">Privacy</a></li>
+          <li><a href="../support/">Support</a></li>
+        </ul>
+      </nav>
+      <a class="wordmark" href="../" aria-label="cookieZ home">cookie<span class="key" aria-hidden="true">Z</span></a>
+      <div class="header-end">
+        <a class="pill" href="https://github.com/mwc0/cookie-manager">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 8-4 4 4 4m6-8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Source code
+        </a>
+        <button type="button" class="theme-toggle" aria-label="Switch theme" hidden>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="currentColor"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="1.5" x2="12" y2="3.6"/>
+              <line x1="12" y1="20.4" x2="12" y2="22.5"/>
+              <line x1="1.5" y1="12" x2="3.6" y2="12"/>
+              <line x1="20.4" y1="12" x2="22.5" y2="12"/>
+              <line x1="4.6" y1="4.6" x2="6.1" y2="6.1"/>
+              <line x1="17.9" y1="17.9" x2="19.4" y2="19.4"/>
+              <line x1="4.6" y1="19.4" x2="6.1" y2="17.9"/>
+              <line x1="17.9" y1="6.1" x2="19.4" y2="4.6"/>
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <div class="wrap prose">
+      <h1>See which cookies a site sets before you accept</h1>
+      <p class="updated">Check whether a cookie banner really waits for your answer.</p>
+
+      <p>A cookie banner is meant to ask before a site stores advertising or analytics cookies. Plenty don't wait. The UK's regulator, the ICO, has been <a href="https://ico.org.uk/about-the-ico/media-centre/news-and-blogs/2025/12/ico-action-secures-increased-cookie-compliance">testing the most popular UK sites for this</a>, and more than half only passed after it stepped in. Here's how to see for yourself what a site sets, and when.</p>
+
+      <h2>With cookieZ</h2>
+      <ol>
+        <li>Open the site in Chrome and click the cookieZ icon. Open the <strong>More</strong> menu (the three dots) and choose <strong>Open in side panel</strong>. The side panel stays open while you click around the page. The toolbar popup doesn't.</li>
+        <li>Click <strong>Clear and reload</strong>, then <strong>Clear and reload</strong> again to confirm. cookieZ deletes the site's cookies and everything else it has stored, then reloads it, so you get the banner a first-time visitor sees. The first time, Chrome asks to let cookieZ clear site data. Cookies you've marked as Kept stay.</li>
+        <li>Leave the banner alone. Everything now in the table was set before you agreed to anything. Click <strong>Site report</strong> to see those cookies grouped by purpose, such as <strong>Advertising and marketing</strong> or <strong>Analytics</strong>, with the company that usually sets each one.</li>
+        <li>Now click Accept on the banner. A link such as <strong>12 changes</strong> appears beside the cookie count. Click it to open <strong>What changed</strong>: every cookie added, changed or removed since cookieZ opened, newest first, with the time. The ones added after your click are the ones the banner let in. The removals at the bottom are from the clear.</li>
+        <li>To check Reject, do steps 2 to 4 again and click Reject instead. Advertising and analytics cookies shouldn't appear.</li>
+      </ol>
+      <p>Nothing here is saved. The What changed list is gone when cookieZ closes, and it starts again when you go to a different site.</p>
+
+      <h2>What this doesn't show</h2>
+      <p>cookieZ lists the cookies stored for the site's own address, and the partitioned cookies other companies keep for it. A cookie another company stores under its own address, from an advert or a script on the page, isn't in that list. To see those as well, open Chrome's DevTools: the Network tab shows the cookies each request sets.</p>
+
+      <h2>Before you report a site</h2>
+      <ul>
+        <li><strong>Not every cookie needs consent.</strong> A login, a basket, or the cookie that remembers your answer to the banner usually doesn't. What does depends on the law that applies, so check the regulator's guidance before calling a site out.</li>
+        <li><strong>Turn off your own blocking first.</strong> Rules set with cookieZ's <strong>Block</strong> button, or Chrome's third-party cookie setting, change what a site can set, so you'd see less than most visitors do.</li>
+        <li><strong>A name isn't proof.</strong> The purposes come from each cookie's name, and any site can call its own cookie <code>_ga</code>.</li>
+      </ul>
+
+      <div class="actions"><a class="button" href="https://chromewebstore.google.com/detail/cookiez-cookie-editor/ceonoigjmjpfhkiokodcnhneecfhfokb">Add cookieZ to Chrome</a></div>
+      <p>cookieZ is free, has no ads and makes no network requests. <a href="https://github.com/mwc0/cookie-manager">Its code is public.</a></p>
+
+      <p class="aside">This guide shows how to see what a site sets. It isn't legal advice.</p>
+
+      <p class="aside">Guides: <a href="../clear-cookies-for-one-site/">Clear cookies for one site</a> · <a href="../cookie-too-large/">Fix “Cookie Too Large”</a> · <a href="../block-cookies-on-one-site/">Block cookies on one site</a> · <a href="../block-third-party-cookies/">Block third-party cookies</a> · <a href="../export-cookies/">Export cookies from Chrome</a> · <a href="../yt-dlp-cookies/">cookies.txt for yt-dlp</a></p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>&copy; 2026 cookieZ</span>
+      <ul>
+        <li><a href="../privacy/">Extension privacy</a></li>
+        <li><a href="../website-privacy/">Website privacy</a></li>
+        <li><a href="../support/">Support</a></li>
+        <li><a href="../support/#guides">Guides</a></li>
+        <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

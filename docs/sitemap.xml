@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://cookiez.uk/</loc>
-    <lastmod>2026-11-02</lastmod>
+    <lastmod>2026-11-05</lastmod>
   </url>
   <url>
     <loc>https://cookiez.uk/privacy/</loc>
@@ -14,10 +14,34 @@
   </url>
   <url>
     <loc>https://cookiez.uk/support/</loc>
-    <lastmod>2026-11-02</lastmod>
+    <lastmod>2026-11-05</lastmod>
   </url>
   <url>
     <loc>https://cookiez.uk/yt-dlp-cookies/</loc>
-    <lastmod>2026-11-02</lastmod>
+    <lastmod>2026-11-05</lastmod>
+  </url>
+  <url>
+    <loc>https://cookiez.uk/clear-cookies-for-one-site/</loc>
+    <lastmod>2026-11-05</lastmod>
+  </url>
+  <url>
+    <loc>https://cookiez.uk/cookie-too-large/</loc>
+    <lastmod>2026-11-05</lastmod>
+  </url>
+  <url>
+    <loc>https://cookiez.uk/block-cookies-on-one-site/</loc>
+    <lastmod>2026-11-05</lastmod>
+  </url>
+  <url>
+    <loc>https://cookiez.uk/export-cookies/</loc>
+    <lastmod>2026-11-05</lastmod>
+  </url>
+  <url>
+    <loc>https://cookiez.uk/block-third-party-cookies/</loc>
+    <lastmod>2026-11-05</lastmod>
+  </url>
+  <url>
+    <loc>https://cookiez.uk/cookies-before-you-accept/</loc>
+    <lastmod>2026-11-05</lastmod>
   </url>
 </urlset>

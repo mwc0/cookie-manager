@@ -178,7 +178,7 @@
         </details>
         <details>
           <summary>How do I move cookies to another browser or tool?</summary>
-          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. The Playwright option makes a storageState file for starting automated tests already logged in. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. Import also takes Set-Cookie lines, a Cookie header (which goes on the site you're on) or a curl command from "Copy as cURL" in DevTools. To copy cookies from one site to another, such as from staging to localhost, open cookieZ on the site they should go to, and tick "Put them on this site instead". You'll see how many cookies will be added, and for which sites, before anything changes. There's also an option that writes Python code, to add the cookies in your own test scripts. An export includes login cookies, so treat it like a password, or lock it with one (below).</p>
+          <p>Choose which cookies in the delete panel, then click Export. JSON works with cookieZ and other cookie editors. cookies.txt works with curl, wget, yt-dlp and similar tools. The Playwright option makes a storageState file for starting automated tests already logged in. To bring cookies in, click Import and paste them, or open cookieZ in a tab to choose a file. Import also takes Set-Cookie lines, a Cookie header (which goes on the site you're on) or a curl command from "Copy as cURL" in DevTools. To copy cookies from one site to another, such as from staging to localhost, open cookieZ on the site they should go to, and tick "Put them on localhost instead" (it names the site you're on). You'll see how many cookies will be added, and for which sites, before anything changes. There's also an option that writes Python code, to add the cookies in your own test scripts. An export includes login cookies, so treat it like a password, or lock it with one (below).</p>
         </details>
         <details>
           <summary>How do I lock an export with a password?</summary>
@@ -198,6 +198,17 @@
         </details>
       </div>
 
+      <h2 id="guides">Guides</h2>
+      <ul>
+        <li><a href="../clear-cookies-for-one-site/">Clear cookies for one site in Chrome</a></li>
+        <li><a href="../cookie-too-large/">Fix &ldquo;Request Header Or Cookie Too Large&rdquo;</a></li>
+        <li><a href="../block-cookies-on-one-site/">Block cookies on one site in Chrome</a></li>
+        <li><a href="../block-third-party-cookies/">Block third-party cookies in Chrome</a></li>
+        <li><a href="../export-cookies/">Export cookies from Chrome</a></li>
+        <li><a href="../yt-dlp-cookies/">Export cookies.txt for yt-dlp</a></li>
+        <li><a href="../cookies-before-you-accept/">See which cookies a site sets before you accept</a></li>
+      </ul>
+
       <h2>Report a problem</h2>
       <p>Please <a href="https://github.com/mwc0/cookie-manager/issues">open an issue on GitHub</a>, or if you'd rather not, email <a href="mailto:support@cookiez.uk">support@cookiez.uk</a>. It helps to include:</p>
       <ul>
@@ -216,6 +227,7 @@
         <li><a href="../privacy/">Extension privacy</a></li>
         <li><a href="../website-privacy/">Website privacy</a></li>
         <li><a href="./" aria-current="page">Support</a></li>
+        <li><a href="#guides">Guides</a></li>
         <li><a href="https://github.com/mwc0/cookie-manager">Source code</a></li>
       </ul>
     </div>
