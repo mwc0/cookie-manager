@@ -16,12 +16,12 @@
     } catch (e) {}
   </script>
   <title>Export cookies.txt for yt-dlp - cookieZ</title>
-  <meta name="description" content="How to give yt-dlp your cookies with a cookies.txt file, using an extension that can't send them anywhere, and how to keep the file safe.">
+  <meta name="description" content="How to give yt-dlp your cookies with a cookies.txt file, including the fix for “Failed to decrypt with DPAPI” on Windows and how to export YouTube cookies.">
   <link rel="canonical" href="https://cookiez.uk/yt-dlp-cookies/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="cookieZ">
   <meta property="og:title" content="Export cookies.txt for yt-dlp - cookieZ">
-  <meta property="og:description" content="How to give yt-dlp your cookies with a cookies.txt file, using an extension that can't send them anywhere, and how to keep the file safe.">
+  <meta property="og:description" content="How to give yt-dlp your cookies with a cookies.txt file, including the fix for “Failed to decrypt with DPAPI” on Windows and how to export YouTube cookies.">
   <meta property="og:url" content="https://cookiez.uk/yt-dlp-cookies/">
   <meta property="og:image" content="https://cookiez.uk/images/01-overview.png">
   <meta property="og:image:width" content="1280">
@@ -84,6 +84,10 @@
 
       <p>That file can sign someone in as you, so the tool that makes it matters. A well-known cookies.txt extension was removed from the Chrome Web Store in 2023 for sending people's cookies to a server. cookieZ makes no network requests, and <a href="https://github.com/mwc0/cookie-manager">its code is public</a>, so you can check that yourself.</p>
 
+      <h2>“Failed to decrypt with DPAPI” on Windows</h2>
+      <p>yt-dlp can usually read cookies straight from your browser with <code>--cookies-from-browser chrome</code>. On Windows, Chrome now encrypts its cookies so that only Chrome itself can read them, and yt-dlp stops with <code>Failed to decrypt with DPAPI</code>. While Chrome is open, it can also say <code>Could not copy Chrome cookie database</code>.</p>
+      <p>yt-dlp's developers <a href="https://github.com/yt-dlp/yt-dlp/issues/10927">expect this to stay broken on Windows</a>. Their advice is to export your cookies with an extension and give yt-dlp the file with <code>--cookies</code>, which is what the steps below do.</p>
+
       <h2>Make the file</h2>
       <ol>
         <li>Log in to the site in Chrome.</li>
@@ -98,6 +102,17 @@
       <pre><code>yt-dlp --cookies "C:\Users\you\Downloads\cookies-www.youtube.com-2026-11-02.txt" "VIDEO_ADDRESS"</code></pre>
       <p><strong>Check the name and the folder.</strong> If yt-dlp can't find the file, it doesn't say so. It carries on without your login and makes a new file with that name. If a site still asks you to sign in, this is the first thing to check.</p>
 
+      <h2>YouTube: make the file in a private window</h2>
+      <p>YouTube keeps changing the login cookies in any YouTube tab you have open, so a file made in your normal window soon stops working. <a href="https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies">yt-dlp's own guide</a> says to make it in a private window instead, then close that window so the login is never used in the browser again:</p>
+      <ol>
+        <li>Type <code>chrome://extensions</code> into the address bar, click <strong>Details</strong> under cookieZ and turn on <strong>Allow in incognito</strong>. cookieZ doesn't open in incognito windows until you do.</li>
+        <li>Close any incognito windows you have open, then open a new one and sign in to YouTube.</li>
+        <li>In the same tab, type <code>youtube.com/robots.txt</code> into the address bar.</li>
+        <li>Click the cookieZ icon and choose <strong>This domain and its subdomains</strong>. Nothing is deleted. Click <strong>Export</strong>, choose <strong>cookies.txt</strong> and click <strong>Download</strong>.</li>
+        <li>Close the incognito window. Don't sign out first: that would end the login in the file too.</li>
+      </ol>
+      <p>cookieZ keeps incognito cookies apart from your normal ones, so the file holds only the private window's login. yt-dlp's guide also warns that using your account with yt-dlp can get it banned, for a while or for good.</p>
+
       <h2>Keep it safe</h2>
       <ul>
         <li><strong>Treat the file like a password.</strong> Anyone who has it can sign in as you until the login expires.</li>
@@ -107,11 +122,11 @@
       </ul>
 
       <h2>If it doesn't work</h2>
-      <p>Check the file's name and folder first. Logins also expire, and some sites change their login cookies often, so make a new file and try again. Some sites also tie a login to your browser, and they may refuse it from another program. YouTube can also ask your account to pass its own age check, and cookies can't get round that.</p>
+      <p>Check the file's name and folder first. Logins also expire, and some sites change their login cookies often, so make a new file and try again. For YouTube, make it in a private window, as above. Some sites also tie a login to your browser, and they may refuse it from another program. YouTube can also ask your account to pass its own age check, and cookies can't get round that.</p>
 
       <p class="aside">Only use this with your own account, and for things you're allowed to download. A site's terms may not allow it. cookieZ has no link with yt-dlp.</p>
 
-      <p class="aside">Guides: <a href="../clear-cookies-for-one-site/">Clear cookies for one site</a> · <a href="../cookie-too-large/">Fix “Cookie Too Large”</a> · <a href="../block-cookies-on-one-site/">Block cookies on one site</a> · <a href="../export-cookies/">Export cookies from Chrome</a></p>
+      <p class="aside">Guides: <a href="../clear-cookies-for-one-site/">Clear cookies for one site</a> · <a href="../cookie-too-large/">Fix “Cookie Too Large”</a> · <a href="../block-cookies-on-one-site/">Block cookies on one site</a> · <a href="../block-third-party-cookies/">Block third-party cookies</a> · <a href="../export-cookies/">Export cookies from Chrome</a> · <a href="../cookies-before-you-accept/">Cookies set before you accept</a></p>
     </div>
   </main>
 
