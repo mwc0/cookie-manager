@@ -12,6 +12,8 @@ import sys
 from playwright.sync_api import sync_playwright
 
 from helpers import (
+    HAS_WHATS_NEW,
+    VERSION,
     EXTENSION,
     Results,
     extension_id,
@@ -122,8 +124,12 @@ def main():
         empty.reload()
         empty.wait_for_timeout(1200)
         line = empty.locator("#whats-new-text").text_content()
-        r.check("an update from an older version shows What's new",
-                empty.locator("#whats-new").is_visible() and line.strip() != "", repr(line))
+        if HAS_WHATS_NEW:
+            r.check("an update from an older version shows What's new",
+                    empty.locator("#whats-new").is_visible() and line.strip() != "", repr(line))
+        else:
+            r.check(f"{VERSION} has no What's new line, so an update shows nothing",
+                    not empty.locator("#whats-new").is_visible(), repr(line))
         empty.close()
 
         # --- the table has to fit ---

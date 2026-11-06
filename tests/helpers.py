@@ -24,6 +24,11 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 EXTENSION = REPO / "src"
 
+# Whether this version has a What's new line. Not every release gets one,
+# and with none, an update shows nothing. Read from small-screens.js's list.
+VERSION = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))["version"]
+HAS_WHATS_NEW = f'"{VERSION}": "main_whatsNew' in (EXTENSION / "popup" / "small-screens.js").read_text(encoding="utf-8")
+
 # Throwaway browser profiles (gitignored). Deleted before each run, so every
 # test starts with no cookies and no permission granted.
 PROFILES = REPO / "tests" / ".profiles"

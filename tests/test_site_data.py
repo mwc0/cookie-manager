@@ -15,7 +15,7 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-from helpers import PROFILES, Results, extension_id, launch
+from helpers import HAS_WHATS_NEW, PROFILES, VERSION, Results, extension_id, launch
 from test_rules import NO_RULES_PERMISSION, TwoSites, new_popup, stored_names, visit
 
 NO_DATA_PERMISSION = NO_RULES_PERMISSION.replace("'contentSettings'", "'browsingData'")
@@ -137,15 +137,20 @@ def main():
             news.evaluate("async () => { await chrome.storage.local.set({ seenVersion: '1.9.0' }); }")
             news.reload()
             news.wait_for_timeout(1200)
-            r.check("the first open on a new version shows what's new",
-                    news.locator("#whats-new").is_visible()
-                    and news.locator("#whats-new-text").text_content().strip() != "",
-                    news.locator("#whats-new-text").text_content())
+            if HAS_WHATS_NEW:
+                r.check("the first open on a new version shows what's new",
+                        news.locator("#whats-new").is_visible()
+                        and news.locator("#whats-new-text").text_content().strip() != "",
+                        news.locator("#whats-new-text").text_content())
+            else:
+                r.check(f"{VERSION} has no What's new line, so an update shows nothing",
+                        not news.locator("#whats-new").is_visible())
             saved = news.evaluate("async () => (await chrome.storage.local.get('seenVersion')).seenVersion")
             r.check("only the version number is saved", saved == news.evaluate("() => chrome.runtime.getManifest().version"),
                     str(saved))
-            news.locator("#whats-new-close").click()
-            r.check("OK hides it", not news.locator("#whats-new").is_visible())
+            if HAS_WHATS_NEW:
+                news.locator("#whats-new-close").click()
+                r.check("OK hides it", not news.locator("#whats-new").is_visible())
             news.reload()
             news.wait_for_timeout(1200)
             r.check("and it doesn't come back next time", not news.locator("#whats-new").is_visible())

@@ -17,7 +17,7 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-from helpers import EXTENSION, Results, delete_button, extension_id, launch, open_popup, row_for
+from helpers import EXTENSION, HAS_WHATS_NEW, Results, delete_button, extension_id, launch, open_popup, row_for
 
 SITE = "https://review.test/"
 
@@ -165,11 +165,14 @@ def main():
         page.wait_for_timeout(300)
 
         # --- never alongside What's new ---
-        prepare(page, {"jobs": 2}, seen="1.9.0")
-        delete_one(page)
-        r.check("never on the same open as What's new",
-                page.locator("#whats-new").is_visible() and not shown(page),
-                str(stored(page)))
+        # Only when this version has a What's new line. The welcome line
+        # below tests the same rule either way.
+        if HAS_WHATS_NEW:
+            prepare(page, {"jobs": 2}, seen="1.9.0")
+            delete_one(page)
+            r.check("never on the same open as What's new",
+                    page.locator("#whats-new").is_visible() and not shown(page),
+                    str(stored(page)))
         prepare(page, {"jobs": 2}, seen=None)
         delete_one(page)
         r.check("or the welcome line", page.locator("#whats-new").is_visible() and not shown(page),
