@@ -139,7 +139,7 @@ it.
 ### Whether to ask for a review
 
 cookieZ counts how many times a delete, an import or a save has worked,
-so that after the fifth it can ask, once, whether you'd leave a review. If
+so that after the third it can ask, once, whether you'd leave a review. If
 you click **Not now**, it asks once more after the twenty-fifth, and never
 again after that. If you click **Leave a review** or **No thanks**, it
 never asks again. The record is that count and which of those you

@@ -282,7 +282,7 @@ export async function countJob(message) {
   }
   el("review-later").textContent = ask === "first" ? t("main_reviewNotNow") : t("main_reviewNoThanks");
   el("review-later").dataset.answer = ask === "first" ? "later" : "done";
-  el("review-ask").hidden = false;
+  el("review-ask").showModal();
 }
 
 // Opens the store's review page in a new tab, only when clicked. Returns

@@ -1531,8 +1531,7 @@ td.report-action {
 
 /* "What's new", once after an update. OK sits at the end of the sentence
    rather than dropping to a line of its own. */
-#whats-new,
-#review-ask {
+#whats-new {
   margin: 0 0 10px;
   color: var(--fg-soft);
 }
@@ -1542,13 +1541,37 @@ td.report-action {
   padding: 0 4px;
 }
 
-/* The review ask looks like What's new, with its buttons after the
-   sentence. */
-#review-open,
-#review-later,
 #help-review {
   margin-left: 2px;
   padding: 0 4px;
+}
+
+/* The review ask: a small box over the popup, framed like the plates,
+   with the rest of the popup dimmed behind it. */
+#review-ask {
+  max-width: 320px;
+  padding: 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgb(var(--light) / 0.07), rgb(var(--light) / 0.02)),
+    var(--panel);
+  color: var(--fg);
+}
+
+#review-ask::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+#review-ask p {
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .help-review {
@@ -1558,8 +1581,6 @@ td.report-action {
 
 /* Small link-style buttons and the new tick boxes still get a 24 px target. */
 #whats-new-close,
-#review-open,
-#review-later,
 #help-review,
 #picked-clear {
   display: inline-flex;

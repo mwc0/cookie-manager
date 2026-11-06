@@ -214,6 +214,9 @@ def open_popup(context, ext_id, site_url, grant=True):
     stub_active_tab(page, site_url)
     page.goto(popup_url(ext_id))
     page.wait_for_timeout(400)
+    # The review box pops up over the popup after a few deletes and would
+    # block the next click, so mark it answered. test_review.py sets its own.
+    page.evaluate("chrome.storage.local.set({reviewAsk: {jobs: 0, state: 'done'}})")
 
     if grant:
         grant_host_permission(page)

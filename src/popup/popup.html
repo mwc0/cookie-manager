@@ -224,16 +224,6 @@
            room (popup.css). -->
       <p id="main-message" class="result" role="status"></p>
       <p id="size-warning" class="result" role="status"></p>
-      <!-- Under the result of what was just done, so that comes first. At most
-           twice, ever: after a few things have gone well. See
-           src/lib/review.js. "Leave a review" opens the store's page in a
-           new tab, only when clicked. -->
-      <p id="review-ask" class="result whats-new" hidden>
-        <span data-i18n="page_reviewAsk">Glad cookieZ is useful. A review in the Chrome Web Store helps other people find it.</span>
-        <button id="review-open" class="link-button" type="button" data-i18n="page_reviewOpen">Leave a review</button>
-        <button id="review-later" class="link-button" type="button" data-i18n="page_reviewLater">Not now</button>
-      </p>
-
       <!-- Filters the table. While searching or filtering, an extra delete
            option removes only the cookies shown. -->
       <div class="search">
@@ -1247,6 +1237,18 @@
       </p>
       <p id="help-review-message" class="result" role="status"></p>
     </section>
+
+    <!-- The review ask, over whichever screen is open. At most twice, ever:
+         after a few things have gone well. See src/lib/review.js. "Leave a
+         review" opens the store's page in a new tab, only when clicked.
+         Escape counts as the other button. -->
+    <dialog id="review-ask" aria-labelledby="review-ask-text">
+      <p id="review-ask-text" data-i18n="page_reviewAsk">Glad cookieZ is useful. A review in the Chrome Web Store helps other people find it.</p>
+      <div class="review-actions">
+        <button id="review-later" type="button" data-i18n="page_reviewLater">Not now</button>
+        <button id="review-open" class="primary" type="button" data-i18n="page_reviewOpen">Leave a review</button>
+      </div>
+    </dialog>
 
     <script src="translate-page.js"></script>
     <script type="module" src="popup.js"></script>

@@ -1322,17 +1322,18 @@ el("whats-new-close").addEventListener("click", () => {
   el("search-input").focus();
 });
 el("review-open").addEventListener("click", async () => {
-  el("review-ask").hidden = true;
-  el("search-input").focus();
+  el("review-ask").close();
   if (await openReviewPage(el("main-message"))) {
     await recordAnswer("done");
   }
 });
 el("review-later").addEventListener("click", async () => {
-  el("review-ask").hidden = true;
-  el("search-input").focus();
+  el("review-ask").close();
   await recordAnswer(el("review-later").dataset.answer);
 });
+// Escape closes the box too. It counts as whichever of Not now or No thanks
+// was showing.
+el("review-ask").addEventListener("cancel", () => recordAnswer(el("review-later").dataset.answer));
 el("help-review").addEventListener("click", () => openReviewPage(el("help-review-message")));
 el("rules-backup").addEventListener("click", saveRulesBackup);
 el("rules-load").addEventListener("change", readRulesBackup);

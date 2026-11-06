@@ -1,11 +1,12 @@
 """
-The review ask: one quiet line, at most twice ever.
+The review ask: one small box, at most twice ever.
 
-It shows after the 5th delete, import or Save that went well. "Not now"
+It shows, as a box over the popup, after the 3rd delete, import or Save
+that went well. "Not now"
 brings it back once, after the 25th. "Leave a review" or "No thanks" ends it
 for good. It never shows on the same open as What's new or the welcome line.
 
-The count is seeded in storage to get near 5 or 25, then one real delete
+The count is seeded in storage to get near 3 or 25, then one real delete
 does the last job, so the popup's own code decides. chrome.tabs.create is
 the one thing faked: it records the address instead of opening a tab, so
 the test can check it's exactly the store's review page.
@@ -85,20 +86,20 @@ def main():
         page, errors = open_popup(context, ext_id, SITE)
         page.add_init_script(FAKE_CREATE)
 
-        # --- before 5 jobs ---
+        # --- before 3 jobs ---
         prepare(page, None)
         delete_one(page)
-        r.check("no line after the first job", not shown(page), str(stored(page)))
+        r.check("no box after the first job", not shown(page), str(stored(page)))
         r.check("the job is counted", (stored(page) or {}).get("jobs") == 1, str(stored(page)))
 
-        prepare(page, {"jobs": 3})
+        prepare(page, {"jobs": 1})
         delete_one(page)
-        r.check("no line after the 4th job", not shown(page), str(stored(page)))
+        r.check("no box after the 2nd job", not shown(page), str(stored(page)))
 
-        # --- the 5th job, then Not now ---
-        prepare(page, {"jobs": 4})
+        # --- the 3rd job, then Not now ---
+        prepare(page, {"jobs": 2})
         delete_one(page)
-        r.check("the line shows after the 5th job, with Not now",
+        r.check("the box shows after the 3rd job, with Not now",
                 shown(page) and page.locator("#review-later").text_content() == "Not now",
                 page.locator("#review-ask").text_content().strip())
         r.check("its buttons are at least 24px tall",
@@ -107,7 +108,7 @@ def main():
         page.locator("#review-later").click()
         page.wait_for_timeout(300)
         r.check("Not now hides it and saves 'later'",
-                not shown(page) and stored(page) == {"jobs": 5, "state": "later"}, str(stored(page)))
+                not shown(page) and stored(page) == {"jobs": 3, "state": "later"}, str(stored(page)))
 
         prepare(page, {"jobs": 23, "state": "later"})
         delete_one(page)
@@ -129,15 +130,25 @@ def main():
                 not shown(page) and stored(page) == {"jobs": 4, "state": "done"}, str(stored(page)))
 
         # --- Leave a review ---
-        prepare(page, {"jobs": 4})
+        prepare(page, {"jobs": 2})
         delete_one(page)
         page.locator("#review-open").click()
         page.wait_for_timeout(300)
         created = page.evaluate("() => window.createdTabs")
         r.check("Leave a review opens exactly the store's review page",
                 created == [STORE_REVIEWS_URL], str(created))
-        r.check("and hides the line and saves 'done'",
+        r.check("and closes the box and saves 'done'",
                 not shown(page) and (stored(page) or {}).get("state") == "done", str(stored(page)))
+
+        # --- it sits over the popup, and Escape counts as Not now ---
+        prepare(page, {"jobs": 2})
+        delete_one(page)
+        r.check("the box is a dialog over the popup",
+                page.evaluate("() => document.getElementById('review-ask').matches(':modal')"))
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(300)
+        r.check("Escape closes it and saves 'later'",
+                not shown(page) and stored(page) == {"jobs": 3, "state": "later"}, str(stored(page)))
 
         # --- the Help screen's button ---
         prepare(page, {"jobs": 7, "state": "later"})
@@ -154,12 +165,12 @@ def main():
         page.wait_for_timeout(300)
 
         # --- never alongside What's new ---
-        prepare(page, {"jobs": 4}, seen="1.9.0")
+        prepare(page, {"jobs": 2}, seen="1.9.0")
         delete_one(page)
         r.check("never on the same open as What's new",
                 page.locator("#whats-new").is_visible() and not shown(page),
                 str(stored(page)))
-        prepare(page, {"jobs": 4}, seen=None)
+        prepare(page, {"jobs": 2}, seen=None)
         delete_one(page)
         r.check("or the welcome line", page.locator("#whats-new").is_visible() and not shown(page),
                 str(stored(page)))

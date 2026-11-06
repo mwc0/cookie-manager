@@ -1,7 +1,7 @@
 // The occasional "a review helps" line, shown after a delete, an import or a
 // Save has gone well a few times.
 //
-// It asks at most twice, ever: after the 5th finished job, and, if the
+// It asks at most twice, ever: after the 3rd finished job, and, if the
 // answer was "Not now", once more after the 25th. "Leave a review" or "No
 // thanks" ends it for good. What's saved is one small entry in
 // chrome.storage.local, never sent anywhere:
@@ -18,7 +18,7 @@ export const REVIEW_KEY = "reviewAsk";
 export const STORE_REVIEWS_URL =
   "https://chromewebstore.google.com/detail/ceonoigjmjpfhkiokodcnhneecfhfokb/reviews";
 
-const FIRST_ASK = 5;
+const FIRST_ASK = 3;
 const SECOND_ASK = 25;
 
 async function loadAsk() {
