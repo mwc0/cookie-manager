@@ -1433,6 +1433,60 @@ main::before {
   margin: 0 0 20px;
 }
 
+/* The Guides page: one box per guide, side by side, one per row on a phone.
+   The title link stretches over the whole box, so the box is clickable. */
+.prose .guide-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-list li {
+  position: relative;
+  padding: 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgb(var(--light) / 0.08), rgb(var(--light) / 0.02)),
+    var(--plate);
+  transition: border-color 0.2s, translate 0.2s;
+}
+
+.guide-list li:hover,
+.guide-list li:focus-within {
+  border-color: var(--link);
+  translate: 0 -2px;
+}
+
+.guide-list a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.guide-list a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.guide-list p {
+  margin: 8px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-list li {
+    transition: none;
+  }
+  .guide-list li:hover,
+  .guide-list li:focus-within {
+    translate: none;
+  }
+}
+
 /* --- footer -------------------------------------------------------------- */
 
 .site-footer {
